@@ -317,8 +317,8 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
         <StatusNotice tone="warning">{setupMessage}</StatusNotice>
         <DataCard title="Inbox Comercial">
           <EmptyState
-            title="Modulul Inbox Comercial nu este activ inca."
-            description="Dupa rularea migratiei, aici vor aparea semnalele comerciale primite de firma."
+            title="Modulul Inbox Comercial nu este activ încă."
+            description="După rularea migrației, aici vor apărea semnalele comerciale primite de firma."
           />
         </DataCard>
       </div>
@@ -339,7 +339,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Semnale noi" value={`${newCount}`} detail="Cereri comerciale neprocesate." />
         <MetricCard label="Semnale urgente" value={`${urgentCount}`} detail="Prioritate urgenta sau scor de urgenta ridicat." tone="gold" />
-        <MetricCard label="Convertite in oportunitati" value={`${convertedCount}`} detail="Semnale transformate in pipeline." tone="mint" />
+        <MetricCard label="Convertite în oportunități" value={`${convertedCount}`} detail="Semnale transformate în pipeline." tone="mint" />
         <MetricCard label="Valoare estimata potentiala" value={formatCurrency(estimatedPotential)} detail="Potential estimat din semnale neconvertite." />
       </div>
 
@@ -362,7 +362,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
             <FormFields form={form} setForm={setForm} />
             <div className="flex flex-wrap gap-3">
               <Button type="submit" className="px-4" disabled={isPending}>
-                Salveaza semnal
+                Salvează semnal
               </Button>
               <Button type="button" variant="ghost" className="px-4" onClick={() => setForm(emptyForm)}>
                 Reseteaza
@@ -386,7 +386,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
             <option value="all">Toate prioritatile</option>
             {priorities.map((priority) => <option key={priority} value={priority}>{priorityLabels[priority]}</option>)}
           </select>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} className={textInputClasses()} placeholder="Cauta contact, firma, nevoie..." />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} className={textInputClasses()} placeholder="Caută contact, firmă, nevoie..." />
         </div>
       </DataCard>
 
@@ -403,7 +403,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
                   </div>
                   <h3 className="mt-3 text-base font-semibold text-white">{signal.contactCompany || signal.contactName || "Semnal fara contact"}</h3>
                   <p className="mt-1 text-sm text-zinc-400">{[signal.contactName, signal.contactRole, signal.contactEmail, signal.contactPhone].filter(Boolean).join(" | ")}</p>
-                  <p className="mt-3 text-sm leading-6 text-zinc-300">{signal.extractedSummary || signal.rawMessage || signal.detectedNeed || "Fara sumar inca."}</p>
+                  <p className="mt-3 text-sm leading-6 text-zinc-300">{signal.extractedSummary || signal.rawMessage || signal.detectedNeed || "Fara sumar încă."}</p>
                   {signal.detectedNeed ? <p className="mt-2 text-sm text-zinc-400">Nevoie: <span className="text-zinc-200">{signal.detectedNeed}</span></p> : null}
                   <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
                     <p><span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Valoare</span><span className="font-semibold text-white">{formatCurrency(Number(signal.estimatedValueMin ?? 0))} - {formatCurrency(Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0))}</span></p>
@@ -412,7 +412,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
                   </div>
                   {signal.recommendedAction ? <p className="mt-3 text-sm font-semibold text-mint-300">{signal.recommendedAction}</p> : null}
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <Button type="button" variant="secondary" className="min-h-10 px-3" onClick={() => handleSelect(signal)}>Revizuieste</Button>
+                    <Button type="button" variant="secondary" className="min-h-10 px-3" onClick={() => handleSelect(signal)}>Revizuiește</Button>
                     {signal.convertedOpportunityId ? (
                       <Button href={`/opportunities/${signal.convertedOpportunityId}`} variant="secondary" className="min-h-10 px-3">Deschide oportunitatea</Button>
                     ) : (
@@ -424,7 +424,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
                 </article>
               ))
             ) : (
-              <EmptyState title="Nu exista semnale comerciale inca." description="Adauga o cerere primita din email, telefon, formular sau WhatsApp. Semnalele importante pot fi transformate in oportunitati." />
+              <EmptyState title="Nu exista semnale comerciale încă." description="Adauga o cerere primita din email, telefon, formular sau WhatsApp. Semnalele importante pot fi transformate în oportunități." />
             )}
           </div>
         </DataCard>
@@ -441,8 +441,8 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
               </div>
               <FormFields form={reviewForm} setForm={setReviewForm} compact />
               <div className="flex flex-wrap gap-2">
-                <Button type="button" className="px-4" onClick={() => handleSave()}>Salveaza</Button>
-                <Button type="button" variant="secondary" className="px-4" onClick={() => handleSave("reviewed")}>Marcheaza revizuit</Button>
+                <Button type="button" className="px-4" onClick={() => handleSave()}>Salvează</Button>
+                <Button type="button" variant="secondary" className="px-4" onClick={() => handleSave("reviewed")}>Marchează revizuit</Button>
                 {selectedSignal.convertedOpportunityId ? (
                   <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary" className="px-4">Deschide oportunitatea</Button>
                 ) : (

@@ -1,8 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Logo } from "@/components/ui/Logo";
+import { getCurrentAuthUser } from "@/lib/auth/profile";
+import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const authUser = await getCurrentAuthUser();
+
+  if (authUser) {
+    const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: false });
+    redirect(currentBusiness?.source === "supabase" ? "/dashboard" : "/onboarding");
+  }
+
   return (
     <main className="grid min-h-screen place-items-center px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900/90 p-6 shadow-premium backdrop-blur">

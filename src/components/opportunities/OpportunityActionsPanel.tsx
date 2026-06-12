@@ -8,7 +8,7 @@ const actions = [
   ["Genereaza script apel", "Script structurat: introducere, calificare, propunere si urmatorul pas."],
   ["Genereaza draft oferta", "Draft cu context, solutie, beneficii, estimare si pasi urmatori."],
   ["Genereaza checklist", "Checklist operational pentru contact, termen, oferta si follow-up."],
-  ["Programeaza follow-up", "Actiune pregatita pentru urmatorul pas comercial."]
+  ["Programează follow-up", "Actiune pregatita pentru urmatorul pas comercial."]
 ];
 
 export function OpportunityActionsPanel() {
@@ -20,7 +20,7 @@ export function OpportunityActionsPanel() {
         <ActionButton key={label} label={label} result={result} variant={index === 0 ? "primary" : "secondary"} />
       ))}
       <div className="mt-2 flex flex-wrap gap-2">
-        {["Marcheaza contactat", "Marcheaza castigat", "Marcheaza pierdut", "Ignora"].map((label) => (
+        {["Marchează contactat", "Marchează câștigat", "Marchează pierdut", "Ignora"].map((label) => (
           <button
             key={label}
             type="button"

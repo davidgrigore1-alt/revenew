@@ -506,7 +506,7 @@ export async function convertSignalToOpportunity(signalId: string) {
       summary: signal.extractedSummary ?? signal.detectedNeed ?? "Oportunitate creata din Inbox Comercial.",
       relevance: [signal.serviceInterest, signal.detectedNeed].filter(Boolean),
       risks: [],
-      recommended_action: signal.recommendedAction ?? signal.nextStep ?? "Revizuieste semnalul si contacteaza lead-ul.",
+      recommended_action: signal.recommendedAction ?? signal.nextStep ?? "Revizuiește semnalul și contactează lead-ul.",
       raw_source_text: rawSourceText,
       contact_name: signal.contactName ?? null,
       contact_email: signal.contactEmail ?? null,

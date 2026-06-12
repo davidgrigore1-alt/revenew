@@ -34,7 +34,7 @@ export default async function SettingsPage() {
 
   return (
     <PageShell
-      eyebrow="Setari"
+      eyebrow="Setări"
       title="Configurare workspace"
       description="Profilul businessului si starea integrarilor folosite in MVP."
     >
@@ -49,8 +49,8 @@ export default async function SettingsPage() {
                 ["CUI", business?.cui ?? ""],
                 ["Website", business?.website ?? ""],
                 ["Industrie", business?.industry ?? ""],
-                ["Oras/Judet", `${business?.city ?? ""}, ${business?.county ?? ""}`],
-                ["Email notificari", business?.notificationEmail ?? ""]
+                ["Oraș/Judet", `${business?.city ?? ""}, ${business?.county ?? ""}`],
+                ["Email notificări", business?.notificationEmail ?? ""]
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-white/10 pb-3">
                   <dt className="text-zinc-500">{label}</dt>
@@ -67,7 +67,7 @@ export default async function SettingsPage() {
                 ["OpenAI usage", openAIConnected ? "Necesită credit API pentru generare reală" : "Cheia API nu este configurată"],
                 ["Analysis mode", openAIConnected ? "AI configurat" : "Analiza locală"],
                 ["Fallback local disponibil", "Da"],
-                ["OpenAI explicatie", "OpenAI este folosit pentru analiza oportunitati si generare documente cand exista credit API. Cheia API ramane doar pe server."]
+                ["OpenAI explicație", "OpenAI este folosit pentru analiză oportunități și generare documente când există credit API. Cheia API rămâne doar pe server."]
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-white/10 pb-3">
                   <dt className="text-zinc-500">{label}</dt>
@@ -90,8 +90,8 @@ export default async function SettingsPage() {
                 ["Business source", currentBusiness?.source === "supabase" ? "Supabase" : "Demo"],
                 ["Business activ", business?.name ?? "-"],
                 ["Business id", business?.id ?? "-"],
-                ["Servicii incarcate", String(currentBusiness?.servicesCount ?? business?.services.length ?? 0)],
-                ["Tinte incarcate", String(currentBusiness?.targetsCount ?? 0)]
+                ["Servicii încărcate", String(currentBusiness?.servicesCount ?? business?.services.length ?? 0)],
+                ["Ținte încărcate", String(currentBusiness?.targetsCount ?? 0)]
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-white/10 pb-3">
                   <dt className="text-zinc-500">{label}</dt>
@@ -123,7 +123,7 @@ export default async function SettingsPage() {
             </dl>
             {ownedBusinesses.length > 1 ? (
               <div className="mt-4 rounded-lg border border-gold-400/20 bg-gold-400/10 p-4 text-sm leading-6 text-gold-200">
-                Exista mai multe business-uri pentru acelasi profil. Aplicatia foloseste cel mai recent business gasit prin owner_profile_id.
+                Există mai multe business-uri pentru acelasi profil. Aplicatia foloseste cel mai recent business gasit prin owner_profile_id.
               </div>
             ) : null}
           </DataCard>

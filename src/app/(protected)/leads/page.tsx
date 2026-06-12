@@ -44,13 +44,13 @@ export default async function LeadsPage() {
     <PageShell
       eyebrow="Lead-uri"
       title="Lead-uri B2B prioritizate"
-      description="Companii si contacte care pot deveni oportunitati comerciale. Lead sources reale vor fi conectate intr-o etapa urmatoare."
+      description="Companii și contacte care pot deveni oportunități comerciale. Lead sources reale vor fi conectate într-o etapă următoare."
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         {isSupabaseConfigured && leads.length === 0 ? (
           <div className="grid gap-3">
-            <EmptyState title="Nu exista lead-uri reale inca" description="Lead-urile reale vor aparea aici dupa import CSV, oportunitati analizate sau contacte salvate." />
+            <EmptyState title="Nu există lead-uri reale încă" description="Lead-urile reale vor apărea aici după import CSV, oportunități analizate sau contacte salvate." />
             <div className="flex flex-wrap gap-2">
               <Button href="/opportunities/analyze">Analizeaza oportunitate</Button>
               <span className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] px-5 text-sm font-semibold text-zinc-500">

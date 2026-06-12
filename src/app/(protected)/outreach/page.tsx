@@ -71,8 +71,8 @@ export default async function OutreachPage() {
         sequences = [
           {
             id: "generated-documents",
-            name: "Documente generate din oportunitati",
-            target: "Oportunitati active",
+            name: "Documente generate din oportunități",
+            target: "Oportunități active",
             status: "draft",
             messages: documentMessages,
             followUps: []
@@ -87,15 +87,15 @@ export default async function OutreachPage() {
     <PageShell
       eyebrow="Outreach"
       title="Secvente, drafturi si follow-up-uri"
-      description="Pregateste comunicarea comerciala fara a trimite emailuri reale. Resend nu este conectat inca."
+      description="Pregătește comunicarea comercială fara a trimite emailuri reale. Resend nu este conectat încă."
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         {isSupabaseConfigured && sequences.length === 0 ? (
           <div className="grid gap-3">
-            <EmptyState title="Nu exista mesaje reale inca" description="Mesajele generate pentru oportunitati vor aparea aici dupa ce creezi emailuri, follow-up-uri sau drafturi de oferta." />
+            <EmptyState title="Nu există mesaje reale încă" description="Mesajele generate pentru oportunități vor apărea aici după ce creezi emailuri, follow-up-uri sau drafturi de ofertă." />
             <div>
-              <Button href="/opportunities">Vezi oportunitati</Button>
+              <Button href="/opportunities">Vezi oportunități</Button>
             </div>
           </div>
         ) : (

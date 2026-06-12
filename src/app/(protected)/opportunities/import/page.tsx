@@ -7,11 +7,11 @@ export default function OpportunityImportPage() {
     <PageShell
       eyebrow="Import"
       title="Import CSV - in curand"
-      description="Zona pregatita pentru importul de lead-uri si oportunitati din fisiere CSV."
+      description="Zona pregătită pentru importul de lead-uri și oportunități din fișiere CSV."
     >
       <DataCard title="Placeholder import CSV">
         <p className="text-sm leading-6 text-zinc-300">
-          Importul CSV nu este activ in aceasta faza. Momentan poti analiza manual oportunitati si poti salva documente,
+          Importul CSV nu este activ în această fază. Momentan poți analiza manual oportunități și poți salva documente,
           follow-up-uri si rapoarte comerciale.
         </p>
         <div className="mt-5">

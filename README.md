@@ -24,7 +24,7 @@ OPENAI_API_KEY=
 RESEND_API_KEY=
 ```
 
-`OPENAI_API_KEY` activeaza analiza si generarea cu OpenAI. `RESEND_API_KEY` este doar placeholder si nu este folosita inca.
+`OPENAI_API_KEY` activeaza analiza si generarea cu OpenAI. `RESEND_API_KEY` este doar placeholder si nu este folosita încă.
 
 ## Supabase setup
 
@@ -95,7 +95,7 @@ Pentru oportunitati reale:
 
 1. Intra in `/opportunities/analyze`.
 2. Completeaza formularul si apasa `Analizeaza oportunitatea`.
-3. Apasa `Salveaza oportunitate`.
+3. Apasa `Salvează oportunitate`.
 4. Aplicatia creeaza un rand real in `opportunities` cu `business_id` egal cu businessul activ si redirectioneaza catre detaliul oportunitatii.
 5. `/opportunities` si `/dashboard` citesc oportunitatile reale cand Supabase este conectat.
 
@@ -173,14 +173,14 @@ Cum testezi analiza AI:
 3. Reporneste serverul.
 4. Mergi la `/opportunities/analyze`.
 5. Completeaza oportunitatea si apasa `Analizeaza cu AI`.
-6. Salveaza preview-ul. Se creeaza rand in `opportunities` si eveniment in `opportunity_events`.
+6. Salvează preview-ul. Se creeaza rand in `opportunities` si eveniment in `opportunity_events`.
 
 Cum testezi generarea de documente:
 
 1. Deschide detaliul unei oportunitati.
 2. Apasa `Genereaza email outreach`, `Genereaza script apel`, `Genereaza draft oferta` sau `Genereaza checklist`.
 3. Documentele se salveaza in `opportunity_documents`.
-4. `Programeaza follow-up` scrie in `opportunity_actions`.
+4. `Programează follow-up` scrie in `opportunity_actions`.
 5. Schimbarile de status scriu in `opportunities` si `opportunity_events`.
 
 Fallback fara OpenAI:

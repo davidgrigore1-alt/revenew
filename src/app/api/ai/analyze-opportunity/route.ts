@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   if (!input.business || !input.title || !input.rawText) {
-    return NextResponse.json({ error: "Titlul, textul oportunitatii si businessul sunt obligatorii." }, { status: 400 });
+    return NextResponse.json({ error: "Titlul, textul oportunității și businessul sunt obligatorii." }, { status: 400 });
   }
 
   const trimmedRawText = input.rawText.length > MAX_RAW_TEXT_LENGTH ? input.rawText.slice(0, MAX_RAW_TEXT_LENGTH) : input.rawText;

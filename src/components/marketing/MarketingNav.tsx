@@ -20,7 +20,7 @@ export function MarketingNav() {
         <Button href="/login" variant="ghost" className="hidden sm:inline-flex">
           Intrare
         </Button>
-        <Button href="/signup">Creeaza cont</Button>
+        <Button href="/signup">Creează cont</Button>
       </div>
     </header>
   );

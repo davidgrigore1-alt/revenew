@@ -10,29 +10,29 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 
 const fields = [
   ["businessName", "Nume business", "Auto Management SRL"],
-  ["legalName", "Denumire legalÄƒ", "Auto Management SRL"],
+  ["legalName", "Denumire legală", "Auto Management SRL"],
   ["cui", "CUI", "RO12345678"],
   ["website", "Website", "automanagement.ro"],
   ["industry", "Industrie", "rent-a-car / servicii auto"],
-  ["city", "OraÈ™", "BucureÈ™ti"],
-  ["county", "JudeÈ›", "Ilfov"],
+  ["city", "Oraș", "București"],
+  ["county", "Județ", "Ilfov"],
   ["averageContractValue", "Valoare medie contract", "6200 EUR"],
-  ["notificationEmail", "Email notificÄƒri", "office@automanagement.ro"]
+  ["notificationEmail", "Email notificări", "office@automanagement.ro"]
 ];
 
 const textAreas = [
-  ["services", "Servicii oferite", "Ã®nchiriere auto pe termen scurt, flote corporate, transfer aeroport"],
-  ["idealCustomers", "ClienÈ›i ideali", "companii de construcÈ›ii, logisticÄƒ, consultanÈ›Äƒ, service-uri auto"],
-  ["targetCities", "OraÈ™e È›intÄƒ", "BucureÈ™ti, Otopeni, Voluntari, Pipera"],
-  ["targetIndustries", "Industrii È›intÄƒ", "construcÈ›ii, logisticÄƒ, evenimente, servicii auto"],
-  ["currentSalesProcess", "Proces actual de vÃ¢nzÄƒri", "Lead-uri din recomandÄƒri, apeluri directe È™i follow-up manual"]
+  ["services", "Servicii oferite", "închiriere auto pe termen scurt, flote corporate, transfer aeroport"],
+  ["idealCustomers", "Clienți ideali", "companii de construcții, logistică, consultanță, service-uri auto"],
+  ["targetCities", "Orașe țintă", "București, Otopeni, Voluntari, Pipera"],
+  ["targetIndustries", "Industrii țintă", "construcții, logistică, evenimente, servicii auto"],
+  ["currentSalesProcess", "Proces actual de vânzări", "Lead-uri din recomandări, apeluri directe și follow-up manual"]
 ];
 
 const fieldHelpers: Record<string, string> = {
   businessName: "Numele afisat in dashboard.",
   legalName: "Numele legal al firmei, util pentru oferte si documente.",
   cui: "Identificator fiscal. Momentan este folosit doar pentru profilul businessului.",
-  averageContractValue: "O estimare aproximativa. Ajuta la prioritizarea oportunitatilor.",
+  averageContractValue: "O estimare aproximativă. Ajută la prioritizarea oportunităților.",
   services: "Scrie serviciile principale. Acestea vor fi folosite pentru scorul de potrivire.",
   idealCustomers: "Exemple de firme sau industrii carora vrei sa le vinzi."
 };
@@ -114,7 +114,7 @@ export function OnboardingForm() {
     setDebug((current) => ({ ...current, currentStep: "auth_check", lastSupabaseError: "" }));
 
     if (isSupabaseConfigured && !debug.sessionExists) {
-      const message = "Nu eÈ™ti autentificat. IntrÄƒ din nou Ã®n cont Ã®nainte sÄƒ salvezi firma.";
+      const message = "Nu ești autentificat. Intră din nou în cont înainte să salvezi firma.";
       setError(message);
       setDebug((current) => ({ ...current, currentStep: "auth_check", lastSupabaseError: message }));
       setLoading(false);
@@ -159,7 +159,7 @@ export function OnboardingForm() {
     <div className="grid gap-6">
       <form onSubmit={handleSubmit} className="grid gap-6">
         <section className="rounded-xl border border-white/10 bg-white/[0.045] p-5">
-          <h2 className="text-lg font-semibold text-white">Profil firmÄƒ</h2>
+          <h2 className="text-lg font-semibold text-white">Profil firmă</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {fields.map(([name, label, placeholder]) => (
               <label key={name} className="block">
@@ -176,7 +176,7 @@ export function OnboardingForm() {
         </section>
 
         <section className="rounded-xl border border-white/10 bg-white/[0.045] p-5">
-          <h2 className="text-lg font-semibold text-white">Oferta È™i piaÈ›a È›intÄƒ</h2>
+          <h2 className="text-lg font-semibold text-white">Oferta și piața țintă</h2>
           <div className="mt-5 grid gap-4">
             {textAreas.map(([name, label, placeholder]) => (
               <label key={name} className="block">
@@ -194,7 +194,7 @@ export function OnboardingForm() {
         </section>
 
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-          <Button type="submit">{loading ? "Se salveazÄƒ..." : "SalveazÄƒ È™i intrÄƒ Ã®n dashboard"}</Button>
+          <Button type="submit">{loading ? "Se salvează..." : "Salvează și intră în dashboard"}</Button>
           {saved ? <p className="text-sm text-mint-400">{successMessage || "Date salvate. Te redirectionam..."}</p> : null}
           {error ? <p className="text-sm text-red-300">{error}</p> : null}
         </div>
@@ -205,7 +205,7 @@ export function OnboardingForm() {
         <p className="font-semibold text-zinc-300">Debug dezvoltare onboarding</p>
         <div className="mt-3 grid gap-1 sm:grid-cols-2">
           <p>Supabase conectat: {isSupabaseConfigured ? "da" : "nu"}</p>
-          <p>Sesiune existentÄƒ: {debug.sessionExists ? "da" : "nu"}</p>
+          <p>Sesiune existentă: {debug.sessionExists ? "da" : "nu"}</p>
           <p>User ID: {debug.userId || "-"}</p>
           <p>Email: {debug.userEmail || "-"}</p>
           <p>Profile ID: {debug.profileId || "-"}</p>
@@ -213,7 +213,7 @@ export function OnboardingForm() {
           <p className="sm:col-span-2">Pas curent: {debug.currentStep}</p>
           <p className="sm:col-span-2">Ultima eroare Supabase: {debug.lastSupabaseError || error || "-"}</p>
           <pre className="mt-2 max-h-52 overflow-auto rounded bg-ink-950/70 p-3 sm:col-span-2">
-            {debug.lastAttemptedPayload || "Payload neÃ®ncercat Ã®ncÄƒ."}
+            {debug.lastAttemptedPayload || "Payload neîncercat încă."}
           </pre>
         </div>
       </section>

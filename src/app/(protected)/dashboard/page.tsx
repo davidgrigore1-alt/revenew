@@ -60,7 +60,7 @@ export default async function DashboardPage() {
     <PageShell
       eyebrow="Dashboard"
       title={`Bani de urmarit pentru ${business.name}`}
-      description={`${business.industry}, ${business.city}. Aici vezi unde poate firma sa castige bani saptamana aceasta.`}
+      description={`${business.industry}, ${business.city}. Aici vezi unde poate firma să câștige bani săptămâna aceasta.`}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
@@ -68,28 +68,28 @@ export default async function DashboardPage() {
           <MetricCard
             label="Pipeline estimat"
             value={formatCurrency(pipelineValue)}
-            detail="Valoare maxima estimata din oportunitati reale active."
+            detail="Valoare maximă estimată din oportunități reale active."
             tone="mint"
-            info="Valoarea totala estimata a oportunitatilor active. Nu este venit garantat, ci potential comercial."
+            info="Valoarea totală estimată a oportunităților active. Nu este venit garantat, ci potențial comercial."
           />
           <MetricCard
-            label="Oportunitati noi"
+            label="Oportunități noi"
             value={`${opportunities.length}`}
-            detail="Semnale comerciale incarcate pentru businessul activ."
-            info="Semnale comerciale care au fost introduse sau detectate, dar nu au fost inca validate complet."
+            detail="Semnale comerciale încărcate pentru businessul activ."
+            info="Semnale comerciale care au fost introduse sau detectate, dar nu au fost încă validate complet."
           />
           <MetricCard
             label="High-fit"
             value={`${highFit.length}`}
-            detail="Oportunitati cu scor de potrivire peste 85."
+            detail="Oportunități cu scor de potrivire peste 85."
             tone="gold"
-            info="Oportunitati cu potrivire mare intre nevoia clientului si serviciile firmei tale."
+            info="Oportunități cu potrivire mare intre nevoia clientului si serviciile firmei tale."
           />
           <MetricCard
             label="Termene urgente"
             value={`${urgentDeadlines.length}`}
-            detail="Oportunitati cu scor de urgenta ridicat sau deadline apropiat."
-            info="Oportunitati cu deadline apropiat sau actiuni care trebuie facute rapid."
+            detail="Oportunități cu scor de urgenta ridicat sau deadline apropiat."
+            info="Oportunități cu deadline apropiat sau acțiuni care trebuie făcute rapid."
           />
         </div>
 
@@ -104,26 +104,26 @@ export default async function DashboardPage() {
           <MetricCard
             label="Follow-up"
             value={`${followUps.length}`}
-            detail="Oportunitati unde urmatorul mesaj conteaza."
+            detail="Oportunități unde urmatorul mesaj conteaza."
             tone="gold"
-            info="Oportunitati unde urmatorul mesaj poate decide daca lead-ul avanseaza sau se pierde."
+            info="Oportunități unde urmatorul mesaj poate decide daca lead-ul avanseaza sau se pierde."
           />
           <MetricCard
             label="Castigate"
             value={`${won.length}`}
-            detail="Oportunitati marcate castigate."
-            info="Oportunitati marcate ca transformate in contract sau rezultat comercial pozitiv."
+            detail="Oportunități marcate câștigate."
+            info="Oportunități marcate ca transformate in contract sau rezultat comercial pozitiv."
           />
           <MetricCard
             label="Pierdute"
             value={`${lost.length}`}
-            detail="Oportunitati marcate pierdute."
-            info="Oportunitati inchise fara rezultat."
+            detail="Oportunități marcate pierdute."
+            info="Oportunități inchise fara rezultat."
           />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <DataCard title="Top oportunitati recomandate" description="Cele mai bune semnale dupa valoare, potrivire si urgenta.">
+          <DataCard title="Top oportunități recomandate" description="Cele mai bune semnale după valoare, potrivire și urgență.">
             <div className="grid gap-4">
               {opportunities.length > 0 ? (
                 opportunities.slice(0, 3).map((opportunity) => (
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
               ) : (
                 <div className="grid gap-3">
                   <EmptyState
-                    title="Nu ai oportunitati reale inca."
+                    title="Nu ai oportunități reale încă."
                     description="Adauga primul semnal comercial sau prima oportunitate pentru a incepe sa urmaresti pipeline-ul si lead-urile care pot fi recuperate."
                   />
                   <div>
@@ -156,13 +156,13 @@ export default async function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <EmptyState title="Nicio actiune azi" description="Actiunile apar dupa ce transformi semnale in oportunitati si programezi follow-up-uri pentru lead-urile care merita recuperate." />
+                <EmptyState title="Nicio acțiune azi" description="Acțiunile apar după ce transformi semnale în oportunități și programezi follow-up-uri pentru lead-urile care merită recuperate." />
               )}
             </div>
           </DataCard>
         </div>
 
-        <DataCard title="Inbox Comercial" description="Semnale comerciale noi care pot deveni oportunitati urmarite.">
+        <DataCard title="Inbox Comercial" description="Semnale comerciale noi care pot deveni oportunități urmărite.">
           {inboxSummary.tableReady ? (
             <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr_auto] md:items-center">
               <div className="grid grid-cols-2 gap-3">

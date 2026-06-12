@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MoneyHunter AI",
-  description: "Agentul AI care gaseste bani pentru firma ta."
+  description: "Agentul AI care găsește bani pentru firma ta."
 };
 
 export default function RootLayout({

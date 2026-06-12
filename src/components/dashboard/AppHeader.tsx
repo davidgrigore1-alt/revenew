@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 
 export function AppHeader({ businessName, isDemo = false }: { businessName?: string; isDemo?: boolean }) {
-  const displayName = businessName ? (isDemo ? `Demo ${businessName}` : businessName) : "Se incarca workspace-ul...";
+  const displayName = businessName ? (isDemo ? `Demo ${businessName}` : businessName) : "Se încărca workspace-ul...";
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/75 backdrop-blur">
@@ -16,7 +16,7 @@ export function AppHeader({ businessName, isDemo = false }: { businessName?: str
         </div>
         <div className="flex items-center gap-3">
           <Button href="/opportunities" variant="secondary" className="hidden sm:inline-flex">
-            Vezi oportunitati
+            Vezi oportunități
           </Button>
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold-400/12 text-sm font-semibold text-gold-400">
             {(businessName ?? "M").slice(0, 1).toUpperCase()}

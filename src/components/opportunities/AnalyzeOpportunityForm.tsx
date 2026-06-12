@@ -149,7 +149,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
     setLoading(openAIConfigured ? "advanced" : "standard");
 
     if (!title || !rawSourceText) {
-      setError("Titlul si textul oportunitatii sunt obligatorii.");
+      setError("Titlul și textul oportunității sunt obligatorii.");
       setLoading("");
       return;
     }
@@ -217,7 +217,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
     formData.set("analysis", JSON.stringify(analysis));
     const result = await saveAnalyzedOpportunity(formData);
     if (result && "ok" in result && !result.ok) {
-      setError(result.error ?? "Salvarea oportunitatii a esuat.");
+      setError(result.error ?? "Salvarea oportunității a eșuat.");
       setLoading("");
     }
   }
@@ -257,7 +257,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
           <div className="grid gap-4 md:grid-cols-2">
             <input name="sourceUrl" placeholder="URL sursa" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
             <input name="deadline" type="date" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
-            <input name="city" placeholder="Oras" defaultValue={business.city || "Bucuresti"} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="city" placeholder="Oraș" defaultValue={business.city || "București"} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
             <input name="county" placeholder="Judet" defaultValue={business.county || "Ilfov"} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
             <input name="estimatedValue" type="number" placeholder="Valoare estimata EUR" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60 md:col-span-2" />
           </div>
@@ -299,13 +299,13 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
               disabled={loading === "save"}
               className="min-h-11 rounded-lg bg-mint-500 px-5 text-sm font-semibold text-ink-950 transition hover:bg-mint-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading === "save" ? "Se salveaza..." : "Salveaza oportunitate"}
+              {loading === "save" ? "Se salvează..." : "Salvează oportunitate"}
             </button>
             {saved ? <StatusNotice tone="success">Oportunitate salvata pentru sesiunea curenta.</StatusNotice> : null}
           </>
         ) : (
           <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-sm leading-6 text-zinc-400">
-            Completeaza formularul ca sa vezi preview-ul oportunitatii analizate.
+            Completează formularul ca să vezi preview-ul oportunității analizate.
           </div>
         )}
       </div>

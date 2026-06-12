@@ -40,18 +40,18 @@ Business:
 - Nume: ${business.name}
 - Denumire legala: ${business.legalName || "n/a"}
 - Industrie: ${business.industry || "n/a"}
-- Oras/Judet: ${business.city || "n/a"} / ${business.county || "n/a"}
+- Oraș/Judet: ${business.city || "n/a"} / ${business.county || "n/a"}
 - Servicii: ${business.services.join(", ") || "n/a"}
 - Clienti tinta: ${business.targetCustomers.join(", ") || "n/a"}
 - Industrii tinta: ${business.targetIndustries.join(", ") || "n/a"}
-- Orase tinta: ${business.targetCities.join(", ") || "n/a"}
+- Orașe tinta: ${business.targetCities.join(", ") || "n/a"}
 - Valoare medie contract: ${business.averageContractValue || 0} EUR
 
 Oportunitate introdusa:
 - Titlu: ${input.title}
 - Tip sursa: ${input.sourceType}
 - URL sursa: ${input.sourceUrl || "n/a"}
-- Oras/Judet: ${input.city || "n/a"} / ${input.county || "n/a"}
+- Oraș/Judet: ${input.city || "n/a"} / ${input.county || "n/a"}
 - Valoare estimata de utilizator: ${input.estimatedValue ?? "n/a"}
 - Deadline: ${input.deadline || "n/a"}
 - Text brut:
@@ -104,7 +104,7 @@ Business:
 - Nume: ${business.name}
 - Denumire legala: ${business.legalName || "n/a"}
 - Industrie: ${business.industry || "n/a"}
-- Oras/Judet: ${business.city || "n/a"} / ${business.county || "n/a"}
+- Oraș/Judet: ${business.city || "n/a"} / ${business.county || "n/a"}
 - Servicii: ${business.services.join(", ") || "n/a"}
 - Clienti tinta: ${business.targetCustomers.join(", ") || "n/a"}
 
@@ -113,7 +113,7 @@ Oportunitate:
 - Tip: ${opportunity.type}
 - Valoare estimata: ${opportunity.estimatedValueLow} - ${opportunity.estimatedValueHigh} EUR
 - Deadline: ${opportunity.deadline || "n/a"}
-- Oras/Judet: ${opportunity.city || "n/a"} / ${opportunity.county || "n/a"}
+- Oraș/Judet: ${opportunity.city || "n/a"} / ${opportunity.county || "n/a"}
 - Sumar: ${opportunity.summary}
 - Recomandare: ${opportunity.recommendedAction}
 - Text sursa: ${opportunity.rawSourceText}

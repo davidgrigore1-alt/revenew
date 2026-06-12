@@ -12,19 +12,19 @@ export default async function OpportunitiesPage() {
 
   return (
     <PageShell
-      eyebrow="Oportunitati"
-      title="Oportunitati detectate"
-      description={`Filtreaza semnalele B2B, granturile, contractele si follow-up-urile care pot aduce venit pentru ${business?.name ?? "firma ta"}.`}
+      eyebrow="Oportunități"
+      title="Oportunități detectate"
+      description={`Filtrează semnalele B2B, granturile, contractele si follow-up-urile care pot aduce venit pentru ${business?.name ?? "firma ta"}.`}
       actions={<Button href="/opportunities/analyze">{firstOpportunityCta ? "Analizeaza prima oportunitate" : "Analizeaza oportunitate noua"}</Button>}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <OpportunitiesExplorer
           opportunities={opportunities}
-          emptyTitle={isSupabaseConfigured ? "Nu ai oportunitati reale inca." : undefined}
+          emptyTitle={isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}
           emptyDescription={
             isSupabaseConfigured
-              ? "Oportunitatile apar manual sau prin convertirea semnalelor din Inbox Comercial. Incepe cu un lead pierdut, o cerere veche sau un follow-up ratat."
+              ? "Oportunitățile apar manual sau prin convertirea semnalelor din Inbox Comercial. Începe cu un lead pierdut, o cerere veche sau un follow-up ratat."
               : undefined
           }
           emptyCtaLabel={isSupabaseConfigured ? "Deschide Inbox Comercial" : undefined}

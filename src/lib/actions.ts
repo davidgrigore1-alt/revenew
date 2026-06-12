@@ -47,7 +47,7 @@ export async function saveOnboarding(formData: FormData) {
   }
 
   if (!current.authUser || !current.profile?.id) {
-    return { ok: false, step: "auth_check", error: "Nu esti autentificat. Intra din nou in cont inainte sa salvezi firma." };
+    return { ok: false, step: "auth_check", error: "Nu ești autentificat. Intră din nou în cont înainte să salvezi firma." };
   }
 
   const { data: existingBusiness, error: existingBusinessError } = await supabase
@@ -114,7 +114,7 @@ export async function saveOnboarding(formData: FormData) {
       profileId: current.profile.id,
       ownerProfileId: current.profile.id,
       attemptedPayload: businessPayload,
-      error: `Firma nu a putut fi salvata: ${businessError?.message ?? "insert fara rezultat"}`
+      error: `Firma nu a putut fi salvată: ${businessError?.message ?? "insert fara rezultat"}`
     };
   }
 
@@ -192,7 +192,7 @@ export async function saveAnalyzedOpportunity(formData: FormData) {
   const supabase = createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !business) {
-    return { ok: false, error: "Nu am gasit firma curenta." };
+    return { ok: false, error: "Nu am găsit firma curentă." };
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -206,7 +206,7 @@ export async function saveAnalyzedOpportunity(formData: FormData) {
   const analysisJson = String(formData.get("analysis") || "");
 
   if (!title || !rawSourceText) {
-    return { ok: false, error: "Titlul si textul oportunitatii sunt obligatorii." };
+    return { ok: false, error: "Titlul și textul oportunității sunt obligatorii." };
   }
 
   let analysis: ValidatedOpportunityAnalysis | null = null;
@@ -245,7 +245,7 @@ export async function saveAnalyzedOpportunity(formData: FormData) {
       summary,
       relevance: analysis ? [analysis.why_relevant] : ["Oportunitatea a fost evaluata local."],
       risks: analysis?.risks ?? ["Analiza trebuie validata manual inainte de contact."],
-      recommended_action: analysis?.recommended_next_action ?? "Revizuieste sursa si pregateste un prim mesaj de contact.",
+      recommended_action: analysis?.recommended_next_action ?? "Revizuiește sursa și pregătește un prim mesaj de contact.",
       raw_source_text: rawSourceText,
       source_url: sourceUrl || null,
       contact_name: analysis?.contact_name ?? null,
@@ -260,7 +260,7 @@ export async function saveAnalyzedOpportunity(formData: FormData) {
 
   if (error || !data) {
     console.error("Supabase opportunity insert error", error);
-    return { ok: false, error: `Salvarea oportunitatii a esuat: ${error?.message ?? "insert fara rezultat"}` };
+    return { ok: false, error: `Salvarea oportunității a eșuat: ${error?.message ?? "insert fara rezultat"}` };
   }
 
   const eventType = analysisMode === "ai" ? "ai_analysis_saved" : "local_analysis_saved";
@@ -296,7 +296,7 @@ export async function persistGeneratedDocument(opportunityId: string, type: Oppo
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !opportunity || !business) {
-    return { ok: false, error: "Nu am putut incarca oportunitatea." };
+    return { ok: false, error: "Nu am putut încărca oportunitatea." };
   }
 
   const [fallbackTitle, fallbackBody] = generatedDocument(opportunity, business, type);
@@ -451,7 +451,7 @@ export async function persistFollowUp(
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !opportunity || !business) {
-    return { ok: false, error: "Nu am putut incarca oportunitatea." };
+    return { ok: false, error: "Nu am putut încărca oportunitatea." };
   }
 
   const description = options?.description ?? generated?.content ?? generateFollowUpMessage(opportunity, business);

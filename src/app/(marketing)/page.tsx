@@ -3,16 +3,16 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 
 const impact = [
-  ["Recupereaza lead-uri pierdute", "Aduna cereri din inbox, formulare, apeluri, WhatsApp si liste vechi intr-un Inbox Comercial."],
-  ["Prioritizeaza banii", "Transforma semnalele importante in oportunitati cu valoare estimata, urgenta si urmatorul pas."],
-  ["Urmareste follow-up-ul", "Pregateste email, oferta, apel sau follow-up ca echipa sa nu piarda oportunitati calde."]
+  ["Recuperează lead-uri pierdute", "Adună cereri din inbox, formulare, apeluri, WhatsApp și liste vechi într-un Inbox Comercial."],
+  ["Prioritizează banii", "Transformă semnalele importante în oportunități cu valoare estimată, urgență și următorul pas."],
+  ["Urmărește follow-up-ul", "Pregătește email, ofertă, apel sau follow-up ca echipa să nu piardă oportunități calde."]
 ];
 
 const steps = [
-  ["1", "Configurezi firma", "Adaugi serviciile, clientii ideali, locatiile si valoarea medie a contractelor."],
-  ["2", "Introduci sau importi oportunitati", "Poti incepe manual cu un lead, o licitatie, un client vechi sau o notita comerciala."],
-  ["3", "Primesti scoruri si actiuni", "Vezi Fit, Urgenta, Bani, Incredere si urmatorul pas recomandat."],
-  ["4", "Urmaresti follow-up-ul", "Pastrezi oportunitatea in pipeline pana cand devine castigata, pierduta sau ignorata."]
+  ["1", "Configurezi firma", "Adaugi serviciile, clienții ideali, locațiile și valoarea medie a contractelor."],
+  ["2", "Introduci sau imporți oportunități", "Poți începe manual cu un lead, o licitație, un client vechi sau o notiță comercială."],
+  ["3", "Primești scoruri și acțiuni", "Vezi Fit, Urgență, Bani, Încredere și următorul pas recomandat."],
+  ["4", "Urmărești follow-up-ul", "Păstrezi oportunitatea în pipeline până când devine câștigată, pierdută sau ignorată."]
 ];
 
 const audiences = ["rent-a-car", "service-uri auto", "constructii", "logistica", "curatenie", "paza", "IT services", "agentii B2B"];
@@ -30,13 +30,13 @@ export default function LandingPage() {
             MoneyHunter AI
           </h1>
           <p className="mt-6 max-w-2xl text-xl leading-8 text-zinc-300">
-            Sistem AI care gaseste si recupereaza oportunitatile comerciale pierdute din inbox, formulare, apeluri si conversatii.
+            Sistem AI care găsește și recuperează oportunitățile comerciale pierdute din inbox, formulare, apeluri si conversatii.
           </p>
           <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-400">
-            Gasim lead-urile pierdute si iti aratam zilnic pe cine trebuie sa contactezi ca sa faci bani.
+            Găsim lead-urile pierdute și îți arătăm zilnic pe cine trebuie să contactezi ca să faci bani.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button href="/signup">Creeaza cont</Button>
+            <Button href="/signup">Creează cont</Button>
             <Button href="/dashboard" variant="secondary">
               Vezi dashboard demo
             </Button>
@@ -65,21 +65,21 @@ export default function LandingPage() {
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">Nu pierde bani din lead-uri neurmarite</h2>
         </div>
         <p className="text-base leading-8 text-zinc-300">
-          Majoritatea firmelor nu pierd bani pentru ca nu au cereri. Pierd bani pentru ca nu raspund la timp, nu urmaresc lead-urile si nu stiu ce oportunitati merita prioritate. MoneyHunter AI centralizeaza aceste semnale si le transforma in actiuni comerciale clare.
+          Majoritatea firmelor nu pierd bani pentru că nu au cereri. Pierd bani pentru că nu răspund la timp, nu urmăresc lead-urile și nu știu ce oportunități merită prioritate. MoneyHunter AI centralizeaza aceste semnale si le transformă în acțiuni comerciale clare.
         </p>
       </section>
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-5 py-10 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-mint-400">Inbox comercial</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">De la cereri pierdute la oportunitati urmarite</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">De la cereri pierdute la oportunități urmărite</h2>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.045] p-6">
           <p className="text-base leading-8 text-zinc-300">
-            Firmele primesc cereri din multe locuri: email, telefon, formulare, recomandari sau liste de prospecti. MoneyHunter AI le centralizeaza intr-un Inbox Comercial, le transforma in oportunitati si pregateste urmatoarea actiune.
+            Firmele primesc cereri din multe locuri: email, telefon, formulare, recomandări sau liste de prospecți. MoneyHunter AI le centralizează într-un Inbox Comercial, le transformă în oportunități și pregătește următoarea acțiune.
           </p>
           <p className="mt-4 text-sm leading-7 text-zinc-400">
-            In MVP, introducerea semnalelor comerciale este manuala. Integrarile cu email, telefonie, formulare sau importuri pot fi adaugate progresiv, fara promisiuni despre automatizari care nu sunt active inca.
+            In MVP, introducerea semnalelor comerciale este manuala. Integrarile cu email, telefonie, formulare sau importuri pot fi adaugate progresiv, fara promisiuni despre automatizari care nu sunt active încă.
           </p>
         </div>
       </section>
@@ -116,7 +116,7 @@ export default function LandingPage() {
         <article className="rounded-xl border border-white/10 bg-white/[0.045] p-6">
           <h2 className="text-xl font-semibold text-white">Ce primeste echipa?</h2>
           <p className="mt-4 text-sm leading-7 text-zinc-300">
-            Oportunitati prioritizate, documente comerciale pregatite pentru revizuire, follow-up-uri urmarite si rapoarte clare pentru decizii saptamanale.
+            Oportunități prioritizate, documente comerciale pregatite pentru revizuire, follow-up-uri urmarite si rapoarte clare pentru decizii saptamanale.
           </p>
         </article>
       </section>

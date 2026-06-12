@@ -37,6 +37,10 @@ export async function getCurrentAuthUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
+    if (error.message.toLowerCase().includes("auth session missing")) {
+      return null;
+    }
+
     throw new Error(`Auth/user error: ${error.message}`);
   }
 

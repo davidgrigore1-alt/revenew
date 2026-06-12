@@ -23,7 +23,7 @@ export function OutreachBoard({ sequences }: { sequences: OutreachSequence[] }) 
   const followUps = useMemo(() => sequences.flatMap((sequence) => sequence.followUps.map((followUp) => ({ ...followUp, sequence: sequence.name }))), [sequences]);
 
   const visibleMessages = messages.filter((message) => message.status === tab);
-  const actions = ["Copiaza email", "Marcheaza trimis", "Programeaza follow-up"];
+  const actions = ["Copiază email", "Marchează trimis", "Programează follow-up"];
 
   return (
     <div className="grid gap-5">
