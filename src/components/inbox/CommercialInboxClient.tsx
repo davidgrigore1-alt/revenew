@@ -332,7 +332,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
 
       <DataCard title="Punct de intrare comercial">
         <p className="text-sm leading-6 text-zinc-300">
-          Acesta este punctul de intrare pentru cererile comerciale. Un semnal poate fi ignorat, arhivat sau transformat intr-o oportunitate urmarita in MoneyHunter.
+          Acesta este punctul de intrare pentru cererile comerciale. Un semnal poate fi ignorat, arhivat sau transformat intr-o oportunitate urmarita in ReveNew.
         </p>
       </DataCard>
 
@@ -345,7 +345,7 @@ export function CommercialInboxClient({ initialSignals, tableReady, setupMessage
 
       <DataCard
         title="Adauga semnal"
-        description="Nu trebuie completate toate campurile. MoneyHunter poate lucra si cu o nota scurta."
+        description="Nu trebuie completate toate campurile. ReveNew poate lucra si cu o nota scurta."
         action={
           <div className="flex flex-wrap gap-2">
             <Button type="button" onClick={() => setShowForm((value) => !value)} className="px-4">

@@ -1,0 +1,78 @@
+{
+  "completeness": "complete",
+  "deferred": [],
+  "documentType": "codex-security.coverage",
+  "excludePaths": [],
+  "explicitExclusions": [],
+  "includePaths": [
+    "."
+  ],
+  "inventoryStrategy": "repository",
+  "mode": "repository",
+  "openQuestions": [
+    {
+      "followUpPrompt": "Verify authenticated grants on public.business_members and EXECUTE grants on reserve_revenew_usage, settle_revenew_usage, and release_revenew_usage for revision e346108c.",
+      "question": "Confirm live Supabase table grants and function execute privileges for the SQL findings."
+    }
+  ],
+  "scanId": "6116cd37-a13f-4683-9027-9d8806528264",
+  "schemaVersion": "1.0",
+  "surfaces": [
+    {
+      "disposition": "reported",
+      "id": "surface_rls_business_members",
+      "label": "Business membership RLS",
+      "notes": "Promoted to CS-SQL-001.",
+      "receiptRefs": [],
+      "riskArea": "Authorization"
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_usage_rpc",
+      "label": "Usage metering RPCs",
+      "notes": "Promoted to CS-SQL-002.",
+      "receiptRefs": [],
+      "riskArea": "Privileged RPC"
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_ai_usage",
+      "label": "AI usage metering",
+      "notes": "Promoted to CAND-AI-USAGE-001.",
+      "receiptRefs": [],
+      "riskArea": "Quota accounting"
+    },
+    {
+      "disposition": "reported",
+      "id": "surface_admin_csv",
+      "label": "Admin CSV export",
+      "notes": "Promoted to CAND-CSV-001.",
+      "receiptRefs": [],
+      "riskArea": "CSV export"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_auth_redirects",
+      "label": "Auth, redirects, platform roles",
+      "notes": "No reportable issue found.",
+      "receiptRefs": [],
+      "riskArea": "Authn/authz"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "surface_tenant_actions",
+      "label": "Server actions and tenant helpers",
+      "notes": "Current business/profile are rederived server-side.",
+      "receiptRefs": [],
+      "riskArea": "BOLA"
+    },
+    {
+      "disposition": "not_applicable",
+      "id": "surface_generated_build",
+      "label": "Generated Next.js build output",
+      "notes": "Derived from source, not authoritative.",
+      "receiptRefs": [],
+      "riskArea": "Generated artifacts"
+    }
+  ]
+}

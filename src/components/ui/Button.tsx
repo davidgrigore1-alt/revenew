@@ -12,9 +12,9 @@ type ButtonProps = {
 };
 
 const variants = {
-  primary: "bg-mint-500 text-ink-950 hover:bg-mint-400 shadow-glow",
-  secondary: "border border-white/12 bg-white/[0.06] text-white hover:bg-white/[0.1]",
-  ghost: "text-zinc-300 hover:bg-white/[0.07] hover:text-white"
+  primary: "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-sm hover:brightness-105",
+  secondary: "border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--foreground))] hover:bg-[rgb(var(--muted))]",
+  ghost: "text-[rgb(var(--muted-foreground))] hover:bg-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
 };
 
 export function Button({
@@ -27,7 +27,7 @@ export function Button({
   disabled = false
 }: ButtonProps) {
   const classes = clsx(
-    "inline-flex min-h-11 items-center justify-center rounded-lg px-5 text-sm font-semibold transition",
+    "focus-ring inline-flex min-h-11 items-center justify-center rounded-lg px-5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
     variants[variant],
     className
   );

@@ -9,6 +9,7 @@ import { StatusNotice } from "@/components/ui/StatusNotice";
 import { saveAnalyzedOpportunity } from "@/lib/actions";
 import { scoreOpportunity } from "@/lib/scoring";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { cleanCommercialLongText, cleanCommercialText } from "@/lib/text/signal-quality";
 import type { Business, Opportunity, OpportunityType } from "@/lib/types";
 import type { ValidatedOpportunityAnalysis } from "@/lib/openai/validation";
 
@@ -46,7 +47,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
       title: result.title,
       type: result.type,
       status: "reviewed",
-      source: result.mode === "ai" ? "Draft asistat" : "Draft pregatit",
+      source: result.mode === "ai" ? "Draft asistat" : "Draft standard",
       sourceUrl: sourceUrl || undefined,
       estimatedValueLow: result.estimated_value_low,
       estimatedValueHigh: result.estimated_value_high,
@@ -76,9 +77,9 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
         {
           id: "manual-event-1",
           type: "analyzed",
-          label: result.mode === "ai" ? "Analiza asistata" : "Analiza standard",
+          label: result.mode === "ai" ? "Analiză asistată" : "Analiză standard",
           date: new Date().toISOString(),
-          description: "Sistemul a pregatit o analiza structurata pentru validare comerciala."
+          description: "Sistemul a pregătit o analiză structurată pentru validare comercială."
         }
       ],
       documents: [],
@@ -87,14 +88,14 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
   }
 
   function buildStandardAnalysis(form: FormData): ValidatedOpportunityAnalysis {
-    const title = String(form.get("title") || "Oportunitate manuala");
-    const rawText = String(form.get("rawSourceText") || "");
+    const title = cleanCommercialText(String(form.get("title") || "Oportunitate manuală"), "Oportunitate manuală");
+    const rawText = cleanCommercialLongText(String(form.get("rawSourceText") || ""), "Textul sursă trebuie completat cu detalii comerciale utile.");
     const city = String(form.get("city") || business.city);
     const county = String(form.get("county") || business.county);
     const estimatedValue = Number(form.get("estimatedValue") || business.averageContractValue || 0);
     const deadline = String(form.get("deadline") || "");
     const type = String(form.get("type") || "manual") as OpportunityType;
-    const summary = `Analiza standard: ${title} pare relevanta pentru ${business.name}.`;
+    const summary = `Analiză standard: ${title} merită validată comercial pentru ${business.name}.`;
     const scores = scoreOpportunity({ title, summary, rawSourceText: rawText, city, county, deadline, estimatedValueHigh: estimatedValue }, business);
 
     return {
@@ -115,9 +116,9 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
       contact_email: null,
       contact_phone: null,
       ai_summary: summary,
-      why_relevant: "Oportunitatea se potriveste cu profilul firmei si merita validata comercial.",
-      risks: ["Analiza trebuie validata manual inainte de contact."],
-      recommended_next_action: "Verifica sursa si pregateste un prim mesaj de contact.",
+      why_relevant: "Oportunitatea se potrivește cu profilul firmei și merită validată comercial.",
+      risks: ["Datele sursă trebuie validate manual înainte de contact."],
+      recommended_next_action: "Verifică sursa, confirmă persoana responsabilă și pregătește un prim mesaj de contact.",
       suggested_documents: ["outreach_email", "call_script"]
     };
   }
@@ -131,7 +132,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
     setPreview(toOpportunity(standard, String(form.get("rawSourceText") || ""), String(form.get("sourceUrl") || "")));
     setError("");
     setStandardAnalysisAvailable(false);
-    setWarning("Analiza standard este pregatita pentru revizuire.");
+    setWarning("Analiza standard este pregătită pentru revizuire.");
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -158,7 +159,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
       const standard = buildStandardAnalysis(form);
       setAnalysis(standard);
       setPreview(toOpportunity(standard, rawSourceText, sourceUrl));
-      setWarning("Analiza standard este pregatita pentru revizuire.");
+      setWarning("Analiza standard este pregătită pentru revizuire.");
       setLoading("");
       return;
     }
@@ -168,7 +169,6 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          business,
           title,
           sourceType: String(form.get("type") || "manual"),
           rawText: rawSourceText,
@@ -182,7 +182,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
       const result = await response.json();
       if (!response.ok) {
         console.error("AI analysis API error", result);
-        setError("Analiza avansata nu a putut fi finalizata. Poti continua cu analiza standard.");
+        setError("Analiza avansată nu a putut fi finalizată. Poți continua cu analiza standard.");
         setStandardAnalysisAvailable(Boolean(result.canUseLocalFallback || result.code === "insufficient_quota"));
         setLoading("");
         return;
@@ -193,7 +193,7 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
       setWarning(result.warning ?? "");
     } catch (apiError) {
       console.error("AI analysis client error", apiError);
-      setError("Analiza avansata nu a putut fi finalizata. Poti continua cu analiza standard.");
+      setError("Analiza avansată nu a putut fi finalizată. Poți continua cu analiza standard.");
       setStandardAnalysisAvailable(true);
     } finally {
       setLoading("");
@@ -223,26 +223,26 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-      <form onSubmit={handleSubmit} className="rounded-xl border border-white/10 bg-white/[0.045] p-5">
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      <form onSubmit={handleSubmit} className="min-w-0 rounded-xl border border-white/10 bg-white/[0.045] p-5">
         <div className="grid gap-4">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-zinc-300">
-              Analiza oportunitate
+              Analiză oportunitate
             </span>
             {analysis ? (
               <span className="rounded-lg border border-mint-400/20 bg-mint-400/10 px-3 py-1 text-xs font-semibold text-mint-400">
-                {analysis.mode === "ai" ? "Draft asistat" : "Draft pregatit"}
+                {analysis.mode === "ai" ? "Draft asistat" : "Draft standard"}
               </span>
             ) : null}
           </div>
-          <label className="block">
+          <label className="block min-w-0">
             <span className="text-sm font-medium text-zinc-300">Titlu oportunitate</span>
-            <input name="title" required className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="title" required className="mt-2 h-11 w-full min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
           </label>
-          <label className="block">
-            <span className="text-sm font-medium text-zinc-300">Tip sursa</span>
-            <select name="type" className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60">
+          <label className="block min-w-0">
+            <span className="text-sm font-medium text-zinc-300">Tip sursă</span>
+            <select name="type" className="mt-2 h-11 w-full min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60">
               {sourceTypes.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -250,32 +250,32 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
               ))}
             </select>
           </label>
-          <label className="block">
+          <label className="block min-w-0">
             <span className="text-sm font-medium text-zinc-300">Text brut oportunitate</span>
-            <textarea name="rawSourceText" required rows={7} className="mt-2 w-full rounded-lg border border-white/10 bg-ink-900/80 px-4 py-3 text-white outline-none focus:border-mint-400/60" />
+            <textarea name="rawSourceText" required rows={7} className="mt-2 w-full min-w-0 resize-y rounded-lg border border-white/10 bg-ink-900/80 px-4 py-3 text-white outline-none focus:border-mint-400/60" />
           </label>
-          <div className="grid gap-4 md:grid-cols-2">
-            <input name="sourceUrl" placeholder="URL sursa" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
-            <input name="deadline" type="date" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
-            <input name="city" placeholder="Oraș" defaultValue={business.city || "București"} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
-            <input name="county" placeholder="Judet" defaultValue={business.county || "Ilfov"} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
-            <input name="estimatedValue" type="number" placeholder="Valoare estimata EUR" className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60 md:col-span-2" />
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <input name="sourceUrl" placeholder="URL sursă" className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="deadline" type="date" className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="city" placeholder="Oraș" defaultValue={business.city || "București"} className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="county" placeholder="Județ" defaultValue={business.county || "Ilfov"} className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60" />
+            <input name="estimatedValue" type="number" placeholder="Valoare estimată EUR" className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60 md:col-span-2" />
           </div>
           <div className="grid gap-2">
-            <Button type="submit">{loading === "advanced" ? "Se analizeaza oportunitatea..." : "Analizeaza oportunitatea"}</Button>
-            <p className="text-xs leading-5 text-zinc-500">Rezultatul poate fi revizuit inainte de salvare.</p>
+            <Button type="submit">{loading === "advanced" ? "Se analizează oportunitatea..." : "Analizează oportunitatea"}</Button>
+            <p className="text-xs leading-5 text-zinc-500">Rezultatul poate fi revizuit înainte de salvare.</p>
           </div>
         </div>
       </form>
 
-      <div className="grid content-start gap-4">
+      <div className="grid min-w-0 content-start gap-4">
         {error ? (
           <StatusNotice
             tone="warning"
             action={
               draft && standardAnalysisAvailable ? (
                 <button type="button" onClick={useStandardAnalysis} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white">
-                  Foloseste analiza standard
+                  Folosește analiza standard
                 </button>
               ) : null
             }
@@ -285,12 +285,14 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
         ) : null}
         {preview ? (
           <>
-            <OpportunityCard opportunity={preview} />
+            <div className="min-w-0">
+              <OpportunityCard opportunity={preview} />
+            </div>
             <div className="flex flex-wrap gap-2">
               <ScoreBadge label="Fit" score={preview.fitScore} />
-              <ScoreBadge label="Urgenta" score={preview.urgencyScore} />
+              <ScoreBadge label="Urgență" score={preview.urgencyScore} />
               <ScoreBadge label="Bani" score={preview.moneyScore} />
-              <ScoreBadge label="Incredere" score={preview.confidenceScore} />
+              <ScoreBadge label="Încredere" score={preview.confidenceScore} />
             </div>
             {warning ? <StatusNotice tone="success">{warning}</StatusNotice> : null}
             <button
@@ -301,10 +303,10 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
             >
               {loading === "save" ? "Se salvează..." : "Salvează oportunitate"}
             </button>
-            {saved ? <StatusNotice tone="success">Oportunitate salvata pentru sesiunea curenta.</StatusNotice> : null}
+            {saved ? <StatusNotice tone="success">Oportunitate salvată pentru sesiunea curentă.</StatusNotice> : null}
           </>
         ) : (
-          <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-sm leading-6 text-zinc-400">
+          <div className="min-w-0 rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-sm leading-6 text-zinc-400">
             Completează formularul ca să vezi preview-ul oportunității analizate.
           </div>
         )}

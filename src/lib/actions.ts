@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -11,180 +11,21 @@ import {
 } from "@/lib/mock-generators";
 import { scoreOpportunity } from "@/lib/scoring";
 import type { Business, Opportunity, OpportunityDocumentType, OpportunityStatus, OpportunityType } from "@/lib/types";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { ValidatedGeneratedDocument, ValidatedOpportunityAnalysis } from "@/lib/openai/validation";
-
-function splitList(value: FormDataEntryValue | null) {
-  return String(value ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+import { requirePermission } from "@/lib/authz/require-permission";
+import { provisionBusinessFromOnboarding } from "@/lib/business/provision-business";
 
 export async function saveOnboarding(formData: FormData) {
-  if (!isSupabaseConfigured) {
-    return { ok: true, mode: "demo", step: "success" };
-  }
-
-  const supabase = createSupabaseServerClient();
-  if (!supabase) {
-    return { ok: false, step: "auth_check", error: "Auth/user error: Supabase nu este disponibil pe server." };
-  }
-
-  let current;
-  try {
-    current = await getCurrentProfile();
-  } catch (error) {
-    console.error("Onboarding profile lookup/create error", error);
-    return {
-      ok: false,
-      step: "profile_lookup",
-      error: error instanceof Error ? error.message : "Profilul nu a putut fi citit sau creat."
-    };
-  }
-
-  if (!current.authUser || !current.profile?.id) {
-    return { ok: false, step: "auth_check", error: "Nu ești autentificat. Intră din nou în cont înainte să salvezi firma." };
-  }
-
-  const { data: existingBusiness, error: existingBusinessError } = await supabase
-    .from("businesses")
-    .select("id,name")
-    .eq("owner_profile_id", current.profile.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingBusinessError) {
-    console.error("Supabase existing business lookup error", existingBusinessError);
-    return {
-      ok: false,
-      step: "business_lookup",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      error: `Business lookup error: ${existingBusinessError.message}`
-    };
-  }
-
-  if (existingBusiness) {
-    return {
-      ok: true,
-      mode: "supabase",
-      step: "business_exists",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      businessId: existingBusiness.id,
-      message: "Ai deja un business configurat. Poti continua in dashboard."
-    };
-  }
-
-  const businessName = String(formData.get("businessName") ?? "").trim();
-  if (!businessName) {
-    return { ok: false, step: "business_insert", error: "Numele businessului este obligatoriu." };
-  }
-
-  const businessPayload = {
-    owner_profile_id: current.profile.id,
-    name: businessName,
-    legal_name: String(formData.get("legalName") ?? businessName),
-    cui: String(formData.get("cui") ?? ""),
-    website: String(formData.get("website") ?? ""),
-    industry: String(formData.get("industry") ?? ""),
-    city: String(formData.get("city") ?? ""),
-    county: String(formData.get("county") ?? ""),
-    average_contract_value: Number(String(formData.get("averageContractValue") ?? "0").replace(/\D/g, "")),
-    current_sales_process: String(formData.get("currentSalesProcess") ?? ""),
-    notification_email: String(formData.get("notificationEmail") ?? current.authUser.email ?? "")
-  };
-
-  const { data: business, error: businessError } = await supabase
-    .from("businesses")
-    .insert(businessPayload)
-    .select("id")
-    .single();
-
-  if (businessError || !business) {
-    console.error("Supabase business insert error", { businessError, businessPayload });
-    return {
-      ok: false,
-      step: "business_insert",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      attemptedPayload: businessPayload,
-      error: `Firma nu a putut fi salvată: ${businessError?.message ?? "insert fara rezultat"}`
-    };
-  }
-
-  const services = splitList(formData.get("services")).map((name) => ({ business_id: business.id, name }));
-  const targets = [
-    ...splitList(formData.get("idealCustomers")).map((value) => ({ business_id: business.id, target_type: "customer", value })),
-    ...splitList(formData.get("targetCities")).map((value) => ({ business_id: business.id, target_type: "city", value })),
-    ...splitList(formData.get("targetIndustries")).map((value) => ({ business_id: business.id, target_type: "industry", value }))
-  ];
-
-  const { error: memberError } = await supabase
-    .from("business_members")
-    .insert({ business_id: business.id, profile_id: current.profile.id, role: "owner" });
-
-  if (memberError) {
-    console.error("Supabase business member insert error", memberError);
-    return {
-      ok: false,
-      step: "member_insert",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      businessId: business.id,
-      attemptedPayload: { business_id: business.id, profile_id: current.profile.id, role: "owner" },
-      error: `Membrul business nu a putut fi salvat: ${memberError.message}`
-    };
-  }
-
-  const [serviceResult, targetResult] = await Promise.all([
-    services.length ? supabase.from("business_services").insert(services) : Promise.resolve({ error: null }),
-    targets.length ? supabase.from("business_targets").insert(targets) : Promise.resolve({ error: null })
-  ]);
-
-  if (serviceResult.error) {
-    console.error("Supabase business services insert error", serviceResult.error);
-    return {
-      ok: false,
-      step: "services_insert",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      businessId: business.id,
-      attemptedPayload: services,
-      error: `Serviciile nu au putut fi salvate: ${serviceResult.error.message}`
-    };
-  }
-
-  if (targetResult.error) {
-    console.error("Supabase business targets insert error", targetResult.error);
-    return {
-      ok: false,
-      step: "targets_insert",
-      profileId: current.profile.id,
-      ownerProfileId: current.profile.id,
-      businessId: business.id,
-      attemptedPayload: targets,
-      error: `Tintele nu au putut fi salvate: ${targetResult.error.message}`
-    };
-  }
-
-  revalidatePath("/dashboard");
-  return {
-    ok: true,
-    mode: "supabase",
-    step: "success",
-    profileId: current.profile.id,
-    ownerProfileId: current.profile.id,
-    businessId: business.id
-  };
+  return provisionBusinessFromOnboarding(formData);
 }
-
 export async function saveAnalyzedOpportunity(formData: FormData) {
+  await requireActivePaidAccess();
+  await requirePermission("opportunities.create");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo", id: null };
   }
@@ -288,6 +129,9 @@ function generatedDocument(opportunity: Opportunity, business: Business, type: O
 }
 
 export async function persistGeneratedDocument(opportunityId: string, type: OpportunityDocumentType, generated?: ValidatedGeneratedDocument) {
+  await requireActivePaidAccess();
+  await requirePermission("documents.generate");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
@@ -351,6 +195,9 @@ export async function updateGeneratedDocument(
   documentId: string,
   updates: { title?: string; content?: string; status?: "edited" | "copied" | "ready_to_send" | "sent" }
 ) {
+  await requireActivePaidAccess();
+  await requirePermission("documents.update");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
@@ -358,6 +205,11 @@ export async function updateGeneratedDocument(
   const supabase = createSupabaseServerClient();
   if (!supabase) {
     return { ok: false, error: "Supabase nu este disponibil." };
+  }
+
+  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
+  if (!opportunity) {
+    return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
   }
 
   const now = new Date().toISOString();
@@ -408,6 +260,9 @@ export async function updateGeneratedDocument(
 }
 
 export async function persistOpportunityStatus(opportunityId: string, status: OpportunityStatus) {
+  await requireActivePaidAccess();
+  await requirePermission("opportunities.update");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
@@ -415,6 +270,11 @@ export async function persistOpportunityStatus(opportunityId: string, status: Op
   const supabase = createSupabaseServerClient();
   if (!supabase) {
     return { ok: false, error: "Supabase nu este disponibil." };
+  }
+
+  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
+  if (!opportunity) {
+    return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
   }
 
   const { error } = await supabase.from("opportunities").update({ status }).eq("id", opportunityId);
@@ -443,6 +303,9 @@ export async function persistFollowUp(
   generated?: ValidatedGeneratedDocument,
   options?: { title?: string; dueAt?: string; priority?: "low" | "medium" | "high"; description?: string }
 ) {
+  await requireActivePaidAccess();
+  await requirePermission("actions.create");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
@@ -499,6 +362,9 @@ export async function persistFollowUp(
 }
 
 export async function updateOpportunityAction(opportunityId: string, actionId: string, action: "done" | "postpone" | "cancel") {
+  await requireActivePaidAccess();
+  await requirePermission(action === "done" ? "actions.complete" : "actions.update");
+
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
@@ -506,6 +372,11 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
   const supabase = createSupabaseServerClient();
   if (!supabase) {
     return { ok: false, error: "Supabase nu este disponibil." };
+  }
+
+  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
+  if (!opportunity) {
+    return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
   }
 
   const now = new Date().toISOString();

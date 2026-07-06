@@ -1,0 +1,83 @@
+{
+  "documentType": "codex-security.scan-manifest",
+  "scan": {
+    "artifacts": [
+      {
+        "mediaType": "application/json",
+        "path": "findings.json",
+        "sha256": "94eb59afdf64670d9ade15e5a05a8b8fd24e7b5e0f0e4d95053dbf58c80fd0f7"
+      },
+      {
+        "mediaType": "application/json",
+        "path": "coverage.json",
+        "sha256": "6c1f9fa87cb981b01e6057a5fd4d9cbfb7d14197888d06325dc1bd78b47e669f"
+      }
+    ],
+    "completedAt": "2026-06-26T14:44:59Z",
+    "coverageRef": "coverage.json",
+    "findingsRef": "findings.json",
+    "id": "6116cd37-a13f-4683-9027-9d8806528264",
+    "producer": {
+      "name": "codex-security-plugin",
+      "version": "0.1.10"
+    },
+    "scope": {
+      "context": "Generated threat model during phase 1; no application files were modified.",
+      "excludePaths": [],
+      "includePaths": [
+        "."
+      ],
+      "limitations": [
+        "Live Supabase grants and RPC execution were not tested.",
+        "Spreadsheet-client formula execution was not dynamically reproduced.",
+        "Generated .next artifacts were treated as derived output."
+      ],
+      "runtimeStatus": "No application server or live Supabase instance was started.",
+      "summary": "Read-only repository-wide scan of the checked-out Next.js/Supabase codebase.",
+      "validationMode": "Static validation with worker-assisted file review."
+    },
+    "sealedAt": "2026-06-26T14:44:59Z",
+    "startedAt": "2026-06-26T14:26:07Z",
+    "status": "completed",
+    "target": {
+      "displayName": "M",
+      "kind": "git_worktree",
+      "revision": "e346108c27dffee5e6f3a6de89f6f9af09b3fb1d",
+      "snapshotDigest": "codex-security-snapshot/v1:sha256:256dd0624a9ef26a9700b68c352c99ae3d2077843a85422fb2038f30e9b66426",
+      "targetId": "target_sha256_2b120dc9729425c76f828d988bf6982c4c8fefc7484c370b512184ff538445a2"
+    },
+    "threatModel": {
+      "assets": [
+        "Auth sessions and profiles",
+        "Business-scoped opportunities and documents",
+        "Platform roles and audit logs",
+        "Service-role and OpenAI secrets",
+        "Usage and provider-cost records"
+      ],
+      "assumptions": [
+        "Supabase RLS is a primary isolation layer",
+        "Repository migrations represent intended production policy"
+      ],
+      "attackerCapabilities": [
+        "Send authenticated requests",
+        "Control business names, AI inputs, and request headers",
+        "Call exposed Supabase tables/RPCs if grants allow"
+      ],
+      "securityObjectives": [
+        "Preserve tenant isolation",
+        "Keep privileged database mutations server-only",
+        "Meter provider-backed work accurately",
+        "Prevent tenant content execution in admin contexts"
+      ],
+      "summary": "ReveNew is a Next.js/Supabase B2B opportunity-management app whose key boundaries are auth, tenant isolation, platform-admin privileges, service-role database access, usage metering, OpenAI calls, and admin exports.",
+      "trustBoundaries": [
+        "Unauthenticated to authenticated routes",
+        "Tenant to tenant",
+        "Business user to platform admin",
+        "Browser to server-only service role",
+        "Tenant content to admin exports"
+      ]
+    }
+  },
+  "schemaVersion": "1.0"
+}

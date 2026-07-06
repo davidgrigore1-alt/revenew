@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { dashboardNavigation } from "@/lib/navigation";
+import { isNavItemActive, primaryNavigation, type NavigationItem } from "@/lib/navigation";
+import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
 
-export function MobileNav() {
+export function MobileNav({ items = primaryNavigation }: { items?: NavigationItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-white/10 bg-ink-950/95 px-2 py-2 backdrop-blur xl:hidden">
-      {dashboardNavigation.map((item) => {
-        const active = pathname === item.href;
-        const Icon = item.icon;
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)_/_0.96)] px-2 py-2 shadow-[var(--shadow-card)] backdrop-blur xl:hidden">
+      {items.map((item) => {
+        const active = isNavItemActive(pathname, item.href);
 
         return (
           <Link
@@ -20,11 +20,12 @@ export function MobileNav() {
             href={item.href}
             aria-label={item.name}
             className={clsx(
-              "flex h-12 items-center justify-center rounded-lg transition",
-              active ? "bg-mint-400/12 text-mint-400" : "text-zinc-500 hover:text-white"
+              "focus-ring flex h-12 flex-col items-center justify-center rounded-lg text-[11px] font-semibold transition",
+              active ? "bg-[rgb(var(--primary)_/_0.12)] text-[rgb(var(--primary))]" : "text-[rgb(var(--muted-foreground))]"
             )}
           >
-            <Icon className="h-5 w-5" aria-hidden="true" />
+            <NavigationIcon name={item.icon} className="h-5 w-5" />
+            <span className="mt-1 max-w-full truncate">{item.name}</span>
           </Link>
         );
       })}

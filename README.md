@@ -1,6 +1,6 @@
-# MoneyHunter AI
+# ReveNew
 
-MoneyHunter AI este un MVP Next.js pentru oportunități B2B: autentificare, onboarding de business, oportunități, acțiuni, documente generate mock, lead-uri, outreach și rapoarte.
+ReveNew este un MVP Next.js pentru oportunități B2B: autentificare, onboarding de business, oportunități, acțiuni, documente generate mock, lead-uri, outreach și rapoarte.
 
 ## Rulare locală
 

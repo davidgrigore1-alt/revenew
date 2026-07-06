@@ -1,37 +1,106 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AuthenticatedAccountChoice } from "@/components/auth/AuthenticatedAccountChoice";
+import { AuthCardShell } from "@/components/auth/AuthCardShell";
 import { AuthForm } from "@/components/auth/AuthForm";
-import { Logo } from "@/components/ui/Logo";
-import { getCurrentAuthUser } from "@/lib/auth/profile";
-import { getCurrentBusinessForUser } from "@/lib/business/current-business";
+import { AuthNotice } from "@/components/auth/AuthNotice";
+import { authPath, sanitizeAuthIntent } from "@/lib/auth/redirects";
+import { resolveAuthPageState } from "@/lib/auth/auth-state";
 
-export default async function LoginPage() {
-  const authUser = await getCurrentAuthUser();
+const loginReasons = {
+  session_expired: {
+    tone: "warning",
+    title: "Sesiunea a expirat",
+    message: "Intră din nou în cont pentru a continua."
+  },
+  signed_out: {
+    tone: "success",
+    title: "Ai ieșit din cont în siguranță.",
+    message: ""
+  },
+  email_confirmed: {
+    tone: "success",
+    title: "Emailul a fost confirmat. Acum te poți autentifica.",
+    message: ""
+  },
+  email_confirmation_sent: {
+    tone: "success",
+    title: "Verifică adresa de email",
+    message: "Dacă nu găsești mesajul, verifică și folderul Spam."
+  },
+  password_updated: {
+    tone: "success",
+    title: "Parola a fost actualizată",
+    message: "Intră în cont cu noua parolă."
+  },
+  account_switched: {
+    tone: "success",
+    title: "Poți folosi alt cont",
+    message: "Sesiunea anterioară a fost închisă."
+  },
+  invalid_link: {
+    tone: "warning",
+    title: "Linkul nu mai este valid",
+    message: "Deschide cel mai recent email sau cere un link nou."
+  }
+} as const;
 
-  if (authUser) {
-    const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: false });
-    redirect(currentBusiness?.source === "supabase" ? "/dashboard" : "/onboarding");
+function LoginReasonNotice({ reason }: { reason?: string }) {
+  const safeReason = reason && reason in loginReasons ? loginReasons[reason as keyof typeof loginReasons] : null;
+  if (!safeReason) {
+    return null;
+  }
+
+  return <AuthNotice tone={safeReason.tone} title={safeReason.title} message={safeReason.message} />;
+}
+
+function RetryAuthState() {
+  return (
+    <div className="mt-6">
+      <AuthNotice tone="warning" title="Autentificarea nu este disponibilă momentan" message="Încearcă din nou în câteva momente." />
+      <Link href="/login" className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-mint-400 px-4 text-sm font-semibold text-ink-950 transition hover:bg-mint-300">
+        Reîncearcă
+      </Link>
+    </div>
+  );
+}
+
+export default async function LoginPage({ searchParams }: { searchParams?: { intent?: string; reason?: string } }) {
+  const intent = sanitizeAuthIntent(searchParams?.intent, "login");
+  const state = await resolveAuthPageState();
+
+  if (state.status === "stale_session") {
+    redirect("/auth/recover-session?next=/login?reason=session_expired");
+  }
+
+  let content: React.ReactNode;
+
+  if (state.status === "authenticated") {
+    content = <AuthenticatedAccountChoice email={state.email} intent={intent} mode="login" />;
+  } else if (state.status === "temporary_auth_failure" || state.status === "unexpected_auth_failure") {
+    content = <RetryAuthState />;
+  } else if (state.status === "authenticated_unconfirmed") {
+    content = <AuthNotice tone="warning" title="Verifică adresa de email" message="Confirmă emailul înainte de a continua în ReveNew." />;
+  } else {
+    content = (
+      <>
+        <LoginReasonNotice reason={searchParams?.reason} />
+        <AuthForm mode="login" intent={intent} />
+      </>
+    );
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-10">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900/90 p-6 shadow-premium backdrop-blur">
-        <Logo />
-        <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-mint-400">Intrare</p>
-          <h1 className="mt-3 text-3xl font-semibold text-white">Bine ai revenit</h1>
-          <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Conectează-te pentru a vedea oportunitățile și pipeline-ul firmei tale.
-          </p>
-        </div>
-        <AuthForm mode="login" />
-        <p className="mt-6 text-center text-sm text-zinc-400">
-          Nu ai cont?{" "}
-          <Link href="/signup" className="font-semibold text-mint-400 hover:text-mint-300">
-            Creează unul
-          </Link>
-        </p>
-      </section>
-    </main>
+    <AuthCardShell
+      eyebrow="AUTENTIFICARE"
+      title="Intră în ReveNew"
+      description="Accesează spațiul firmei și continuă procesul de recuperare comercială."
+      trustLine="Accesul este protejat, iar datele firmei sunt separate pentru fiecare cont."
+      footerPrompt="Nu ai cont?"
+      footerHref={authPath("/signup", "create_account")}
+      footerLabel="Creează unul"
+    >
+      {content}
+    </AuthCardShell>
   );
 }

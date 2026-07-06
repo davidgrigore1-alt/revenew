@@ -1,114 +1,169 @@
 import type { Business, Opportunity } from "@/lib/types";
+import { cleanCommercialLongText, cleanCommercialText, missingDataItems } from "@/lib/text/signal-quality";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 function serviceLine(business: Business) {
-  return business.services.slice(0, 3).join(", ") || "servicii B2B adaptate contextului comercial";
+  return business.services.slice(0, 3).map((item) => cleanCommercialText(item, "")).filter(Boolean).join(", ") || "servicii B2B adaptate contextului comercial";
 }
 
 function contactLine(opportunity: Opportunity) {
-  return opportunity.contact
-    ? `${opportunity.contact.name}, ${opportunity.contact.role}${opportunity.contact.company ? ` la ${opportunity.contact.company}` : ""}`
-    : `echipa responsabila de oportunitatea din ${opportunity.city}`;
+  if (!opportunity.contact) return "persoana responsabilă de decizie trebuie confirmată";
+  return `${cleanCommercialText(opportunity.contact.name, "contact neconfirmat")}${opportunity.contact.role ? `, ${cleanCommercialText(opportunity.contact.role)}` : ""}${opportunity.contact.company ? ` la ${cleanCommercialText(opportunity.contact.company)}` : ""}`;
+}
+
+function locationLine(opportunity: Opportunity) {
+  return [opportunity.city, opportunity.county].map((item) => cleanCommercialText(item, "")).filter(Boolean).join(" / ") || "locație de confirmat";
+}
+
+function valueLine(opportunity: Opportunity) {
+  if (!opportunity.estimatedValueHigh && !opportunity.estimatedValueLow) return "valoare de confirmat";
+  return `${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}`;
+}
+
+function missingData(opportunity: Opportunity) {
+  return missingDataItems([
+    ["persoana responsabilă de decizie", opportunity.contact?.name],
+    ["criteriile comerciale finale", opportunity.recommendedAction],
+    ["termenul final pentru răspuns", opportunity.deadline],
+    ["valoarea sau volumul estimat", opportunity.estimatedValueHigh]
+  ]);
+}
+
+function confirmationBlock(opportunity: Opportunity) {
+  const items = missingData(opportunity);
+  if (!items.length) return "De confirmat înainte de trimitere:\n- condițiile finale, disponibilitatea și persoana care validează oferta.";
+  return `De confirmat înainte de trimitere:\n${items.map((item) => `- ${item};`).join("\n")}`;
 }
 
 export function generateOutreachEmail(opportunity: Opportunity, business: Business) {
+  const title = cleanCommercialText(opportunity.title, "oportunitatea identificată");
   const subject =
     opportunity.type === "grant"
-      ? `Clarificare oportunitate si eligibilitate pentru ${business.name}`
-      : `Propunere colaborare pentru ${opportunity.city}/${opportunity.county}`;
+      ? `Clarificare eligibilitate și pași următori pentru ${business.name}`
+      : `Propunere de discuție pentru ${locationLine(opportunity)}`;
 
-  return `Subject: ${subject}
+  return `Subiect: ${subject}
 
-Buna ziua,
+Bună ziua,
 
-Va contactez in legatura cu oportunitatea "${opportunity.title}", unde contextul descris indica o nevoie concreta ce poate fi abordata prin serviciile ${business.name}.
+Vă contactez în legătură cu "${title}". Din informațiile disponibile, pare să existe o nevoie comercială care merită clarificată înainte de pregătirea unei oferte.
 
-Din profilul oportunității, înțelegem că sunt importante disponibilitatea, viteza de răspuns și o soluție comerciala clara pentru zona ${opportunity.city}/${opportunity.county}. ${business.name} poate susține acest tip de situație prin ${serviceLine(business)}, cu o abordare adaptata duratei, volumului și condițiilor operaționale.
+${business.name} poate susține acest context prin ${serviceLine(business)}, cu o abordare adaptată locației ${locationLine(opportunity)} și intervalului orientativ ${valueLine(opportunity)}.
 
-Pentru o prima evaluare, putem pregati o varianta estimativa in intervalul ${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}, in functie de cerintele finale, termenul disponibil si resursele necesare.
+Propun o discuție scurtă de 10-15 minute pentru a confirma nevoia, calendarul și pașii următori. Îmi puteți indica, vă rog, persoana potrivită sau o fereastră bună pentru discuție?
 
-Dacă este relevant, propun o discutie de 10-15 minute pentru a confirma contextul, disponibilitatea și pașii următori. Îmi puteți indica, va rog, o fereastra potrivita sau persoana responsabila pentru aceasta solicitare?
+${confirmationBlock(opportunity)}
 
-Cu stima,
+Cu stimă,
 ${business.name}`;
 }
 
 export function generateCallScript(opportunity: Opportunity, business: Business) {
-  return `Script apel - ${opportunity.title}
+  const title = cleanCommercialText(opportunity.title, "oportunitatea identificată");
 
-Contact vizat: ${contactLine(opportunity)}
+  return `Script apel - ${title}
 
-1. Deschidere
-Buna ziua, sunt de la ${business.name}. Va contactez in legatura cu oportunitatea "${opportunity.title}". Am vrut sa verific rapid daca subiectul este încă activ si cine coordoneaza discutia comerciala.
+Obiectiv:
+Confirmă dacă oportunitatea este activă, cine decide și ce informații sunt necesare pentru o propunere serioasă.
 
-2. Intrebari de calificare
-- Care este nevoia principala pe care doriti sa o acoperiti?
+Contact vizat:
+${contactLine(opportunity)}
+
+Deschidere:
+Bună ziua, sunt de la ${business.name}. Vă contactez în legătură cu "${title}". Aș vrea să confirm rapid dacă subiectul este încă activ și cine coordonează discuția comercială.
+
+Întrebări de calificare:
+- Care este nevoia principală pe care doriți să o acoperiți?
 - Care este termenul real pentru decizie sau livrare?
-- Există un volum estimativ, o perioada de utilizare sau un buget orientativ?
-- Cine valideaza oferta si conditiile comerciale?
+- Există un volum estimativ, o perioadă de utilizare sau un buget orientativ?
+- Cine validează oferta și condițiile comerciale?
+- Ce criterii contează cel mai mult în alegerea furnizorului?
 
-3. Propunere de valoare
-${business.name} poate pregati o varianta structurata pentru ${serviceLine(business)}, adaptata contextului din ${opportunity.city}/${opportunity.county} si intervalului estimativ ${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}.
+Răspunsuri la obiecții probabile:
+- Dacă este prea devreme: putem trimite o propunere scurtă, fără angajament, pentru comparație internă.
+- Dacă lipsesc detalii: revenim cu o listă clară de informații necesare.
+- Dacă există deja furnizor: putem valida rapid dacă există o alternativă mai potrivită pentru context.
 
-4. Inchidere
-Daca informatiile sunt suficiente, putem reveni cu o propunere initiala. Care este cel mai bun canal pentru trimiterea detaliilor si cand ar fi util sa revenim cu follow-up?`;
+Închidere:
+Dacă informațiile sunt suficiente, revenim cu o propunere inițială pentru ${serviceLine(business)}. Care este cel mai bun canal pentru detalii și când ar fi util un follow-up?
+
+Note de capturat:
+- decident;
+- termen;
+- volum;
+- buget orientativ;
+- criterii de selecție.`;
 }
 
 export function generateOfferDraft(opportunity: Opportunity, business: Business) {
-  return `Draft oferta - ${opportunity.title}
+  const title = cleanCommercialText(opportunity.title, "oportunitatea identificată");
+  const summary = cleanCommercialLongText(opportunity.summary, "Contextul comercial trebuie confirmat înainte de oferta finală.");
 
-Context
-${opportunity.summary}
+  return `Draft ofertă - ${title}
 
-Solutie propusa
-${business.name} propune o solutie bazata pe ${serviceLine(business)}, adaptata cerintelor comerciale, locatiei ${opportunity.city}/${opportunity.county} si termenului ${formatDate(opportunity.deadline)}.
+Context oportunitate
+${summary}
 
-Beneficii comerciale
-- Raspuns structurat pentru o nevoie deja identificata.
-- Claritate asupra serviciilor, termenelor si conditiilor de livrare.
-- Posibilitatea de ajustare in functie de volum, durata si disponibilitate.
-- Reducerea timpului necesar pentru validarea unei prime variante comerciale.
+Scop propus
+${business.name} propune o soluție bazată pe ${serviceLine(business)}, adaptată locației ${locationLine(opportunity)} și calendarului ${formatDate(opportunity.deadline)}.
 
-Estimare / interval de valoare
-Interval orientativ: ${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}.
-Estimarea finală depinde de cerințele confirmate, calendar, volum și condiții operaționale.
+Structură comercială orientativă
+- Interval estimativ: ${valueLine(opportunity)}.
+- Servicii incluse: ${serviceLine(business)}.
+- Calendar și disponibilitate: de confirmat înainte de transmiterea ofertei finale.
+- Condiții comerciale: de stabilit după validarea volumului, duratei și cerințelor operaționale.
 
-Pasi urmatori
+Ipoteze
+- Oportunitatea este încă activă.
+- Datele din sursă trebuie validate cu persoana responsabilă.
+- Oferta finală nu trebuie transmisă fără confirmarea criteriilor comerciale.
+
+Elemente deschise
+${confirmationBlock(opportunity)}
+
+Pași următori
 1. Confirmarea contactului și a persoanei decidente.
-2. Validarea nevoii, termenului si criteriilor comerciale.
-3. Verificarea disponibilitatii interne si a conditiilor de livrare.
-4. Trimiterea unei oferte finale cu pret, termen si conditii.
-5. Programarea unui follow-up pentru clarificari si decizie.`;
+2. Validarea nevoii, termenului și criteriilor comerciale.
+3. Verificarea disponibilității interne.
+4. Pregătirea ofertei finale cu preț, termen și condiții.
+5. Programarea unui follow-up pentru decizie.`;
 }
 
 export function generateChecklist(opportunity: Opportunity, business: Business) {
   const procurement = opportunity.type === "public_procurement";
   const grant = opportunity.type === "grant";
+  const extra = [
+    procurement ? "- Verifică documentele obligatorii, criteriile de calificare, garanțiile și termenii procedurii." : "",
+    grant ? "- Verifică eligibilitatea, documentele financiare și condițiile programului de finanțare." : ""
+  ].filter(Boolean).join("\n");
 
-  return `Checklist operational - ${opportunity.title}
+  return `Checklist operațional - ${cleanCommercialText(opportunity.title, "oportunitate")}
 
-- Verifica persoana de contact: ${contactLine(opportunity)}.
+- Confirmă persoana de contact: ${contactLine(opportunity)}.
 - Confirmă nevoia reală și contextul comercial.
-- Verifica termenul limita: ${formatDate(opportunity.deadline)}.
-- Confirmă locația principală: ${opportunity.city}/${opportunity.county}.
-- Verifica disponibilitatea pentru serviciile relevante: ${serviceLine(business)}.
-- Pregătește intervalul orientativ: ${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}.
-- Stabileste urmatorul pas: email, apel, oferta sau clarificare.
-- Programează follow-up la 48 de ore dupa primul contact.
-${procurement ? "- Verifică documentele obligatorii, criteriile de calificare, garanțiile și termenii procedurii.\n" : ""}${grant ? "- Verifică eligibilitatea, documentele financiare și condițiile programului de finanțare.\n" : ""}- Notează concluzia în statusul oportunității.`;
+- Verifică termenul limită: ${formatDate(opportunity.deadline)}.
+- Confirmă locația principală: ${locationLine(opportunity)}.
+- Verifică disponibilitatea pentru serviciile relevante: ${serviceLine(business)}.
+- Pregătește intervalul orientativ: ${valueLine(opportunity)}.
+- Notează informațiile lipsă înainte de ofertare.
+- Stabilește următorul pas: email, apel, ofertă sau clarificare.
+- Programează follow-up la 48 de ore după primul contact.
+${extra ? `${extra}\n` : ""}- Actualizează statusul oportunității după contact.`;
 }
 
 export function generateFollowUpMessage(opportunity: Opportunity, business: Business) {
-  return `Subject: Follow-up pentru ${opportunity.title}
+  return `Subiect: Follow-up pentru ${cleanCommercialText(opportunity.title, "oportunitatea discutată")}
 
-Buna ziua,
+Bună ziua,
 
-Revin cu un follow-up legat de oportunitatea "${opportunity.title}".
+Revin cu un follow-up legat de oportunitatea "${cleanCommercialText(opportunity.title, "oportunitatea discutată")}".
 
-${business.name} poate pregati o propunere initiala pentru ${serviceLine(business)}, in functie de cerintele finale, termen si disponibilitate. Din informatiile disponibile, contextul pare relevant pentru zona ${opportunity.city}/${opportunity.county} si merita validat intr-o discutie scurta.
+${business.name} poate pregăti o propunere inițială pentru ${serviceLine(business)}, în funcție de cerințele finale, termen și disponibilitate. Din informațiile disponibile, contextul pentru ${locationLine(opportunity)} merită validat într-o discuție scurtă.
 
-Dacă subiectul este încă activ, putem discuta 10-15 minute pentru a confirma nevoia și pașii următori. Alternativ, ne puteți trimite câteva detalii suplimentare pentru a reveni cu o variantă orientativă.
+Dacă subiectul este încă activ, putem discuta 10-15 minute pentru a confirma nevoia și pașii următori. Alternativ, ne puteți trimite detaliile lipsă pentru a reveni cu o variantă orientativă.
 
-Cu stima,
+${confirmationBlock(opportunity)}
+
+Cu stimă,
 ${business.name}`;
 }

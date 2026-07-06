@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function ReportActions({ reportText, fileName = "moneyhunter-report.txt" }: { reportText: string; fileName?: string }) {
+export function ReportActions({ reportText, fileName = "revenew-report.txt" }: { reportText: string; fileName?: string }) {
   const [message, setMessage] = useState("");
 
   async function copyReport() {

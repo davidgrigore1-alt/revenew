@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { themeInitScript } from "@/components/theme/theme-script";
+import { brand } from "@/lib/brand";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MoneyHunter AI",
-  description: "Agentul AI care găsește bani pentru firma ta."
+  applicationName: brand.name,
+  title: {
+    default: brand.title,
+    template: `%s | ${brand.name}`
+  },
+  description: brand.description,
+  openGraph: {
+    title: brand.title,
+    description: brand.description,
+    type: "website",
+    locale: "ro_RO"
+  },
+  twitter: {
+    card: "summary",
+    title: brand.title,
+    description: brand.description
+  }
 };
 
 export default function RootLayout({
@@ -12,8 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ro">
-      <body className="font-sans antialiased">{children}</body>
+    <html lang="ro" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript() }} />
+      </head>
+      <body className="font-sans antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

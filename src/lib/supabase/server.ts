@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { classifyAuthError, hasPersistedSupabaseAuthCookie } from "@/lib/auth/session-errors";
 import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supabase/status";
 
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,7 +13,6 @@ export function getSupabaseServerConfig() {
   return {
     url: supabaseUrl ?? "",
     anonKey: supabaseAnonKey ?? "",
-    serviceRoleKey: supabaseServiceRoleKey ?? "",
     isConfigured: isSupabaseServerConfigured,
     isAdminConfigured: isSupabaseAdminConfigured
   };
@@ -53,9 +53,27 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
   }
 
+  const hasPersistedSession = hasPersistedSupabaseAuthCookie(cookies().getAll());
+
   const {
-    data: { user }
+    data: { user },
+    error
   } = await supabase.auth.getUser();
+
+  if (error) {
+    const classified = classifyAuthError(error, { hasPersistedSession });
+    if (classified.status === "anonymous") {
+      return null;
+    }
+
+    if (classified.status === "stale_session") {
+      console.warn("auth_stale_session_detected", { reason: classified.reason });
+      return null;
+    }
+
+    console.error("auth_user_lookup_failed", { status: classified.status, reason: classified.reason });
+    throw new Error("Autentificarea nu este disponibilă momentan. Încearcă din nou în câteva momente.");
+  }
 
   return user;
 }

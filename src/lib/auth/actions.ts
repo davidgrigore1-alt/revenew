@@ -1,7 +1,10 @@
 "use server";
 
 import { getCurrentAuthUser, getCurrentProfile, getOrCreateProfile } from "@/lib/auth/profile";
+import { destinationForAuthIntent, type AuthIntent } from "@/lib/auth/redirects";
+import { getPostBusinessDestination } from "@/lib/billing/paid-access";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
+import { safeProfileInitializationMessage } from "@/lib/supabase/database-errors";
 
 export async function ensureCurrentProfile(fullName?: string) {
   try {
@@ -18,7 +21,7 @@ export async function ensureCurrentProfile(fullName?: string) {
     return { ok: true, authUserId: authUser.id, profileId: profile.id, email: profile.email };
   } catch (error) {
     console.error("ensureCurrentProfile error", error);
-    return { ok: false, error: error instanceof Error ? error.message : "Profilul nu a putut fi creat." };
+    return { ok: false, error: safeProfileInitializationMessage };
   }
 }
 
@@ -42,7 +45,7 @@ export async function getCurrentProfileDebug() {
       authUserEmail: "",
       profileId: "",
       profileEmail: "",
-      error: error instanceof Error ? error.message : "Profilul nu a putut fi citit."
+      error: "Profilul nu a putut fi citit."
     };
   }
 }
@@ -55,15 +58,38 @@ export async function getPostLoginDestination() {
     }
 
     const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: false });
+    const destination = currentBusiness?.source === "supabase" ? await getPostBusinessDestination() : "/onboarding";
     return {
       ok: true,
-      destination: currentBusiness?.source === "supabase" ? "/dashboard" : "/onboarding",
+      destination,
       authUserId: authUser.id,
       profileId: profile.id
     };
   } catch (error) {
     console.error("getPostLoginDestination error", error);
-    return { ok: false, error: error instanceof Error ? error.message : "Nu am putut verifica firma conectată." };
+    return { ok: false, error: "Nu am putut pregăti sesiunea. Încearcă din nou." };
+  }
+}
+
+export async function getPostAuthIntentDestination(intent: AuthIntent) {
+  try {
+    const { authUser, profile } = await getCurrentProfile();
+    if (!authUser || !profile) {
+      return { ok: false, error: "Nu ești autentificat. Intră din nou în cont." };
+    }
+
+    const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: false });
+    const postBusinessDestination = currentBusiness?.source === "supabase" ? await getPostBusinessDestination() : null;
+
+    return {
+      ok: true,
+      destination: destinationForAuthIntent(intent, postBusinessDestination),
+      authUserId: authUser.id,
+      profileId: profile.id
+    };
+  } catch (error) {
+    console.error("getPostAuthIntentDestination error", error);
+    return { ok: false, error: "Nu am putut pregăti sesiunea. Încearcă din nou." };
   }
 }
 
@@ -78,6 +104,6 @@ export async function repairCurrentProfile(fullName?: string) {
     return { ok: true, authUserId: authUser.id, profileId: profile.id, email: profile.email };
   } catch (error) {
     console.error("repairCurrentProfile error", error);
-    return { ok: false, error: error instanceof Error ? error.message : "Profilul nu a putut fi reparat." };
+    return { ok: false, error: safeProfileInitializationMessage };
   }
 }

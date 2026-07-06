@@ -54,6 +54,10 @@ export type Business = {
   cui: string;
   website: string;
   industry: string;
+  countryCode?: string;
+  administrativeAreaCode?: string;
+  companyPhoneE164?: string;
+  postalCode?: string;
   city: string;
   county: string;
   services: string[];
@@ -138,6 +142,44 @@ export type OpportunityEvent = {
   description: string;
 };
 
+export type CrmOrganization = {
+  id: string;
+  businessId: string;
+  name: string;
+  website?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type CrmContact = {
+  id: string;
+  businessId: string;
+  organizationId?: string | null;
+  organization?: CrmOrganization | null;
+  fullName: string;
+  jobTitle?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  professionalUrl?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type OpportunityContact = {
+  id: string;
+  opportunityId: string;
+  businessId: string;
+  contactId: string;
+  role?: string | null;
+  isPrimary: boolean;
+  notes?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  contact: CrmContact;
+};
+
 export type Opportunity = {
   id: string;
   title: string;
@@ -170,6 +212,7 @@ export type Opportunity = {
   timeline: OpportunityEvent[];
   documents: OpportunityDocument[];
   actions: OpportunityAction[];
+  contacts?: OpportunityContact[];
 };
 
 export type CommercialSignalSource =

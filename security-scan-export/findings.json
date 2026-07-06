@@ -1,0 +1,262 @@
+{
+  "documentType": "codex-security.findings",
+  "findings": [
+    {
+      "attackPath": {
+        "dataflow": {
+          "summary": "See affected locations for source, control, and sink."
+        },
+        "reachability": {
+          "summary": "Reachability is based on repository source and migration evidence."
+        },
+        "summary": "The `business_members` insert/update RLS policy accepts `profile_id = current_profile_id()` for any target business, and downstream `can_access_business()` plus opportunity policies trust that membership row, creating a cross-tenant access path if authenticated table writes are exposed."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Validated by static source and migration trace; live runtime proof was not attempted."
+      },
+      "extensions": {
+        "candidateId": "CS-SQL-001"
+      },
+      "findingId": "csf_3b745b0baf08058622ea4f83",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:c781c0e429954579c45f1f433f1f7f0c2be2d6d90c992713d8b5a0729c03136f"
+      },
+      "identity": {
+        "anchor": "business-member-self-join",
+        "instance": "rls-policy"
+      },
+      "locations": [
+        {
+          "endLine": 175,
+          "path": "supabase/migrations/202606100007_stabilize_supabase_rls.sql",
+          "role": "root_control",
+          "startLine": 170
+        }
+      ],
+      "occurrenceId": "occ_f2a3d8e94824f5eed93877f8",
+      "provenance": {
+        "source": "codex-security"
+      },
+      "remediation": "Require owner/admin/invitation authorization for membership insert/update; add authenticated RLS regression tests that self-join attempts fail.",
+      "ruleId": "authorization.rls-business-member-self-join",
+      "severity": {
+        "changeConditions": "Live deployment privilege checks could raise or lower this severity.",
+        "level": "high",
+        "rationale": "The `business_members` insert/update RLS policy accepts `profile_id = current_profile_id()` for any target business, and downstream `can_access_business()` plus opportunity policies trust that membership row, creating a cross-tenant access path if authenticated table writes are exposed.",
+        "score": 8.1,
+        "scoringSystem": "CVSS:3.1"
+      },
+      "summary": "The `business_members` insert/update RLS policy accepts `profile_id = current_profile_id()` for any target business, and downstream `can_access_business()` plus opportunity policies trust that membership row, creating a cross-tenant access path if authenticated table writes are exposed.",
+      "taxonomy": {
+        "category": "Authorization bypass / tenant isolation",
+        "cwe": [
+          "CWE-284",
+          "CWE-639"
+        ]
+      },
+      "title": "Business-members RLS allows authenticated users to self-join tenants",
+      "validation": {
+        "limitations": [
+          "No live Supabase or spreadsheet runtime proof was performed."
+        ],
+        "method": "static source and migration trace",
+        "summary": "The `business_members` insert/update RLS policy accepts `profile_id = current_profile_id()` for any target business, and downstream `can_access_business()` plus opportunity policies trust that membership row, creating a cross-tenant access path if authenticated table writes are exposed."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "summary": "See affected locations for source, control, and sink."
+        },
+        "reachability": {
+          "summary": "Reachability is based on repository source and migration evidence."
+        },
+        "summary": "The usage metering migration defines `security definer` RPCs that mutate usage counters/events with caller-supplied identifiers, but no migration revokes default function execute privileges or checks caller membership/service-role intent."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Validated by static source and migration trace; live runtime proof was not attempted."
+      },
+      "extensions": {
+        "candidateId": "CS-SQL-002"
+      },
+      "findingId": "csf_bd43676796facfa9e5a1b877",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:4d155b566d89daec524c7dc558c7e5889017c9bf063b1f75e3a69b530c7033e5"
+      },
+      "identity": {
+        "anchor": "usage-metering-rpc-execute",
+        "instance": "usage-rpcs"
+      },
+      "locations": [
+        {
+          "endLine": 99,
+          "path": "supabase/migrations/202606240001_usage_metering.sql",
+          "role": "root_control",
+          "startLine": 86
+        }
+      ],
+      "occurrenceId": "occ_71f5a8b92e20ef8be66ce891",
+      "provenance": {
+        "source": "codex-security"
+      },
+      "remediation": "Revoke execute from public/anon/authenticated on usage RPCs, grant only trusted server role, and add function privilege regression checks.",
+      "ruleId": "authorization.exposed-security-definer-rpc",
+      "severity": {
+        "changeConditions": "Live deployment privilege checks could raise or lower this severity.",
+        "level": "high",
+        "rationale": "The usage metering migration defines `security definer` RPCs that mutate usage counters/events with caller-supplied identifiers, but no migration revokes default function execute privileges or checks caller membership/service-role intent.",
+        "score": 8,
+        "scoringSystem": "CVSS:3.1"
+      },
+      "summary": "The usage metering migration defines `security definer` RPCs that mutate usage counters/events with caller-supplied identifiers, but no migration revokes default function execute privileges or checks caller membership/service-role intent.",
+      "taxonomy": {
+        "category": "Authorization bypass / exposed privileged RPC",
+        "cwe": [
+          "CWE-266",
+          "CWE-284"
+        ]
+      },
+      "title": "Usage metering security-definer RPCs are exposed without trusted caller checks",
+      "validation": {
+        "limitations": [
+          "No live Supabase or spreadsheet runtime proof was performed."
+        ],
+        "method": "static source and migration trace",
+        "summary": "The usage metering migration defines `security definer` RPCs that mutate usage counters/events with caller-supplied identifiers, but no migration revokes default function execute privileges or checks caller membership/service-role intent."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "summary": "See affected locations for source, control, and sink."
+        },
+        "reachability": {
+          "summary": "Reachability is based on repository source and migration evidence."
+        },
+        "summary": "AI routes accept caller-controlled idempotency keys, `reserve_revenew_usage` returns an existing event for repeated keys, and settlement returns early for already-settled events while fresh OpenAI calls still run."
+      },
+      "confidence": {
+        "level": "high",
+        "rationale": "Validated by static source and migration trace; live runtime proof was not attempted."
+      },
+      "extensions": {
+        "candidateId": "CAND-AI-USAGE-001"
+      },
+      "findingId": "csf_2a59fd5ef7941d98e41f5bde",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:47698fc5e73872623c121f80bbefac8a888ed138cceee8776aaa595318c774bc"
+      },
+      "identity": {
+        "anchor": "ai-usage-idempotency-reuse",
+        "instance": "ai-routes"
+      },
+      "locations": [
+        {
+          "endLine": 58,
+          "path": "src/app/api/ai/analyze-opportunity/route.ts",
+          "role": "entrypoint",
+          "startLine": 58
+        }
+      ],
+      "occurrenceId": "occ_7e1b30221485bb555af2d8e7",
+      "provenance": {
+        "source": "codex-security"
+      },
+      "remediation": "Bind idempotency keys to request digest and unsettled status, or return cached results instead of issuing fresh provider calls.",
+      "ruleId": "billing.idempotency-key-reuse",
+      "severity": {
+        "changeConditions": "Live deployment privilege checks could raise or lower this severity.",
+        "level": "medium",
+        "rationale": "AI routes accept caller-controlled idempotency keys, `reserve_revenew_usage` returns an existing event for repeated keys, and settlement returns early for already-settled events while fresh OpenAI calls still run.",
+        "score": 5.8,
+        "scoringSystem": "CVSS:3.1"
+      },
+      "summary": "AI routes accept caller-controlled idempotency keys, `reserve_revenew_usage` returns an existing event for repeated keys, and settlement returns early for already-settled events while fresh OpenAI calls still run.",
+      "taxonomy": {
+        "category": "Billing / quota bypass",
+        "cwe": [
+          "CWE-770",
+          "CWE-840"
+        ]
+      },
+      "title": "Reusable idempotency keys let repeated AI calls avoid additional usage settlement",
+      "validation": {
+        "limitations": [
+          "No live Supabase or spreadsheet runtime proof was performed."
+        ],
+        "method": "static source and migration trace",
+        "summary": "AI routes accept caller-controlled idempotency keys, `reserve_revenew_usage` returns an existing event for repeated keys, and settlement returns early for already-settled events while fresh OpenAI calls still run."
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "summary": "See affected locations for source, control, and sink."
+        },
+        "reachability": {
+          "summary": "Reachability is based on repository source and migration evidence."
+        },
+        "summary": "Tenant-controlled business names flow into the admin usage CSV export. The CSV helper quotes cells but does not neutralize leading spreadsheet formula characters, enabling formula execution when an admin opens the file in an evaluating spreadsheet client."
+      },
+      "confidence": {
+        "level": "medium",
+        "rationale": "Validated by static source and migration trace; live runtime proof was not attempted."
+      },
+      "extensions": {
+        "candidateId": "CAND-CSV-001"
+      },
+      "findingId": "csf_20dc7f479dc7ba5c35d6a454",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:c142df2d63259e31a99b722efc2553e7e56687c15cddd8185c94a048ec2dddef"
+      },
+      "identity": {
+        "anchor": "admin-usage-csv-formula",
+        "instance": "business-name"
+      },
+      "locations": [
+        {
+          "endLine": 8,
+          "path": "src/app/(protected)/admin/usage/export/route.ts",
+          "role": "root_control",
+          "startLine": 6
+        }
+      ],
+      "occurrenceId": "occ_de3bb49715f3ccc1fcc21550",
+      "provenance": {
+        "source": "codex-security"
+      },
+      "remediation": "Neutralize formula-like prefixes before CSV quoting for all user-controlled export fields, with tests for =, +, -, @, tab, CR, and LF.",
+      "ruleId": "csv.spreadsheet-formula-injection",
+      "severity": {
+        "changeConditions": "Live deployment privilege checks could raise or lower this severity.",
+        "level": "medium",
+        "rationale": "Tenant-controlled business names flow into the admin usage CSV export. The CSV helper quotes cells but does not neutralize leading spreadsheet formula characters, enabling formula execution when an admin opens the file in an evaluating spreadsheet client.",
+        "score": 5.4,
+        "scoringSystem": "CVSS:3.1"
+      },
+      "summary": "Tenant-controlled business names flow into the admin usage CSV export. The CSV helper quotes cells but does not neutralize leading spreadsheet formula characters, enabling formula execution when an admin opens the file in an evaluating spreadsheet client.",
+      "taxonomy": {
+        "category": "CSV formula injection",
+        "cwe": [
+          "CWE-1236"
+        ]
+      },
+      "title": "Admin usage CSV export does not neutralize spreadsheet formula cells",
+      "validation": {
+        "limitations": [
+          "No live Supabase or spreadsheet runtime proof was performed."
+        ],
+        "method": "static source and migration trace",
+        "summary": "Tenant-controlled business names flow into the admin usage CSV export. The CSV helper quotes cells but does not neutralize leading spreadsheet formula characters, enabling formula execution when an admin opens the file in an evaluating spreadsheet client."
+      }
+    }
+  ],
+  "scanId": "6116cd37-a13f-4683-9027-9d8806528264",
+  "schemaVersion": "1.0"
+}

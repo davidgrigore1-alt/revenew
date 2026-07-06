@@ -8,11 +8,10 @@ type ScoreBadgeProps = {
 };
 
 const scoreInfo: Record<string, string> = {
-  Fit: "Cat de bine se potriveste oportunitatea cu serviciile, locatia si publicul tinta al firmei.",
-  Urgenta: "Cat de repede trebuie actionat, in functie de deadline si context.",
+  Fit: "Cât de bine se potrivește oportunitatea cu serviciile, locația și publicul țintă al firmei.",
+  Urgență: "Cât de repede trebuie acționat, în funcție de deadline și context.",
   Bani: "Estimare a valorii comerciale posibile. Nu este venit garantat.",
-  Incredere: "Cat de sigura este analiza in functie de datele disponibile.",
-  "Încredere": "Cat de sigura este analiza in functie de datele disponibile."
+  Încredere: "Cât de sigură este analiza în funcție de datele disponibile."
 };
 
 export function ScoreBadge({ label = "Scor", score, info }: ScoreBadgeProps) {

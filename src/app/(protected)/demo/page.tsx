@@ -5,6 +5,7 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { DemoExampleActions } from "@/components/demo/DemoExampleActions";
 import { Button } from "@/components/ui/Button";
+import { requirePermission } from "@/lib/authz/require-permission";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
 import { opportunities as demoOpportunities } from "@/lib/mock-data";
@@ -22,7 +23,7 @@ type WorkflowMetrics = {
 const demoFlow = [
   "Firma primește cereri din email, telefon, formulare, WhatsApp sau liste vechi.",
   "Multe raman neurmarite sau fara follow-up.",
-  "MoneyHunter le aduna in Inbox Comercial.",
+  "ReveNew le aduna in Inbox Comercial.",
   "Semnalele importante devin oportunități.",
   "Platforma pregateste email, oferta, apel sau follow-up.",
   "Managerul vede raportul cu bani potențiali și acțiuni urgente."
@@ -39,7 +40,7 @@ const demoScript = [
 const objections = [
   [
     "Avem deja CRM",
-    "MoneyHunter nu înlocuiește CRM-ul la început. Funcționează ca strat de revenue recovery peste semnalele comerciale: identifică lead-uri pierdute, follow-up-uri lipsă și oportunități care merită urmărite."
+    "ReveNew nu înlocuiește CRM-ul la început. Funcționează ca strat de revenue recovery peste semnalele comerciale: identifică lead-uri pierdute, follow-up-uri lipsă și oportunități care merită urmărite."
   ],
   [
     "Nu avem timp sa introducem date",
@@ -47,7 +48,7 @@ const objections = [
   ],
   [
     "Nu vrem AI care trimite singur mesaje",
-    "MoneyHunter pregateste mesaje si documente pentru revizuire. Echipa pastreaza controlul si decide ce se trimite, cand si cui."
+    "ReveNew pregateste mesaje si documente pentru revizuire. Echipa pastreaza controlul si decide ce se trimite, cand si cui."
   ],
   [
     "Cat de sigur este?",
@@ -55,7 +56,7 @@ const objections = [
   ],
   [
     "Cine verifica ce genereaza AI-ul?",
-    "Managerul sau echipa comerciala revizuieste continutul inainte de folosire. MoneyHunter accelereaza pregatirea, nu elimina decizia umana."
+    "Managerul sau echipa comerciala revizuieste continutul inainte de folosire. ReveNew accelereaza pregatirea, nu elimina decizia umana."
   ]
 ];
 
@@ -154,6 +155,8 @@ function statusBadge(isReady: boolean) {
 }
 
 export default async function DemoPage() {
+  await requirePermission("platform.internal_tools.access");
+
   const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = currentBusiness?.business;
   const opportunities = isSupabaseConfigured ? await getOpportunitiesForCurrentBusiness() : demoOpportunities;
@@ -181,8 +184,8 @@ export default async function DemoPage() {
   return (
     <PageShell
       eyebrow="Demo"
-      title="Demo Revenue Recovery MoneyHunter AI"
-      description="Pregătește un demo care arată cum MoneyHunter găsește semnale comerciale pierdute, le transformă în oportunități și pregătește următoarea acțiune."
+      title="Demo Revenue Recovery ReveNew"
+      description="Pregătește un demo care arată cum ReveNew găsește semnale comerciale pierdute, le transformă în oportunități și pregătește următoarea acțiune."
       actions={<Button href="/inbox" variant="secondary">Deschide Inbox Comercial</Button>}
     >
       <div className="grid gap-6">
@@ -192,7 +195,7 @@ export default async function DemoPage() {
           <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr]">
             <div>
               <p className="text-lg font-semibold leading-8 text-white">
-                MoneyHunter AI este un Revenue Recovery System pentru firme: un sistem AI care găsește și recuperează oportunitățile comerciale pierdute din inbox, formulare, apeluri si conversatii.
+                ReveNew este un Revenue Recovery System pentru firme: un sistem AI care găsește și recuperează oportunitățile comerciale pierdute din inbox, formulare, apeluri si conversatii.
               </p>
               <p className="mt-4 text-sm leading-6 text-zinc-300">
                 Găsim lead-urile pierdute și îți arătăm zilnic pe cine trebuie să contactezi ca să faci bani.
@@ -254,7 +257,7 @@ export default async function DemoPage() {
         <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
           <DataCard title="Demo script" description="Text de prezentare si structura de 5 minute.">
             <p className="rounded-lg border border-white/10 bg-ink-900/70 p-4 text-sm leading-6 text-zinc-300">
-              MoneyHunter AI este un sistem de Revenue Recovery care centralizează cererile comerciale ale firmei și le transformă în oportunități urmărite. In loc ca emailurile, apelurile, formularele sau conversațiile să rămână pierdute, ele intra intr-un Inbox Comercial, sunt prioritizate, convertite în oportunități și apoi platforma pregătește următoarea acțiune: email, oferta, apel sau follow-up.
+              ReveNew este un sistem de Revenue Recovery care centralizează cererile comerciale ale firmei și le transformă în oportunități urmărite. In loc ca emailurile, apelurile, formularele sau conversațiile să rămână pierdute, ele intra intr-un Inbox Comercial, sunt prioritizate, convertite în oportunități și apoi platforma pregătește următoarea acțiune: email, oferta, apel sau follow-up.
             </p>
             <div className="mt-4 grid gap-3">
               {demoScript.map(([minute, title, copy]) => (
@@ -269,7 +272,7 @@ export default async function DemoPage() {
 
           <DataCard title="Audit Revenue Recovery - 7 zile" description="Oferta pilot recomandata pentru vanzare consultativa.">
             <p className="text-sm leading-6 text-zinc-300">
-              În 7 zile analizăm semnalele comerciale ale firmei, identificăm lead-uri pierdute sau neurmărite, le introducem în MoneyHunter AI și livrăm un raport cu oportunități recuperabile, valoare estimată și acțiuni concrete.
+              În 7 zile analizăm semnalele comerciale ale firmei, identificăm lead-uri pierdute sau neurmărite, le introducem în ReveNew și livrăm un raport cu oportunități recuperabile, valoare estimată și acțiuni concrete.
             </p>
             <div className="mt-5 grid gap-3">
               {["Setup pilot: 300-500 EUR", "Abonament lunar dupa pilot: 300-1000 EUR", "Firme mari: implementare personalizata"].map((item) => (

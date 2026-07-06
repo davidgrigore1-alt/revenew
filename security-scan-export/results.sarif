@@ -1,0 +1,209 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "6116cd37-a13f-4683-9027-9d8806528264"
+      },
+      "properties": {
+        "codexSecuritySchemaVersion": "1.0",
+        "codexSecurityTargetKind": "git_worktree"
+      },
+      "results": [
+        {
+          "level": "error",
+          "locations": [
+            {
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "supabase/migrations/202606240001_usage_metering.sql"
+                },
+                "region": {
+                  "endLine": 99,
+                  "startLine": 86
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "The usage metering migration defines `security definer` RPCs that mutate usage counters/events with caller-supplied identifiers, but no migration revokes default function execute privileges or checks caller membership/service-role intent."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:4d155b566d89daec524c7dc558c7e5889017c9bf063b1f75e3a69b530c7033e5"
+          },
+          "properties": {
+            "category": "Authorization bypass / exposed privileged RPC",
+            "confidence": "high",
+            "findingId": "csf_bd43676796facfa9e5a1b877",
+            "occurrenceId": "occ_71f5a8b92e20ef8be66ce891",
+            "severity": "high"
+          },
+          "ruleId": "authorization.exposed-security-definer-rpc",
+          "ruleIndex": 0
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/app/api/ai/analyze-opportunity/route.ts"
+                },
+                "region": {
+                  "endLine": 58,
+                  "startLine": 58
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "AI routes accept caller-controlled idempotency keys, `reserve_revenew_usage` returns an existing event for repeated keys, and settlement returns early for already-settled events while fresh OpenAI calls still run."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:47698fc5e73872623c121f80bbefac8a888ed138cceee8776aaa595318c774bc"
+          },
+          "properties": {
+            "category": "Billing / quota bypass",
+            "confidence": "high",
+            "findingId": "csf_2a59fd5ef7941d98e41f5bde",
+            "occurrenceId": "occ_7e1b30221485bb555af2d8e7",
+            "severity": "medium"
+          },
+          "ruleId": "billing.idempotency-key-reuse",
+          "ruleIndex": 2
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/app/%28protected%29/admin/usage/export/route.ts"
+                },
+                "region": {
+                  "endLine": 8,
+                  "startLine": 6
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Tenant-controlled business names flow into the admin usage CSV export. The CSV helper quotes cells but does not neutralize leading spreadsheet formula characters, enabling formula execution when an admin opens the file in an evaluating spreadsheet client."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:c142df2d63259e31a99b722efc2553e7e56687c15cddd8185c94a048ec2dddef"
+          },
+          "properties": {
+            "category": "CSV formula injection",
+            "confidence": "medium",
+            "findingId": "csf_20dc7f479dc7ba5c35d6a454",
+            "occurrenceId": "occ_de3bb49715f3ccc1fcc21550",
+            "severity": "medium"
+          },
+          "ruleId": "csv.spreadsheet-formula-injection",
+          "ruleIndex": 3
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "supabase/migrations/202606100007_stabilize_supabase_rls.sql"
+                },
+                "region": {
+                  "endLine": 175,
+                  "startLine": 170
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "The `business_members` insert/update RLS policy accepts `profile_id = current_profile_id()` for any target business, and downstream `can_access_business()` plus opportunity policies trust that membership row, creating a cross-tenant access path if authenticated table writes are exposed."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:c781c0e429954579c45f1f433f1f7f0c2be2d6d90c992713d8b5a0729c03136f"
+          },
+          "properties": {
+            "category": "Authorization bypass / tenant isolation",
+            "confidence": "high",
+            "findingId": "csf_3b745b0baf08058622ea4f83",
+            "occurrenceId": "occ_f2a3d8e94824f5eed93877f8",
+            "severity": "high"
+          },
+          "ruleId": "authorization.rls-business-member-self-join",
+          "ruleIndex": 1
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "Codex Security",
+          "rules": [
+            {
+              "id": "authorization.exposed-security-definer-rpc",
+              "name": "authorization.exposed-security-definer-rpc",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "authorization.exposed-security-definer-rpc"
+              }
+            },
+            {
+              "id": "authorization.rls-business-member-self-join",
+              "name": "authorization.rls-business-member-self-join",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "authorization.rls-business-member-self-join"
+              }
+            },
+            {
+              "id": "billing.idempotency-key-reuse",
+              "name": "billing.idempotency-key-reuse",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "billing.idempotency-key-reuse"
+              }
+            },
+            {
+              "id": "csv.spreadsheet-formula-injection",
+              "name": "csv.spreadsheet-formula-injection",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "csv.spreadsheet-formula-injection"
+              }
+            }
+          ],
+          "version": "0.1.10"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}

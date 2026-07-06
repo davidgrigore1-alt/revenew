@@ -1,27 +1,55 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AuthenticatedAccountChoice } from "@/components/auth/AuthenticatedAccountChoice";
+import { AuthCardShell } from "@/components/auth/AuthCardShell";
 import { AuthForm } from "@/components/auth/AuthForm";
-import { Logo } from "@/components/ui/Logo";
+import { AuthNotice } from "@/components/auth/AuthNotice";
+import { authPath, sanitizeAuthIntent } from "@/lib/auth/redirects";
+import { resolveAuthPageState } from "@/lib/auth/auth-state";
 
-export default function SignupPage() {
+function RetryAuthState() {
   return (
-    <main className="grid min-h-screen place-items-center px-4 py-10">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900/90 p-6 shadow-premium backdrop-blur">
-        <Logo />
-        <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gold-400">Start</p>
-          <h1 className="mt-3 text-3xl font-semibold text-white">Creează workspace</h1>
-          <p className="mt-3 text-sm leading-6 text-zinc-400">
-            Pregătește MoneyHunter AI pentru firma ta. Autentificarea reală vine într-o etapă următoare.
-          </p>
-        </div>
-        <AuthForm mode="signup" />
-        <p className="mt-6 text-center text-sm text-zinc-400">
-          Ai deja cont?{" "}
-          <Link href="/login" className="font-semibold text-mint-400 hover:text-mint-300">
-            Intră aici
-          </Link>
-        </p>
-      </section>
-    </main>
+    <div className="mt-6">
+      <AuthNotice tone="warning" title="Autentificarea nu este disponibilă momentan" message="Încearcă din nou în câteva momente." />
+      <Link href="/signup" className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-mint-400 px-4 text-sm font-semibold text-ink-950 transition hover:bg-mint-300">
+        Reîncearcă
+      </Link>
+    </div>
+  );
+}
+
+export default async function SignupPage({ searchParams }: { searchParams?: { intent?: string; reason?: string } }) {
+  const intent = sanitizeAuthIntent(searchParams?.intent, "create_account");
+  const state = await resolveAuthPageState();
+
+  if (state.status === "stale_session") {
+    redirect("/auth/recover-session?next=/login?reason=session_expired");
+  }
+
+  let content: React.ReactNode;
+
+  if (state.status === "authenticated") {
+    content = <AuthenticatedAccountChoice email={state.email} intent={intent} mode="signup" />;
+  } else if (state.status === "temporary_auth_failure" || state.status === "unexpected_auth_failure") {
+    content = <RetryAuthState />;
+  } else if (state.status === "authenticated_unconfirmed") {
+    content = <AuthNotice tone="warning" title="Verifică adresa de email" message="Confirmă emailul înainte de a continua în ReveNew." />;
+  } else {
+    content = <AuthForm mode="signup" intent={intent} />;
+  }
+
+  return (
+    <AuthCardShell
+      eyebrow="CONT NOU"
+      title="Creează contul ReveNew"
+      description="Începi cu datele tale de contact. După confirmarea emailului, configurăm firma și contextul comercial."
+      accent="gold"
+      trustLine="Contul personal nu creează automat o firmă și nu acordă roluri de administrare."
+      footerPrompt="Ai deja cont?"
+      footerHref={authPath("/login", "login")}
+      footerLabel="Intră aici"
+    >
+      {content}
+    </AuthCardShell>
   );
 }

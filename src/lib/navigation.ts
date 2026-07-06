@@ -1,26 +1,53 @@
-import {
-  ChartBarIcon,
-  Cog6ToothIcon,
-  ClipboardDocumentCheckIcon,
-  HomeIcon,
-  InboxStackIcon,
-  MegaphoneIcon,
-  QuestionMarkCircleIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  UserGroupIcon
-} from "@heroicons/react/24/outline";
+import type { Permission } from "@/lib/authz/permissions";
 
-export const dashboardNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
-  { name: "Inbox Comercial", href: "/inbox", icon: InboxStackIcon },
-  { name: "Oportunități", href: "/opportunities", icon: SparklesIcon },
-  { name: "Analizeaza oportunitate", href: "/opportunities/analyze", icon: SparklesIcon },
-  { name: "Lead-uri", href: "/leads", icon: UserGroupIcon },
-  { name: "Outreach", href: "/outreach", icon: MegaphoneIcon },
-  { name: "Rapoarte", href: "/reports", icon: ChartBarIcon },
-  { name: "Demo", href: "/demo", icon: ClipboardDocumentCheckIcon },
-  { name: "Ajutor", href: "/help", icon: QuestionMarkCircleIcon },
-  { name: "Setări", href: "/settings", icon: Cog6ToothIcon },
-  { name: "Admin", href: "/admin", icon: ShieldCheckIcon }
-];
+export type NavigationIconName =
+  | "banknotes"
+  | "chart-bar"
+  | "cog"
+  | "clipboard-check"
+  | "home"
+  | "inbox-stack"
+  | "lifebuoy"
+  | "megaphone"
+  | "puzzle"
+  | "shield-check"
+  | "sparkles"
+  | "user-group";
+
+export type NavigationItem = {
+  name: string;
+  href: string;
+  icon: NavigationIconName;
+  permission: Permission;
+  description?: string;
+};
+
+export const primaryNavigation = [
+  { name: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
+  { name: "Bani recuperabili", href: "/recoverable", icon: "banknotes", permission: "opportunities.read" },
+  { name: "Acțiuni", href: "/today", icon: "clipboard-check", permission: "actions.read" },
+  { name: "Rezultate", href: "/results", icon: "chart-bar", permission: "reports.read" },
+  { name: "Instrumente", href: "/tools", icon: "puzzle", permission: "workspace.read" }
+] satisfies NavigationItem[];
+
+export const utilityNavigation = [
+  { name: "Setări", href: "/settings", icon: "cog", permission: "settings.read" },
+  { name: "Ajutor", href: "/help", icon: "lifebuoy", permission: "workspace.read" }
+] satisfies NavigationItem[];
+
+export const advancedNavigation = [
+  { name: "Inbox Comercial", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele comerciale primite.", permission: "signals.read" },
+  { name: "Oportunități", href: "/opportunities", icon: "sparkles", description: "Vezi oportunitățile analizate și statusul lor.", permission: "opportunities.read" },
+  { name: "Verifică potențialul", href: "/opportunities/analyze", icon: "sparkles", description: "Transformă o cerere într-o oportunitate verificată.", permission: "opportunities.analyze" },
+  { name: "Lead-uri", href: "/leads", icon: "user-group", description: "Gestionează companii și contacte comerciale.", permission: "workspace.read" },
+  { name: "Outreach", href: "/outreach", icon: "megaphone", description: "Lucrează mesajele și comunicarea comercială.", permission: "documents.read" },
+  { name: "Rapoarte detaliate", href: "/reports", icon: "chart-bar", description: "Deschide raportarea completă și exporturile.", permission: "reports.read" },
+  { name: "Demo", href: "/demo", icon: "clipboard-check", description: "Instrumente de prezentare și scenarii demo.", permission: "workspace.read" },
+  { name: "Admin", href: "/admin", icon: "shield-check", description: "Zonă administrativă pentru operare internă.", permission: "platform.admin.access" }
+] satisfies NavigationItem[];
+
+export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, ...advancedNavigation] satisfies NavigationItem[];
+
+export function isNavItemActive(pathname: string, href: string) {
+  return pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+}

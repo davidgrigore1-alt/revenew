@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useRef, useState } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { getOpportunityTypeLabel } from "@/components/dashboard/OpportunityCard";
 import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { OpportunityContactsPanel } from "@/components/opportunities/OpportunityContactsPanel";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import {
   generateCallScript,
@@ -35,10 +36,10 @@ type PendingLocalDocument = {
 
 const actionLabels: Array<[OpportunityAction["type"], string]> = [
   ["send_email", "Trimite email"],
-  ["call_contact", "Suna contactul"],
+  ["call_contact", "Sună contactul"],
   ["prepare_offer", "Pregătește oferta"],
   ["follow_up", "Follow-up"],
-  ["research_more", "Cerceteaza mai mult"]
+  ["research_more", "Cercetează mai mult"]
 ];
 
 const isDevelopmentMode = process.env.NODE_ENV === "development";
@@ -48,7 +49,7 @@ const documentStatusLabels: Record<OpportunityDocument["status"], string> = {
   draft: "Draft",
   edited: "Editat",
   copied: "Copiat",
-  ready_to_send: "Pregatit",
+  ready_to_send: "Pregătit",
   sent: "Trimis",
   approved: "Aprobat",
   archived: "Arhivat"
@@ -57,9 +58,9 @@ const documentStatusLabels: Record<OpportunityDocument["status"], string> = {
 function documentTypeLabel(type?: OpportunityDocument["type"]) {
   if (type === "outreach_email") return "Email outreach";
   if (type === "follow_up_email") return "Email follow-up";
-  if (type === "offer_draft") return "Draft oferta";
+  if (type === "offer_draft") return "Draft ofertă";
   if (type === "call_script") return "Script apel";
-  if (type === "procurement_checklist") return "Checklist";
+  if (type === "procurement_checklist") return "Checklist operațional";
   if (type === "grant_summary") return "Rezumat grant";
   if (type === "linkedin_message") return "Mesaj LinkedIn";
   if (type === "whatsapp_message") return "Mesaj WhatsApp";
@@ -108,17 +109,17 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
   );
   const workflowDescription = isSupabaseConfigured
     ? openAIConfigured && openAIUnavailable
-      ? "Generarea avansată nu este disponibilă momentan. Poți continua cu drafturi standard pe baza datelor oportunității."
+      ? "Poți continua cu un draft standard și îl poți personaliza înainte de trimitere."
       : openAIConfigured
       ? "Documentele sunt generate pe baza datelor oportunității și pot fi editate înainte de trimitere."
       : "Documentele sunt pregătite pe baza datelor oportunității și pot fi editate înainte de trimitere."
-    : "Exploreaza workflow-ul comercial cu date demonstrative.";
+    : "Explorează workflow-ul comercial cu date demonstrative.";
   const topDetails = useMemo(
     () => [
-      ["Valoare estimata", `${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}`],
+      ["Valoare estimată", `${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}`],
       ["Deadline", formatDate(opportunity.deadline)],
       ["Sursa", source],
-      ["Locatie", `${opportunity.city}, ${opportunity.county}`]
+      ["Locație", `${opportunity.city}, ${opportunity.county}`]
     ],
     [opportunity, source]
   );
@@ -177,7 +178,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
     window.setTimeout(() => setHighlightedDocumentId(""), 3500);
     scrollToGeneratedDocumentOnce(persistedDocumentId);
     setStatus("action_generated");
-    setSuccess(type === "outreach_email" ? "Emailul outreach este pregatit pentru revizuire." : "Documentul a fost pregatit mai jos.");
+    setSuccess(type === "outreach_email" ? "Emailul outreach este pregătit pentru revizuire." : "Documentul a fost pregătit mai jos.");
     setPendingLocalDocument(null);
     setLoading("");
     return true;
@@ -214,8 +215,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           documentType: type,
-          business,
-          opportunity,
+          opportunityId: opportunity.id,
           tone: "profesionist, direct, B2B"
         })
       });
@@ -226,7 +226,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
           if (result.code === "insufficient_quota") {
             setOpenAIUnavailable(true);
             setPendingLocalDocument({ type, title: fallbackTitle, content: fallbackContent });
-            setError("Generarea avansată nu este disponibilă momentan. Poți pregăti un draft standard pe baza datelor oportunității.");
+            setError("Poți continua cu un draft standard și îl poți personaliza înainte de trimitere.");
           } else {
             setError(result.error ? `Documentul nu a putut fi generat: ${result.error}` : "Documentul nu a putut fi generat.");
           }
@@ -239,7 +239,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
     } catch (apiError) {
       console.error("AI document client error", apiError);
       if (openAIConfigured) {
-        setError("Generarea avansată nu este disponibilă momentan. Poți pregăti un draft standard pe baza datelor oportunității.");
+        setError("Poți continua cu un draft standard și îl poți personaliza înainte de trimitere.");
         setPendingLocalDocument({ type, title: fallbackTitle, content: fallbackContent });
         setLoading("");
         return;
@@ -267,8 +267,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           documentType: "follow_up_email",
-          business,
-          opportunity,
+          opportunityId: opportunity.id,
           tone: "scurt, politicos, orientat pe urmatorul pas"
         })
       });
@@ -279,7 +278,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         console.error("AI follow-up API error", result);
         if (result.code === "insufficient_quota") {
           setOpenAIUnavailable(true);
-          setSuccess("Follow-up-ul va fi pregatit cu draft standard.");
+          setSuccess("Follow-up-ul va fi pregătit cu draft standard.");
         } else {
           setError(result.error ? `Documentul nu a putut fi generat: ${result.error}` : "Documentul nu a putut fi generat.");
           setLoading("");
@@ -289,7 +288,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
     } catch (apiError) {
       console.error("AI follow-up client error", apiError);
       if (openAIConfigured) {
-        setSuccess("Follow-up-ul va fi pregatit cu draft standard.");
+        setSuccess("Follow-up-ul va fi pregătit cu draft standard.");
       }
     }
 
@@ -451,7 +450,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
     setError("");
     const result = await updateOpportunityAction(opportunity.id, actionId, action);
     if (!result.ok) {
-      setError(result.error ?? "Actiunea nu a putut fi actualizata.");
+      setError(result.error ?? "Acțiunea nu a putut fi actualizată.");
       setLoading("");
       restoreScrollPosition(scroll.top, scroll.left);
       return;
@@ -534,43 +533,53 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
           </dl>
         </DataCard>
 
-        <DataCard title="Butoane workflow" description={workflowDescription}>
+        <DataCard title="Proces comercial" description={workflowDescription}>
           <p className="mb-4 text-sm leading-6 text-zinc-400">
-            Aceste acțiuni transformă oportunitatea în documente, follow-up-uri si statusuri urmărite.
+            Alege următorul pas comercial, apoi revizuiește documentul înainte de a-l folosi.
           </p>
-          <div className="grid gap-2">
+          <div className="grid gap-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Comunicare</p>
             <div className="flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg bg-mint-500 px-4 py-3 text-sm font-semibold text-ink-950 hover:bg-mint-400 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("outreach_email", "Email outreach", generateOutreachEmail(opportunity, business))}>
-                {loading === "outreach_email" ? "Se pregateste documentul..." : "Genereaza email outreach"}
+                {loading === "outreach_email" ? "Se pregătește documentul..." : "Generează email outreach"}
               </button>
             </div>
-            <div className="flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("call_script", "Script apel", generateCallScript(opportunity, business))}>
-                {loading === "call_script" ? "Se pregateste documentul..." : "Genereaza script apel"}
+                {loading === "call_script" ? "Se pregătește documentul..." : "Generează script apel"}
               </button>
             </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Materiale comerciale</p>
             <div className="flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("offer_draft", "Draft oferta", generateOfferDraft(opportunity, business))}>
-                {loading === "offer_draft" ? "Se pregateste documentul..." : "Genereaza draft oferta"}
+                {loading === "offer_draft" ? "Se pregătește documentul..." : "Generează draft ofertă"}
               </button>
             </div>
-            <div className="flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("procurement_checklist", "Checklist actiune", generateChecklist(opportunity, business))}>
-                {loading === "procurement_checklist" ? "Se pregateste documentul..." : "Genereaza checklist"}
+                {loading === "procurement_checklist" ? "Se pregătește documentul..." : "Generează checklist"}
               </button>
             </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Follow-up</p>
             <div className="flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-gold-400/25 bg-gold-400/10 px-4 py-3 text-sm font-semibold text-gold-400 hover:bg-gold-400/15 disabled:cursor-not-allowed disabled:opacity-60" onClick={scheduleFollowUp}>
                 {loading === "follow_up" ? "Se salvează..." : "Programează follow-up"}
               </button>
             </div>
+            </div>
           </div>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Rezultat</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {[
               ["contacted", "Marchează contactat"],
               ["won", "Marchează câștigat"],
               ["lost", "Marchează pierdut"],
-              ["ignored", "Ignora"]
+              ["ignored", "Ignoră"]
             ].map(([nextStatus, label]) => (
               <span key={nextStatus} className="inline-flex items-center gap-2">
                 <button
@@ -602,6 +611,8 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         </DataCard>
       </div>
 
+      <OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} />
+
       <div className="grid gap-6 lg:grid-cols-3">
         <DataCard title="Sumar tip AI">
           <p className="text-sm leading-6 text-zinc-300">{opportunity.summary}</p>
@@ -622,7 +633,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         </DataCard>
       </div>
 
-      <DataCard title="Actiuni programate">
+        <DataCard title="Acțiuni programate">
         <div className="mb-4">
           <button
             type="button"
@@ -662,17 +673,17 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                     <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">{existing.priority ?? "medium"}</span>
                   </div>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    {existing?.description ?? "Actiune pregatita pentru acest tip de oportunitate."}
+                    {existing?.description ?? "Acțiune pregătită pentru acest tip de oportunitate."}
                   </p>
                   <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-mint-400">
-                    {existing ? formatDateTimeWithSeconds(existing.dueDate) : "Fara termen"}
+                    {existing ? formatDateTimeWithSeconds(existing.dueDate) : "Fără termen"}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button type="button" onClick={() => updateAction(existing.id, "done")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
                       Marchează finalizat
                     </button>
                     <button type="button" onClick={() => updateAction(existing.id, "postpone")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
-                      Amana 3 zile
+                      Amână 3 zile
                     </button>
                     <button type="button" onClick={() => updateAction(existing.id, "cancel")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
                       Anuleaza
@@ -683,12 +694,12 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
             })}
           </div>
         ) : (
-          <EmptyState title="Nu există acțiuni programate" description="Nu există acțiuni programate. Programează un follow-up sau marchează oportunitatea ca contactată." />
+          <EmptyState title="Nu există acțiuni programate" description="Programează un follow-up sau marchează oportunitatea ca contactată." />
         )}
       </DataCard>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <DataCard title="Text sursa brut">
+        <DataCard title="Text sursă brut">
           <p className="rounded-lg border border-white/10 bg-ink-900/80 p-4 text-sm leading-6 text-zinc-300">
             {opportunity.rawSourceText}
           </p>
@@ -699,7 +710,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
               opportunity.timeline.map((event) => (
                 <div key={event.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex size-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-xs font-semibold text-mint-300">•</span>
+                    <span className="inline-flex size-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-xs font-semibold text-mint-300">?</span>
                     <p className="font-semibold text-white">{event.label}</p>
                     <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2 py-1 text-xs font-semibold text-zinc-300">{event.type ?? "event"}</span>
                   </div>
@@ -708,7 +719,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                 </div>
               ))
             ) : (
-              <EmptyState title="Nu exista evenimente încă" description="Genereaza un document sau programeaza un follow-up pentru a incepe workflow-ul." />
+              <EmptyState title="Nu există evenimente încă" description="Generează un document sau programează un follow-up pentru a începe workflow-ul." />
             )}
             {status !== opportunity.status ? (
               <div className="rounded-lg border border-mint-400/20 bg-mint-400/10 p-4">
@@ -726,18 +737,17 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
       <DataCard
         title="Documente generate"
         description={
-          "Documentele sunt salvate in workspace. Revizuiește textul inainte de trimitere."
+          "Documentele sunt salvate în workspace. Revizuiește textul înainte de trimitere."
         }
       >
         {selectedDocument ? (
           <div className="mb-5 grid gap-4 rounded-lg border border-mint-400/20 bg-mint-400/5 p-4">
             <div className="flex flex-wrap gap-2">
               <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentTypeLabel(selectedDocument.type)}</span>
-              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{selectedDocument.generationMode === "ai" ? "Draft asistat" : "Draft pregatit"}</span>
-              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[selectedDocument.status]}</span>
               {isDevelopmentMode && selectedDocument.generationMode ? (
-                <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-zinc-500">{selectedDocument.generationMode}</span>
+                <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{selectedDocument.generationMode}</span>
               ) : null}
+              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[selectedDocument.status]}</span>
             </div>
             <dl className="grid gap-2 text-xs text-zinc-400 sm:grid-cols-3">
               <div>
@@ -759,15 +769,15 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
             </dl>
             {selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email" ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <input value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Catre" className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
+                <input value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Către" className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
                 <input value={ccEmail} onChange={(event) => setCcEmail(event.target.value)} placeholder="CC optional" className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-                {!recipientEmail ? <p className="text-xs text-gold-300 sm:col-span-2">Completeaza destinatarul inainte de trimitere.</p> : null}
+                {!recipientEmail ? <p className="text-xs text-gold-300 sm:col-span-2">Completează destinatarul înainte de trimitere.</p> : null}
               </div>
             ) : null}
             <input value={editorTitle} onChange={(event) => setEditorTitle(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-            <textarea value={editorContent} onChange={(event) => setEditorContent(event.target.value)} rows={12} className="rounded-lg border border-white/10 bg-ink-950/80 px-4 py-3 text-white outline-none" />
+            <textarea value={editorContent} onChange={(event) => setEditorContent(event.target.value)} rows={12} className="w-full min-w-0 resize-y rounded-lg border border-white/10 bg-ink-950/80 px-4 py-3 font-sans text-sm leading-6 text-white outline-none" />
             <p className={`text-sm font-semibold ${hasUnsavedChanges ? "text-gold-300" : "text-zinc-500"}`}>
-              {hasUnsavedChanges ? "Ai modificari nesalvate." : "Toate modificarile sunt salvate."}
+              {hasUnsavedChanges ? "Ai modificări nesalvate." : "Toate modificările sunt salvate."}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -780,16 +790,16 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                     : "cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.035] px-4 py-2 text-sm font-semibold text-zinc-500 opacity-70"
                 }
               >
-                Salvează modificarile
+                Salvează modificările
               </button>
-              <button type="button" onClick={copyDocument} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white">Copiază email</button>
+              <button type="button" onClick={copyDocument} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white">Copiază</button>
               {(selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email") && recipientEmail ? (
                 <a
                   href={`mailto:${encodeURIComponent(recipientEmail)}?cc=${encodeURIComponent(ccEmail)}&subject=${encodeURIComponent(editorTitle)}&body=${encodeURIComponent(editorContent)}`}
                   onClick={preserveScrollAfterUtilityClick}
                   className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white"
                 >
-                  Deschide in client email
+                  Deschide în client email
                 </a>
               ) : null}
               <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Marchează pregătit</button>
@@ -800,12 +810,12 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                 onClick={preserveScrollAfterUtilityClick}
                 className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white"
               >
-                Descarca .txt
+                Descarcă .txt
               </a>
               <button type="button" disabled className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-600" title="Trimiterea directa va fi disponibila dupa conectarea providerului de email.">
                 Trimite din aplicație
               </button>
-              <button type="button" onClick={closeDocumentEditor} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Inchide</button>
+              <button type="button" onClick={closeDocumentEditor} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Închide</button>
             </div>
           </div>
         ) : null}
@@ -816,22 +826,22 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                 <p className="font-semibold text-white">{document.title}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentTypeLabel(document.type)}</span>
-                  <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{document.generationMode === "ai" ? "Draft asistat" : "Draft pregatit"}</span>
+                  <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{document.generationMode === "ai" ? "Draft asistat" : "Draft standard"}</span>
                   <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[document.status]}</span>
                   {document.createdAt ? <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">Creat la: {formatDateTimeWithSeconds(document.createdAt)}</span> : null}
                 </div>
                 {"content" in document && document.content ? (
-                  <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-ink-950/80 p-4 text-sm leading-6 text-zinc-300">
+                  <div className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-white/10 bg-ink-950/80 p-4 font-sans text-sm leading-6 text-zinc-300">
                     {document.content.slice(0, 500)}
-                  </pre>
+                  </div>
                 ) : (
-                  <p className="mt-2 text-sm text-zinc-400">Draft pregatit pentru revizuire.</p>
+                  <p className="mt-2 text-sm text-zinc-400">Draft pregătit pentru revizuire.</p>
                 )}
               </button>
             ))}
           </div>
         ) : (
-          <EmptyState title="Nu exista documente generate încă" description="Nu exista documente generate încă. Genereaza un email, script de apel sau draft de oferta pentru aceasta oportunitate." />
+          <EmptyState title="Nu există documente generate încă" description="Generează un email, script de apel sau draft de ofertă pentru această oportunitate." />
         )}
       </DataCard>
       </div>

@@ -7,18 +7,21 @@ import {
   generateOutreachEmail
 } from "@/lib/mock-generators";
 import { scoreOpportunity } from "@/lib/scoring";
+import { cleanCommercialLongText, cleanCommercialText } from "@/lib/text/signal-quality";
 import type { Business, Opportunity, OpportunityDocumentType, OpportunityType } from "@/lib/types";
 import type { OpportunityAnalysisPromptInput } from "@/lib/openai/prompts";
 import type { ValidatedGeneratedDocument, ValidatedOpportunityAnalysis } from "@/lib/openai/validation";
 
 export function buildLocalOpportunityAnalysis(input: OpportunityAnalysisPromptInput): ValidatedOpportunityAnalysis {
   const estimatedValueHigh = Number(input.estimatedValue || input.business.averageContractValue || 0);
-  const summary = `Analiza locala: ${input.title} pare relevanta pentru ${input.business.name}, mai ales daca se potriveste cu serviciile si zona tinta.`;
+  const title = cleanCommercialText(input.title, "Oportunitate de confirmat");
+  const rawText = cleanCommercialLongText(input.rawText, "Textul sursă nu conține suficiente detalii comerciale utile.");
+  const summary = `Analiză standard: "${title}" merită validată comercial pentru ${input.business.name}, cu accent pe potrivirea serviciilor, locație și termen.`;
   const scores = scoreOpportunity(
     {
-      title: input.title,
+      title,
       summary,
-      rawSourceText: input.rawText,
+      rawSourceText: rawText,
       city: input.city ?? input.business.city,
       county: input.county ?? input.business.county,
       deadline: input.deadline ?? undefined,
@@ -32,7 +35,7 @@ export function buildLocalOpportunityAnalysis(input: OpportunityAnalysisPromptIn
   return {
     mode: "local_fallback",
     type: (input.sourceType as OpportunityType) || "manual",
-    title: input.title,
+    title,
     description: summary,
     estimated_value_low: Math.round(estimatedValueHigh * 0.65),
     estimated_value_high: estimatedValueHigh,
@@ -47,9 +50,9 @@ export function buildLocalOpportunityAnalysis(input: OpportunityAnalysisPromptIn
     contact_email: null,
     contact_phone: null,
     ai_summary: summary,
-    why_relevant: "Oportunitatea se potriveste partial cu profilul firmei si merita validata manual.",
-    risks: ["Analiza este locala si trebuie verificata manual.", "Contactul nu este confirmat."],
-    recommended_next_action: "Verifica sursa si pregateste un prim mesaj de contact.",
+    why_relevant: "Oportunitatea se potrivește parțial cu profilul firmei și merită validată înainte de outreach.",
+    risks: ["Datele sursă trebuie confirmate înainte de contact.", "Contactul și criteriile comerciale nu sunt confirmate."],
+    recommended_next_action: "Verifică sursa, confirmă persoana responsabilă și pregătește un prim mesaj de contact.",
     suggested_documents: ["outreach_email", "call_script"]
   };
 }

@@ -262,7 +262,7 @@ export default async function ReportsPage() {
 
   const recentActivity = workflow.events.slice(0, 8);
   const reportText = [
-    "MoneyHunter AI - Raport comercial",
+    "ReveNew - Raport comercial",
     `Business: ${business?.name ?? "Workspace"}`,
     `Raport generat la: ${formatDateTimeWithSeconds(reportGeneratedAt)}`,
     "",
@@ -298,7 +298,7 @@ export default async function ReportsPage() {
   return (
     <PageShell
       eyebrow="Rapoarte"
-      title="Raport comercial MoneyHunter"
+      title="Raport comercial ReveNew"
       description="Imagine executivă asupra pipeline-ului, acțiunilor urgente, documentelor pregătite și oportunităților care pot produce venit."
     >
       <div className="grid gap-6 print:block print:space-y-5">
@@ -309,7 +309,7 @@ export default async function ReportsPage() {
         ) : null}
 
         <DataCard title="Export raport" description="Copiaza, descarca sau printeaza raportul pentru discutia comerciala saptamanala.">
-          <ReportActions reportText={reportText} fileName="moneyhunter-raport-comercial.txt" />
+          <ReportActions reportText={reportText} fileName="revenew-raport-comercial.txt" />
         </DataCard>
 
         <DataCard title="Rezumat executiv">

@@ -3,15 +3,15 @@ import { PageShell } from "@/components/dashboard/PageShell";
 const glossary = [
   [
     "Ce vinzi de fapt?",
-    "MoneyHunter AI vinde recuperarea oportunităților comerciale pierdute, nu doar acces la o aplicație."
+    "ReveNew vinde recuperarea oportunităților comerciale pierdute, nu doar acces la o aplicație."
   ],
   [
-    "Ce vinzi de fapt cu MoneyHunter AI?",
-    "MoneyHunter AI nu este doar un CRM. Este un sistem care ajută firmele să nu piardă cereri comerciale. Platforma aduna semnale, le transformă în oportunități, pregătește acțiuni și arată managerului ce trebuie urmărit."
+    "Ce vinzi de fapt cu ReveNew?",
+    "ReveNew nu este doar un CRM. Este un sistem care ajută firmele să nu piardă cereri comerciale. Platforma aduna semnale, le transformă în oportunități, pregătește acțiuni și arată managerului ce trebuie urmărit."
   ],
   [
     "Cum apar oportunitățile?",
-    "În MoneyHunter, oportunitățile pot fi adăugate manual sau pot porni din Inbox Comercial. Inbox-ul aduna semnale precum apeluri, emailuri, formulare, mesaje sau lead-uri importate. Semnalele importante pot fi transformate în oportunități, iar apoi platforma pregătește emailuri, follow-up-uri, oferte si rapoarte."
+    "În ReveNew, oportunitățile pot fi adăugate manual sau pot porni din Inbox Comercial. Inbox-ul aduna semnale precum apeluri, emailuri, formulare, mesaje sau lead-uri importate. Semnalele importante pot fi transformate în oportunități, iar apoi platforma pregătește emailuri, follow-up-uri, oferte si rapoarte."
   ],
   ["Ce este o oportunitate?", "Un semnal comercial care poate deveni bani: un lead, o licitatie, un client vechi, o recomandare sau o nevoie observata."],
   ["Ce este pipeline-ul?", "Lista organizată de oportunități active, cu valoare estimată, status, scoruri și următorul pas."],
@@ -29,7 +29,7 @@ export default function HelpPage() {
   return (
     <PageShell
       eyebrow="Ajutor"
-      title="Glosar MoneyHunter AI"
+      title="Glosar ReveNew"
       description="Termeni esentiali pentru folosirea platformei in fluxul comercial."
     >
       <div className="grid gap-4 md:grid-cols-2">

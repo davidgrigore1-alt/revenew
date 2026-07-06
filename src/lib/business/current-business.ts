@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { demoBusiness } from "@/lib/mock-data";
 import type { Business } from "@/lib/types";
@@ -11,6 +12,8 @@ export type CurrentBusinessResult = {
   source: "supabase" | "demo";
   profileId: string;
   authUserId: string;
+  authUserEmail: string;
+  profileName: string;
   servicesCount: number;
   targetsCount: number;
 };
@@ -23,6 +26,10 @@ type BusinessRow = {
   cui: string | null;
   website: string | null;
   industry: string | null;
+  country_code: string | null;
+  administrative_area_code: string | null;
+  company_phone_e164: string | null;
+  postal_code: string | null;
   city: string | null;
   county: string | null;
   average_contract_value: number | null;
@@ -39,6 +46,10 @@ function mapBusiness(row: BusinessRow, services: string[], customers: string[], 
     cui: row.cui ?? "",
     website: row.website ?? "",
     industry: row.industry ?? "",
+    countryCode: row.country_code ?? "",
+    administrativeAreaCode: row.administrative_area_code ?? "",
+    companyPhoneE164: row.company_phone_e164 ?? "",
+    postalCode: row.postal_code ?? "",
     city: row.city ?? "",
     county: row.county ?? "",
     services,
@@ -51,13 +62,15 @@ function mapBusiness(row: BusinessRow, services: string[], customers: string[], 
   };
 }
 
-export async function getCurrentBusinessForUser({ redirectIfMissing = false } = {}): Promise<CurrentBusinessResult | null> {
+const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessForUserCached(redirectIfMissing: boolean): Promise<CurrentBusinessResult | null> {
   if (!isSupabaseConfigured) {
     return {
       business: demoBusiness,
       source: "demo",
       profileId: "",
       authUserId: "",
+      authUserEmail: "",
+      profileName: "Demo",
       servicesCount: demoBusiness.services.length,
       targetsCount: demoBusiness.targetCustomers.length + demoBusiness.targetCities.length + demoBusiness.targetIndustries.length
     };
@@ -139,7 +152,13 @@ export async function getCurrentBusinessForUser({ redirectIfMissing = false } = 
     source: "supabase",
     profileId: profile.id,
     authUserId: authUser.id,
+    authUserEmail: authUser.email ?? profile.email,
+    profileName: profile.full_name,
     servicesCount: services?.length ?? 0,
     targetsCount: targetRows.length
   };
+});
+
+export async function getCurrentBusinessForUser({ redirectIfMissing = false } = {}): Promise<CurrentBusinessResult | null> {
+  return getCurrentBusinessForUserCached(Boolean(redirectIfMissing));
 }
