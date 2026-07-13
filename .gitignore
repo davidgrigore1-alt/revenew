@@ -22,3 +22,8 @@ security-scan-export/
 artifacts/phase1-verification/local-*
 
 .vercel
+
+# Local development and verification artifacts
+.codex-dev-*.log
+dev-server.*.log
+artifacts/
