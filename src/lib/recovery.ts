@@ -17,6 +17,10 @@ export type RecoveryAction = {
   company: string;
   reason: string;
   estimatedValue: number;
+  currency: string;
+  assignedToProfileId?: string | null;
+  createdAt?: string;
+  completedAt?: string;
 };
 
 export type RecoveryDocument = {
@@ -74,7 +78,11 @@ function mapDemoActions(opportunities: Opportunity[]): RecoveryAction[] {
       opportunityTitle: opportunity.title,
       company: companyForOpportunity(opportunity),
       reason: actionReason({ description: action.description, dueAt: action.dueDate, priority: action.priority ?? "medium" }, opportunity),
-      estimatedValue: opportunity.estimatedValueHigh
+      estimatedValue: opportunity.estimatedValueHigh,
+      currency: opportunity.currency ?? "RON",
+      assignedToProfileId: action.assignedToProfileId,
+      createdAt: action.createdAt,
+      completedAt: action.completedAt
     }))
   );
 }
@@ -106,7 +114,7 @@ export async function getRecoverySummary(): Promise<RecoverySummary> {
   const [{ data: actionRows, error: actionError }, { data: documentRows, error: documentError }] = await Promise.all([
     supabase
       .from("opportunity_actions")
-      .select("id,title,description,status,due_at,priority,opportunity_id")
+      .select("*")
       .eq("business_id", business.id)
       .order("due_at", { ascending: true, nullsFirst: false }),
     supabase
@@ -156,7 +164,11 @@ export async function getRecoverySummary(): Promise<RecoverySummary> {
         opportunityTitle: opportunity?.title ?? "Oportunitate",
         company: opportunity ? companyForOpportunity(opportunity) : "Contact neconfirmat",
         reason: actionReason({ description: action.description ?? "", dueAt: action.due_at ?? undefined, priority }, opportunity),
-        estimatedValue: opportunity?.estimatedValueHigh ?? 0
+        estimatedValue: opportunity?.estimatedValueHigh ?? 0,
+        currency: opportunity?.currency ?? "RON",
+        assignedToProfileId: action.assigned_to_profile_id ?? null,
+        createdAt: action.created_at ?? undefined,
+        completedAt: action.completed_at ?? undefined
       };
     }),
     documents: (documentRows ?? []).map((document) => ({ id: document.id, status: document.status, opportunityId: document.opportunity_id })),
@@ -175,9 +187,11 @@ export function recoverableOpportunities(opportunities: Opportunity[]) {
 }
 
 export function recoverableValue(opportunities: Opportunity[], signals: CommercialSignal[]) {
-  const opportunityValue = recoverableOpportunities(opportunities).reduce((sum, opportunity) => sum + opportunity.estimatedValueHigh, 0);
+  const opportunityValue = recoverableOpportunities(opportunities)
+    .filter((opportunity) => (opportunity.currency ?? "RON") === "RON")
+    .reduce((sum, opportunity) => sum + opportunity.estimatedValueHigh, 0);
   const signalValue = signals
-    .filter((signal) => !signal.convertedOpportunityId && !["converted", "ignored", "archived"].includes(signal.status))
+    .filter((signal) => signal.currency === "RON" && !signal.convertedOpportunityId && !["converted", "ignored", "archived"].includes(signal.status))
     .reduce((sum, signal) => sum + Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0), 0);
   return opportunityValue + signalValue;
 }

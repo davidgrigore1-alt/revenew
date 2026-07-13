@@ -18,6 +18,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { ValidatedGeneratedDocument, ValidatedOpportunityAnalysis } from "@/lib/openai/validation";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { provisionBusinessFromOnboarding } from "@/lib/business/provision-business";
+import { updatePipelineStatus } from "@/lib/revenue-workspace/actions";
 
 export async function saveOnboarding(formData: FormData) {
   return provisionBusinessFromOnboarding(formData);
@@ -260,42 +261,9 @@ export async function updateGeneratedDocument(
 }
 
 export async function persistOpportunityStatus(opportunityId: string, status: OpportunityStatus) {
-  await requireActivePaidAccess();
-  await requirePermission("opportunities.update");
-
-  if (!isSupabaseConfigured) {
-    return { ok: true, mode: "demo" };
-  }
-
-  const supabase = createSupabaseServerClient();
-  if (!supabase) {
-    return { ok: false, error: "Supabase nu este disponibil." };
-  }
-
-  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
-  if (!opportunity) {
-    return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
-  }
-
-  const { error } = await supabase.from("opportunities").update({ status }).eq("id", opportunityId);
-  if (error) {
-    console.error("Supabase status update error", error);
-    return { ok: false, error: `Actualizarea statusului a esuat: ${error.message}` };
-  }
-
-  const eventType = status === "contacted" ? "marked_contacted" : status === "won" ? "marked_won" : status === "lost" ? "marked_lost" : "ignored";
-  const eventResult = await supabase.from("opportunity_events").insert({
-    opportunity_id: opportunityId,
-    event_type: eventType,
-    label: "Status actualizat",
-    description: `Statusul a fost schimbat in ${status}.`
-  });
-
-  if (eventResult.error) {
-    console.error("Supabase status event insert error", eventResult.error);
-  }
-
-  return { ok: true, mode: "supabase" };
+  const formData = new FormData();
+  formData.set("status", status);
+  return updatePipelineStatus(opportunityId, formData);
 }
 
 export async function persistFollowUp(
@@ -304,7 +272,7 @@ export async function persistFollowUp(
   options?: { title?: string; dueAt?: string; priority?: "low" | "medium" | "high"; description?: string }
 ) {
   await requireActivePaidAccess();
-  await requirePermission("actions.create");
+  const authorization = await requirePermission("actions.create");
 
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
@@ -329,21 +297,25 @@ export async function persistFollowUp(
       description,
       status: "pending",
       due_at: dueAt,
-      priority: options?.priority ?? "medium"
+      priority: options?.priority ?? "medium",
+      assigned_to_profile_id: authorization.profileId
     })
     .select("id,due_at,priority,status")
     .single();
 
   if (error || !data) {
     console.error("Supabase follow-up insert error", error);
-    return { ok: false, error: `Programarea follow-up-ului a esuat: ${error?.message ?? "insert fara rezultat"}` };
+    return { ok: false, error: "Programarea follow-up-ului nu a putut fi salvată." };
   }
 
   const eventResult = await supabase.from("opportunity_events").insert({
     opportunity_id: opportunityId,
-    event_type: "follow_up_scheduled",
+    business_id: business.id,
+    actor_profile_id: authorization.profileId,
+    event_type: "next_action_created",
     label: "Follow-up programat",
-    description: "A fost creata o actiune de follow-up cu text pregatit pentru revizuire."
+    description: "A fost creată o acțiune de follow-up cu text pregătit pentru revizuire.",
+    metadata: { action_id: data.id, assigned_to_profile_id: authorization.profileId, due_at: data.due_at }
   });
 
   if (eventResult.error) {
@@ -363,7 +335,7 @@ export async function persistFollowUp(
 
 export async function updateOpportunityAction(opportunityId: string, actionId: string, action: "done" | "postpone" | "cancel") {
   await requireActivePaidAccess();
-  await requirePermission(action === "done" ? "actions.complete" : "actions.update");
+  const authorization = await requirePermission(action === "done" ? "actions.complete" : "actions.update");
 
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
@@ -374,8 +346,9 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
     return { ok: false, error: "Supabase nu este disponibil." };
   }
 
+  const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
-  if (!opportunity) {
+  if (!business || !opportunity) {
     return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
   }
 
@@ -398,7 +371,7 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
     label = "Actiune anulata";
   }
 
-  const { error } = await supabase.from("opportunity_actions").update(payload).eq("id", actionId).eq("opportunity_id", opportunityId);
+  const { error } = await supabase.from("opportunity_actions").update(payload).eq("id", actionId).eq("business_id", business.id).eq("opportunity_id", opportunityId);
   if (error) {
     console.error("Supabase action update error", error);
     return { ok: false, error: `Actiunea nu a putut fi actualizata: ${error.message}` };
@@ -406,9 +379,12 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
 
   const eventResult = await supabase.from("opportunity_events").insert({
     opportunity_id: opportunityId,
+    business_id: business.id,
+    actor_profile_id: authorization.profileId,
     event_type: eventType,
     label,
-    description: label
+    description: label,
+    metadata: { action_id: actionId }
   });
   if (eventResult.error) {
     console.error("Supabase action event insert error", eventResult.error);

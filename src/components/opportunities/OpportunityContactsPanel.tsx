@@ -16,6 +16,7 @@ import { formatDateTimeWithSeconds } from "@/lib/utils";
 type OpportunityContactsPanelProps = {
   opportunityId: string;
   contacts: OpportunityContact[];
+  existingContacts?: Array<{ id: string; fullName: string; organizationName?: string | null; email?: string | null }>;
 };
 
 type EditableContact = {
@@ -81,7 +82,7 @@ function ContactLine({ label, value, href }: { label: string; value?: string | n
   );
 }
 
-export function OpportunityContactsPanel({ opportunityId, contacts }: OpportunityContactsPanelProps) {
+export function OpportunityContactsPanel({ opportunityId, contacts, existingContacts = [] }: OpportunityContactsPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(contacts.length === 0);
@@ -124,6 +125,15 @@ export function OpportunityContactsPanel({ opportunityId, contacts }: Opportunit
   }
 
   function submitContact(formData: FormData) {
+    setError("");
+    setMessage("");
+    startTransition(async () => {
+      const result = await saveOpportunityContact(opportunityId, formData);
+      refreshAfter(result);
+    });
+  }
+
+  function submitExistingContact(formData: FormData) {
     setError("");
     setMessage("");
     startTransition(async () => {
@@ -253,6 +263,49 @@ export function OpportunityContactsPanel({ opportunityId, contacts }: Opportunit
           </div>
         ) : null}
 
+        {existingContacts.length > 0 ? (
+          <form action={submitExistingContact} className="grid gap-3 rounded-lg border border-white/10 bg-ink-900/70 p-4 md:grid-cols-[1fr_auto]">
+            <input type="hidden" name="useExistingContact" value="1" />
+            <input type="hidden" name="associationId" value="" />
+            <input type="hidden" name="fullName" value={existingContacts[0]?.fullName ?? ""} />
+            <input type="hidden" name="organizationName" value="" />
+            <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              Asociază un contact existent
+              <select
+                name="contactId"
+                className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                onChange={(event) => {
+                  const selected = existingContacts.find((contact) => contact.id === event.currentTarget.value);
+                  const form = event.currentTarget.form;
+                  if (form && selected) {
+                    (form.elements.namedItem("fullName") as HTMLInputElement).value = selected.fullName;
+                    (form.elements.namedItem("organizationName") as HTMLInputElement).value = selected.organizationName ?? "";
+                  }
+                }}
+              >
+                {existingContacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>{[contact.fullName, contact.organizationName, contact.email].filter(Boolean).join(" · ")}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              Rol
+              <select name="role" defaultValue="decision_maker" className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50">
+                <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-3 text-sm font-semibold text-zinc-200 md:col-span-2">
+              <input name="isPrimary" type="checkbox" defaultChecked={contacts.length === 0} className="size-4 rounded border-white/20 bg-ink-950 text-mint-400" />
+              Contact principal pentru această oportunitate
+            </label>
+            <div className="md:col-span-2">
+              <button type="submit" disabled={isPending} className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-mint-400 disabled:opacity-60">
+                Asociază contactul
+              </button>
+            </div>
+          </form>
+        ) : null}
+
         {showForm ? (
           <form action={submitContact} className="grid gap-4 rounded-lg border border-white/10 bg-ink-900/70 p-4">
             <input type="hidden" name="associationId" value={editing.associationId} />
@@ -285,12 +338,14 @@ export function OpportunityContactsPanel({ opportunityId, contacts }: Opportunit
               </label>
               <label className="grid gap-2 text-sm font-semibold text-zinc-200">
                 Rol în oportunitate
-                <input
+                <select
                   name="role"
                   defaultValue={editing.role}
-                  placeholder="Decident, influencer, financiar"
                   className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
-                />
+                >
+                  {editing.role && !["decision_maker", "economic_buyer", "champion", "influencer", "approver", "other"].includes(editing.role) ? <option value={editing.role}>Rol legacy: {editing.role}</option> : null}
+                  <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
+                </select>
               </label>
               <label className="grid gap-2 text-sm font-semibold text-zinc-200">
                 Email

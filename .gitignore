@@ -12,8 +12,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
+.codex-*.log
+dev-server.*.log
 .DS_Store
 *.tsbuildinfo
 .codex-e2e-browser-profile/
+security-scan-export/
+artifacts/phase1-verification/local-*
 
 .vercel

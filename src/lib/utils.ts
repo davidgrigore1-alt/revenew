@@ -4,17 +4,18 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
-export function formatCurrency(value: number) {
+export function formatCurrency(value: number, currency = "EUR") {
+  const safeCurrency = /^[A-Z]{3}$/.test(currency) ? currency : "EUR";
   return new Intl.NumberFormat("ro-RO", {
     style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0
+    currency: safeCurrency,
+    maximumFractionDigits: 2
   }).format(value);
 }
 
 export function formatDate(value?: string) {
   if (!value) {
-    return "Fara termen";
+    return "Fără termen";
   }
 
   return new Intl.DateTimeFormat("ro-RO", {
@@ -26,7 +27,7 @@ export function formatDate(value?: string) {
 
 export function formatDateTimeWithSeconds(value?: string) {
   if (!value) {
-    return "Fara data";
+    return "Fără dată";
   }
 
   return new Intl.DateTimeFormat("ro-RO", {

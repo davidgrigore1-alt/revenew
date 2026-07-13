@@ -16,6 +16,7 @@ type ContactMutationContext = {
   ok: true;
   supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>;
   businessId: string;
+  actorProfileId: string;
 };
 
 type ValidatedContactInput = {
@@ -33,6 +34,7 @@ type ValidatedContactInput = {
   role: string | null;
   notes: string | null;
   isPrimary: boolean;
+  useExistingContact: boolean;
 };
 
 type ExistingContactRow = {
@@ -45,6 +47,7 @@ type ExistingAssociationRow = {
 };
 
 const MAX_NOTE_LENGTH = 1200;
+const opportunityBuyingRoles = new Set(["decision_maker", "economic_buyer", "champion", "influencer", "approver", "other"]);
 const SAFE_TEXT_PATTERN = /^[^<>]*$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^\+?[0-9][0-9 .()/-]{5,39}$/;
@@ -104,6 +107,10 @@ function validateContactForm(formData: FormData): ValidatedContactInput {
 
   const organizationName = optionalText(formData, "organizationName", 160);
   const notes = optionalText(formData, "notes", MAX_NOTE_LENGTH);
+  const role = optionalText(formData, "role", 120);
+  if (role && !opportunityBuyingRoles.has(role) && !fieldValue(formData, "associationId")) {
+    throw new Error("Rolul în oportunitate nu este valid.");
+  }
 
   return {
     contactId: fieldValue(formData, "contactId"),
@@ -117,15 +124,38 @@ function validateContactForm(formData: FormData): ValidatedContactInput {
     normalizedEmail: email,
     phone,
     professionalUrl,
-    role: optionalText(formData, "role", 120),
+    role,
     notes,
-    isPrimary: formData.get("isPrimary") === "on"
+    isPrimary: formData.get("isPrimary") === "on",
+    useExistingContact: formData.get("useExistingContact") === "1"
   };
+}
+
+async function verifyExistingContact(
+  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  businessId: string,
+  contactId: string
+) {
+  const { data, error } = await supabase
+    .from("crm_contacts")
+    .select("id")
+    .eq("id", contactId)
+    .eq("business_id", businessId)
+    .single();
+
+  if (error || !data) {
+    throw new Error("Contactul selectat nu este disponibil în workspace.");
+  }
+
+  return data.id as string;
 }
 
 async function getMutationContext(opportunityId: string): Promise<ContactMutationContext | Extract<ContactActionResult, { ok: false }>> {
   await requireActivePaidAccess();
-  await requirePermission("opportunities.update");
+  const authorization = await requirePermission("opportunities.update");
+  if (!authorization.profileId) {
+    return { ok: false, error: "Profilul autentificat nu este disponibil." };
+  }
 
   if (!isSupabaseConfigured) {
     return { ok: false, error: "Contactele CRM sunt disponibile doar când Supabase este configurat.", crmReady: false };
@@ -153,7 +183,8 @@ async function getMutationContext(opportunityId: string): Promise<ContactMutatio
   return {
     ok: true,
     supabase,
-    businessId: business.id
+    businessId: business.id,
+    actorProfileId: authorization.profileId
   };
 }
 
@@ -283,15 +314,20 @@ async function existingOpportunityContact(
 async function insertTimelineEvent(
   supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
   opportunityId: string,
+  businessId: string,
+  actorProfileId: string,
   eventType: string,
   label: string,
   description: string
 ) {
   const { error } = await supabase.from("opportunity_events").insert({
     opportunity_id: opportunityId,
+    business_id: businessId,
+    actor_profile_id: actorProfileId,
     event_type: eventType,
     label,
-    description
+    description,
+    metadata: {}
   });
 
   if (error) {
@@ -326,8 +362,10 @@ export async function saveOpportunityContact(opportunityId: string, formData: Fo
 
   try {
     const input = validateContactForm(formData);
-    const organizationId = await ensureOrganization(context.supabase, context.businessId, input);
-    const contactId = await ensureContact(context.supabase, context.businessId, input, organizationId);
+    const organizationId = input.useExistingContact ? null : await ensureOrganization(context.supabase, context.businessId, input);
+    const contactId = input.useExistingContact && input.contactId
+      ? await verifyExistingContact(context.supabase, context.businessId, input.contactId)
+      : await ensureContact(context.supabase, context.businessId, input, organizationId);
     const existing = input.associationId
       ? ({ id: input.associationId, contact_id: contactId } satisfies ExistingAssociationRow)
       : await existingOpportunityContact(context.supabase, context.businessId, opportunityId, contactId);
@@ -371,6 +409,8 @@ export async function saveOpportunityContact(opportunityId: string, formData: Fo
     await insertTimelineEvent(
       context.supabase,
       opportunityId,
+      context.businessId,
+      context.actorProfileId,
       input.isPrimary ? "primary_contact_changed" : existing ? "contact_updated" : "contact_assigned",
       input.isPrimary ? "Contact principal actualizat" : existing ? "Contact actualizat" : "Contact asociat",
       input.isPrimary ? "Contactul principal al oportunității a fost actualizat." : "Contactele oportunității au fost actualizate."
@@ -419,6 +459,8 @@ export async function setPrimaryOpportunityContact(opportunityId: string, associ
     await insertTimelineEvent(
       context.supabase,
       opportunityId,
+      context.businessId,
+      context.actorProfileId,
       "primary_contact_changed",
       "Contact principal actualizat",
       "Contactul principal al oportunității a fost schimbat."
@@ -449,6 +491,8 @@ export async function removeOpportunityContact(opportunityId: string, associatio
     await insertTimelineEvent(
       context.supabase,
       opportunityId,
+      context.businessId,
+      context.actorProfileId,
       "contact_removed",
       "Contact eliminat",
       "Un contact a fost eliminat din această oportunitate."

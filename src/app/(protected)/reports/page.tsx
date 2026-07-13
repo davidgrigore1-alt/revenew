@@ -208,7 +208,7 @@ function CompactOpportunity({ opportunity }: { opportunity: Opportunity }) {
       <div className="mt-3 grid gap-3 text-sm text-zinc-400 sm:grid-cols-3">
         <p>
           <span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Valoare</span>
-          <span className="font-semibold text-white">{formatCurrency(opportunity.estimatedValueLow)} - {formatCurrency(opportunity.estimatedValueHigh)}</span>
+          <span className="font-semibold text-white">{formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
         </p>
         <p>
           <span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Termen</span>
@@ -234,10 +234,11 @@ export default async function ReportsPage() {
   const nextWeek = addDays(7).slice(0, 10);
   const opportunityById = new Map(opportunities.map((opportunity) => [opportunity.id, opportunity]));
 
-  const pipelineValue = opportunities.reduce((sum, item) => sum + item.estimatedValueHigh, 0);
+  const ronOpportunities = opportunities.filter((item) => (item.currency ?? "RON") === "RON");
+  const pipelineValue = ronOpportunities.reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const activeOpportunities = opportunities.filter((item) => !["won", "lost", "ignored"].includes(item.status));
-  const wonValue = opportunities.filter((item) => item.status === "won").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
-  const lostValue = opportunities.filter((item) => item.status === "lost").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
+  const wonValue = ronOpportunities.filter((item) => item.status === "won").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
+  const lostValue = ronOpportunities.filter((item) => item.status === "lost").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const deadlinesThisWeek = opportunities.filter((item) => item.deadline && item.deadline.slice(0, 10) >= today && item.deadline.slice(0, 10) <= nextWeek);
   const urgentActions = dedupeActions(workflow.actions.filter((action) => action.status === "pending" && action.dueAt && action.dueAt.slice(0, 10) <= nextWeek));
   const overdueActions = urgentActions.filter((action) => action.dueAt && action.dueAt.slice(0, 10) < today);
@@ -257,7 +258,7 @@ export default async function ReportsPage() {
   ].filter(Boolean);
 
   const executiveSummary = opportunities.length
-    ? `Prioritatea săptămânii este urmărirea oportunităților active cu fit ridicat si finalizarea follow-up-urilor scadente. Există ${activeOpportunities.length} oportunități active în pipeline, cu o valoare estimată de ${formatCurrency(pipelineValue)} si ${urgentActions.length} acțiuni urgente de verificat.${inboxSummary.tableReady ? ` Inbox-ul comercial are ${inboxSummary.newCount} semnale noi, ${inboxSummary.urgentCount} urgente și potențial neconvertit de ${formatCurrency(inboxSummary.estimatedPotential)}.` : ""}`
+    ? `Prioritatea săptămânii este urmărirea oportunităților active cu fit ridicat si finalizarea follow-up-urilor scadente. Există ${activeOpportunities.length} oportunități active în pipeline, cu o valoare estimată în RON de ${formatCurrency(pipelineValue, "RON")} si ${urgentActions.length} acțiuni urgente de verificat.${inboxSummary.tableReady ? ` Inbox-ul comercial are ${inboxSummary.newCount} semnale noi și ${inboxSummary.urgentCount} urgente.` : ""}`
     : "Nu exista încă suficiente date pentru un raport comercial relevant.";
 
   const recentActivity = workflow.events.slice(0, 8);
@@ -270,7 +271,7 @@ export default async function ReportsPage() {
     executiveSummary,
     "",
     "Indicatori cheie",
-    `Pipeline estimat: ${formatCurrency(pipelineValue)}`,
+    `Pipeline estimat RON: ${formatCurrency(pipelineValue, "RON")}`,
     `Oportunități active: ${activeOpportunities.length}`,
     `Actiuni urgente: ${urgentActions.length}`,
     `Documente pregatite: ${readyDocuments.length}`,
@@ -283,7 +284,7 @@ export default async function ReportsPage() {
     ] : []),
     "",
     "Top oportunități",
-    ...(topOpportunities.length ? topOpportunities.map((opportunity, index) => `${index + 1}. ${opportunity.title} | ${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)} | Fit ${opportunity.fitScore} | ${opportunity.recommendedAction}`) : ["Nu există oportunități în raport."]),
+    ...(topOpportunities.length ? topOpportunities.map((opportunity, index) => `${index + 1}. ${opportunity.title} | ${formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - ${formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")} | Fit ${opportunity.fitScore} | ${opportunity.recommendedAction}`) : ["Nu există oportunități în raport."]),
     "",
     "Actiuni urgente",
     ...(urgentActions.length ? urgentActions.slice(0, 8).map((action) => `${action.title} | ${opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"} | Termen: ${formatDateTimeWithSeconds(action.dueAt)} | Prioritate: ${priorityLabels[action.priority ?? "medium"]}`) : ["Nu exista acțiuni urgente."]),
@@ -317,7 +318,7 @@ export default async function ReportsPage() {
         </DataCard>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Pipeline estimat" value={formatCurrency(pipelineValue)} detail="Valoarea maximă estimată a oportunităților din raport." tone="mint" />
+          <MetricCard label="Pipeline estimat (RON)" value={formatCurrency(pipelineValue, "RON")} detail="Valoarea maximă estimată doar pentru oportunitățile în RON." tone="mint" />
           <MetricCard label="Oportunități active" value={`${activeOpportunities.length}`} detail="Oportunități deschise care nu sunt marcate câștigate, pierdute sau ignorate." />
           <MetricCard label="Actiuni urgente" value={`${urgentActions.length}`} detail="Actiuni scadente sau apropiate, deduplicate pe oportunitate si termen." tone="gold" />
           <MetricCard label="Conversie" value={`${conversionRate}%`} detail="Ponderea oportunităților marcate câștigate din total." />
@@ -327,7 +328,7 @@ export default async function ReportsPage() {
           <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
           <MetricCard label="Documente pregatite" value={`${readyDocuments.length}`} detail="Documente editate, copiate, pregatite sau trimise." tone="mint" />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
-          <MetricCard label="Valoare pierdută" value={formatCurrency(lostValue)} detail="Estimare din oportunități marcate pierdute." tone="gold" />
+          <MetricCard label="Valoare pierdută (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
         </div>
 
         {inboxSummary.tableReady ? (

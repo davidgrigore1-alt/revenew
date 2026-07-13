@@ -4,9 +4,12 @@ import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { getOpportunityTypeLabel } from "@/components/dashboard/OpportunityCard";
 import { Button } from "@/components/ui/Button";
+import { CreateTaskForm } from "@/components/revenue/TaskControls";
+import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
 import { getCommercialSignalForOpportunity } from "@/lib/commercial-inbox";
 import { OpportunityWorkflow } from "@/components/opportunities/OpportunityWorkflow";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
+import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 import { opportunities } from "@/lib/mock-data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { isOpenAIConfigured } from "@/lib/openai/client";
@@ -19,6 +22,10 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
   const opportunity = await getOpportunityForCurrentBusiness(params.id);
   const demoBusiness = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const sourceSignal = await getCommercialSignalForOpportunity(params.id);
+  const [crm, assignableProfiles] = await Promise.all([
+    getCrmWorkspaceForCurrentBusiness(),
+    getAssignableProfilesForCurrentBusiness()
+  ]);
 
   if (!opportunity) {
     notFound();
@@ -58,7 +65,21 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
             </div>
           </DataCard>
         ) : null}
-        <OpportunityWorkflow opportunity={opportunity} business={demoBusiness} openAIConfigured={isOpenAIConfigured()} />
+        <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
+        <DataCard title="Programează o acțiune internă" description="Creează un follow-up sau task intern. Nu se trimite nimic către client.">
+          <CreateTaskForm opportunityId={opportunity.id} />
+        </DataCard>
+        <OpportunityWorkflow
+          opportunity={opportunity}
+          business={demoBusiness}
+          openAIConfigured={isOpenAIConfigured()}
+          existingContacts={crm.ready ? crm.contacts.map((contact) => ({
+            id: contact.id,
+            fullName: contact.fullName,
+            organizationName: contact.organization?.name,
+            email: contact.email
+          })) : []}
+        />
       </div>
     </PageShell>
   );

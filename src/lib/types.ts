@@ -29,6 +29,19 @@ export type OpportunityActionType =
   | "apply_to_grant"
   | "research_more";
 
+export type CommercialPipelineStage = "lead" | "qualified" | "proposal" | "won" | "lost";
+
+export type OpportunityLifecycleStatus = "open" | "won" | "lost" | "disqualified" | "archived";
+
+export type OpportunityCommercialType =
+  | "new_business"
+  | "stalled_pipeline"
+  | "reactivation"
+  | "expansion"
+  | "renewal"
+  | "commercial_recovery"
+  | "other";
+
 export type OpportunityDocumentType =
   | "outreach_email"
   | "follow_up_email"
@@ -93,6 +106,10 @@ export type OpportunityAction = {
   status: "pending" | "done" | "cancelled";
   dueDate: string;
   priority?: "low" | "medium" | "high";
+  assignedToProfileId?: string | null;
+  assignedToName?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   completedAt?: string;
   cancelledAt?: string;
 };
@@ -140,14 +157,26 @@ export type OpportunityEvent = {
   label: string;
   date: string;
   description: string;
+  businessId?: string | null;
+  actorProfileId?: string | null;
+  metadata?: Record<string, unknown>;
 };
 
 export type CrmOrganization = {
   id: string;
   businessId: string;
   name: string;
+  normalizedName?: string | null;
   website?: string | null;
+  industry?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  county?: string | null;
+  country?: string | null;
   notes?: string | null;
+  relationshipStatus?: string | null;
+  isArchived?: boolean | null;
+  archivedAt?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 };
@@ -158,10 +187,17 @@ export type CrmContact = {
   organizationId?: string | null;
   organization?: CrmOrganization | null;
   fullName: string;
+  firstName?: string | null;
+  lastName?: string | null;
   jobTitle?: string | null;
+  department?: string | null;
+  decisionRole?: string | null;
   email?: string | null;
   phone?: string | null;
   professionalUrl?: string | null;
+  isActive?: boolean | null;
+  isPrimaryForOrganization?: boolean | null;
+  archivedAt?: string | null;
   notes?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -182,9 +218,23 @@ export type OpportunityContact = {
 
 export type Opportunity = {
   id: string;
+  businessId?: string;
   title: string;
   type: OpportunityType;
   status: OpportunityStatus;
+  lifecycleStatus?: OpportunityLifecycleStatus;
+  commercialType?: OpportunityCommercialType | null;
+  ownerProfileId?: string | null;
+  ownerName?: string | null;
+  currency?: string;
+  actualOutcomeAmount?: number | null;
+  outcomeDate?: string | null;
+  outcomeReason?: string | null;
+  outcomeNote?: string | null;
+  outcomeRecordedByProfileId?: string | null;
+  outcomeRecordedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   source?: string;
   sourceUrl?: string;
   estimatedValueLow: number;

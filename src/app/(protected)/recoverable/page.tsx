@@ -50,7 +50,7 @@ export default async function RecoverablePage() {
                   <SourceBadge source={signal.source} />
                   <h2 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{signal.contactCompany || signal.contactName || "Cerere comercială"}</h2>
                 </div>
-                <p className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0))}</p>
+                <p className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0), signal.currency ?? "RON")}</p>
               </div>
               <p className="mt-2 line-clamp-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{signal.extractedSummary || signal.detectedNeed || signal.rawMessage || "Cerere de verificat."}</p>
               <p className="mt-3 text-sm text-[rgb(var(--muted-foreground))]">Recomandare: {signal.recommendedAction || signal.nextStep || "Revizuiește cererea."}</p>
@@ -64,7 +64,7 @@ export default async function RecoverablePage() {
                   <h2 className="font-semibold text-[rgb(var(--foreground))]">{opportunity.title}</h2>
                   <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{opportunityStatusLabels[opportunity.status] ?? "În lucru"} · Termen {formatDate(opportunity.deadline)}</p>
                 </div>
-                <p className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh)}</p>
+                <p className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p>
               </div>
               <p className="mt-2 line-clamp-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{opportunity.summary || "Oportunitate de verificat."}</p>
               <p className="mt-3 text-sm text-[rgb(var(--muted-foreground))]">Recomandare: {opportunity.recommendedAction}</p>

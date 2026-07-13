@@ -64,7 +64,16 @@ test("customer-facing opportunity and AI source does not contain known Romanian 
     "src/app/api/ai/generate-document/route.ts",
     "src/components/authz/ForbiddenState.tsx",
     "src/app/(protected)/admin/layout.tsx",
-    "src/components/admin/AdminUi.tsx"
+    "src/components/admin/AdminUi.tsx",
+    "src/lib/navigation.ts",
+    "src/lib/revenue-workspace.ts",
+    "src/lib/crm/workspace-actions.ts",
+    "src/app/(protected)/crm/page.tsx",
+    "src/app/(protected)/crm/organizations/[id]/page.tsx",
+    "src/components/crm/CrmWorkspaceClient.tsx",
+    "src/components/revenue/PipelineBoard.tsx",
+    "src/components/revenue/TaskControls.tsx",
+    "src/components/revenue/NextBestActionPanel.tsx"
   ];
 
   for (const file of files) {

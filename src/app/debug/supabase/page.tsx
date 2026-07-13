@@ -4,7 +4,7 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { isSupabaseConfigured, supabaseUrl } from "@/lib/supabase/status";
 
 export default async function SupabaseDebugPage() {
   if (process.env.NODE_ENV !== "development") {
@@ -54,6 +54,7 @@ export default async function SupabaseDebugPage() {
           <dl className="grid gap-3 text-sm">
             {[
               ["Supabase env", isSupabaseConfigured ? "Conectat" : "Neconectat"],
+              ["Supabase host", supabaseUrl ? new URL(supabaseUrl).host : "-"],
               ["Auth user id", authUserId || "-"],
               ["Auth user email", authUserEmail || "-"],
               ["Profile id", profileId || "-"],

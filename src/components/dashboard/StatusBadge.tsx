@@ -2,14 +2,14 @@ import type { OpportunityStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const labels: Record<OpportunityStatus, string> = {
-  new: "Noua",
-  reviewed: "Revizuita",
-  action_generated: "Actiune pregatita",
-  contacted: "Contactata",
+  new: "Nouă",
+  reviewed: "Revizuită",
+  action_generated: "Acțiune pregătită",
+  contacted: "Contactată",
   follow_up_needed: "Follow-up",
-  won: "Castigata",
-  lost: "Pierduta",
-  ignored: "Ignorata"
+  won: "Câștigată",
+  lost: "Pierdută",
+  ignored: "Ignorată"
 };
 
 const tones: Record<OpportunityStatus, string> = {

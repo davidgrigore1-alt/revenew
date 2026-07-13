@@ -1,6 +1,7 @@
 import { DataCard } from "@/components/dashboard/DataCard";
 import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
-import { getRecoverySummary, type RecoveryAction } from "@/lib/recovery";
+import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
+import type { RecoveryAction } from "@/lib/recovery";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,8 @@ function CompactEmpty({ label }: { label: string }) {
 }
 
 export default async function TodayPage() {
-  const summary = await getRecoverySummary();
-  const pending = summary.actions.filter((action) => action.status === "pending");
+  const summary = await getRevenueWorkspaceSummary();
+  const pending = summary.workQueue.allPersonal.filter((action) => action.status === "pending");
   const groups = groupActions(pending);
 
   return (
@@ -33,7 +34,8 @@ export default async function TodayPage() {
         ["Urgente", groups.urgent, "urgente"],
         ["Astăzi", groups.today, "pentru astăzi"],
         ["Urmează", groups.next, "în următoarele zile"],
-        ["Fără termen", groups.none, "fără termen"]
+        ["Fără termen", groups.none, "fără termen"],
+        ["Finalizate astăzi", summary.workQueue.completedToday, "finalizate astăzi"]
       ].map(([title, actions, emptyLabel]) => (
         <DataCard key={String(title)} title={String(title)}>
           <div className="grid gap-3 lg:grid-cols-2">

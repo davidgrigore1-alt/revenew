@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { applicationDateKey } from "@/lib/opportunity-domain";
 
 function riskReason(opportunity: Opportunity) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = applicationDateKey();
   if (opportunity.deadline && opportunity.deadline.slice(0, 10) <= today) {
     return "Termen depășit sau astăzi";
   }
@@ -24,7 +25,7 @@ export function RiskOpportunityCard({ opportunity }: { opportunity: Opportunity 
           <h3 className="truncate font-semibold text-[rgb(var(--foreground))]">{opportunity.title}</h3>
           <p className="mt-1 text-sm text-[rgb(var(--warning))]">{riskReason(opportunity)}</p>
         </div>
-        <p className="shrink-0 text-sm font-semibold text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh)}</p>
+        <p className="shrink-0 text-sm font-semibold text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p>
       </div>
       <p className="mt-3 text-xs text-[rgb(var(--muted-foreground))]">Termen: {formatDate(opportunity.deadline)}</p>
     </Link>

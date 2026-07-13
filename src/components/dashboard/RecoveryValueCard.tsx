@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
 
-export function RecoveryValueCard({ value, count }: { value: number; count: number }) {
+export function RecoveryValueCard({ value, count, currency = "RON" }: { value: number; count: number; currency?: string }) {
   const hasData = value > 0 || count > 0;
 
   return (
@@ -12,7 +12,7 @@ export function RecoveryValueCard({ value, count }: { value: number; count: numb
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Venit recuperabil</p>
           {hasData ? (
             <>
-              <p className="mt-4 text-5xl font-semibold tracking-tight text-[rgb(var(--foreground))] sm:text-6xl">{formatCurrency(value)}</p>
+              <p className="mt-4 text-5xl font-semibold tracking-tight text-[rgb(var(--foreground))] sm:text-6xl">{formatCurrency(value, currency)}</p>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">
                 Valoarea estimată a oportunităților care încă pot fi recuperate.
               </p>

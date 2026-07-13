@@ -70,11 +70,14 @@ test("opportunity detail exposes CRM contact management without changing page ar
   assert.match(types, /export type CrmContact/);
   assert.match(types, /export type OpportunityContact/);
   assert.match(types, /contacts\?: OpportunityContact\[\]/);
-  assert.match(workflow, /<OpportunityContactsPanel opportunityId=\{opportunity\.id\} contacts=\{opportunity\.contacts \?\? \[\]\} \/>/);
+  assert.match(workflow, /<OpportunityContactsPanel/);
+  assert.match(workflow, /existingContacts=\{existingContacts\}/);
   assert.match(panel, /Contacte oportunitate/);
   assert.match(panel, /Companie prospect/);
   assert.match(panel, /Setează principal/);
   assert.match(panel, /Elimină/);
+  assert.match(panel, /Asociază un contact existent/);
+  assert.match(actions, /useExistingContact/);
   assert.match(actions, /Numele contactului este obligatoriu/);
   assert.doesNotMatch(panel, /Ä|È|Å|Ã|Â|�/);
 });

@@ -17,6 +17,7 @@ import {
 } from "@/lib/mock-generators";
 import { persistFollowUp, persistGeneratedDocument, persistOpportunityStatus, updateGeneratedDocument, updateOpportunityAction } from "@/lib/actions";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { applicationDateKey } from "@/lib/opportunity-domain";
 import type { Business, Opportunity, OpportunityAction, OpportunityDocument, OpportunityStatus } from "@/lib/types";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
 
@@ -67,7 +68,17 @@ function documentTypeLabel(type?: OpportunityDocument["type"]) {
   return "Document";
 }
 
-export function OpportunityWorkflow({ opportunity, business, openAIConfigured }: { opportunity: Opportunity; business: Business; openAIConfigured: boolean }) {
+export function OpportunityWorkflow({
+  opportunity,
+  business,
+  openAIConfigured,
+  existingContacts = []
+}: {
+  opportunity: Opportunity;
+  business: Business;
+  openAIConfigured: boolean;
+  existingContacts?: Array<{ id: string; fullName: string; organizationName?: string | null; email?: string | null }>;
+}) {
   const [status, setStatus] = useState<OpportunityStatus>(opportunity.status);
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [documentOverrides, setDocumentOverrides] = useState<Record<string, Partial<OpportunityDocument>>>({});
@@ -83,7 +94,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
   const [ccEmail, setCcEmail] = useState("");
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
   const [followUpTitle, setFollowUpTitle] = useState(`Follow-up pentru ${opportunity.title}`);
-  const [followUpDate, setFollowUpDate] = useState(new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10));
+  const [followUpDate, setFollowUpDate] = useState(applicationDateKey(new Date(Date.now() + 3 * 86400000)));
   const [followUpTime, setFollowUpTime] = useState("09:00");
   const [followUpPriority, setFollowUpPriority] = useState<"low" | "medium" | "high">("medium");
   const [followUpNote, setFollowUpNote] = useState(generateFollowUpMessage(opportunity, business));
@@ -116,7 +127,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
     : "Explorează workflow-ul comercial cu date demonstrative.";
   const topDetails = useMemo(
     () => [
-      ["Valoare estimată", `${formatCurrency(opportunity.estimatedValueLow)} - ${formatCurrency(opportunity.estimatedValueHigh)}`],
+      ["Valoare estimată", `${formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - ${formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}`],
       ["Deadline", formatDate(opportunity.deadline)],
       ["Sursa", source],
       ["Locație", `${opportunity.city}, ${opportunity.county}`]
@@ -576,10 +587,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Rezultat</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {[
-              ["contacted", "Marchează contactat"],
-              ["won", "Marchează câștigat"],
-              ["lost", "Marchează pierdut"],
-              ["ignored", "Ignoră"]
+              ["contacted", "Marchează contactat"]
             ].map(([nextStatus, label]) => (
               <span key={nextStatus} className="inline-flex items-center gap-2">
                 <button
@@ -611,7 +619,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         </DataCard>
       </div>
 
-      <OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} />
+      <OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <DataCard title="Sumar tip AI">
@@ -664,10 +672,11 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
         {actions.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {actions.map((existing) => {
-              const label = actionLabels.find(([type]) => type === existing.type)?.[1] ?? existing.title;
+              const typeLabel = actionLabels.find(([type]) => type === existing.type)?.[1];
               return (
                 <article key={existing.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
-                  <p className="text-sm font-semibold text-white">{label}</p>
+                  <p className="text-sm font-semibold text-white">{existing.title}</p>
+                  {typeLabel && typeLabel !== existing.title ? <p className="mt-1 text-xs text-zinc-500">{typeLabel}</p> : null}
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
                     <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">{existing.status}</span>
                     <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">{existing.priority ?? "medium"}</span>
@@ -686,7 +695,7 @@ export function OpportunityWorkflow({ opportunity, business, openAIConfigured }:
                       Amână 3 zile
                     </button>
                     <button type="button" onClick={() => updateAction(existing.id, "cancel")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
-                      Anuleaza
+                      Anulează
                     </button>
                   </div>
                 </article>

@@ -12,6 +12,8 @@ export const routePolicies: Array<{ prefix: string; permission: Permission }> = 
   { prefix: "/inbox", permission: "signals.read" },
   { prefix: "/opportunities/analyze", permission: "opportunities.analyze" },
   { prefix: "/opportunities", permission: "opportunities.read" },
+  { prefix: "/pipeline", permission: "opportunities.read" },
+  { prefix: "/crm", permission: "workspace.read" },
   { prefix: "/today", permission: "actions.read" },
   { prefix: "/results", permission: "reports.read" },
   { prefix: "/recoverable", permission: "opportunities.read" },

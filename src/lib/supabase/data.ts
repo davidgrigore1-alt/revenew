@@ -17,6 +17,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 
 type OpportunityRow = {
   id: string;
+  business_id: string;
   title: string;
   type: Opportunity["type"];
   status: Opportunity["status"];
@@ -42,6 +43,18 @@ type OpportunityRow = {
   why_relevant?: string | null;
   analysis_mode?: "ai" | "local_fallback" | null;
   source_id?: string | null;
+  commercial_type?: Opportunity["commercialType"];
+  lifecycle_status?: Opportunity["lifecycleStatus"];
+  owner_profile_id?: string | null;
+  currency?: string | null;
+  actual_outcome_amount?: number | null;
+  outcome_date?: string | null;
+  outcome_reason?: string | null;
+  outcome_note?: string | null;
+  outcome_recorded_by_profile_id?: string | null;
+  outcome_recorded_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 type CrmOrganizationRow = {
@@ -60,6 +73,7 @@ type CrmContactRow = {
   organization_id: string | null;
   full_name: string;
   job_title: string | null;
+  decision_role?: string | null;
   email: string | null;
   phone: string | null;
   professional_url: string | null;
@@ -125,6 +139,7 @@ function mapOpportunityContacts(rows: OpportunityContactRow[] = []): Opportunity
         organization: mapCrmOrganization(firstJoinRow(contact.crm_organizations)),
         fullName: contact.full_name,
         jobTitle: contact.job_title,
+        decisionRole: contact.decision_role,
         email: contact.email,
         phone: contact.phone,
         professionalUrl: contact.professional_url,
@@ -136,6 +151,38 @@ function mapOpportunityContacts(rows: OpportunityContactRow[] = []): Opportunity
   }
 
   return mapped;
+}
+
+function mapOpportunityAction(action: Record<string, unknown>): OpportunityAction {
+  return {
+    id: String(action.id),
+    type: action.type as OpportunityAction["type"],
+    title: String(action.title),
+    description: String(action.description ?? ""),
+    status: action.status as OpportunityAction["status"],
+    dueDate: typeof action.due_at === "string" ? action.due_at : "",
+    priority: (action.priority as OpportunityAction["priority"]) ?? "medium",
+    assignedToProfileId: typeof action.assigned_to_profile_id === "string" ? action.assigned_to_profile_id : null,
+    createdAt: typeof action.created_at === "string" ? action.created_at : undefined,
+    updatedAt: typeof action.updated_at === "string" ? action.updated_at : undefined,
+    completedAt: typeof action.completed_at === "string" ? action.completed_at : undefined,
+    cancelledAt: typeof action.cancelled_at === "string" ? action.cancelled_at : undefined
+  };
+}
+
+function mapOpportunityEvent(event: Record<string, unknown>): OpportunityEvent {
+  return {
+    id: String(event.id),
+    type: String(event.event_type ?? "event"),
+    label: String(event.label),
+    description: String(event.description ?? ""),
+    date: String(event.occurred_at ?? event.created_at ?? ""),
+    businessId: typeof event.business_id === "string" ? event.business_id : null,
+    actorProfileId: typeof event.actor_profile_id === "string" ? event.actor_profile_id : null,
+    metadata: typeof event.metadata === "object" && event.metadata !== null
+      ? event.metadata as Record<string, unknown>
+      : {}
+  };
 }
 
 function mapOpportunity(
@@ -167,9 +214,22 @@ function mapOpportunity(
 
   return {
     id: row.id,
+    businessId: row.business_id,
     title: row.title,
     type: row.type,
     status: row.status,
+    lifecycleStatus: row.lifecycle_status,
+    commercialType: row.commercial_type ?? null,
+    ownerProfileId: row.owner_profile_id ?? null,
+    currency: row.currency ?? "RON",
+    actualOutcomeAmount: row.actual_outcome_amount == null ? null : Number(row.actual_outcome_amount),
+    outcomeDate: row.outcome_date ?? null,
+    outcomeReason: row.outcome_reason ?? null,
+    outcomeNote: row.outcome_note ?? null,
+    outcomeRecordedByProfileId: row.outcome_recorded_by_profile_id ?? null,
+    outcomeRecordedAt: row.outcome_recorded_at ?? null,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
     source: row.analysis_mode === "ai" ? "Supabase + AI" : "Supabase",
     sourceUrl: row.source_url ?? undefined,
     estimatedValueLow: Number(row.estimated_value_low ?? 0),
@@ -233,13 +293,76 @@ export async function getOpportunitiesForCurrentBusiness() {
     .from("opportunities")
     .select("*")
     .eq("business_id", business.id)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(200);
 
   if (error) {
     throw new Error(`Opportunity load error: ${error.message}`);
   }
 
-  return (data ?? []).map((row) => mapOpportunity(row as OpportunityRow));
+  const rows = (data ?? []) as OpportunityRow[];
+  const opportunityIds = rows.map((row) => row.id);
+  if (opportunityIds.length === 0) return [];
+
+  const [actionResult, eventResult, contactResult] = await Promise.all([
+    supabase
+      .from("opportunity_actions")
+      .select("*")
+      .eq("business_id", business.id)
+      .in("opportunity_id", opportunityIds)
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .limit(500),
+    supabase
+      .from("opportunity_events")
+      .select("*")
+      .in("opportunity_id", opportunityIds)
+      .order("occurred_at", { ascending: false })
+      .limit(500),
+    supabase
+      .from("opportunity_contacts")
+      .select(
+        "id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,notes,created_at,updated_at,crm_organizations(id,business_id,name,website,notes,created_at,updated_at))"
+      )
+      .eq("business_id", business.id)
+      .in("opportunity_id", opportunityIds)
+      .order("is_primary", { ascending: false })
+      .limit(500)
+  ]);
+
+  if (actionResult.error) throw new Error(`Opportunity actions load error: ${actionResult.error.message}`);
+  if (eventResult.error) throw new Error(`Opportunity events load error: ${eventResult.error.message}`);
+  if (contactResult.error && !isMissingRelationError(contactResult.error, "opportunity_contacts")) {
+    throw new Error(`Opportunity contacts load error: ${contactResult.error.message}`);
+  }
+
+  const actionsByOpportunity = new Map<string, OpportunityAction[]>();
+  for (const action of actionResult.data ?? []) {
+    const current = actionsByOpportunity.get(action.opportunity_id) ?? [];
+    current.push(mapOpportunityAction(action));
+    actionsByOpportunity.set(action.opportunity_id, current);
+  }
+  const eventsByOpportunity = new Map<string, OpportunityEvent[]>();
+  for (const event of eventResult.data ?? []) {
+    const current = eventsByOpportunity.get(event.opportunity_id) ?? [];
+    current.push(mapOpportunityEvent(event));
+    eventsByOpportunity.set(event.opportunity_id, current);
+  }
+  const contactsByOpportunity = new Map<string, OpportunityContact[]>();
+  if (!contactResult.error) {
+    for (const association of (contactResult.data ?? []) as OpportunityContactRow[]) {
+      const current = contactsByOpportunity.get(association.opportunity_id) ?? [];
+      current.push(...mapOpportunityContacts([association]));
+      contactsByOpportunity.set(association.opportunity_id, current);
+    }
+  }
+
+  return rows.map((row) => mapOpportunity(
+    row,
+    actionsByOpportunity.get(row.id) ?? [],
+    [],
+    eventsByOpportunity.get(row.id) ?? [],
+    contactsByOpportunity.get(row.id) ?? []
+  ));
 }
 
 export async function getOpportunityForCurrentBusiness(id: string) {
@@ -272,7 +395,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     supabase
       .from("opportunity_contacts")
       .select(
-        "id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,email,phone,professional_url,notes,created_at,updated_at,crm_organizations(id,business_id,name,website,notes,created_at,updated_at))"
+        "id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,notes,created_at,updated_at,crm_organizations(id,business_id,name,website,notes,created_at,updated_at))"
       )
       .eq("opportunity_id", id)
       .eq("business_id", business.id)
@@ -307,17 +430,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     return null;
   }
 
-  const mappedActions: OpportunityAction[] = (actions ?? []).map((action) => ({
-    id: action.id,
-    type: action.type,
-    title: action.title,
-    description: action.description ?? "",
-    status: action.status,
-    dueDate: action.due_at ?? action.created_at,
-    priority: action.priority ?? "medium",
-    completedAt: action.completed_at ?? undefined,
-    cancelledAt: action.cancelled_at ?? undefined
-  }));
+  const mappedActions: OpportunityAction[] = (actions ?? []).map((action) => mapOpportunityAction(action));
 
   const mappedDocuments: OpportunityDocument[] = (documents ?? []).map((document) => ({
     id: document.id,
@@ -333,13 +446,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     sentAt: document.sent_at ?? undefined
   }));
 
-  const mappedEvents: OpportunityEvent[] = (events ?? []).map((event) => ({
-    id: event.id,
-    type: event.event_type,
-    label: event.label,
-    description: event.description ?? "",
-    date: event.occurred_at ?? event.created_at
-  }));
+  const mappedEvents: OpportunityEvent[] = (events ?? []).map((event) => mapOpportunityEvent(event));
 
   const mappedContacts = contactsError ? [] : mapOpportunityContacts((contacts ?? []) as OpportunityContactRow[]);
 
