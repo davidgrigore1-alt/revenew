@@ -24,7 +24,7 @@ export function AppShell({
     <div className="min-h-screen overflow-x-hidden bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
       <Sidebar primaryItems={primaryItems} utilityItems={utilityItems} />
       <div className="min-w-0 xl:pl-[248px]">
-        <AppHeader businessName={businessName} userEmail={userEmail} userName={userName} isDemo={isDemo} />
+        <AppHeader businessName={businessName} userEmail={userEmail} userName={userName} isDemo={isDemo} primaryItems={primaryItems} utilityItems={utilityItems} />
         {children}
       </div>
       <MobileNav items={primaryItems} />

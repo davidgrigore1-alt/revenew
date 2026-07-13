@@ -129,13 +129,14 @@ test("workspace actions enforce membership-scoped opportunity reloads and activi
   assert.doesNotMatch(source, /profiles\.role/);
 });
 
-test("CRM and pipeline routes are protected and visible through serializable navigation", () => {
+test("CRM deep links stay protected while company/contact navigation remains serializable", () => {
   const policies = read("src/lib/authz/route-policies.ts");
   const navigation = read("src/lib/navigation.ts");
 
   assert.match(policies, /prefix: "\/crm", permission: "workspace\.read"/);
   assert.match(policies, /prefix: "\/pipeline", permission: "opportunities\.read"/);
-  assert.match(navigation, /href: "\/crm"/);
+  assert.match(navigation, /href: "\/companies"/);
+  assert.match(navigation, /href: "\/contacts"/);
   assert.match(navigation, /href: "\/pipeline"/);
   assert.doesNotMatch(navigation, /render:|HomeIcon|icon:\s*[A-Z][A-Za-z]+Icon[,}]/);
 });

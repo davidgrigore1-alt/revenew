@@ -2,6 +2,7 @@ import type { Permission } from "@/lib/authz/permissions";
 
 export type NavigationIconName =
   | "banknotes"
+  | "building-office"
   | "chart-bar"
   | "cog"
   | "clipboard-check"
@@ -12,6 +13,7 @@ export type NavigationIconName =
   | "puzzle"
   | "shield-check"
   | "sparkles"
+  | "document"
   | "user-group";
 
 export type NavigationItem = {
@@ -24,10 +26,13 @@ export type NavigationItem = {
 
 export const primaryNavigation = [
   { name: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
-  { name: "CRM", href: "/crm", icon: "user-group", permission: "workspace.read" },
+  { name: "Activitatea mea", href: "/today", icon: "clipboard-check", permission: "actions.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
-  { name: "Acțiuni", href: "/today", icon: "clipboard-check", permission: "actions.read" },
-  { name: "Oportunități", href: "/opportunities", icon: "sparkles", permission: "opportunities.read" }
+  { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
+  { name: "Contacte", href: "/contacts", icon: "user-group", permission: "workspace.read" },
+  { name: "Oportunități", href: "/opportunities", icon: "sparkles", permission: "opportunities.read" },
+  { name: "Documente", href: "/outreach", icon: "document", permission: "documents.read" },
+  { name: "Rapoarte", href: "/reports", icon: "chart-bar", permission: "reports.read" }
 ] satisfies NavigationItem[];
 
 export const utilityNavigation = [

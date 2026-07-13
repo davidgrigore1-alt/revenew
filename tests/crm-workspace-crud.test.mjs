@@ -36,19 +36,20 @@ test("CRM workspace actions create, edit and archive tenant-scoped records", () 
   assert.doesNotMatch(source, /profiles\.role/);
 });
 
-test("CRM UI exposes real CRUD forms and organization detail surfaces", () => {
+test("CRM UI exposes real CRUD forms and first-class company/contact navigation", () => {
   const crmPage = read("src/app/(protected)/crm/page.tsx");
   const client = read("src/components/crm/CrmWorkspaceClient.tsx");
   const detail = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const navigation = read("src/lib/navigation.ts");
 
-  assert.match(navigation, /href: "\/crm"/);
+  assert.match(navigation, /href: "\/companies"/);
+  assert.match(navigation, /href: "\/contacts"/);
   assert.match(navigation, /primaryNavigation/);
   assert.match(crmPage, /CrmWorkspaceClient/);
-  assert.match(client, /Creează organizație/);
+  assert.match(client, /Creează companie/);
   assert.match(client, /Creează contact/);
   assert.match(client, /Arhivează/);
-  assert.match(client, /Contact principal pentru organizație/);
+  assert.match(client, /Contact principal pentru companie/);
   assert.match(detail, /Oportunități asociate/);
   assert.match(detail, /Activitate/);
 });

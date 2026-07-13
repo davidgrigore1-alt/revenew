@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 type CrmWorkspaceClientProps = {
   organizations: CrmOrganization[];
   contacts: CrmContact[];
+  view?: "all" | "companies" | "contacts";
 };
 
 const roleOptions = [
@@ -25,7 +26,7 @@ const roleOptions = [
   ["other", "Alt rol"]
 ];
 
-export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClientProps) {
+export function CrmWorkspaceClient({ organizations, contacts, view = "all" }: CrmWorkspaceClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [notice, setNotice] = useState("");
@@ -62,15 +63,15 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
 
-      <section className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5">
+      {view !== "contacts" ? <section className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5">
         <div>
-          <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează organizația" : "Creează organizație"}</h2>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Organizațiile sunt companii prospect sau client din workspace-ul curent.</p>
+          <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează compania" : "Creează companie"}</h2>
+          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din workspace-ul curent.</p>
         </div>
         <form action={organizationSubmit} className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingOrganization?.id ?? ""} />
           <label className="grid gap-2 text-sm font-semibold">
-            Nume organizație
+            Nume companie
             <input name="name" required defaultValue={editingOrganization?.name ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
           </label>
           <label className="grid gap-2 text-sm font-semibold">
@@ -111,23 +112,23 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
             <textarea name="notes" rows={3} defaultValue={editingOrganization?.notes ?? ""} className="resize-y rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" />
           </label>
           <div className="flex flex-wrap gap-2 md:col-span-2">
-            <Button type="submit" disabled={isPending}>{editingOrganization ? "Salvează organizația" : "Creează organizația"}</Button>
+            <Button type="submit" disabled={isPending}>{editingOrganization ? "Salvează compania" : "Creează compania"}</Button>
             {editingOrganization ? <Button variant="secondary" onClick={() => setEditingOrganization(null)}>Renunță</Button> : null}
           </div>
         </form>
-      </section>
+      </section> : null}
 
-      <section className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5">
+      {view !== "companies" ? <section className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5">
         <div>
           <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingContact ? "Editează contactul" : "Creează contact"}</h2>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți atașa mai multe contacte la aceeași organizație și poți marca unul ca principal.</p>
+          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți atașa mai multe contacte la aceeași companie și poți marca unul ca principal.</p>
         </div>
         <form action={contactSubmit} className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingContact?.id ?? ""} />
           <label className="grid gap-2 text-sm font-semibold">
-            Organizație
+            Companie
             <select name="organizationId" defaultValue={editingContact?.organizationId ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
-              <option value="">Fără organizație</option>
+              <option value="">Fără companie</option>
               {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
             </select>
           </label>
@@ -171,7 +172,7 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
           </label>
           <label className="flex items-center gap-3 text-sm font-semibold md:col-span-2">
             <input name="isPrimaryForOrganization" type="checkbox" defaultChecked={Boolean(editingContact?.isPrimaryForOrganization)} className="size-4" />
-            Contact principal pentru organizație
+            Contact principal pentru companie
           </label>
           <label className="grid gap-2 text-sm font-semibold md:col-span-2">
             Note
@@ -182,10 +183,10 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
             {editingContact ? <Button variant="secondary" onClick={() => setEditingContact(null)}>Renunță</Button> : null}
           </div>
         </form>
-      </section>
+      </section> : null}
 
-      <section className="grid gap-4">
-        <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Organizații</h2>
+      {view !== "contacts" ? <section className="grid gap-4">
+        <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Companii</h2>
         <div className="grid gap-3">
           {organizations.map((organization) => {
             const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
@@ -208,9 +209,10 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
             );
           })}
         </div>
-      </section>
+        {organizations.length === 0 ? <p className="rounded-lg border border-dashed border-[rgb(var(--border))] p-5 text-sm text-[rgb(var(--muted-foreground))]">Nu există companii încă. Adaugă primul client sau prospect pentru a lega contacte și oportunități reale.</p> : null}
+      </section> : null}
 
-      <section className="grid gap-4">
+      {view !== "companies" ? <section className="grid gap-4">
         <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2>
         <div className="grid gap-3 md:grid-cols-2">
           {contacts.map((contact) => (
@@ -219,7 +221,7 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
                 <div className="min-w-0">
                   <h3 className="break-words font-semibold text-[rgb(var(--foreground))]">{contact.fullName}</h3>
                   <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p>
-                  {contact.isPrimaryForOrganization ? <p className="mt-2 text-xs font-semibold text-[rgb(var(--primary))]">Contact principal organizație</p> : null}
+                  {contact.isPrimaryForOrganization ? <p className="mt-2 text-xs font-semibold text-[rgb(var(--primary))]">Contact principal companie</p> : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="secondary" onClick={() => setEditingContact(contact)}>Editează</Button>
@@ -233,7 +235,8 @@ export function CrmWorkspaceClient({ organizations, contacts }: CrmWorkspaceClie
             </article>
           ))}
         </div>
-      </section>
+        {contacts.length === 0 ? <p className="rounded-lg border border-dashed border-[rgb(var(--border))] p-5 text-sm text-[rgb(var(--muted-foreground))]">Nu există contacte încă. Adaugă o persoană implicată sau documentează explicit că decidentul nu este cunoscut.</p> : null}
+      </section> : null}
     </div>
   );
 }

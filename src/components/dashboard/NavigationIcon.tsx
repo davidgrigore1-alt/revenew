@@ -1,5 +1,6 @@
 import {
   BanknotesIcon,
+  BuildingOffice2Icon,
   ChartBarIcon,
   Cog6ToothIcon,
   ClipboardDocumentCheckIcon,
@@ -10,6 +11,7 @@ import {
   PuzzlePieceIcon,
   ShieldCheckIcon,
   SparklesIcon,
+  DocumentTextIcon,
   UserGroupIcon
 } from "@heroicons/react/24/outline";
 import type { NavigationIconName } from "@/lib/navigation";
@@ -17,6 +19,7 @@ import type { ComponentType, SVGProps } from "react";
 
 const icons = {
   banknotes: BanknotesIcon,
+  "building-office": BuildingOffice2Icon,
   "chart-bar": ChartBarIcon,
   cog: Cog6ToothIcon,
   "clipboard-check": ClipboardDocumentCheckIcon,
@@ -27,6 +30,7 @@ const icons = {
   puzzle: PuzzlePieceIcon,
   "shield-check": ShieldCheckIcon,
   sparkles: SparklesIcon,
+  document: DocumentTextIcon,
   "user-group": UserGroupIcon
 } satisfies Record<NavigationIconName, ComponentType<SVGProps<SVGSVGElement>>>;
 

@@ -5,6 +5,7 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getPostBusinessDestination } from "@/lib/billing/paid-access";
+import { emptyOnboardingDraft, type OnboardingDraft } from "@/lib/onboarding/draft";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 
@@ -100,10 +101,27 @@ export default async function OnboardingPage() {
     redirect(await getPostBusinessDestination());
   }
 
+  type SavedDraft = { current_step: number; entry_mode: "manual" | "import"; draft: Partial<OnboardingDraft> };
+  let savedDraft: SavedDraft | null = null;
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = supabase ? await supabase.from("onboarding_drafts").select("current_step,entry_mode,draft").eq("profile_id", profileId).maybeSingle() : { data: null, error: null };
+    if (error) console.warn("onboarding_draft_load_failed", { code: error.code });
+    if (data) savedDraft = data as unknown as SavedDraft;
+  } catch {
+    // A missing draft must never block first-time setup.
+  }
+
+  const restoredDraft: OnboardingDraft = {
+    ...emptyOnboardingDraft,
+    ...(savedDraft?.draft ?? {}),
+    leadSources: Array.isArray(savedDraft?.draft?.leadSources) ? savedDraft.draft.leadSources.filter((item: unknown): item is string => typeof item === "string") : []
+  };
+
   return pageContent(
     <div className="grid gap-6">
       {!isSupabaseConfigured ? <DemoNotice /> : null}
-      <OnboardingForm />
+      <OnboardingForm initialDraft={restoredDraft} initialStep={savedDraft?.current_step ?? 0} initialEntryMode={savedDraft?.entry_mode ?? "manual"} resumed={Boolean(savedDraft)} />
     </div>
   );
 }

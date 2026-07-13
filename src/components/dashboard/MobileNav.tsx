@@ -8,10 +8,11 @@ import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
 
 export function MobileNav({ items = primaryNavigation }: { items?: NavigationItem[] }) {
   const pathname = usePathname();
+  const mobileItems = items.filter((item) => ["/dashboard", "/today", "/pipeline", "/companies", "/opportunities"].includes(item.href));
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)_/_0.96)] px-2 py-2 shadow-[var(--shadow-card)] backdrop-blur xl:hidden">
-      {items.map((item) => {
+      {mobileItems.map((item) => {
         const active = isNavItemActive(pathname, item.href);
 
         return (

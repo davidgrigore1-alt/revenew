@@ -3,6 +3,8 @@ import { DataCard } from "@/components/dashboard/DataCard";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { repairCurrentProfile } from "@/lib/auth/actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function RepairProfilePage() {
   if (process.env.NODE_ENV !== "development") {
     notFound();

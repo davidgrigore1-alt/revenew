@@ -7,7 +7,8 @@ import { clsx } from "clsx";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { WorkspaceMenu } from "@/components/dashboard/WorkspaceMenu";
 import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
-import { isNavItemActive, primaryNavigation, utilityNavigation } from "@/lib/navigation";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { isNavItemActive, primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 const pageCopy: Record<string, { title: string; subtitle: string; cta?: { label: string; href: string } }> = {
   "/dashboard": {
@@ -20,8 +21,16 @@ const pageCopy: Record<string, { title: string; subtitle: string; cta?: { label:
     subtitle: "Cererile și oportunitățile care încă pot produce venit."
   },
   "/today": {
-    title: "Acțiuni",
-    subtitle: "Pașii importanți de făcut acum."
+    title: "Activitatea mea",
+    subtitle: "Termenele, oportunitățile și pașii care îți sunt atribuiți."
+  },
+  "/companies": {
+    title: "Companii",
+    subtitle: "Clienții, prospecții și relațiile comerciale din workspace."
+  },
+  "/contacts": {
+    title: "Contacte",
+    subtitle: "Persoanele implicate în oportunități și decizii comerciale."
   },
   "/results": {
     title: "Rezultate",
@@ -54,17 +63,21 @@ export function AppHeader({
   businessName,
   userEmail,
   userName,
-  isDemo = false
+  isDemo = false,
+  primaryItems = primaryNavigation,
+  utilityItems = utilityNavigation
 }: {
   businessName?: string;
   userEmail?: string;
   userName?: string;
   isDemo?: boolean;
+  primaryItems?: NavigationItem[];
+  utilityItems?: NavigationItem[];
 }) {
   const pathname = usePathname();
   const copy = getPageCopy(pathname);
   const [open, setOpen] = useState(false);
-  const drawerItems = [...primaryNavigation, ...utilityNavigation];
+  const drawerItems = [...primaryItems, ...utilityItems];
 
   return (
     <>
@@ -86,6 +99,7 @@ export function AppHeader({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <GlobalSearch />
             {copy.cta ? (
               <Link href={copy.cta.href} className="focus-ring hidden h-10 items-center rounded-lg bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))] md:inline-flex">
                 {copy.cta.label}

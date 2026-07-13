@@ -11,8 +11,8 @@ export default async function CrmPage() {
   return (
     <PageShell
       eyebrow="CRM"
-      title="Organizații și contacte"
-      description="Registrul comercial intern pentru prospecți, clienți și persoanele implicate în oportunități."
+      title="Companii și contacte"
+      description="Registrul comercial intern pentru companii și persoanele implicate în oportunități."
     >
       {crm.ready ? (
         <CrmWorkspaceClient organizations={crm.organizations} contacts={crm.contacts} />

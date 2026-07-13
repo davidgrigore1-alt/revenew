@@ -21,12 +21,12 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
 
   return (
     <PageShell
-      eyebrow="Organizație CRM"
+      eyebrow="Companie"
       title={detail.organization.name}
       description={[detail.organization.industry, detail.organization.city, detail.organization.county].filter(Boolean).join(" · ") || "Detalii comerciale necompletate."}
     >
       <div className="grid gap-6">
-        <DataCard title="Profil organizație">
+        <DataCard title="Profil companie">
           <dl className="grid gap-3 text-sm md:grid-cols-2">
             <div><dt className="text-[rgb(var(--muted-foreground))]">Website</dt><dd className="break-all font-semibold">{detail.organization.website ?? "Necompletat"}</dd></div>
             <div><dt className="text-[rgb(var(--muted-foreground))]">Telefon</dt><dd className="font-semibold">{detail.organization.phone ?? "Necompletat"}</dd></div>
@@ -67,7 +67,7 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
               ))}
             </div>
           ) : (
-            <EmptyState title="Fără oportunități asociate" description="Asociază contacte ale organizației la oportunități pentru a vedea istoricul comercial aici." />
+            <EmptyState title="Fără oportunități asociate" description="Asociază contactele companiei la oportunități pentru a vedea istoricul comercial aici." />
           )}
         </DataCard>
 

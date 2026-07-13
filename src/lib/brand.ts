@@ -1,10 +1,10 @@
 export const brand = {
   name: "ReveNew",
   mark: "RN",
-  category: "Recuperare venituri B2B",
-  descriptor: "Recuperare venituri pentru firme B2B",
+  category: "Sistem de recuperare a oportunităților comerciale B2B",
+  descriptor: "Identifică valoarea comercială blocată și clarifică următoarea acțiune",
   shortDescriptor: "Revenue Recovery B2B",
-  title: "ReveNew | Identifică oportunitățile comerciale rămase în urmă",
+  title: "ReveNew | Sistem de recuperare a oportunităților comerciale B2B",
   description:
-    "ReveNew identifică cererile fără răspuns, ofertele neurmărite și lead-urile care merită reluate. Începe cu un audit comercial de 7 zile."
+    "ReveNew identifică valoarea comercială blocată, explică de ce necesită intervenție, atribuie următoarea acțiune și înregistrează rezultatul."
 } as const;

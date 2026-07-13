@@ -6,6 +6,8 @@ import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, supabaseUrl } from "@/lib/supabase/status";
 
+export const dynamic = "force-dynamic";
+
 export default async function SupabaseDebugPage() {
   if (process.env.NODE_ENV !== "development") {
     notFound();

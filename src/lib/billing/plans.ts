@@ -1,7 +1,7 @@
 export const previewPlans = [
   {
     id: "audit",
-    title: "Audit Revenue Recovery",
+    title: "Revenue Recovery Audit",
     price: "490 EUR",
     billing: "plată unică",
     description: "Audit de 7 zile pentru identificarea oportunităților comerciale care merită reluate.",
@@ -32,10 +32,10 @@ export function getPreviewPlanById(value: string | null | undefined) {
 export const commercialPricingPlans = [
   {
     label: "PUNCT DE PORNIRE",
-    title: "Audit Revenue Recovery",
+    title: "Revenue Recovery Audit",
     price: "490 EUR",
     billing: "plată unică",
-    description: "Audit comercial de 7 zile pentru identificarea oportunităților care merită reluate.",
+    description: "Evaluare structurată inițială a oportunităților comerciale blocate. Nu garantează venit recuperat.",
     items: [
       "analiza semnalelor comerciale disponibile",
       "identificarea cererilor fără răspuns",
@@ -68,10 +68,10 @@ export const commercialPricingPlans = [
   },
   {
     label: "LA CERERE",
-    title: "Implementare personalizată",
+    title: "Custom Implementation",
     price: "Preț personalizat",
     billing: "în funcție de volum și complexitate",
-    description: "Pentru echipe cu mai multe surse comerciale, procese interne și cerințe specifice de raportare.",
+    description: "Ofertă separată pentru integrări aprobate, migrare, fluxuri, instruire și cerințe enterprise.",
     items: [
       "analiză de proces",
       "configurarea fluxurilor necesare",

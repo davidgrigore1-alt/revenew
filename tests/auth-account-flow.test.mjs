@@ -164,6 +164,8 @@ test("onboarding business creation derives ownership server-side and avoids payl
   assert.equal(provisioning.includes("owner_id"), false);
   assert.equal(provisioning.includes("profile_id: profileId"), true);
   assert.equal(provisioning.includes('role: "owner"'), true);
+  assert.equal(provisioning.includes("const businessId = randomUUID()"), true, "business id must exist before membership provisioning");
+  assert.equal(provisioning.includes(".select(\"id\")\n    .single()"), false, "insert must not require SELECT access before owner membership exists");
   assert.equal(provisioning.includes("attemptedPayload"), false);
   assert.equal(normalization.includes("cleanText("), true);
   assert.equal(normalization.includes("validateWebsite("), true);
@@ -173,6 +175,17 @@ test("onboarding business creation derives ownership server-side and avoids payl
   assert.equal(provisioning.includes("buildServices(parsed, existingBusiness.id)"), true);
   assert.equal(provisioning.includes("buildTargets(parsed, existingBusiness.id)"), true);
   assert.equal(provisioning.includes("current.profile.id"), true, "owner_profile_id must be derived from the authenticated profile");
+});
+
+test("onboarding businesses migration supplies the location columns used by provisioning", () => {
+  const migration = fs.readFileSync(
+    path.resolve("supabase/migrations/20260713135440_add_business_onboarding_location_fields.sql"),
+    "utf8"
+  );
+
+  for (const column of ["country_code", "administrative_area_code", "company_phone_e164", "postal_code"]) {
+    assert.equal(migration.includes(`add column if not exists ${column} text`), true, `missing additive ${column} column`);
+  }
 });
 
 test("onboarding route is reachable with a profile and no business", () => {

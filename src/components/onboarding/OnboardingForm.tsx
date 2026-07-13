@@ -4,6 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { saveOnboarding } from "@/lib/actions";
+import { emptyOnboardingDraft, type OnboardingDraft } from "@/lib/onboarding/draft";
+import { saveOnboardingProgress } from "@/lib/onboarding/progress-actions";
 import {
   administrativeAreaDisplayName,
   administrativeAreaLabel,
@@ -26,53 +28,7 @@ import {
 
 const steps = ["Despre firmă", "Ce vinde firma?", "De unde vin cererile?", "Verificare"] as const;
 
-type Draft = {
-  businessName: string;
-  legalName: string;
-  cui: string;
-  website: string;
-  industry: string;
-  customIndustry: string;
-  countryCode: string;
-  administrativeArea: string;
-  city: string;
-  postalCode: string;
-  companyPhoneCountry: string;
-  companyPhone: string;
-  mainOffering: string;
-  shortDescription: string;
-  averageContractValue: string;
-  currency: string;
-  leadSources: string[];
-  customLeadSource: string;
-  mainCommercialProblem: string;
-  customCommercialProblem: string;
-};
-
-type FieldName = keyof Draft;
-
-const initialDraft: Draft = {
-  businessName: "",
-  legalName: "",
-  cui: "",
-  website: "",
-  industry: "",
-  customIndustry: "",
-  countryCode: "RO",
-  administrativeArea: "",
-  city: "",
-  postalCode: "",
-  companyPhoneCountry: "RO",
-  companyPhone: "",
-  mainOffering: "",
-  shortDescription: "",
-  averageContractValue: "",
-  currency: "RON",
-  leadSources: [],
-  customLeadSource: "",
-  mainCommercialProblem: "",
-  customCommercialProblem: ""
-};
+type FieldName = keyof OnboardingDraft;
 
 function Field({
   label,
@@ -261,7 +217,7 @@ function ErrorSummary({ errors }: { errors: FieldErrors<FieldName> }) {
   );
 }
 
-function validateStep(draft: Draft, step: number) {
+function validateStep(draft: OnboardingDraft, step: number) {
   const errors: FieldErrors<FieldName> = {};
 
   if (step === 0) {
@@ -304,10 +260,11 @@ function validateStep(draft: Draft, step: number) {
   return errors;
 }
 
-export function OnboardingForm() {
+export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialStep = 0, initialEntryMode = "manual", resumed = false }: { initialDraft?: OnboardingDraft; initialStep?: number; initialEntryMode?: "manual" | "import"; resumed?: boolean }) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(initialDraft);
+  const [step, setStep] = useState(Math.max(0, Math.min(initialStep, steps.length - 1)));
+  const [draft, setDraft] = useState<OnboardingDraft>(initialDraft);
+  const [entryMode, setEntryMode] = useState<"manual" | "import">(initialEntryMode);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors<FieldName>>({});
   const [serverError, setServerError] = useState("");
@@ -351,14 +308,17 @@ export function OnboardingForm() {
     }));
   }
 
-  function goNext() {
+  async function goNext() {
     const nextErrors = validateStep(draft, step);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       focusFirstError(nextErrors);
       return;
     }
-    setStep((current) => Math.min(current + 1, steps.length - 1));
+    const nextStep = Math.min(step + 1, steps.length - 1);
+    const progress = await saveOnboardingProgress(nextStep, entryMode, draft);
+    if (!progress.ok) setServerError(progress.error ?? "Progresul nu a putut fi salvat.");
+    setStep(nextStep);
   }
 
   async function submit() {
@@ -380,6 +340,7 @@ export function OnboardingForm() {
       }
       formData.set(key, Array.isArray(value) ? value.join(", ") : value);
     });
+    formData.set("entryMode", entryMode);
 
     const result = await saveOnboarding(formData);
     if (!result.ok) {
@@ -388,11 +349,19 @@ export function OnboardingForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(`/activation?mode=${entryMode}`);
   }
 
   return (
     <div className="grid gap-6">
+      <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-5">
+        <div><h2 className="text-lg font-semibold text-white">Cum vrei să aduci primele date?</h2><p className="mt-1 text-sm text-zinc-400">Mai întâi configurăm workspace-ul. După acest pas poți crea manual sau importa date reale.</p></div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button type="button" onClick={() => setEntryMode("manual")} className={`focus-ring rounded-lg border p-4 text-left ${entryMode === "manual" ? "border-mint-400/60 bg-mint-400/10" : "border-white/10"}`}><span className="block font-semibold text-white">Configurez manual</span><span className="mt-1 block text-sm text-zinc-400">Creezi prima companie, contactul și oportunitatea pas cu pas.</span></button>
+          <button type="button" onClick={() => setEntryMode("import")} className={`focus-ring rounded-lg border p-4 text-left ${entryMode === "import" ? "border-mint-400/60 bg-mint-400/10" : "border-white/10"}`}><span className="block font-semibold text-white">Import date</span><span className="mt-1 block text-sm text-zinc-400">După workspace, continui în importul CSV controlat.</span></button>
+        </div>
+        {resumed ? <p className="text-sm font-semibold text-mint-300" role="status">Continui configurarea existentă. Ultimul pas salvat și datele valide au fost restaurate.</p> : null}
+      </section>
       <nav aria-label="Pași onboarding" className="grid gap-2 sm:grid-cols-4">
         {steps.map((label, index) => (
           <button

@@ -19,8 +19,8 @@ import { marketingSections } from "@/lib/marketing/navigation";
 import { canonicalUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "ReveNew | Identifică oportunitățile comerciale rămase în urmă",
-  description: "ReveNew identifică cererile fără răspuns, ofertele neurmărite și lead-urile care merită reluate. Începe cu un audit comercial de 7 zile.",
+  title: "ReveNew | Sistem de recuperare a oportunităților comerciale B2B",
+  description: "ReveNew identifică valoarea comercială blocată în oferte, follow-up-uri și relații nevalorificate, apoi clarifică responsabilul, acțiunea și rezultatul.",
   alternates: { canonical: canonicalUrl("/") },
   openGraph: {
     title: "ReveNew | Identifică oportunitățile comerciale rămase în urmă",
@@ -37,18 +37,22 @@ export const metadata: Metadata = {
 };
 
 const fitPoints = [
-  "cereri din email, formulare, telefon sau alte surse",
-  "valoare relevantă per client sau contract",
-  "proces comercial în care viteza și follow-up-ul contează"
+  "oportunități blocate sau fără responsabil",
+  "oferte fără follow-up și propuneri stagnante",
+  "clienți existenți cu potențial nevalorificat",
+  "reînnoiri și relații comerciale în risc",
+  "oportunități fără decident sau următoarea acțiune",
+  "date împrăștiate între CRM, email și documente"
 ];
 
 const industries = ["Auto și mobilitate", "Construcții", "Logistică", "Servicii B2B", "Agenții"];
 
 const steps = [
-  ["01", "Colectăm semnalele comerciale", "Pornim de la sursele disponibile: emailuri relevante, formulare, lead-uri vechi, oferte, note comerciale sau importuri controlate."],
-  ["02", "Identificăm ce merită reluat", "Separăm semnalele relevante de zgomot și evidențiem motivul, urgența, valoarea estimată și informațiile care lipsesc."],
-  ["03", "Pregătim următoarea acțiune", "ReveNew propune follow-up-ul, mesajul, apelul sau clarificarea necesară înainte ca echipa să continue."],
-  ["04", "Urmărim rezultatul", "Echipa marchează ce a fost contactat, ofertat, câștigat sau pierdut, iar istoricul rămâne disponibil pentru raportare."]
+  ["01", "Descoperă", "Adună controlat semnalele și datele comerciale pe care compania le are deja."],
+  ["02", "Prioritizează", "Evidențiază valoarea estimată, blocajele și informațiile care lipsesc, fără a le prezenta drept venit garantat."],
+  ["03", "Atribuie", "Clarifică responsabilul, contactul principal și rolul de decizie pentru fiecare oportunitate."],
+  ["04", "Acționează", "Programează următorul pas și pregătește documente pe care echipa le verifică înainte de utilizare."],
+  ["05", "Măsoară", "Înregistrează rezultatul comercial real și păstrează separat estimările de venitul confirmat."]
 ];
 
 const audiences = [
@@ -76,8 +80,24 @@ const faqCategories: FaqCategory[] = [
         answer: "ReveNew este un sistem de recuperare comercială construit peste semnalele pe care firma le are deja: cereri, formulare, oferte, lead-uri și conversații care necesită follow-up. Sistemul ajută echipa să identifice ce merită reluat, ce acțiune este recomandată și ce rezultat a urmat. Nu înlocuiește obligatoriu CRM-ul și nu este un instrument de trimitere în masă."
       },
       {
+        question: "Este ReveNew un CRM?",
+        answer: "ReveNew include companii, contacte și oportunități pentru a opera recuperarea comercială, dar nu urmărește să înlocuiască toate funcțiile unui CRM generalist."
+      },
+      {
+        question: "Înlocuiește CRM-ul pe care îl folosim deja?",
+        answer: "Nu este necesar. ReveNew poate lucra alături de procesele existente, pornind de la importuri controlate și de la oportunitățile care necesită intervenție."
+      },
+      {
+        question: "Este un serviciu de recuperare a datoriilor?",
+        answer: "Nu. ReveNew lucrează cu oportunități comerciale, propuneri, follow-up-uri, reînnoiri și relații nevalorificate. Nu gestionează creanțe, facturi neplătite sau proceduri juridice."
+      },
+      {
         question: "Trimite ReveNew mesaje automat?",
         answer: "ReveNew poate pregăti un follow-up, un email, o structură de ofertă sau un script de apel, însă echipa clientului păstrează controlul asupra revizuirii, modificării și utilizării. Orice automatizare viitoare trebuie activată doar pe baza unei integrări reale și a unor permisiuni clare."
+      },
+      {
+        question: "Cine aprobă conținutul generat?",
+        answer: "Un utilizator autorizat din echipa clientului verifică, modifică și decide folosirea mesajelor, ofertelor sau scripturilor. ReveNew nu elimină controlul uman."
       },
       {
         question: "Cum este calculată valoarea estimată?",
@@ -101,12 +121,28 @@ const faqCategories: FaqCategory[] = [
         answer: "Nu. Auditul inițial poate începe cu un set limitat de date sau cu un import controlat. Integrările complete sunt justificate numai după clarificarea valorii, accesului, securității, costului și responsabilităților."
       },
       {
+        question: "Cât de repede poate începe o companie?",
+        answer: "Configurarea inițială poate începe imediat cu profilul firmei și un set controlat de date. Durata auditului comercial este stabilită separat, în funcție de surse și volum."
+      },
+      {
+        question: "Cum sunt protejate datele companiei?",
+        answer: "Datele sunt izolate pe workspace, accesul este controlat prin roluri, iar acțiunile comerciale importante păstrează context auditat. Importurile și căutarea respectă aceleași permisiuni."
+      },
+      {
         question: "Ce se întâmplă în cele 7 zile de audit?",
         answer: "Sunt definite sursele și contextul comercial, sunt analizate cererile disponibile, sunt identificate oportunitățile care necesită atenție, este estimată valoarea și sunt pregătite acțiunile."
       },
       {
         question: "Ce se întâmplă după audit?",
         answer: "Auditul oferă firmei informațiile necesare pentru a decide dacă merită continuarea. Clientul poate implementa intern recomandările, poate solicita o etapă suplimentară sau poate continua cu ReveNew Managed."
+      }
+      ,{
+        question: "Ce include auditul?",
+        answer: "Auditul include analiza surselor convenite, identificarea și prioritizarea oportunităților, clarificarea informațiilor lipsă, acțiuni propuse și un raport executiv. Nu promite venit recuperat."
+      },
+      {
+        question: "Este disponibilă o implementare personalizată?",
+        answer: "Da. Integrările aprobate, migrarea datelor, fluxurile specifice, instruirea și cerințele enterprise sunt evaluate și ofertate separat."
       }
     ]
   },
@@ -152,16 +188,16 @@ export default function LandingPage() {
       <section id="continut" className="mx-auto grid w-full max-w-[1220px] gap-12 px-4 py-14 sm:px-6 md:py-20 lg:grid-cols-12 lg:px-8">
         <div className="self-center lg:col-span-6">
           <p className="inline-flex rounded-full border border-[rgb(var(--primary)_/_0.25)] bg-[rgb(var(--primary)_/_0.1)] px-4 py-2 text-sm font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">
-            Recuperare comercială B2B
+            Sistem de recuperare a oportunităților comerciale B2B
           </p>
           <h1 className="mt-6 max-w-3xl text-[clamp(2.625rem,6vw,4.5rem)] font-semibold leading-[1.06] tracking-normal">
-            Înainte să cauți lead-uri noi, vezi ce oportunități ai lăsat în urmă.
+            Recuperează valoarea comercială blocată în execuție, nu datorii.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[rgb(var(--muted-foreground))]">
-            ReveNew identifică cererile fără răspuns, ofertele neurmărite și lead-urile care merită reluate. Echipa primește priorități clare, mesaje pregătite și următorii pași comerciali.
+            ReveNew identifică propuneri stagnante, follow-up-uri neglijate, relații inactive și oportunități fără responsabil. Explică blocajul, atribuie următorul pas și înregistrează rezultatul comercial.
           </p>
           <p className="mt-4 max-w-2xl text-sm font-semibold text-[rgb(var(--foreground))]">
-            Recomandările și mesajele sunt revizuite de echipa ta înainte de utilizare.
+            Funcționează alături de CRM-ul și procesele existente. ReveNew recomandă, iar echipa ta decide.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button href="#preturi">Solicită auditul</Button>
@@ -176,9 +212,9 @@ export default function LandingPage() {
       <section className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
         <div className="mx-auto grid max-w-[1220px] gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
           <div>
-            <h2 className="max-w-3xl text-2xl font-semibold leading-tight">Construit pentru firme în care o cerere pierdută are valoare reală.</h2>
+            <h2 className="max-w-3xl text-2xl font-semibold leading-tight">Util când execuția comercială lasă valoare în urmă.</h2>
             <p className="mt-4 max-w-3xl text-base leading-7 text-[rgb(var(--muted-foreground))]">
-              ReveNew este util atunci când firma primește cereri din mai multe surse, pregătește oferte și are nevoie de follow-up constant pentru a transforma interesul într-un rezultat comercial.
+              Nu este recuperare de creanțe. Este un sistem operațional pentru oportunități B2B care există deja, dar au rămas fără context, responsabilitate sau acțiune.
             </p>
           </div>
           <div className="grid gap-3">
@@ -198,7 +234,7 @@ export default function LandingPage() {
       <section id="cum-functioneaza" className="scroll-mt-28 bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto max-w-[1220px] px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <SectionHeading eyebrow="Fluxul ReveNew" title="De la cerere uitată la acțiune comercială clară." />
-          <div className="mt-12 grid gap-4 lg:grid-cols-4">
+          <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             {steps.map(([number, title, description]) => (
               <article key={title} className="relative rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[rgb(var(--primary)_/_0.12)] text-sm font-semibold text-[rgb(var(--primary))]">{number}</span>
@@ -271,10 +307,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[rgb(var(--surface-subtle))]">
+      <section id="control" className="scroll-mt-28 bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto grid max-w-[1220px] gap-10 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-          <SectionHeading title="ReveNew pregătește următorul pas. Echipa ta păstrează controlul.">
-            Sursa, data, contextul și istoricul fiecărei recomandări rămân vizibile. Echipa verifică, modifică și aprobă acțiunea înainte de utilizare.
+          <SectionHeading eyebrow="Control uman și siguranță" title="ReveNew recomandă. Echipa ta decide.">
+            Nu există outreach autonom necontrolat. Sursele, contextul și istoricul rămân vizibile, accesul este bazat pe roluri, iar datele fiecărui workspace sunt izolate.
           </SectionHeading>
           <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-6 shadow-[var(--shadow-card)]">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Exemplu de flux</p>
@@ -341,7 +377,7 @@ export default function LandingPage() {
                   {plan.items.map((item) => <li key={item} className="flex gap-2"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}
                 </ul>
                 <div className="mt-auto pt-6">
-                  <Button href={authPath("/signup", plan.title === "Audit Revenue Recovery" ? "audit" : "select_plan")} className="w-full">{plan.cta}</Button>
+                  <Button href={authPath("/signup", plan.title === "Revenue Recovery Audit" ? "audit" : "select_plan")} className="w-full">{plan.cta}</Button>
                 </div>
               </div>
             </article>

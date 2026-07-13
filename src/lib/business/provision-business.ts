@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -144,7 +145,9 @@ export async function provisionBusinessFromOnboarding(formData: FormData) {
     return { ok: true, mode: "supabase", step: "business_exists", profileId: current.profile.id, ownerProfileId: current.profile.id, businessId: existingBusiness.id, message: "Ai deja o firmă configurată. Poți continua în dashboard." };
   }
 
+  const businessId = randomUUID();
   const businessPayload = {
+    id: businessId,
     owner_profile_id: current.profile.id,
     name: parsed.businessName,
     legal_name: parsed.legalName,
@@ -171,29 +174,32 @@ export async function provisionBusinessFromOnboarding(formData: FormData) {
     notification_email: current.authUser.email ?? ""
   };
 
-  const { data: business, error: businessError } = await supabase
+  const { error: businessError } = await supabase
     .from("businesses")
-    .insert(businessPayload)
-    .select("id")
-    .single();
+    .insert(businessPayload);
 
-  if (businessError || !business) {
-    console.error("Supabase business insert error", { code: businessError?.code });
+  if (businessError) {
+    console.error("Supabase business insert error", {
+      code: businessError?.code ?? null,
+      message: businessError?.message ?? null,
+      details: businessError?.details ?? null,
+      hint: businessError?.hint ?? null
+    });
     return { ok: false, step: "business_insert", profileId: current.profile.id, ownerProfileId: current.profile.id, error: "Firma nu a putut fi salvată. Încearcă din nou." };
   }
 
   const setupResult = await ensureOnboardingBusinessSetup({
     supabase,
-    businessId: business.id,
+    businessId,
     profileId: current.profile.id,
-    services: buildServices(parsed, business.id),
-    targets: buildTargets(parsed, business.id)
+    services: buildServices(parsed, businessId),
+    targets: buildTargets(parsed, businessId)
   });
 
   if (!setupResult.ok) {
-    return { ok: false, step: setupResult.step, profileId: current.profile.id, ownerProfileId: current.profile.id, businessId: business.id, error: setupResult.error };
+    return { ok: false, step: setupResult.step, profileId: current.profile.id, ownerProfileId: current.profile.id, businessId, error: setupResult.error };
   }
 
   revalidatePath("/dashboard");
-  return { ok: true, mode: "supabase", step: "success", profileId: current.profile.id, ownerProfileId: current.profile.id, businessId: business.id };
+  return { ok: true, mode: "supabase", step: "success", profileId: current.profile.id, ownerProfileId: current.profile.id, businessId };
 }

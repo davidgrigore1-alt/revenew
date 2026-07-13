@@ -19,9 +19,17 @@ import type { ValidatedGeneratedDocument, ValidatedOpportunityAnalysis } from "@
 import { requirePermission } from "@/lib/authz/require-permission";
 import { provisionBusinessFromOnboarding } from "@/lib/business/provision-business";
 import { updatePipelineStatus } from "@/lib/revenue-workspace/actions";
+import { getCurrentProfile } from "@/lib/auth/profile";
+import { recordProductEvent } from "@/lib/product-events";
 
 export async function saveOnboarding(formData: FormData) {
-  return provisionBusinessFromOnboarding(formData);
+  const result = await provisionBusinessFromOnboarding(formData);
+  if (result.ok && result.mode === "supabase") {
+    const [{ profile }, supabase] = await Promise.all([getCurrentProfile(), Promise.resolve(createSupabaseServerClient())]);
+    if (profile && supabase) await supabase.from("onboarding_drafts").delete().eq("profile_id", profile.id);
+    void recordProductEvent("workspace_setup_completed", { businessId: result.businessId, metadata: { entry_mode: String(formData.get("entryMode") ?? "manual") } });
+  }
+  return result;
 }
 export async function saveAnalyzedOpportunity(formData: FormData) {
   await requireActivePaidAccess();
