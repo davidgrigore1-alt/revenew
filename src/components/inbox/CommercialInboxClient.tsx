@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { Button } from "@/components/ui/Button";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import {
@@ -29,7 +30,6 @@ type ProfileOption = { id: string; fullName: string };
 type CommercialInboxClientProps = {
   initialSignals: CommercialSignal[];
   tableReady: boolean;
-  setupMessage?: string;
   organizations: OrganizationOption[];
   contacts: ContactOption[];
   assignableProfiles: ProfileOption[];
@@ -171,7 +171,6 @@ function urgencyClass(value?: RecoverabilityUrgency | null) {
 export function CommercialInboxClient({
   initialSignals,
   tableReady,
-  setupMessage,
   organizations,
   contacts,
   assignableProfiles,
@@ -196,7 +195,7 @@ export function CommercialInboxClient({
   const [decisionReason, setDecisionReason] = useState("");
   const [postponeUntil, setPostponeUntil] = useState("");
   const [notice, setNotice] = useState("");
-  const [error, setError] = useState(setupMessage ?? "");
+  const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const selectedSignal = signals.find((signal) => signal.id === selectedId) ?? null;
@@ -330,7 +329,11 @@ export function CommercialInboxClient({
     }), "Semnalul a fost aprobat și convertit într-un caz de recuperare urmărit.");
   }
 
-  if (!tableReady) return <StatusNotice tone="warning">{setupMessage ?? "Motorul de recuperare nu este disponibil până la aplicarea migrării revizuite."}</StatusNotice>;
+  if (!tableReady) return (
+    <StatusNotice tone="warning">
+      Inbox Comercial necesită finalizarea configurării workspace-ului. Datele existente sunt în siguranță; contactează administratorul pentru activarea importului și revizuirii.
+    </StatusNotice>
+  );
 
   return (
     <div className="grid gap-6">
@@ -338,7 +341,7 @@ export function CommercialInboxClient({
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="De revizuit" value={`${awaitingReview.length}`} detail="Semnale analizate care necesită decizia echipei." tone="gold" />
+        <MetricCard label="În revizuire" value={`${awaitingReview.length}`} detail="Semnale analizate care necesită decizia echipei." tone="gold" />
         <MetricCard label="Valoare estimată în revizuire" value={formatCurrency(estimatedUnderReview, "RON")} detail="Potențial estimat; nu reprezintă venit confirmat." />
         <MetricCard label="Convertite" value={`${converted}`} detail="Cazuri aprobate și transformate în oportunități." tone="mint" />
       </div>
@@ -401,11 +404,20 @@ export function CommercialInboxClient({
                 <p className="mt-3 line-clamp-2 text-sm text-[rgb(var(--muted-foreground))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
               </button>
             ))}
-            {filteredSignals.length === 0 ? <EmptyState title="Nu există semnale pentru filtrele selectate." description="Modifică filtrele sau adaugă un semnal comercial nou." /> : null}
+            {filteredSignals.length === 0 ? signals.length === 0 ? (
+              <div className="grid gap-4 rounded-lg border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5">
+                <div>
+                  <h3 className="font-semibold text-[rgb(var(--foreground))]">Inbox-ul Comercial este pregătit</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Importă cereri vechi din CSV sau detectează oportunități fără follow-up. Datele devin semnale pentru analiză, nu oportunități aprobate automat.</p>
+                </div>
+                <InboxIngestionActions />
+                <p className="text-xs text-[rgb(var(--muted-foreground))]">Nicio acțiune externă nu este trimisă din acest pas.</p>
+              </div>
+            ) : <EmptyState title="Niciun rezultat pentru filtrele curente" description="Modifică filtrele sau căutarea pentru a vedea alte semnale." /> : null}
           </div>
         </DataCard>
 
-        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description="Scorul este recalculat prin analiză; câmpurile comerciale rămân editabile înainte de aprobare.">
+        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description="Analizează contextul, verifică datele și decide. Aprobarea creează cazul urmărit, dar nu trimite mesaje externe.">
           {selectedSignal ? (
             <div className="grid gap-6">
               <div className="flex flex-wrap items-center gap-2">
@@ -422,11 +434,11 @@ export function CommercialInboxClient({
                   <MetricCard label="Încredere" value={selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută"} detail={selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare."} />
                 </div>
               ) : (
-                <StatusNotice tone="neutral">Semnalul trebuie analizat înainte de revizuire și aprobare.</StatusNotice>
+                <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
 
               {selectedSignal.analysisExplanation ? <div><h3 className="text-sm font-semibold">De ce merită atenție</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p></div> : null}
-              {selectedSignal.missingInformation.length > 0 ? <div><h3 className="text-sm font-semibold">Informații lipsă</h3><ul className="mt-2 grid gap-1 text-sm text-[rgb(var(--muted-foreground))]">{selectedSignal.missingInformation.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}
+              {selectedSignal.missingInformation.length > 0 ? <div><h3 className="text-sm font-semibold">Ce trebuie verificat</h3><ul className="mt-2 grid gap-1 text-sm text-[rgb(var(--muted-foreground))]">{selectedSignal.missingInformation.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}
               {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -456,7 +468,7 @@ export function CommercialInboxClient({
               <div className="flex flex-wrap gap-3">
                 <Button onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza este pregătită pentru revizuire.")} disabled={isPending || selectedSignal.status === "converted"}>{selectedSignal.analysisStatus === "completed" ? "Reanalizează" : "Analizează"}</Button>
                 <Button variant="secondary" onClick={saveReviewFields} disabled={isPending}>Salvează modificările</Button>
-                <Button onClick={approve} disabled={isPending || selectedSignal.analysisStatus !== "completed" || selectedSignal.status === "converted"}>Aprobă și creează cazul</Button>
+                <Button onClick={approve} disabled={isPending || selectedSignal.analysisStatus !== "completed" || selectedSignal.status === "converted"}>Aprobă și creează oportunitatea</Button>
                 {selectedSignal.convertedOpportunityId ? <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary">Deschide oportunitatea</Button> : null}
               </div>
 

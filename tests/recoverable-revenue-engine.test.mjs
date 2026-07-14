@@ -81,7 +81,7 @@ test("signal operations derive the workspace server-side and prevent cross-tenan
 
 test("review UI requires human approval and supports all decision paths", async () => {
   const source = await readFile(clientPath, "utf8");
-  assert.match(source, /Aprobă și creează cazul/);
+  assert.match(source, /Aprobă și creează oportunitatea/);
   assert.match(source, /Respinge/);
   assert.match(source, /Marchează duplicat/);
   assert.match(source, /Amână/);

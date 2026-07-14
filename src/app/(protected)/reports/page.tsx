@@ -302,35 +302,35 @@ export default async function ReportsPage() {
     <PageShell
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
-      description="Imagine executivă asupra pipeline-ului, acțiunilor urgente, documentelor pregătite și oportunităților care pot produce venit."
+      description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
     >
       <div className="grid gap-6 print:block print:space-y-5">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <p className="text-sm font-semibold text-zinc-400">Raport generat la: {formatDateTimeWithSeconds(reportGeneratedAt)}</p>
         {isSupabaseConfigured && opportunities.length === 0 ? (
-          <EmptyState title="Nu există suficiente date pentru raport" description="Raportul devine relevant după ce există semnale, oportunități și acțiuni urmărite." />
+          <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." />
         ) : null}
 
         <DataCard title="Export raport" description="Copiaza, descarca sau printeaza raportul pentru discutia comerciala saptamanala.">
           <ReportActions reportText={reportText} fileName="revenew-raport-comercial.txt" />
         </DataCard>
 
-        <DataCard title="Rezumat executiv">
+        <DataCard title="Rezumat executiv" description="Estimările descriu potențialul urmărit; doar oportunitățile marcate câștigate intră în rezultate confirmate.">
           <p className="text-sm leading-6 text-zinc-300">{executiveSummary}</p>
         </DataCard>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Pipeline estimat (RON)" value={formatCurrency(pipelineValue, "RON")} detail="Valoarea maximă estimată doar pentru oportunitățile în RON." tone="mint" />
+          <MetricCard label="Pipeline activ · Estimat (RON)" value={formatCurrency(pipelineValue, "RON")} detail="Valoarea maximă estimată doar pentru oportunitățile în RON." tone="mint" />
           <MetricCard label="Oportunități active" value={`${activeOpportunities.length}`} detail="Oportunități deschise care nu sunt marcate câștigate, pierdute sau ignorate." />
           <MetricCard label="Actiuni urgente" value={`${urgentActions.length}`} detail="Actiuni scadente sau apropiate, deduplicate pe oportunitate si termen." tone="gold" />
-          <MetricCard label="Conversie" value={`${conversionRate}%`} detail="Ponderea oportunităților marcate câștigate din total." />
+          <MetricCard label="Conversie confirmată" value={opportunities.length ? `${conversionRate}%` : "Date insuficiente"} detail="Ponderea oportunităților marcate câștigate din total." />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
           <MetricCard label="Documente pregatite" value={`${readyDocuments.length}`} detail="Documente editate, copiate, pregatite sau trimise." tone="mint" />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
-          <MetricCard label="Valoare pierdută (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
+          <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
         </div>
 
         {inboxSummary.tableReady ? (
@@ -349,7 +349,7 @@ export default async function ReportsPage() {
               <MetricCard label="Rânduri respinse" value={`${ingestionSummary.rejectedRows}`} detail="Date invalide care nu au creat semnale." />
               <MetricCard label="Rată duplicate" value={`${ingestionSummary.duplicateRate}%`} detail="Rânduri omise prin protecția de idempotency." />
               <MetricCard label="Conversii din import" value={`${ingestionSummary.convertedImportedSignals}`} detail="Semnale CSV aprobate și transformate prin workflow-ul existent." />
-              <MetricCard label="Valoare importată estimată" value={formatCurrency(ingestionSummary.estimatedImportedRecoverableValue, "RON")} detail="Potențial estimat; venitul câștigat rămâne separat." />
+              <MetricCard label="Import · Potențial estimat" value={formatCurrency(ingestionSummary.estimatedImportedRecoverableValue, "RON")} detail="Potențial estimat; venitul câștigat rămâne separat." />
             </div>
 
             <DataCard title="Semnale comerciale noi" description="Top semnale urgente sau noi din Inbox Comercial.">

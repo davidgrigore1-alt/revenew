@@ -487,6 +487,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
 
         {step === 3 ? (
           <div className="mt-5 grid gap-4 text-sm leading-6 text-zinc-300">
+            <p className="rounded-lg border border-mint-400/20 bg-mint-400/[0.06] p-4 text-zinc-300">După creare vei continua în workspace. Poți importa date în Inbox Comercial, iar fiecare semnal rămâne sub controlul echipei înainte de conversie sau contact extern.</p>
             {[
               ["Firmă", `${draft.businessName} · ${draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry}`],
               ["Localizare", `${draft.countryCode}, ${administrativeAreaDisplayName(draft.countryCode, draft.administrativeArea) || "fără regiune"}, ${draft.city}`],

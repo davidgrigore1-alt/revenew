@@ -8,6 +8,7 @@ import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
 
 export function MobileNav({ items = primaryNavigation }: { items?: NavigationItem[] }) {
   const pathname = usePathname();
+  const mobileLabels: Record<string, string> = { "/inbox": "Inbox", "/today": "Activitate", "/opportunities": "Oportunități" };
   const mobileItems = items.filter((item) => ["/dashboard", "/inbox", "/today", "/pipeline", "/companies", "/opportunities"].includes(item.href));
 
   return (
@@ -26,7 +27,7 @@ export function MobileNav({ items = primaryNavigation }: { items?: NavigationIte
             )}
           >
             <NavigationIcon name={item.icon} className="h-5 w-5" />
-            <span className="mt-1 max-w-full truncate">{item.name}</span>
+            <span className="mt-1 max-w-full text-center">{mobileLabels[item.href] ?? item.name}</span>
           </Link>
         );
       })}

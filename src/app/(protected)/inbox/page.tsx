@@ -16,13 +16,12 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
     <PageShell
       eyebrow="Inbox Comercial"
       title="Inbox Comercial"
-      description="Transformă semnalele comerciale incomplete în cazuri de recuperare revizuite, aprobate și măsurabile."
-      actions={<InboxIngestionActions />}
+      description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide."
+      actions={inbox.signals.length > 0 ? <InboxIngestionActions /> : undefined}
     >
       <CommercialInboxClient
         initialSignals={inbox.signals}
         tableReady={inbox.tableReady && crm.ready}
-        setupMessage={inbox.setupMessage ?? crm.error}
         organizations={crm.organizations.map((organization) => ({ id: organization.id, name: organization.name }))}
         contacts={crm.contacts.map((contact) => ({ id: contact.id, fullName: contact.fullName, organizationId: contact.organizationId, email: contact.email }))}
         assignableProfiles={assignableProfiles}

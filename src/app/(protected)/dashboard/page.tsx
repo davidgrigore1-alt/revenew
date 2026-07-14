@@ -63,14 +63,14 @@ export default async function DashboardPage() {
         {!hasUsefulData ? <FirstTimeGuide /> : null}
 
         <div className="grid gap-4 md:grid-cols-3">
-          <MetricCard label="Valoare pipeline activ" value={formatCurrency(summary.metrics.activePipelineValue, "RON")} detail="Estimare recuperabilă pentru oportunități deschise." tone="mint" />
-          <MetricCard label="Valoare câștigată luna curentă" value={formatCurrency(summary.metrics.wonRevenue, "RON")} detail="Doar valori efective înregistrate în RON; estimările sunt excluse." tone="gold" />
-          <MetricCard label="Conversie" value={summary.metrics.conversionRate === null ? "Insuficient" : `${summary.metrics.conversionRate}%`} detail="Oportunități câștigate din total." />
+          <MetricCard label="Pipeline activ · Estimat" value={formatCurrency(summary.metrics.activePipelineValue, "RON")} detail="Potențial estimat pentru oportunități deschise; nu este venit confirmat." tone="mint" />
+          <MetricCard label="Câștigat confirmat · Luna curentă" value={formatCurrency(summary.metrics.wonRevenue, "RON")} detail="Doar valori efective înregistrate în RON; estimările sunt excluse." tone="gold" />
+          <MetricCard label="Conversie confirmată" value={summary.metrics.conversionRate === null ? "Date insuficiente" : `${summary.metrics.conversionRate}%`} detail="Oportunități marcate câștigate din totalul urmărit." />
           <MetricCard label="Acțiuni restante" value={`${summary.workQueue.overdue.length}`} detail="Atribuite utilizatorului curent." />
           <MetricCard label="Acțiuni astăzi" value={`${summary.workQueue.dueToday.length}`} detail="Atribuite utilizatorului curent." />
           <MetricCard label="Fără contact principal" value={`${summary.metrics.missingPrimaryContact}`} detail="Necesită completarea relației CRM." />
           <MetricCard label="Semnale de revizuit" value={`${reviewSignals.length}`} detail="Analizate și pregătite pentru decizia echipei." tone="gold" />
-          <MetricCard label="Potențial estimat în revizuire" value={formatCurrency(reviewSignals.filter((signal) => signal.currency === "RON").reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0), "RON")} detail="Estimare activă; nu este venit confirmat." />
+          <MetricCard label="În revizuire · Potențial estimat" value={formatCurrency(reviewSignals.filter((signal) => signal.currency === "RON").reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0), "RON")} detail="Estimare activă; nu este venit confirmat." />
           <MetricCard label="Semnale fără responsabil" value={`${reviewSignals.filter((signal) => !signal.assignedToProfileId && !signal.suggestedOwnerProfileId).length}`} detail="Necesită atribuirea unei persoane responsabile." />
           <MetricCard label="Importate în așteptare" value={`${ingestion.awaitingImportedReview}`} detail="Semnale CSV care necesită analiză sau decizie umană." tone="gold" />
           <MetricCard label="Oportunități detectate" value={`${ingestion.detectedSignals}`} detail="Semnale create explicit din oportunități neglijate." />
