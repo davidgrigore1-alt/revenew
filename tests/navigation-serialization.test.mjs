@@ -36,7 +36,7 @@ function loadTsModule(relativePath) {
   return module.exports;
 }
 
-const { advancedNavigation, dashboardNavigation, primaryNavigation, utilityNavigation } = loadTsModule("src/lib/navigation.ts");
+const { advancedNavigation, dashboardNavigation, isNavItemActive, primaryNavigation, utilityNavigation } = loadTsModule("src/lib/navigation.ts");
 
 test("navigation config is serializable across server/client boundaries", () => {
   const allItems = [...primaryNavigation, ...utilityNavigation, ...advancedNavigation, ...dashboardNavigation];
@@ -56,4 +56,18 @@ test("admin navigation remains permission-gated by centralized permission", () =
   assert.ok(admin);
   assert.equal(admin.permission, "platform.admin.access");
   assert.equal(admin.icon, "shield-check");
+});
+
+test("commercial inbox is a unique primary route directly after home", () => {
+  const inboxItems = dashboardNavigation.filter((item) => item.href === "/inbox");
+
+  assert.equal(primaryNavigation[0].href, "/dashboard");
+  assert.equal(primaryNavigation[1].href, "/inbox");
+  assert.equal(primaryNavigation[2].href, "/today");
+  assert.equal(inboxItems.length, 1);
+  assert.equal(inboxItems[0].name, "Inbox Comercial");
+  assert.equal(inboxItems[0].icon, "inbox-stack");
+  assert.equal(inboxItems[0].permission, "signals.read");
+  assert.equal(isNavItemActive("/inbox", "/inbox"), true);
+  assert.equal(isNavItemActive("/inbox/review", "/inbox"), true);
 });

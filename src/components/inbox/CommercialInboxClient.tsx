@@ -1,21 +1,74 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Button } from "@/components/ui/Button";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import {
-  archiveCommercialSignal,
-  convertSignalToOpportunity,
+  analyzeCommercialSignal,
+  approveCommercialSignal,
   createCommercialSignal,
-  ignoreCommercialSignal,
+  setCommercialSignalReviewDecision,
   updateCommercialSignal
 } from "@/lib/commercial-inbox-actions";
-import type { CommercialSignal, CommercialSignalPriority, CommercialSignalSource, CommercialSignalStatus } from "@/lib/types";
+import type {
+  CommercialSignal,
+  CommercialSignalReviewStatus,
+  CommercialSignalSource,
+  RecoverabilityConfidence,
+  RecoverabilityUrgency
+} from "@/lib/types";
 import { formatCurrency, formatDateTimeWithSeconds } from "@/lib/utils";
+
+type OrganizationOption = { id: string; name: string };
+type ContactOption = { id: string; fullName: string; organizationId?: string | null; email?: string | null };
+type ProfileOption = { id: string; fullName: string };
+
+type CommercialInboxClientProps = {
+  initialSignals: CommercialSignal[];
+  tableReady: boolean;
+  setupMessage?: string;
+  organizations: OrganizationOption[];
+  contacts: ContactOption[];
+  assignableProfiles: ProfileOption[];
+};
+
+type CreateForm = {
+  title: string;
+  source: CommercialSignalSource;
+  sourceReference: string;
+  company: string;
+  contact: string;
+  email: string;
+  phone: string;
+  value: string;
+  currency: string;
+  lastInteractionAt: string;
+  context: string;
+};
+
+type ReviewForm = {
+  title: string;
+  company: string;
+  contact: string;
+  email: string;
+  phone: string;
+  value: string;
+  lastInteractionAt: string;
+  context: string;
+  recommendedAction: string;
+  dueAt: string;
+  ownerProfileId: string;
+  organizationId: string;
+  contactId: string;
+  newOrganizationName: string;
+  newContactName: string;
+  newContactEmail: string;
+  newContactPhone: string;
+  reviewedDraft: string;
+};
 
 const sourceLabels: Record<CommercialSignalSource, string> = {
   manual: "Manual",
@@ -26,514 +79,399 @@ const sourceLabels: Record<CommercialSignalSource, string> = {
   whatsapp: "WhatsApp",
   instagram: "Instagram",
   csv_import: "Import CSV",
-  ai_receptionist: "AI Receptionist",
+  ai_receptionist: "Recepționer AI",
   referral: "Recomandare",
-  other: "Alta sursa"
+  other: "Altă sursă"
 };
 
-const statusLabels: Record<CommercialSignalStatus, string> = {
+const reviewLabels: Record<CommercialSignalReviewStatus, string> = {
   new: "Nou",
-  reviewed: "Revizuit",
-  converted: "Convertit",
-  ignored: "Ignorat",
-  archived: "Arhivat"
+  ready_for_review: "De revizuit",
+  approved: "Aprobat",
+  dismissed: "Respins",
+  duplicate: "Duplicat",
+  postponed: "Amânat",
+  converted: "Convertit"
 };
 
-const priorityLabels: Record<CommercialSignalPriority, string> = {
-  low: "Scazuta",
+const urgencyLabels: Record<RecoverabilityUrgency, string> = {
+  low: "Scăzută",
   medium: "Medie",
-  high: "Ridicata",
-  urgent: "Urgenta"
+  high: "Ridicată",
+  critical: "Critică"
 };
 
-const sources = Object.keys(sourceLabels) as CommercialSignalSource[];
-const statuses = Object.keys(statusLabels) as CommercialSignalStatus[];
-const priorities = Object.keys(priorityLabels) as CommercialSignalPriority[];
-
-type SignalFormState = {
-  source: CommercialSignalSource;
-  priority: CommercialSignalPriority;
-  contactName: string;
-  contactCompany: string;
-  contactEmail: string;
-  contactPhone: string;
-  contactRole: string;
-  rawMessage: string;
-  extractedSummary: string;
-  detectedNeed: string;
-  serviceInterest: string;
-  location: string;
-  requestedDate: string;
-  estimatedValueMin: string;
-  estimatedValueMax: string;
-  urgencyScore: string;
-  fitScore: string;
-  confidenceScore: string;
-  recommendedAction: string;
-  nextStep: string;
-  notes: string;
+const confidenceLabels: Record<RecoverabilityConfidence, string> = {
+  low: "Scăzută",
+  medium: "Medie",
+  high: "Ridicată"
 };
 
-type CommercialInboxClientProps = {
-  initialSignals: CommercialSignal[];
-  tableReady: boolean;
-  setupMessage?: string;
-};
-
-const emptyForm: SignalFormState = {
+const emptyCreate: CreateForm = {
+  title: "",
   source: "manual",
-  priority: "medium",
-  contactName: "",
-  contactCompany: "",
-  contactEmail: "",
-  contactPhone: "",
-  contactRole: "",
-  rawMessage: "",
-  extractedSummary: "",
-  detectedNeed: "",
-  serviceInterest: "",
-  location: "",
-  requestedDate: "",
-  estimatedValueMin: "",
-  estimatedValueMax: "",
-  urgencyScore: "50",
-  fitScore: "50",
-  confidenceScore: "50",
-  recommendedAction: "",
-  nextStep: "",
-  notes: ""
+  sourceReference: "",
+  company: "",
+  contact: "",
+  email: "",
+  phone: "",
+  value: "",
+  currency: "RON",
+  lastInteractionAt: "",
+  context: ""
 };
 
-function toInput(signal: CommercialSignal): SignalFormState {
+function reviewFormFor(signal: CommercialSignal): ReviewForm {
   return {
-    source: signal.source,
-    priority: signal.priority,
-    contactName: signal.contactName ?? "",
-    contactCompany: signal.contactCompany ?? "",
-    contactEmail: signal.contactEmail ?? "",
-    contactPhone: signal.contactPhone ?? "",
-    contactRole: signal.contactRole ?? "",
-    rawMessage: signal.rawMessage ?? "",
-    extractedSummary: signal.extractedSummary ?? "",
-    detectedNeed: signal.detectedNeed ?? "",
-    serviceInterest: signal.serviceInterest ?? "",
-    location: signal.location ?? "",
-    requestedDate: signal.requestedDate ? signal.requestedDate.slice(0, 16) : "",
-    estimatedValueMin: signal.estimatedValueMin ? String(signal.estimatedValueMin) : "",
-    estimatedValueMax: signal.estimatedValueMax ? String(signal.estimatedValueMax) : "",
-    urgencyScore: String(signal.urgencyScore),
-    fitScore: String(signal.fitScore),
-    confidenceScore: String(signal.confidenceScore),
+    title: signal.title,
+    company: signal.contactCompany ?? "",
+    contact: signal.contactName ?? "",
+    email: signal.contactEmail ?? "",
+    phone: signal.contactPhone ?? "",
+    value: signal.estimatedRecoverableValue !== null && signal.estimatedRecoverableValue !== undefined
+      ? String(signal.estimatedRecoverableValue)
+      : signal.estimatedValueMax !== null && signal.estimatedValueMax !== undefined
+        ? String(signal.estimatedValueMax)
+        : "",
+    lastInteractionAt: signal.lastInteractionAt ? signal.lastInteractionAt.slice(0, 16) : "",
+    context: signal.rawMessage ?? "",
     recommendedAction: signal.recommendedAction ?? "",
-    nextStep: signal.nextStep ?? "",
-    notes: signal.notes ?? ""
+    dueAt: signal.suggestedDueDate ?? "",
+    ownerProfileId: signal.assignedToProfileId ?? signal.suggestedOwnerProfileId ?? "",
+    organizationId: signal.matchedOrganizationId ?? "",
+    contactId: signal.matchedContactId ?? "",
+    newOrganizationName: "",
+    newContactName: "",
+    newContactEmail: "",
+    newContactPhone: "",
+    reviewedDraft: signal.reviewedDraft ?? ""
   };
 }
 
-function toPayload(form: SignalFormState, status?: CommercialSignalStatus) {
-  return {
-    source: form.source,
-    priority: form.priority,
-    status,
-    contactName: form.contactName,
-    contactCompany: form.contactCompany,
-    contactEmail: form.contactEmail,
-    contactPhone: form.contactPhone,
-    contactRole: form.contactRole,
-    rawMessage: form.rawMessage,
-    extractedSummary: form.extractedSummary,
-    detectedNeed: form.detectedNeed,
-    serviceInterest: form.serviceInterest,
-    location: form.location,
-    requestedDate: form.requestedDate,
-    estimatedValueMin: form.estimatedValueMin ? Number(form.estimatedValueMin) : undefined,
-    estimatedValueMax: form.estimatedValueMax ? Number(form.estimatedValueMax) : undefined,
-    urgencyScore: Number(form.urgencyScore || 50),
-    fitScore: Number(form.fitScore || 50),
-    confidenceScore: Number(form.confidenceScore || 50),
-    recommendedAction: form.recommendedAction,
-    nextStep: form.nextStep,
-    notes: form.notes
-  };
-}
-
-function badgeClass(kind: "source" | "status" | "priority", value: string) {
-  if (kind === "priority" && value === "urgent") return "border-gold-400/30 bg-gold-400/10 text-gold-300";
-  if (kind === "status" && value === "converted") return "border-mint-400/30 bg-mint-400/10 text-mint-300";
-  if (kind === "status" && ["ignored", "archived"].includes(value)) return "border-white/10 bg-white/[0.04] text-zinc-500";
-  return "border-white/10 bg-white/[0.06] text-zinc-300";
+function fieldClasses() {
+  return "min-h-11 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]";
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="grid gap-2 text-sm font-medium text-zinc-300">
-      <span>{label}</span>
-      {children}
-    </label>
-  );
+  return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]"><span>{label}</span>{children}</label>;
 }
 
-function textInputClasses() {
-  return "min-h-11 rounded-lg border border-white/10 bg-ink-950/80 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/50";
+function urgencyRank(value?: RecoverabilityUrgency | null) {
+  return value === "critical" ? 4 : value === "high" ? 3 : value === "medium" ? 2 : 1;
 }
 
-export function CommercialInboxClient({ initialSignals, tableReady, setupMessage }: CommercialInboxClientProps) {
+function urgencyClass(value?: RecoverabilityUrgency | null) {
+  if (value === "critical" || value === "high") return "border-red-400/30 bg-red-400/10 text-red-700 dark:text-red-200";
+  if (value === "medium") return "border-amber-400/30 bg-amber-400/10 text-amber-700 dark:text-amber-200";
+  return "border-[rgb(var(--border))] bg-[rgb(var(--muted))] text-[rgb(var(--muted-foreground))]";
+}
+
+export function CommercialInboxClient({
+  initialSignals,
+  tableReady,
+  setupMessage,
+  organizations,
+  contacts,
+  assignableProfiles
+}: CommercialInboxClientProps) {
   const [signals, setSignals] = useState(initialSignals);
-  const [statusFilter, setStatusFilter] = useState<CommercialSignalStatus | "all">("all");
-  const [sourceFilter, setSourceFilter] = useState<CommercialSignalSource | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<CommercialSignalPriority | "all">("all");
-  const [query, setQuery] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<SignalFormState>(emptyForm);
   const [selectedId, setSelectedId] = useState(initialSignals[0]?.id ?? "");
-  const [reviewForm, setReviewForm] = useState<SignalFormState>(initialSignals[0] ? toInput(initialSignals[0]) : emptyForm);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateForm>(emptyCreate);
+  const [reviewForm, setReviewForm] = useState<ReviewForm>(initialSignals[0] ? reviewFormFor(initialSignals[0]) : reviewFormFor({ title: "" } as CommercialSignal));
+  const [reviewStatus, setReviewStatus] = useState<CommercialSignalReviewStatus | "all">("all");
+  const [urgency, setUrgency] = useState<RecoverabilityUrgency | "all">("all");
+  const [confidence, setConfidence] = useState<RecoverabilityConfidence | "all">("all");
+  const [source, setSource] = useState<CommercialSignalSource | "all">("all");
+  const [minimumValue, setMinimumValue] = useState("");
+  const [matchFilter, setMatchFilter] = useState<"all" | "matched" | "unmatched">("all");
+  const [duplicateFilter, setDuplicateFilter] = useState<"all" | "risk">("all");
+  const [ownerFilter, setOwnerFilter] = useState<"all" | "assigned" | "unassigned">("all");
+  const [query, setQuery] = useState("");
+  const [decisionReason, setDecisionReason] = useState("");
+  const [postponeUntil, setPostponeUntil] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState(setupMessage ?? "");
   const [isPending, startTransition] = useTransition();
 
   const selectedSignal = signals.find((signal) => signal.id === selectedId) ?? null;
-  const filteredSignals = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return signals.filter((signal) => {
-      const haystack = [
-        signal.contactName,
-        signal.contactCompany,
-        signal.contactEmail,
-        signal.rawMessage,
-        signal.extractedSummary,
-        signal.detectedNeed,
-        signal.serviceInterest,
-        signal.recommendedAction
-      ].filter(Boolean).join(" ").toLowerCase();
-      return (
-        (statusFilter === "all" || signal.status === statusFilter) &&
-        (sourceFilter === "all" || signal.source === sourceFilter) &&
-        (priorityFilter === "all" || signal.priority === priorityFilter) &&
-        (!normalizedQuery || haystack.includes(normalizedQuery))
-      );
-    });
-  }, [priorityFilter, query, signals, sourceFilter, statusFilter]);
+  const filteredSignals = useMemo(() => signals.filter((signal) => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO");
+    const haystack = [signal.title, signal.contactCompany, signal.contactName, signal.contactEmail, signal.extractedSummary, signal.rawMessage]
+      .filter(Boolean).join(" ").toLocaleLowerCase("ro-RO");
+    const value = Number(signal.estimatedRecoverableValue ?? signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0);
+    const matched = Boolean(signal.matchedOrganizationId || signal.matchedContactId);
+    const assigned = Boolean(signal.assignedToProfileId || signal.suggestedOwnerProfileId);
+    return (reviewStatus === "all" || signal.reviewStatus === reviewStatus)
+      && (urgency === "all" || signal.urgencyLevel === urgency)
+      && (confidence === "all" || signal.confidenceLevel === confidence)
+      && (source === "all" || signal.source === source)
+      && (!minimumValue || value >= Number(minimumValue))
+      && (matchFilter === "all" || (matchFilter === "matched" ? matched : !matched))
+      && (duplicateFilter === "all" || signal.duplicateRisk)
+      && (ownerFilter === "all" || (ownerFilter === "assigned" ? assigned : !assigned))
+      && (!normalizedQuery || haystack.includes(normalizedQuery));
+  }).sort((a, b) => urgencyRank(b.urgencyLevel) - urgencyRank(a.urgencyLevel)
+    || Number(b.recoverabilityScore ?? 0) - Number(a.recoverabilityScore ?? 0)
+    || Number(b.estimatedRecoverableValue ?? 0) - Number(a.estimatedRecoverableValue ?? 0)
+    || new Date(a.lastInteractionAt ?? a.createdAt ?? 0).getTime() - new Date(b.lastInteractionAt ?? b.createdAt ?? 0).getTime()), [confidence, duplicateFilter, matchFilter, minimumValue, ownerFilter, query, reviewStatus, signals, source, urgency]);
 
-  const activeSignals = signals.filter((signal) => !["converted", "ignored", "archived"].includes(signal.status));
-  const newCount = signals.filter((signal) => signal.status === "new").length;
-  const urgentCount = signals.filter((signal) => signal.priority === "urgent" || signal.urgencyScore >= 80).length;
-  const convertedCount = signals.filter((signal) => signal.status === "converted").length;
-  const estimatedPotential = activeSignals.reduce((sum, signal) => sum + Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0), 0);
+  const awaitingReview = signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
+  const estimatedUnderReview = awaitingReview.reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0);
+  const converted = signals.filter((signal) => signal.reviewStatus === "converted").length;
 
-  function updateSignalState(signal: CommercialSignal) {
-    setSignals((items) => items.map((item) => (item.id === signal.id ? { ...item, ...signal } : item)));
+  function replaceSignal(signal: CommercialSignal) {
+    setSignals((items) => items.map((item) => item.id === signal.id ? signal : item));
     setSelectedId(signal.id);
-    setReviewForm(toInput(signal));
+    setReviewForm(reviewFormFor(signal));
   }
 
-  function handleSelect(signal: CommercialSignal) {
+  function selectSignal(signal: CommercialSignal) {
     setSelectedId(signal.id);
-    setReviewForm(toInput(signal));
+    setReviewForm(reviewFormFor(signal));
+    setDecisionReason("");
+    setPostponeUntil("");
     setNotice("");
     setError("");
+  }
+
+  function runAction(action: () => Promise<{ ok: boolean; message?: string; signal?: CommercialSignal; fallbackUsed?: boolean; opportunityId?: string; alreadyConverted?: boolean }>, successMessage: string) {
+    setNotice("");
+    setError("");
+    startTransition(async () => {
+      const result = await action();
+      if (!result.ok) {
+        setError(result.message ?? "Acțiunea nu a putut fi finalizată.");
+        return;
+      }
+      if (result.signal) replaceSignal(result.signal);
+      setNotice(result.fallbackUsed
+        ? "Analiza a fost generată pe baza regulilor disponibile și necesită verificarea echipei."
+        : result.alreadyConverted
+          ? "Semnalul fusese deja convertit; nu au fost create duplicate."
+          : successMessage);
+    });
   }
 
   function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice("");
-    setError("");
-    startTransition(async () => {
-      const result = await createCommercialSignal(toPayload(form));
-      if (!result.ok || !result.signal) {
-        setError(result.message ?? "Semnalul nu a putut fi adaugat.");
-        return;
+    runAction(async () => {
+      const result = await createCommercialSignal({
+        title: createForm.title,
+        source: createForm.source,
+        sourceReference: createForm.sourceReference,
+        contactCompany: createForm.company,
+        contactName: createForm.contact,
+        contactEmail: createForm.email,
+        contactPhone: createForm.phone,
+        estimatedValueMin: createForm.value ? Number(createForm.value) : undefined,
+        estimatedValueMax: createForm.value ? Number(createForm.value) : undefined,
+        currency: createForm.currency,
+        lastInteractionAt: createForm.lastInteractionAt,
+        rawMessage: createForm.context
+      });
+      if (result.ok && result.signal) {
+        setSignals((items) => [result.signal!, ...items]);
+        setSelectedId(result.signal.id);
+        setReviewForm(reviewFormFor(result.signal));
+        setCreateForm(emptyCreate);
+        setCreateOpen(false);
       }
-      setSignals((items) => [result.signal, ...items]);
-      setSelectedId(result.signal.id);
-      setReviewForm(toInput(result.signal));
-      setForm(emptyForm);
-      setShowForm(false);
-      setNotice("Semnalul comercial a fost adaugat.");
-    });
+      return result;
+    }, "Semnalul a fost creat și așteaptă analiza.");
   }
 
-  function handleSave(status?: CommercialSignalStatus) {
+  function saveReviewFields() {
     if (!selectedSignal) return;
-    setNotice("");
-    setError("");
-    startTransition(async () => {
-      const result = await updateCommercialSignal(selectedSignal.id, toPayload(reviewForm, status));
-      if (!result.ok || !result.signal) {
-        setError(result.message ?? "Semnalul nu a putut fi salvat.");
-        return;
-      }
-      updateSignalState(result.signal);
-      setNotice(status === "reviewed" ? "Semnalul a fost marcat ca revizuit." : "Semnalul a fost salvat.");
-    });
+    runAction(() => updateCommercialSignal(selectedSignal.id, {
+      title: reviewForm.title,
+      contactCompany: reviewForm.company,
+      contactName: reviewForm.contact,
+      contactEmail: reviewForm.email,
+      contactPhone: reviewForm.phone,
+      estimatedValueMin: reviewForm.value ? Number(reviewForm.value) : undefined,
+      estimatedValueMax: reviewForm.value ? Number(reviewForm.value) : undefined,
+      lastInteractionAt: reviewForm.lastInteractionAt,
+      rawMessage: reviewForm.context,
+      recommendedAction: reviewForm.recommendedAction,
+      suggestedDueDate: reviewForm.dueAt,
+      assignedToProfileId: reviewForm.ownerProfileId,
+      matchedOrganizationId: reviewForm.organizationId,
+      matchedContactId: reviewForm.contactId,
+      reviewedDraft: reviewForm.reviewedDraft
+    }), "Câmpurile revizuite au fost salvate.");
   }
 
-  function handleIgnore(signal: CommercialSignal) {
-    setNotice("");
-    setError("");
-    startTransition(async () => {
-      const result = await ignoreCommercialSignal(signal.id);
-      if (!result.ok || !result.signal) {
-        setError(result.message ?? "Semnalul nu a putut fi ignorat.");
-        return;
-      }
-      updateSignalState(result.signal);
-      setNotice("Semnalul a fost ignorat.");
-    });
+  function decide(decision: "dismissed" | "duplicate" | "postponed") {
+    if (!selectedSignal) return;
+    runAction(() => setCommercialSignalReviewDecision(selectedSignal.id, decision, decisionReason, postponeUntil),
+      decision === "dismissed" ? "Semnalul a fost respins." : decision === "duplicate" ? "Semnalul a fost marcat duplicat." : "Revizuirea a fost amânată.");
   }
 
-  function handleArchive(signal: CommercialSignal) {
-    setNotice("");
-    setError("");
-    startTransition(async () => {
-      const result = await archiveCommercialSignal(signal.id);
-      if (!result.ok || !result.signal) {
-        setError(result.message ?? "Semnalul nu a putut fi arhivat.");
-        return;
-      }
-      updateSignalState(result.signal);
-      setNotice("Semnalul a fost arhivat.");
-    });
+  function approve() {
+    if (!selectedSignal) return;
+    runAction(() => approveCommercialSignal(selectedSignal.id, {
+      organizationId: reviewForm.organizationId,
+      contactId: reviewForm.contactId,
+      newOrganizationName: reviewForm.newOrganizationName,
+      newContactName: reviewForm.newContactName,
+      newContactEmail: reviewForm.newContactEmail,
+      newContactPhone: reviewForm.newContactPhone,
+      ownerProfileId: reviewForm.ownerProfileId,
+      dueAt: reviewForm.dueAt,
+      recommendedAction: reviewForm.recommendedAction,
+      reviewedDraft: reviewForm.reviewedDraft
+    }), "Semnalul a fost aprobat și convertit într-un caz de recuperare urmărit.");
   }
 
-  function handleConvert(signal: CommercialSignal) {
-    setNotice("");
-    setError("");
-    startTransition(async () => {
-      const result = await convertSignalToOpportunity(signal.id);
-      if (!result.ok || !result.opportunityId) {
-        setError(result.message ?? "Semnalul nu a putut fi transformat in oportunitate.");
-        return;
-      }
-      if (result.signal) {
-        updateSignalState(result.signal);
-      }
-      setNotice(result.alreadyConverted ? "Semnalul era deja transformat intr-o oportunitate." : "Semnalul a fost transformat intr-o oportunitate.");
-    });
-  }
-
-  if (!tableReady) {
-    return (
-      <div className="grid gap-6">
-        <StatusNotice tone="warning">{setupMessage}</StatusNotice>
-        <DataCard title="Inbox Comercial">
-          <EmptyState
-            title="Modulul Inbox Comercial nu este activ încă."
-            description="După rularea migrației, aici vor apărea semnalele comerciale primite de firma."
-          />
-        </DataCard>
-      </div>
-    );
-  }
+  if (!tableReady) return <StatusNotice tone="warning">{setupMessage ?? "Motorul de recuperare nu este disponibil până la aplicarea migrării revizuite."}</StatusNotice>;
 
   return (
     <div className="grid gap-6">
+      {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
-      {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
 
-      <DataCard title="Punct de intrare comercial">
-        <p className="text-sm leading-6 text-zinc-300">
-          Acesta este punctul de intrare pentru cererile comerciale. Un semnal poate fi ignorat, arhivat sau transformat intr-o oportunitate urmarita in ReveNew.
-        </p>
-      </DataCard>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Semnale noi" value={`${newCount}`} detail="Cereri comerciale neprocesate." />
-        <MetricCard label="Semnale urgente" value={`${urgentCount}`} detail="Prioritate urgenta sau scor de urgenta ridicat." tone="gold" />
-        <MetricCard label="Convertite în oportunități" value={`${convertedCount}`} detail="Semnale transformate în pipeline." tone="mint" />
-        <MetricCard label="Valoare estimata potentiala" value={formatCurrency(estimatedPotential)} detail="Potential estimat din semnale neconvertite." />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard label="De revizuit" value={`${awaitingReview.length}`} detail="Semnale analizate care necesită decizia echipei." tone="gold" />
+        <MetricCard label="Valoare estimată în revizuire" value={formatCurrency(estimatedUnderReview, "RON")} detail="Potențial estimat; nu reprezintă venit confirmat." />
+        <MetricCard label="Convertite" value={`${converted}`} detail="Cazuri aprobate și transformate în oportunități." tone="mint" />
       </div>
 
-      <DataCard
-        title="Adauga semnal"
-        description="Nu trebuie completate toate campurile. ReveNew poate lucra si cu o nota scurta."
-        action={
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => setShowForm((value) => !value)} className="px-4">
-              {showForm ? "Inchide" : "Adauga semnal"}
-            </Button>
-            <Button type="button" variant="secondary" className="cursor-not-allowed px-4 opacity-60">
-              Import CSV
-            </Button>
-          </div>
-        }
-      >
-        {showForm ? (
-          <form onSubmit={handleCreate} className="grid gap-6">
-            <FormFields form={form} setForm={setForm} />
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit" className="px-4" disabled={isPending}>
-                Salvează semnal
-              </Button>
-              <Button type="button" variant="ghost" className="px-4" onClick={() => setForm(emptyForm)}>
-                Reseteaza
-              </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-2xl text-sm text-[rgb(var(--muted-foreground))]">ReveNew recomandă. Echipa ta verifică, editează și aprobă înainte de orice acțiune externă.</p>
+        <Button onClick={() => setCreateOpen((open) => !open)}>{createOpen ? "Închide" : "Adaugă semnal"}</Button>
+      </div>
+
+      {createOpen ? (
+        <DataCard title="Semnal comercial nou" description="Introdu numai informațiile disponibile; câmpurile lipsă vor fi semnalate în analiză.">
+          <form onSubmit={handleCreate} className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <Field label="Titlu"><input required maxLength={240} value={createForm.title} onChange={(event) => setCreateForm({ ...createForm, title: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Sursă"><select value={createForm.source} onChange={(event) => setCreateForm({ ...createForm, source: event.target.value as CommercialSignalSource })} className={fieldClasses()}>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+              <Field label="Referință sursă"><input maxLength={500} value={createForm.sourceReference} onChange={(event) => setCreateForm({ ...createForm, sourceReference: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Companie"><input value={createForm.company} onChange={(event) => setCreateForm({ ...createForm, company: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Contact"><input value={createForm.contact} onChange={(event) => setCreateForm({ ...createForm, contact: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Email"><input type="email" value={createForm.email} onChange={(event) => setCreateForm({ ...createForm, email: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Telefon"><input value={createForm.phone} onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Valoare estimată"><input type="number" min="0" value={createForm.value} onChange={(event) => setCreateForm({ ...createForm, value: event.target.value })} className={fieldClasses()} /></Field>
+              <Field label="Monedă"><select value={createForm.currency} onChange={(event) => setCreateForm({ ...createForm, currency: event.target.value })} className={fieldClasses()}><option>RON</option><option>EUR</option><option>USD</option></select></Field>
+              <Field label="Ultima interacțiune"><input type="datetime-local" value={createForm.lastInteractionAt} onChange={(event) => setCreateForm({ ...createForm, lastInteractionAt: event.target.value })} className={fieldClasses()} /></Field>
             </div>
+            <Field label="Context neconfirmat"><textarea required rows={4} maxLength={12000} value={createForm.context} onChange={(event) => setCreateForm({ ...createForm, context: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
+            <div><Button type="submit" disabled={isPending}>Salvează semnalul</Button></div>
           </form>
-        ) : null}
-      </DataCard>
+        </DataCard>
+      ) : null}
 
-      <DataCard title="Filtre">
-        <div className="grid gap-3 md:grid-cols-4">
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as CommercialSignalStatus | "all")} className={textInputClasses()}>
-            <option value="all">Toate statusurile</option>
-            {statuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
-          </select>
-          <select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as CommercialSignalSource | "all")} className={textInputClasses()}>
-            <option value="all">Toate sursele</option>
-            {sources.map((source) => <option key={source} value={source}>{sourceLabels[source]}</option>)}
-          </select>
-          <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value as CommercialSignalPriority | "all")} className={textInputClasses()}>
-            <option value="all">Toate prioritatile</option>
-            {priorities.map((priority) => <option key={priority} value={priority}>{priorityLabels[priority]}</option>)}
-          </select>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} className={textInputClasses()} placeholder="Caută contact, firmă, nevoie..." />
+      <DataCard title="Coadă de recuperare" description="Ordine implicită: urgență, scor, valoare și vechimea interacțiunii.">
+        <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
+          <Field label="Caută"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className={fieldClasses()} /></Field>
+          <Field label="Revizuire"><select value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value as CommercialSignalReviewStatus | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+          <Field label="Urgență"><select value={urgency} onChange={(event) => setUrgency(event.target.value as RecoverabilityUrgency | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(urgencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+          <Field label="Încredere"><select value={confidence} onChange={(event) => setConfidence(event.target.value as RecoverabilityConfidence | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(confidenceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+          <Field label="Sursă"><select value={source} onChange={(event) => setSource(event.target.value as CommercialSignalSource | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+          <Field label="Valoare minimă"><input type="number" min="0" value={minimumValue} onChange={(event) => setMinimumValue(event.target.value)} className={fieldClasses()} /></Field>
+          <Field label="Potrivire"><select value={matchFilter} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)} className={fieldClasses()}><option value="all">Toate</option><option value="matched">Potrivite</option><option value="unmatched">Nepotrivite</option></select></Field>
+          <Field label="Excepții"><select value={`${duplicateFilter}:${ownerFilter}`} onChange={(event) => { const [duplicate, owner] = event.target.value.split(":"); setDuplicateFilter(duplicate as typeof duplicateFilter); setOwnerFilter(owner as typeof ownerFilter); }} className={fieldClasses()}><option value="all:all">Toate</option><option value="risk:all">Risc duplicat</option><option value="all:unassigned">Fără responsabil</option><option value="all:assigned">Cu responsabil</option></select></Field>
         </div>
       </DataCard>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr]">
-        <DataCard title="Semnale comerciale" description="Cele mai noi apar primele.">
-          <div className="grid gap-4">
-            {filteredSignals.length > 0 ? (
-              filteredSignals.map((signal) => (
-                <article key={signal.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded border px-2 py-1 text-xs font-semibold ${badgeClass("source", signal.source)}`}>{signal.sourceLabel ?? sourceLabels[signal.source]}</span>
-                    <span className={`rounded border px-2 py-1 text-xs font-semibold ${badgeClass("status", signal.status)}`}>{statusLabels[signal.status]}</span>
-                    <span className={`rounded border px-2 py-1 text-xs font-semibold ${badgeClass("priority", signal.priority)}`}>{priorityLabels[signal.priority]}</span>
-                  </div>
-                  <h3 className="mt-3 text-base font-semibold text-white">{signal.contactCompany || signal.contactName || "Semnal fara contact"}</h3>
-                  <p className="mt-1 text-sm text-zinc-400">{[signal.contactName, signal.contactRole, signal.contactEmail, signal.contactPhone].filter(Boolean).join(" | ")}</p>
-                  <p className="mt-3 text-sm leading-6 text-zinc-300">{signal.extractedSummary || signal.rawMessage || signal.detectedNeed || "Fara sumar încă."}</p>
-                  {signal.detectedNeed ? <p className="mt-2 text-sm text-zinc-400">Nevoie: <span className="text-zinc-200">{signal.detectedNeed}</span></p> : null}
-                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                    <p><span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Valoare</span><span className="font-semibold text-white">{formatCurrency(Number(signal.estimatedValueMin ?? 0))} - {formatCurrency(Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0))}</span></p>
-                    <p><span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Scoruri</span><span className="font-semibold text-white">U {signal.urgencyScore} / F {signal.fitScore} / C {signal.confidenceScore}</span></p>
-                    <p><span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Primit</span><span className="font-semibold text-white">{formatDateTimeWithSeconds(signal.occurredAt ?? signal.createdAt ?? undefined)}</span></p>
-                  </div>
-                  {signal.recommendedAction ? <p className="mt-3 text-sm font-semibold text-mint-300">{signal.recommendedAction}</p> : null}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button type="button" variant="secondary" className="min-h-10 px-3" onClick={() => handleSelect(signal)}>Revizuiește</Button>
-                    {signal.convertedOpportunityId ? (
-                      <Button href={`/opportunities/${signal.convertedOpportunityId}`} variant="secondary" className="min-h-10 px-3">Deschide oportunitatea</Button>
-                    ) : (
-                      <Button type="button" className="min-h-10 px-3" onClick={() => handleConvert(signal)}>Transforma in oportunitate</Button>
-                    )}
-                    <Button type="button" variant="ghost" className="min-h-10 px-3" onClick={() => handleIgnore(signal)}>Ignora</Button>
-                    <Button type="button" variant="ghost" className="min-h-10 px-3" onClick={() => handleArchive(signal)}>Arhiveaza</Button>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <EmptyState title="Nu exista semnale comerciale încă." description="Adauga o cerere primita din email, telefon, formular sau WhatsApp. Semnalele importante pot fi transformate în oportunități." />
-            )}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)]">
+        <DataCard title={`Semnale (${filteredSignals.length})`}>
+          <div className="grid gap-3">
+            {filteredSignals.map((signal) => (
+              <button key={signal.id} type="button" onClick={() => selectSignal(signal)} className={`focus-ring rounded-lg border p-4 text-left transition ${selectedId === signal.id ? "border-[rgb(var(--primary))] bg-[rgb(var(--muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--primary))]"}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">{sourceLabels[signal.source]}</span>
+                  <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(signal.urgencyLevel)}`}>{signal.urgencyLevel ? urgencyLabels[signal.urgencyLevel] : "Neanalizat"}</span>
+                </div>
+                <h3 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{signal.title}</h3>
+                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{signal.contactCompany || signal.contactName || "Companie neconfirmată"}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Scor</span><strong>{signal.recoverabilityScore ?? "—"}</strong></div>
+                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Potențial</span><strong>{formatCurrency(Number(signal.estimatedRecoverableValue ?? 0), signal.currency)}</strong></div>
+                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Stare</span><strong>{reviewLabels[signal.reviewStatus]}</strong></div>
+                </div>
+                <p className="mt-3 line-clamp-2 text-sm text-[rgb(var(--muted-foreground))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
+              </button>
+            ))}
+            {filteredSignals.length === 0 ? <EmptyState title="Nu există semnale pentru filtrele selectate." description="Modifică filtrele sau adaugă un semnal comercial nou." /> : null}
           </div>
         </DataCard>
 
-        <DataCard title="Revizuire semnal" description="Actualizeaza detaliile inainte de conversie.">
+        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description="Scorul este recalculat prin analiză; câmpurile comerciale rămân editabile înainte de aprobare.">
           {selectedSignal ? (
-            <div className="grid gap-5">
-              <div className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`rounded border px-2 py-1 text-xs font-semibold ${badgeClass("status", selectedSignal.status)}`}>{statusLabels[selectedSignal.status]}</span>
-                  <span className={`rounded border px-2 py-1 text-xs font-semibold ${badgeClass("priority", selectedSignal.priority)}`}>{priorityLabels[selectedSignal.priority]}</span>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">{selectedSignal.rawMessage || selectedSignal.extractedSummary || "Fara mesaj brut."}</p>
+            <div className="grid gap-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">{reviewLabels[selectedSignal.reviewStatus]}</span>
+                <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(selectedSignal.urgencyLevel)}`}>{selectedSignal.urgencyLevel ? urgencyLabels[selectedSignal.urgencyLevel] : "Neanalizat"}</span>
+                {selectedSignal.duplicateRisk ? <span className="rounded border border-red-400/30 bg-red-400/10 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-200">Posibil duplicat</span> : null}
+                <span className="text-xs text-[rgb(var(--muted-foreground))]">Primit {formatDateTimeWithSeconds(selectedSignal.createdAt ?? undefined)}</span>
               </div>
-              <FormFields form={reviewForm} setForm={setReviewForm} compact />
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" className="px-4" onClick={() => handleSave()}>Salvează</Button>
-                <Button type="button" variant="secondary" className="px-4" onClick={() => handleSave("reviewed")}>Marchează revizuit</Button>
-                {selectedSignal.convertedOpportunityId ? (
-                  <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary" className="px-4">Deschide oportunitatea</Button>
-                ) : (
-                  <Button type="button" className="px-4" onClick={() => handleConvert(selectedSignal)}>Transforma</Button>
-                )}
-                <Button type="button" variant="ghost" className="px-4" onClick={() => handleIgnore(selectedSignal)}>Ignora</Button>
-                <Button type="button" variant="ghost" className="px-4" onClick={() => handleArchive(selectedSignal)}>Arhiveaza</Button>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">Evenimente</h3>
-                <div className="mt-3 grid gap-2">
-                  {(selectedSignal.events ?? []).length > 0 ? selectedSignal.events?.map((event) => (
-                    <div key={event.id} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
-                      <p className="text-sm font-semibold text-white">{event.eventType}</p>
-                      <p className="mt-1 text-sm text-zinc-400">{event.description}</p>
-                      <p className="mt-2 text-xs text-zinc-500">{formatDateTimeWithSeconds(event.createdAt)}</p>
-                    </div>
-                  )) : <p className="text-sm text-zinc-500">Evenimentele vor aparea dupa salvare sau conversie.</p>}
+
+              {selectedSignal.analysisStatus === "completed" ? (
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <MetricCard label="Scor recuperabilitate" value={`${selectedSignal.recoverabilityScore ?? 0}/100`} detail="Prioritate estimată; necesită revizuire." tone="gold" />
+                  <MetricCard label="Potențial estimat" value={formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency)} detail="Nu reprezintă venit garantat sau câștigat." />
+                  <MetricCard label="Încredere" value={selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută"} detail={selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare."} />
                 </div>
+              ) : (
+                <StatusNotice tone="neutral">Semnalul trebuie analizat înainte de revizuire și aprobare.</StatusNotice>
+              )}
+
+              {selectedSignal.analysisExplanation ? <div><h3 className="text-sm font-semibold">De ce merită atenție</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p></div> : null}
+              {selectedSignal.missingInformation.length > 0 ? <div><h3 className="text-sm font-semibold">Informații lipsă</h3><ul className="mt-2 grid gap-1 text-sm text-[rgb(var(--muted-foreground))]">{selectedSignal.missingInformation.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}
+              {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Titlu"><input value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Companie extrasă"><input value={reviewForm.company} onChange={(event) => setReviewForm({ ...reviewForm, company: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Contact extras"><input value={reviewForm.contact} onChange={(event) => setReviewForm({ ...reviewForm, contact: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Email"><input type="email" value={reviewForm.email} onChange={(event) => setReviewForm({ ...reviewForm, email: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Telefon"><input value={reviewForm.phone} onChange={(event) => setReviewForm({ ...reviewForm, phone: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Valoare comercială"><input type="number" min="0" value={reviewForm.value} onChange={(event) => setReviewForm({ ...reviewForm, value: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Ultima interacțiune"><input type="datetime-local" value={reviewForm.lastInteractionAt} onChange={(event) => setReviewForm({ ...reviewForm, lastInteractionAt: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Termen recomandat"><input type="date" value={reviewForm.dueAt} onChange={(event) => setReviewForm({ ...reviewForm, dueAt: event.target.value })} className={fieldClasses()} /></Field>
+              </div>
+              <Field label="Context original"><textarea rows={4} value={reviewForm.context} onChange={(event) => setReviewForm({ ...reviewForm, context: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
+              <Field label="Acțiune recomandată"><textarea rows={3} value={reviewForm.recommendedAction} onChange={(event) => setReviewForm({ ...reviewForm, recommendedAction: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="Responsabil"><select value={reviewForm.ownerProfileId} onChange={(event) => setReviewForm({ ...reviewForm, ownerProfileId: event.target.value })} className={fieldClasses()}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</select></Field>
+                <Field label="Companie CRM"><select value={reviewForm.organizationId} onChange={(event) => setReviewForm({ ...reviewForm, organizationId: event.target.value, contactId: "" })} className={fieldClasses()}><option value="">Fără potrivire</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select></Field>
+                <Field label="Contact CRM"><select value={reviewForm.contactId} onChange={(event) => setReviewForm({ ...reviewForm, contactId: event.target.value })} className={fieldClasses()}><option value="">Fără potrivire</option>{contacts.filter((contact) => !reviewForm.organizationId || !contact.organizationId || contact.organizationId === reviewForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}{contact.email ? ` · ${contact.email}` : ""}</option>)}</select></Field>
+              </div>
+
+              {!reviewForm.organizationId ? <div className="grid gap-4 md:grid-cols-2"><Field label="Companie CRM nouă"><input value={reviewForm.newOrganizationName} onChange={(event) => setReviewForm({ ...reviewForm, newOrganizationName: event.target.value })} placeholder={reviewForm.company || "Denumire companie"} className={fieldClasses()} /></Field></div> : null}
+              {!reviewForm.contactId ? <div className="grid gap-4 md:grid-cols-3"><Field label="Contact CRM nou"><input value={reviewForm.newContactName} onChange={(event) => setReviewForm({ ...reviewForm, newContactName: event.target.value })} placeholder={reviewForm.contact || "Nume contact"} className={fieldClasses()} /></Field><Field label="Email contact nou"><input type="email" value={reviewForm.newContactEmail} onChange={(event) => setReviewForm({ ...reviewForm, newContactEmail: event.target.value })} className={fieldClasses()} /></Field><Field label="Telefon contact nou"><input value={reviewForm.newContactPhone} onChange={(event) => setReviewForm({ ...reviewForm, newContactPhone: event.target.value })} className={fieldClasses()} /></Field></div> : null}
+
+              <Field label="Draft comercial revizuit"><textarea rows={7} value={reviewForm.reviewedDraft} onChange={(event) => setReviewForm({ ...reviewForm, reviewedDraft: event.target.value })} placeholder="Draft opțional; nu va fi trimis automat." className={`${fieldClasses()} py-3`} /></Field>
+
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza este pregătită pentru revizuire.")} disabled={isPending || selectedSignal.status === "converted"}>{selectedSignal.analysisStatus === "completed" ? "Reanalizează" : "Analizează"}</Button>
+                <Button variant="secondary" onClick={saveReviewFields} disabled={isPending}>Salvează modificările</Button>
+                <Button onClick={approve} disabled={isPending || selectedSignal.analysisStatus !== "completed" || selectedSignal.status === "converted"}>Aprobă și creează cazul</Button>
+                {selectedSignal.convertedOpportunityId ? <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary">Deschide oportunitatea</Button> : null}
+              </div>
+
+              {selectedSignal.status !== "converted" ? (
+                <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5 md:grid-cols-[1fr_auto]">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Motiv decizie"><input value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Obligatoriu pentru respingere sau duplicat" className={fieldClasses()} /></Field>
+                    <Field label="Reia revizuirea la"><input type="datetime-local" value={postponeUntil} onChange={(event) => setPostponeUntil(event.target.value)} className={fieldClasses()} /></Field>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-2"><Button variant="ghost" onClick={() => decide("dismissed")} disabled={isPending}>Respinge</Button><Button variant="ghost" onClick={() => decide("duplicate")} disabled={isPending}>Marchează duplicat</Button><Button variant="secondary" onClick={() => decide("postponed")} disabled={isPending || !postponeUntil}>Amână</Button></div>
+                </div>
+              ) : null}
+
+              <div className="border-t border-[rgb(var(--border))] pt-5">
+                <h3 className="text-sm font-semibold">Istoric verificabil</h3>
+                <div className="mt-3 grid gap-3">{(selectedSignal.events ?? []).map((event) => <div key={event.id} className="rounded-lg bg-[rgb(var(--surface-elevated))] p-3"><p className="text-sm font-medium">{event.description || event.eventType}</p><p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{formatDateTimeWithSeconds(event.createdAt)}</p></div>)}{(selectedSignal.events ?? []).length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente înregistrate încă.</p> : null}</div>
               </div>
             </div>
-          ) : (
-            <EmptyState title="Alege un semnal" description="Selecteaza un semnal din lista pentru revizuire." />
-          )}
+          ) : <EmptyState title="Selectează un semnal" description="Alege un element din coadă pentru analiză și revizuire." />}
         </DataCard>
       </div>
-    </div>
-  );
-}
-
-function FormFields({ form, setForm, compact = false }: { form: SignalFormState; setForm: React.Dispatch<React.SetStateAction<SignalFormState>>; compact?: boolean }) {
-  function setField<K extends keyof SignalFormState>(key: K, value: SignalFormState[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
-
-  return (
-    <div className="grid gap-5">
-      <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">Contact</h3>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Field label="Sursa">
-            <select value={form.source} onChange={(event) => setField("source", event.target.value as CommercialSignalSource)} className={textInputClasses()}>
-              {sources.map((source) => <option key={source} value={source}>{sourceLabels[source]}</option>)}
-            </select>
-          </Field>
-          <Field label="Prioritate">
-            <select value={form.priority} onChange={(event) => setField("priority", event.target.value as CommercialSignalPriority)} className={textInputClasses()}>
-              {priorities.map((priority) => <option key={priority} value={priority}>{priorityLabels[priority]}</option>)}
-            </select>
-          </Field>
-          <Field label="Nume contact"><input value={form.contactName} onChange={(event) => setField("contactName", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Firma"><input value={form.contactCompany} onChange={(event) => setField("contactCompany", event.target.value)} className={textInputClasses()} /></Field>
-          {!compact ? <Field label="Email"><input value={form.contactEmail} onChange={(event) => setField("contactEmail", event.target.value)} className={textInputClasses()} /></Field> : null}
-          {!compact ? <Field label="Telefon"><input value={form.contactPhone} onChange={(event) => setField("contactPhone", event.target.value)} className={textInputClasses()} /></Field> : null}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">Cerere</h3>
-        <div className="grid gap-3">
-          <Field label="Mesaj brut">
-            <textarea value={form.rawMessage} onChange={(event) => setField("rawMessage", event.target.value)} rows={compact ? 4 : 5} className={`${textInputClasses()} py-3`} />
-          </Field>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Nevoie detectata"><input value={form.detectedNeed} onChange={(event) => setField("detectedNeed", event.target.value)} className={textInputClasses()} /></Field>
-            <Field label="Serviciu de interes"><input value={form.serviceInterest} onChange={(event) => setField("serviceInterest", event.target.value)} className={textInputClasses()} /></Field>
-            <Field label="Locatie"><input value={form.location} onChange={(event) => setField("location", event.target.value)} className={textInputClasses()} /></Field>
-            <Field label="Data solicitata"><input type="datetime-local" value={form.requestedDate} onChange={(event) => setField("requestedDate", event.target.value)} className={textInputClasses()} /></Field>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">Prioritate</h3>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Valoare minima"><input type="number" value={form.estimatedValueMin} onChange={(event) => setField("estimatedValueMin", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Valoare maxima"><input type="number" value={form.estimatedValueMax} onChange={(event) => setField("estimatedValueMax", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Urgenta"><input type="number" min="0" max="100" value={form.urgencyScore} onChange={(event) => setField("urgencyScore", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Fit"><input type="number" min="0" max="100" value={form.fitScore} onChange={(event) => setField("fitScore", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Incredere"><input type="number" min="0" max="100" value={form.confidenceScore} onChange={(event) => setField("confidenceScore", event.target.value)} className={textInputClasses()} /></Field>
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">Recomandare</h3>
-        <div className="grid gap-3">
-          <Field label="Actiune recomandata"><input value={form.recommendedAction} onChange={(event) => setField("recommendedAction", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Urmatorul pas"><input value={form.nextStep} onChange={(event) => setField("nextStep", event.target.value)} className={textInputClasses()} /></Field>
-          <Field label="Note"><textarea value={form.notes} onChange={(event) => setField("notes", event.target.value)} rows={3} className={`${textInputClasses()} py-3`} /></Field>
-        </div>
-      </section>
     </div>
   );
 }

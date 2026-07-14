@@ -279,7 +279,24 @@ export type CommercialSignalSource =
   | "referral"
   | "other";
 
-export type CommercialSignalStatus = "new" | "reviewed" | "converted" | "ignored" | "archived";
+export type CommercialSignalStatus =
+  | "new"
+  | "analyzing"
+  | "ready_for_review"
+  | "approved"
+  | "dismissed"
+  | "duplicate"
+  | "postponed"
+  | "converted"
+  | "failed"
+  | "reviewed"
+  | "ignored"
+  | "archived";
+
+export type CommercialSignalAnalysisStatus = "not_started" | "analyzing" | "completed" | "failed";
+export type CommercialSignalReviewStatus = "new" | "ready_for_review" | "approved" | "dismissed" | "duplicate" | "postponed" | "converted";
+export type RecoverabilityConfidence = "low" | "medium" | "high";
+export type RecoverabilityUrgency = "low" | "medium" | "high" | "critical";
 
 export type CommercialSignalPriority = "low" | "medium" | "high" | "urgent";
 
@@ -301,6 +318,32 @@ export type CommercialSignal = {
   sourceLabel?: string | null;
   status: CommercialSignalStatus;
   priority: CommercialSignalPriority;
+  title: string;
+  sourceReference?: string | null;
+  lastInteractionAt?: string | null;
+  analysisStatus: CommercialSignalAnalysisStatus;
+  reviewStatus: CommercialSignalReviewStatus;
+  analysisMode?: "ai" | "deterministic_fallback" | null;
+  recoverabilityScore?: number | null;
+  confidenceLevel?: RecoverabilityConfidence | null;
+  estimatedRecoverableValue?: number | null;
+  urgencyLevel?: RecoverabilityUrgency | null;
+  primaryRecoveryReason?: string | null;
+  analysisExplanation?: string | null;
+  missingInformation: string[];
+  uncertaintyNotes: string[];
+  suggestedDueDate?: string | null;
+  suggestedOwnerProfileId?: string | null;
+  matchedOrganizationId?: string | null;
+  matchedContactId?: string | null;
+  duplicateRisk: boolean;
+  duplicateSignalId?: string | null;
+  reviewDueAt?: string | null;
+  reviewedDraft?: string | null;
+  dismissalReason?: string | null;
+  analyzedAt?: string | null;
+  reviewedAt?: string | null;
+  approvedByProfileId?: string | null;
   contactName?: string | null;
   contactCompany?: string | null;
   contactEmail?: string | null;

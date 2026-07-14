@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
@@ -334,10 +335,14 @@ export default async function ReportsPage() {
         {inboxSummary.tableReady ? (
           <>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard label="Semnale noi" value={`${inboxSummary.newCount}`} detail="Cereri comerciale in Inbox Comercial." />
-              <MetricCard label="Semnale urgente" value={`${inboxSummary.urgentCount}`} detail="Semnale cu prioritate sau urgenta mare." tone="gold" />
-              <MetricCard label="Convertite" value={`${inboxSummary.convertedCount}`} detail="Semnale transformate în oportunități." tone="mint" />
-              <MetricCard label="Potential inbox" value={formatCurrency(inboxSummary.estimatedPotential)} detail="Valoare estimata din semnale active." />
+              <MetricCard label="Semnale de revizuit" value={`${inboxSummary.awaitingReviewCount}`} detail="Analizate și pregătite pentru decizia echipei." tone="gold" />
+              <MetricCard label="Potențial estimat în revizuire" value={formatCurrency(inboxSummary.estimatedValueUnderReview, "RON")} detail="Estimare activă, separată de venitul confirmat." />
+              <MetricCard label="Convertite" value={`${inboxSummary.convertedCount}`} detail="Semnale aprobate și transformate în oportunități." tone="mint" />
+              <MetricCard label="Respinse" value={`${inboxSummary.dismissedCount}`} detail="Nu sunt incluse în valoarea recuperabilă activă." />
+              <MetricCard label="Duplicate" value={`${inboxSummary.duplicateCount}`} detail="Eliminate din coada și valoarea activă." />
+              <MetricCard label="Fără responsabil" value={`${inboxSummary.signalsWithoutOwner}`} detail="Semnale pregătite pentru revizuire fără proprietar." />
+              <MetricCard label="Valoare mare în atenție" value={`${inboxSummary.highValueAttentionCount}`} detail="Urgență ridicată sau critică și valoare cunoscută." tone="gold" />
+              <MetricCard label="Timp mediu de revizuire" value={inboxSummary.averageReviewHours === null ? "Insuficient" : `${inboxSummary.averageReviewHours} h`} detail="De la creare până la decizia umană." />
             </div>
 
             <DataCard title="Semnale comerciale noi" description="Top semnale urgente sau noi din Inbox Comercial.">

@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
@@ -33,10 +34,11 @@ function OpportunityException({ opportunity, reasons }: { opportunity: Opportuni
 export default async function DashboardPage() {
   try {
     const summary = await getRevenueWorkspaceSummary();
-    const activeSignals = summary.signals.filter((signal) => !signal.convertedOpportunityId && !["converted", "ignored", "archived"].includes(signal.status));
+    const activeSignals = summary.signals.filter((signal) => !signal.convertedOpportunityId && !["converted", "dismissed", "duplicate", "ignored", "archived"].includes(signal.status));
+    const reviewSignals = summary.signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
     const signalValue = activeSignals
       .filter((signal) => signal.currency === "RON")
-      .reduce((sum, signal) => sum + Number(signal.estimatedValueMax ?? signal.estimatedValueMin ?? 0), 0);
+      .reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0);
     const totalEstimatedValue = summary.metrics.activePipelineValue + signalValue;
     const hasUsefulData = totalEstimatedValue > 0 || summary.opportunities.length > 0 || activeSignals.length > 0 || summary.actions.length > 0;
     const pendingActions = [...summary.workQueue.overdue, ...summary.workQueue.dueToday, ...summary.workQueue.upcoming].slice(0, 5);
@@ -66,6 +68,9 @@ export default async function DashboardPage() {
           <MetricCard label="Acțiuni restante" value={`${summary.workQueue.overdue.length}`} detail="Atribuite utilizatorului curent." />
           <MetricCard label="Acțiuni astăzi" value={`${summary.workQueue.dueToday.length}`} detail="Atribuite utilizatorului curent." />
           <MetricCard label="Fără contact principal" value={`${summary.metrics.missingPrimaryContact}`} detail="Necesită completarea relației CRM." />
+          <MetricCard label="Semnale de revizuit" value={`${reviewSignals.length}`} detail="Analizate și pregătite pentru decizia echipei." tone="gold" />
+          <MetricCard label="Potențial estimat în revizuire" value={formatCurrency(reviewSignals.filter((signal) => signal.currency === "RON").reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0), "RON")} detail="Estimare activă; nu este venit confirmat." />
+          <MetricCard label="Semnale fără responsabil" value={`${reviewSignals.filter((signal) => !signal.assignedToProfileId && !signal.suggestedOwnerProfileId).length}`} detail="Necesită atribuirea unei persoane responsabile." />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

@@ -26,6 +26,7 @@ export type NavigationItem = {
 
 export const primaryNavigation = [
   { name: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
+  { name: "Inbox Comercial", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
   { name: "Activitatea mea", href: "/today", icon: "clipboard-check", permission: "actions.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
@@ -41,7 +42,6 @@ export const utilityNavigation = [
 ] satisfies NavigationItem[];
 
 export const advancedNavigation = [
-  { name: "Inbox Comercial", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele comerciale primite.", permission: "signals.read" },
   { name: "Bani recuperabili", href: "/recoverable", icon: "banknotes", description: "Vezi valoarea recuperabilă și cererile active.", permission: "opportunities.read" },
   { name: "Verifică potențialul", href: "/opportunities/analyze", icon: "sparkles", description: "Transformă o cerere într-o oportunitate verificată.", permission: "opportunities.analyze" },
   { name: "Lead-uri", href: "/leads", icon: "user-group", description: "Gestionează companii și contacte comerciale.", permission: "workspace.read" },
