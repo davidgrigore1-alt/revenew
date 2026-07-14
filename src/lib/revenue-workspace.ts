@@ -276,7 +276,7 @@ export async function getCrmOrganizationDetail(organizationId: string) {
 
   const contacts = crm.contacts.filter((contact) => contact.organizationId === organizationId);
   const opportunities = (await getOpportunitiesForCurrentBusiness()).filter((opportunity) =>
-    opportunity.contacts?.some((contact) => contact.contact.organizationId === organizationId)
+    opportunity.organizationId === organizationId || opportunity.contacts?.some((contact) => contact.contact.organizationId === organizationId)
   );
   const events = opportunities.flatMap((opportunity) =>
     opportunity.timeline.map((event) => ({
@@ -287,6 +287,28 @@ export async function getCrmOrganizationDetail(organizationId: string) {
   ).sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
   return { ready: true as const, organization, contacts, opportunities, events };
+}
+
+export async function getCrmOrganizationStats() {
+  const opportunities = await getOpportunitiesForCurrentBusiness();
+  const stats: Record<string, { activeOpportunities: number; lastActivity?: string }> = {};
+
+  for (const opportunity of opportunities) {
+    const organizationIds = new Set<string>();
+    if (opportunity.organizationId) organizationIds.add(opportunity.organizationId);
+    for (const association of opportunity.contacts ?? []) {
+      if (association.contact.organizationId) organizationIds.add(association.contact.organizationId);
+    }
+    for (const organizationId of Array.from(organizationIds)) {
+      const current = stats[organizationId] ?? { activeOpportunities: 0, lastActivity: undefined };
+      if (!["won", "lost", "disqualified", "archived"].includes(opportunity.lifecycleStatus ?? "open")) current.activeOpportunities += 1;
+      const lastActivity = opportunity.timeline[0]?.date ?? opportunity.updatedAt ?? opportunity.createdAt;
+      if (lastActivity && (!current.lastActivity || lastActivity > current.lastActivity)) current.lastActivity = lastActivity;
+      stats[organizationId] = current;
+    }
+  }
+
+  return stats;
 }
 
 export type NextBestAction = {

@@ -218,3 +218,76 @@ export async function archiveCrmContact(id: string): Promise<CrmActionResult> {
     return crmDatabaseError(error);
   }
 }
+
+export async function createCrmOpportunity(formData: FormData): Promise<CrmActionResult> {
+  await requireActivePaidAccess();
+  await requirePermission("opportunities.create");
+
+  if (!isSupabaseConfigured) {
+    return { ok: false, error: "Oportunitățile reale sunt disponibile doar când Supabase este configurat." };
+  }
+
+  const supabase = createSupabaseServerClient();
+  const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
+  const business = current?.business;
+  if (!supabase || !business) return { ok: false, error: "Nu am găsit workspace-ul curent." };
+
+  try {
+    const organizationId = field(formData, "organizationId", 64);
+    const title = field(formData, "title", 180);
+    const summary = field(formData, "summary", 1200);
+    const estimatedValue = field(formData, "estimatedValue", 24).replace(",", ".");
+    const deadline = field(formData, "deadline", 10) || null;
+    if (!organizationId || !title || !summary) throw new Error("Compania, titlul și contextul comercial sunt obligatorii.");
+    if (estimatedValue && !/^(0|[1-9]\d{0,9})(\.\d{1,2})?$/.test(estimatedValue)) {
+      throw new Error("Valoarea estimată trebuie să fie un număr pozitiv valid.");
+    }
+    if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || Number.isNaN(Date.parse(`${deadline}T00:00:00Z`)))) {
+      throw new Error("Termenul oportunității nu este valid.");
+    }
+
+    const { data: organization, error: organizationError } = await supabase
+      .from("crm_organizations")
+      .select("id,name")
+      .eq("id", organizationId)
+      .eq("business_id", business.id)
+      .eq("is_archived", false)
+      .single();
+    if (organizationError || !organization) throw new Error("Compania selectată nu este disponibilă în workspace.");
+
+    const value = estimatedValue ? Number(estimatedValue) : 0;
+    const { data, error } = await supabase.from("opportunities").insert({
+      business_id: business.id,
+      organization_id: organization.id,
+      title,
+      type: "manual",
+      status: "reviewed",
+      lifecycle_status: "open",
+      commercial_type: "new_business",
+      estimated_value_low: value,
+      estimated_value_high: value,
+      deadline,
+      city: business.city || null,
+      county: business.county || null,
+      fit_score: 0,
+      urgency_score: 0,
+      money_score: 0,
+      confidence_score: 0,
+      summary,
+      relevance: ["Oportunitate creată manual și asociată unei companii CRM."],
+      risks: ["Contextul și contactele trebuie validate de echipa comercială."],
+      recommended_action: "Asociază contactul principal și stabilește următoarea acțiune.",
+      raw_source_text: summary,
+      currency: "RON"
+    }).select("id").single();
+    if (error || !data) throw error ?? new Error("Oportunitatea nu a fost creată.");
+
+    revalidatePath("/opportunities");
+    revalidatePath("/pipeline");
+    revalidatePath("/dashboard");
+    revalidatePath(`/crm/organizations/${organization.id}`);
+    return { ok: true, id: data.id, message: "Oportunitatea a fost creată. Adaugă contactul principal și următoarea acțiune." };
+  } catch (error) {
+    return crmDatabaseError(error);
+  }
+}

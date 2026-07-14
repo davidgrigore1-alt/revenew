@@ -10,10 +10,12 @@ import { getSavedViews } from "@/lib/saved-views/actions";
 import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import { applicationDateKey, lifecycleForOpportunity } from "@/lib/opportunity-domain";
 import Link from "next/link";
+import { CreateOpportunityPanel } from "@/components/opportunities/CreateOpportunityPanel";
+import { getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 
 export default async function OpportunitiesPage({ searchParams }: { searchParams: OpportunityFilterState & { page?: string } }) {
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const [allOpportunities, savedViews] = await Promise.all([getOpportunitiesForCurrentBusiness(), getSavedViews("opportunities")]);
+  const [allOpportunities, savedViews, crm] = await Promise.all([getOpportunitiesForCurrentBusiness(), getSavedViews("opportunities"), getCrmWorkspaceForCurrentBusiness()]);
   const today = applicationDateKey();
   const query = (searchParams.q ?? "").trim().toLocaleLowerCase("ro-RO").slice(0, 120);
   const filtered = allOpportunities.filter((opportunity) => {
@@ -49,7 +51,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       eyebrow="Oportunități"
       title="Oportunități detectate"
       description={`Filtrează semnalele B2B, granturile, contractele si follow-up-urile care pot aduce venit pentru ${business?.name ?? "firma ta"}.`}
-      actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button><Button href="/opportunities/analyze">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate nouă"}</Button></div>}
+      actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}

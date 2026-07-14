@@ -36,7 +36,7 @@ export function CompleteTaskButton({ opportunityId, actionId }: { opportunityId:
   );
 }
 
-export function CreateTaskForm({ opportunityId, compact = false }: { opportunityId: string; compact?: boolean }) {
+export function CreateTaskForm({ opportunityId, compact = false, assignableProfiles = [] }: { opportunityId: string; compact?: boolean; assignableProfiles?: Array<{ id: string; fullName: string }> }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -92,10 +92,17 @@ export function CreateTaskForm({ opportunityId, compact = false }: { opportunity
             <option value="low">Scăzută</option>
           </select>
         </label>
+        <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
+          Responsabil
+          <select name="assignedToProfileId" defaultValue="" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+            <option value="">Eu</option>
+            {assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}
+          </select>
+        </label>
       </div>
       {!compact ? (
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Descriere
+          Note
           <textarea name="description" rows={3} className="resize-y rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" />
         </label>
       ) : null}

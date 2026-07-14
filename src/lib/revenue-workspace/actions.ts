@@ -6,7 +6,7 @@ import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
-import { applicationLocalDateTimeToIso } from "@/lib/opportunity-domain";
+import { applicationLocalDateTimeToIso, isValidPipelineTransition } from "@/lib/opportunity-domain";
 import type {
   OpportunityActionType,
   OpportunityCommercialType,
@@ -82,6 +82,9 @@ export async function updatePipelineStatus(opportunityId: string, formData: Form
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
   if (opportunity.status === nextStatus && opportunity.lifecycleStatus !== "archived") return { ok: true, unchanged: true };
+  if (!isValidPipelineTransition(opportunity.status, nextStatus)) {
+    return { ok: false, error: "Etapa selectată nu este o tranziție validă. Avansează sau revino câte o etapă." };
+  }
 
   const { error } = await supabase
     .from("opportunities")
@@ -122,6 +125,7 @@ export async function createOpportunityTask(opportunityId: string, formData: For
   const description = safeText(formData.get("description"), "", 1200);
   const dueDate = safeText(formData.get("dueDate"));
   const dueTime = safeText(formData.get("dueTime"), "09:00");
+  const requestedAssignee = safeText(formData.get("assignedToProfileId"), "", 64);
   if (!title || !validActionTypes.has(type) || !validPriorities.has(priority)) {
     return { ok: false, error: "Verifică tipul, prioritatea și titlul acțiunii." };
   }
@@ -130,6 +134,10 @@ export async function createOpportunityTask(opportunityId: string, formData: For
   }
   const dueAt = dueDate ? applicationLocalDateTimeToIso(dueDate, dueTime) : null;
   if (dueDate && !dueAt) return { ok: false, error: "Data sau ora acțiunii nu este validă." };
+  const assignedToProfileId = requestedAssignee || actorProfileId(authorization);
+  if (!(await verifyAssignableProfile(business.id, assignedToProfileId))) {
+    return { ok: false, error: "Responsabilul selectat nu aparține workspace-ului curent." };
+  }
 
   const { data, error } = await supabase.from("opportunity_actions").insert({
     business_id: business.id,
@@ -140,7 +148,7 @@ export async function createOpportunityTask(opportunityId: string, formData: For
     status: "pending",
     due_at: dueAt,
     priority,
-    assigned_to_profile_id: actorProfileId(authorization)
+    assigned_to_profile_id: assignedToProfileId
   }).select("id").single();
   if (error || !data) {
     console.error("opportunity_task_create_failed", { code: error?.code });
@@ -154,7 +162,7 @@ export async function createOpportunityTask(opportunityId: string, formData: For
     eventType: "next_action_created",
     label: "Acțiune următoare creată",
     description: title,
-    metadata: { action_id: data.id, due_at: dueAt, assigned_to_profile_id: actorProfileId(authorization) }
+    metadata: { action_id: data.id, due_at: dueAt, assigned_to_profile_id: assignedToProfileId }
   });
   revalidateOpportunity(opportunityId);
   return { ok: true, id: data.id };

@@ -106,6 +106,14 @@ export function stageForLegacyStatus(status: OpportunityStatus): CommercialPipel
   return "lead";
 }
 
+export function isValidPipelineTransition(current: OpportunityStatus, next: OpportunityStatus) {
+  if (current === next) return true;
+  const order: CommercialPipelineStage[] = ["lead", "qualified", "proposal", "won", "lost"];
+  const currentIndex = order.indexOf(stageForLegacyStatus(current));
+  const nextIndex = order.indexOf(stageForLegacyStatus(next));
+  return currentIndex >= 0 && nextIndex >= 0 && nextIndex < 3 && Math.abs(nextIndex - currentIndex) <= 1;
+}
+
 export function stageForOpportunity(opportunity: Pick<Opportunity, "lifecycleStatus" | "status">): CommercialPipelineStage {
   const lifecycle = lifecycleForOpportunity(opportunity);
   if (lifecycle === "won") return "won";

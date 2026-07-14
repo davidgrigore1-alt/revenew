@@ -91,6 +91,16 @@ test("commercial dates use Europe/Bucharest and local task input becomes an exac
   assert.equal(domain.applicationLocalDateTimeToIso("2026-03-29", "03:30"), null);
 });
 
+test("pipeline transitions advance or return one stage and reject skipped stages", () => {
+  const domain = loadTsModule("src/lib/opportunity-domain.ts");
+
+  assert.equal(domain.isValidPipelineTransition("reviewed", "contacted"), true);
+  assert.equal(domain.isValidPipelineTransition("contacted", "follow_up_needed"), true);
+  assert.equal(domain.isValidPipelineTransition("follow_up_needed", "contacted"), true);
+  assert.equal(domain.isValidPipelineTransition("reviewed", "follow_up_needed"), false);
+  assert.equal(domain.isValidPipelineTransition("contacted", "won"), false);
+});
+
 test("next-best-action uses known data and does not invent missing contact details", () => {
   const workspace = loadTsModule("src/lib/revenue-workspace.ts");
   const recommendation = workspace.recommendNextBestAction({
@@ -125,6 +135,8 @@ test("workspace actions enforce membership-scoped opportunity reloads and activi
   assert.match(source, /\.eq\("business_id", business\.id\)/);
   assert.match(source, /\.eq\("status", "pending"\)/);
   assert.match(source, /eventForOpportunity/);
+  assert.match(source, /verifyAssignableProfile\(business\.id, assignedToProfileId\)/);
+  assert.match(source, /isValidPipelineTransition\(opportunity\.status, nextStatus\)/);
   assert.doesNotMatch(source, /\bowner_id\b/);
   assert.doesNotMatch(source, /profiles\.role/);
 });

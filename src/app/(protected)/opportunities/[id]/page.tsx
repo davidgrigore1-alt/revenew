@@ -67,7 +67,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
         ) : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
         <DataCard title="Programează o acțiune internă" description="Creează un follow-up sau task intern. Nu se trimite nimic către client.">
-          <CreateTaskForm opportunityId={opportunity.id} />
+          <CreateTaskForm opportunityId={opportunity.id} assignableProfiles={assignableProfiles} />
         </DataCard>
         <OpportunityWorkflow
           opportunity={opportunity}

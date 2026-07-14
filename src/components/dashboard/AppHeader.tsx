@@ -24,6 +24,10 @@ const pageCopy: Record<string, { title: string; subtitle: string; cta?: { label:
     title: "Activitatea mea",
     subtitle: "Termenele, oportunitățile și pașii care îți sunt atribuiți."
   },
+  "/pipeline": {
+    title: "Pipeline",
+    subtitle: "Oportunitățile grupate pe etapele comerciale valide."
+  },
   "/companies": {
     title: "Companii",
     subtitle: "Clienții, prospecții și relațiile comerciale din workspace."
@@ -31,6 +35,18 @@ const pageCopy: Record<string, { title: string; subtitle: string; cta?: { label:
   "/contacts": {
     title: "Contacte",
     subtitle: "Persoanele implicate în oportunități și decizii comerciale."
+  },
+  "/opportunities": {
+    title: "Oportunități",
+    subtitle: "Companii, contacte, acțiuni și rezultate comerciale."
+  },
+  "/outreach": {
+    title: "Documente",
+    subtitle: "Drafturi comerciale pregătite pentru revizuirea echipei."
+  },
+  "/reports": {
+    title: "Rapoarte",
+    subtitle: "Indicatori calculați exclusiv din activitatea comercială salvată."
   },
   "/results": {
     title: "Rezultate",
@@ -53,9 +69,13 @@ const pageCopy: Record<string, { title: string; subtitle: string; cta?: { label:
 function getPageCopy(pathname: string) {
   const exact = pageCopy[pathname];
   if (exact) return exact;
-  if (pathname.startsWith("/opportunities") || pathname.startsWith("/inbox") || pathname.startsWith("/leads") || pathname.startsWith("/outreach") || pathname.startsWith("/reports")) {
-    return { title: "Instrumente", subtitle: "Lucrează în instrumentele avansate ReveNew." };
-  }
+  if (pathname.startsWith("/opportunities/")) return pageCopy["/opportunities"];
+  if (pathname.startsWith("/outreach/")) return pageCopy["/outreach"];
+  if (pathname.startsWith("/reports/")) return pageCopy["/reports"];
+  if (pathname.startsWith("/companies/") || pathname.startsWith("/crm/organizations/")) return pageCopy["/companies"];
+  if (pathname.startsWith("/contacts/")) return pageCopy["/contacts"];
+  if (pathname.startsWith("/inbox")) return { title: "Inbox Comercial", subtitle: "Revizuiește semnalele înainte de a le transforma în oportunități." };
+  if (pathname.startsWith("/leads")) return { title: "Lead-uri", subtitle: "Cereri și contacte comerciale care trebuie calificate." };
   return { title: "ReveNew", subtitle: "Recuperare venituri B2B." };
 }
 

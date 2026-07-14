@@ -46,12 +46,38 @@ test("CRM UI exposes real CRUD forms and first-class company/contact navigation"
   assert.match(navigation, /href: "\/contacts"/);
   assert.match(navigation, /primaryNavigation/);
   assert.match(crmPage, /CrmWorkspaceClient/);
-  assert.match(client, /Creează companie/);
-  assert.match(client, /Creează contact/);
+  assert.match(client, /Adaugă companie/);
+  assert.match(client, /Adaugă contact/);
+  assert.match(client, /role="dialog"/);
+  assert.match(client, /filteredOrganizations/);
+  assert.match(client, /activeOpportunities/);
   assert.match(client, /Arhivează/);
   assert.match(client, /Contact principal pentru companie/);
   assert.match(detail, /Oportunități asociate/);
   assert.match(detail, /Activitate/);
+});
+
+test("commercial workflow links opportunities to companies with a tenant-scope trigger", () => {
+  const sql = read("supabase/migrations/20260714100223_complete_commercial_workflow.sql");
+  const actions = read("src/lib/crm/workspace-actions.ts");
+  const createPanel = read("src/components/opportunities/CreateOpportunityPanel.tsx");
+
+  assert.match(sql, /add column if not exists organization_id uuid references public\.crm_organizations\(id\)/i);
+  assert.match(sql, /organization\.business_id = new\.business_id/i);
+  assert.match(sql, /organization\.is_archived = false/i);
+  assert.match(sql, /trg_opportunities_validate_organization_scope/i);
+  assert.doesNotMatch(sql, /disable row level security/i);
+  assert.match(actions, /requirePermission\("opportunities\.create"\)/);
+  assert.match(actions, /\.eq\("business_id", business\.id\)/);
+  assert.match(actions, /organization_id: organization\.id/);
+  assert.match(createPanel, /createCrmOpportunity/);
+  assert.doesNotMatch(actions, /business_id:\s*field\(/);
+});
+
+test("Supabase configuration never auto-seeds demonstration data", () => {
+  const config = read("supabase/config.toml");
+
+  assert.match(config, /\[db\.seed\][\s\S]*enabled = false/);
 });
 
 test("CRM loader detects missing tables and missing CRUD columns explicitly", () => {

@@ -1,5 +1,8 @@
 import { DataCard } from "@/components/dashboard/DataCard";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { PageShell } from "@/components/dashboard/PageShell";
 import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
+import { Button } from "@/components/ui/Button";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import type { RecoveryAction } from "@/lib/recovery";
 
@@ -27,9 +30,14 @@ export default async function TodayPage() {
   const summary = await getRevenueWorkspaceSummary();
   const pending = summary.workQueue.allPersonal.filter((action) => action.status === "pending");
   const groups = groupActions(pending);
+  const hasAnyActions = summary.workQueue.allPersonal.length > 0 || summary.workQueue.completedToday.length > 0;
+
+  if (!hasAnyActions) {
+    return <PageShell eyebrow="Activitate" title="Activitatea mea" description="Acțiunile atribuite ție, ordonate după termen și prioritate."><div className="grid justify-items-start gap-4"><EmptyState title="Nu ai încă acțiuni atribuite" description="Acțiunile ajung aici după ce deschizi o oportunitate, alegi responsabilul și stabilești următorul pas cu termen sau fără termen." /><Button href="/opportunities">Deschide oportunitățile</Button></div></PageShell>;
+  }
 
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-7 pb-24 sm:px-6 lg:px-8 xl:pb-8">
+    <PageShell eyebrow="Activitate" title="Activitatea mea" description="Acțiunile atribuite ție, ordonate după termen și prioritate."><div className="grid gap-5">
       {[
         ["Urgente", groups.urgent, "urgente"],
         ["Astăzi", groups.today, "pentru astăzi"],
@@ -47,6 +55,6 @@ export default async function TodayPage() {
           </div>
         </DataCard>
       ))}
-    </main>
+    </div></PageShell>
   );
 }

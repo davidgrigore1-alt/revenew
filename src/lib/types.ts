@@ -219,6 +219,7 @@ export type OpportunityContact = {
 export type Opportunity = {
   id: string;
   businessId?: string;
+  organizationId?: string | null;
   title: string;
   type: OpportunityType;
   status: OpportunityStatus;

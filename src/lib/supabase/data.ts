@@ -18,6 +18,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 type OpportunityRow = {
   id: string;
   business_id: string;
+  organization_id?: string | null;
   title: string;
   type: Opportunity["type"];
   status: Opportunity["status"];
@@ -215,6 +216,7 @@ function mapOpportunity(
   return {
     id: row.id,
     businessId: row.business_id,
+    organizationId: row.organization_id ?? null,
     title: row.title,
     type: row.type,
     status: row.status,

@@ -3,6 +3,8 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { PipelineBoard } from "@/components/revenue/PipelineBoard";
 import { getPipelineOpportunities } from "@/lib/revenue-workspace";
 import { formatCurrency } from "@/lib/utils";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,7 @@ export default async function PipelinePage() {
   const activeValue = columns
     .filter((column) => !["won", "lost"].includes(column.id))
     .reduce((sum, column) => sum + column.totalValue, 0);
+  const opportunityCount = columns.reduce((sum, column) => sum + column.count, 0);
 
   return (
     <PageShell
@@ -35,7 +38,7 @@ export default async function PipelinePage() {
             <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Doar valori efective înregistrate; estimările sunt excluse.</p>
           </DataCard>
         </div>
-        <PipelineBoard columns={columns} />
+        {opportunityCount === 0 ? <div className="grid justify-items-start gap-4"><EmptyState title="Pipeline-ul este pregătit" description="Oportunitățile apar aici după ce le creezi pentru o companie. Etapele se schimbă controlat, iar rezultatele câștigate sau pierdute se înregistrează în detaliul oportunității." /><Button href="/opportunities">Adaugă prima oportunitate</Button></div> : <PipelineBoard columns={columns} />}
       </div>
     </PageShell>
   );

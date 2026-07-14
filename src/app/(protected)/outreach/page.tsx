@@ -85,9 +85,9 @@ export default async function OutreachPage() {
 
   return (
     <PageShell
-      eyebrow="Outreach"
-      title="Secvente, drafturi si follow-up-uri"
-      description="Pregătește comunicarea comercială fara a trimite emailuri reale. Resend nu este conectat încă."
+      eyebrow="Documente"
+      title="Drafturi comerciale"
+      description="Pregătește, revizuiește și editează emailuri, oferte sau follow-up-uri. Niciun mesaj nu este trimis automat."
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
