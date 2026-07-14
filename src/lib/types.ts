@@ -365,6 +365,10 @@ export type CommercialSignal = {
   nextStep?: string | null;
   notes?: string | null;
   convertedOpportunityId?: string | null;
+  importBatchId?: string | null;
+  ingestionFingerprint?: string | null;
+  ingestionOrigin?: "manual" | "csv_import" | "stale_detection";
+  detectedFromOpportunityId?: string | null;
   createdByProfileId?: string | null;
   assignedToProfileId?: string | null;
   occurredAt?: string | null;

@@ -9,6 +9,7 @@ import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { ReportActions } from "@/components/reports/ReportActions";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
+import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { weeklyReport } from "@/lib/mock-data";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -229,7 +230,7 @@ export default async function ReportsPage() {
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunities = isSupabaseConfigured ? await getOpportunitiesForCurrentBusiness() : weeklyReport.topOpportunities;
   const workflow = await loadWorkflowData(opportunities);
-  const inboxSummary = await getCommercialInboxSummary();
+  const [inboxSummary, ingestionSummary] = await Promise.all([getCommercialInboxSummary(), getCommercialIngestionSummary()]);
   const reportGeneratedAt = new Date().toISOString();
   const today = new Date().toISOString().slice(0, 10);
   const nextWeek = addDays(7).slice(0, 10);
@@ -343,6 +344,12 @@ export default async function ReportsPage() {
               <MetricCard label="Fără responsabil" value={`${inboxSummary.signalsWithoutOwner}`} detail="Semnale pregătite pentru revizuire fără proprietar." />
               <MetricCard label="Valoare mare în atenție" value={`${inboxSummary.highValueAttentionCount}`} detail="Urgență ridicată sau critică și valoare cunoscută." tone="gold" />
               <MetricCard label="Timp mediu de revizuire" value={inboxSummary.averageReviewHours === null ? "Insuficient" : `${inboxSummary.averageReviewHours} h`} detail="De la creare până la decizia umană." />
+              <MetricCard label="Loturi luna aceasta" value={`${ingestionSummary.batchesThisMonth}`} detail="Importuri CSV și detectări explicite procesate." />
+              <MetricCard label="Rânduri acceptate" value={`${ingestionSummary.acceptedRows}`} detail="Semnale create din date validate." tone="mint" />
+              <MetricCard label="Rânduri respinse" value={`${ingestionSummary.rejectedRows}`} detail="Date invalide care nu au creat semnale." />
+              <MetricCard label="Rată duplicate" value={`${ingestionSummary.duplicateRate}%`} detail="Rânduri omise prin protecția de idempotency." />
+              <MetricCard label="Conversii din import" value={`${ingestionSummary.convertedImportedSignals}`} detail="Semnale CSV aprobate și transformate prin workflow-ul existent." />
+              <MetricCard label="Valoare importată estimată" value={formatCurrency(ingestionSummary.estimatedImportedRecoverableValue, "RON")} detail="Potențial estimat; venitul câștigat rămâne separat." />
             </div>
 
             <DataCard title="Semnale comerciale noi" description="Top semnale urgente sau noi din Inbox Comercial.">

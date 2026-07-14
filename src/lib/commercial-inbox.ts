@@ -151,6 +151,10 @@ type CommercialSignalRow = {
   next_step: string | null;
   notes: string | null;
   converted_opportunity_id: string | null;
+  import_batch_id: string | null;
+  ingestion_fingerprint: string | null;
+  ingestion_origin: CommercialSignal["ingestionOrigin"];
+  detected_from_opportunity_id: string | null;
   created_by_profile_id: string | null;
   assigned_to_profile_id: string | null;
   occurred_at: string | null;
@@ -371,6 +375,10 @@ function mapSignal(row: CommercialSignalRow, events: CommercialSignalEvent[] = [
     nextStep: row.next_step,
     notes: row.notes,
     convertedOpportunityId: row.converted_opportunity_id,
+    importBatchId: row.import_batch_id,
+    ingestionFingerprint: row.ingestion_fingerprint,
+    ingestionOrigin: row.ingestion_origin ?? "manual",
+    detectedFromOpportunityId: row.detected_from_opportunity_id,
     createdByProfileId: row.created_by_profile_id,
     assignedToProfileId: row.assigned_to_profile_id,
     occurredAt: row.occurred_at,
@@ -732,19 +740,27 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: false, tableReady: true, message: "Emailul contactului nu este valid." };
   }
-  const { data, error } = await supabase.rpc("approve_recoverable_signal", {
+  const { data: signalLink, error: signalLinkError } = await supabase.from("commercial_signals")
+    .select("detected_from_opportunity_id").eq("id", signalId).eq("business_id", business.id).single();
+  if (signalLinkError) return { ok: false, tableReady: !isMissingRecoverabilitySchema(signalLinkError), message: "Semnalul nu este disponibil pentru aprobare." };
+  const commonApproval = {
     target_signal_id: signalId,
-    selected_organization_id: safeUuid(input.organizationId),
-    selected_contact_id: safeUuid(input.contactId),
-    new_organization_name: toNullString(input.newOrganizationName)?.slice(0, 240) ?? null,
-    new_contact_name: toNullString(input.newContactName)?.slice(0, 240) ?? null,
-    new_contact_email: email,
-    new_contact_phone: toNullString(input.newContactPhone)?.slice(0, 80) ?? null,
     selected_owner_profile_id: safeUuid(input.ownerProfileId),
     selected_due_at: toNullString(input.dueAt),
     reviewed_action: toNullString(input.recommendedAction)?.slice(0, 500) ?? null,
     reviewed_draft: toNullString(input.reviewedDraft)?.slice(0, 8000) ?? null
-  });
+  };
+  const { data, error } = signalLink.detected_from_opportunity_id
+    ? await supabase.rpc("approve_detected_recoverable_signal", commonApproval)
+    : await supabase.rpc("approve_recoverable_signal", {
+      ...commonApproval,
+      selected_organization_id: safeUuid(input.organizationId),
+      selected_contact_id: safeUuid(input.contactId),
+      new_organization_name: toNullString(input.newOrganizationName)?.slice(0, 240) ?? null,
+      new_contact_name: toNullString(input.newContactName)?.slice(0, 240) ?? null,
+      new_contact_email: email,
+      new_contact_phone: toNullString(input.newContactPhone)?.slice(0, 80) ?? null
+    });
   if (error) {
     return { ok: false, tableReady: !isMissingRecoverabilitySchema(error), message: isMissingRecoverabilitySchema(error) ? commercialInboxSetupMessage : "Aprobarea nu a putut fi finalizată. Verifică potrivirea companiei, contactului și responsabilului." };
   }

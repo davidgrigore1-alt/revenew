@@ -627,15 +627,15 @@ export function OpportunityWorkflow({
         </DataCard>
         <DataCard title="De ce conteaza">
           <ul className="space-y-3 text-sm leading-6 text-zinc-300">
-            {opportunity.relevance.map((item) => (
-              <li key={item}>{item}</li>
+            {opportunity.relevance.map((item, index) => (
+              <li key={`${index}-${item}`}>{item}</li>
             ))}
           </ul>
         </DataCard>
         <DataCard title="Riscuri">
           <ul className="space-y-3 text-sm leading-6 text-zinc-300">
-            {opportunity.risks.map((item) => (
-              <li key={item}>{item}</li>
+            {opportunity.risks.map((item, index) => (
+              <li key={`${index}-${item}`}>{item}</li>
             ))}
           </ul>
         </DataCard>

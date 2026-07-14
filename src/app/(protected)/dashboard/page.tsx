@@ -9,6 +9,7 @@ import { RecoveryValueCard } from "@/components/dashboard/RecoveryValueCard";
 import { RiskOpportunityCard } from "@/components/dashboard/RiskOpportunityCard";
 import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
+import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -33,7 +34,7 @@ function OpportunityException({ opportunity, reasons }: { opportunity: Opportuni
 
 export default async function DashboardPage() {
   try {
-    const summary = await getRevenueWorkspaceSummary();
+    const [summary, ingestion] = await Promise.all([getRevenueWorkspaceSummary(), getCommercialIngestionSummary()]);
     const activeSignals = summary.signals.filter((signal) => !signal.convertedOpportunityId && !["converted", "dismissed", "duplicate", "ignored", "archived"].includes(signal.status));
     const reviewSignals = summary.signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
     const signalValue = activeSignals
@@ -71,6 +72,9 @@ export default async function DashboardPage() {
           <MetricCard label="Semnale de revizuit" value={`${reviewSignals.length}`} detail="Analizate și pregătite pentru decizia echipei." tone="gold" />
           <MetricCard label="Potențial estimat în revizuire" value={formatCurrency(reviewSignals.filter((signal) => signal.currency === "RON").reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0), "RON")} detail="Estimare activă; nu este venit confirmat." />
           <MetricCard label="Semnale fără responsabil" value={`${reviewSignals.filter((signal) => !signal.assignedToProfileId && !signal.suggestedOwnerProfileId).length}`} detail="Necesită atribuirea unei persoane responsabile." />
+          <MetricCard label="Importate în așteptare" value={`${ingestion.awaitingImportedReview}`} detail="Semnale CSV care necesită analiză sau decizie umană." tone="gold" />
+          <MetricCard label="Oportunități detectate" value={`${ingestion.detectedSignals}`} detail="Semnale create explicit din oportunități neglijate." />
+          <MetricCard label="Valoare importată estimată" value={formatCurrency(ingestion.estimatedImportedRecoverableValue, "RON")} detail="Estimare separată de venitul câștigat confirmat." />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

@@ -33,6 +33,8 @@ type CommercialInboxClientProps = {
   organizations: OrganizationOption[];
   contacts: ContactOption[];
   assignableProfiles: ProfileOption[];
+  initialSource?: CommercialSignalSource | "all";
+  initialBatchId?: string;
 };
 
 type CreateForm = {
@@ -172,17 +174,20 @@ export function CommercialInboxClient({
   setupMessage,
   organizations,
   contacts,
-  assignableProfiles
+  assignableProfiles,
+  initialSource = "all",
+  initialBatchId
 }: CommercialInboxClientProps) {
+  const initiallySelectedSignal = initialSignals.find((signal) => !initialBatchId || signal.importBatchId === initialBatchId) ?? initialSignals[0];
   const [signals, setSignals] = useState(initialSignals);
-  const [selectedId, setSelectedId] = useState(initialSignals[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState(initiallySelectedSignal?.id ?? "");
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateForm>(emptyCreate);
-  const [reviewForm, setReviewForm] = useState<ReviewForm>(initialSignals[0] ? reviewFormFor(initialSignals[0]) : reviewFormFor({ title: "" } as CommercialSignal));
+  const [reviewForm, setReviewForm] = useState<ReviewForm>(initiallySelectedSignal ? reviewFormFor(initiallySelectedSignal) : reviewFormFor({ title: "" } as CommercialSignal));
   const [reviewStatus, setReviewStatus] = useState<CommercialSignalReviewStatus | "all">("all");
   const [urgency, setUrgency] = useState<RecoverabilityUrgency | "all">("all");
   const [confidence, setConfidence] = useState<RecoverabilityConfidence | "all">("all");
-  const [source, setSource] = useState<CommercialSignalSource | "all">("all");
+  const [source, setSource] = useState<CommercialSignalSource | "all">(initialSource);
   const [minimumValue, setMinimumValue] = useState("");
   const [matchFilter, setMatchFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [duplicateFilter, setDuplicateFilter] = useState<"all" | "risk">("all");
@@ -206,6 +211,7 @@ export function CommercialInboxClient({
       && (urgency === "all" || signal.urgencyLevel === urgency)
       && (confidence === "all" || signal.confidenceLevel === confidence)
       && (source === "all" || signal.source === source)
+      && (!initialBatchId || signal.importBatchId === initialBatchId)
       && (!minimumValue || value >= Number(minimumValue))
       && (matchFilter === "all" || (matchFilter === "matched" ? matched : !matched))
       && (duplicateFilter === "all" || signal.duplicateRisk)
@@ -214,7 +220,7 @@ export function CommercialInboxClient({
   }).sort((a, b) => urgencyRank(b.urgencyLevel) - urgencyRank(a.urgencyLevel)
     || Number(b.recoverabilityScore ?? 0) - Number(a.recoverabilityScore ?? 0)
     || Number(b.estimatedRecoverableValue ?? 0) - Number(a.estimatedRecoverableValue ?? 0)
-    || new Date(a.lastInteractionAt ?? a.createdAt ?? 0).getTime() - new Date(b.lastInteractionAt ?? b.createdAt ?? 0).getTime()), [confidence, duplicateFilter, matchFilter, minimumValue, ownerFilter, query, reviewStatus, signals, source, urgency]);
+    || new Date(a.lastInteractionAt ?? a.createdAt ?? 0).getTime() - new Date(b.lastInteractionAt ?? b.createdAt ?? 0).getTime()), [confidence, duplicateFilter, initialBatchId, matchFilter, minimumValue, ownerFilter, query, reviewStatus, signals, source, urgency]);
 
   const awaitingReview = signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
   const estimatedUnderReview = awaitingReview.reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0);
