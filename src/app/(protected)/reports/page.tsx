@@ -16,6 +16,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
+import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 
 type ReportAction = {
   id: string;
@@ -229,8 +230,9 @@ function CompactOpportunity({ opportunity }: { opportunity: Opportunity }) {
 export default async function ReportsPage() {
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunities = isSupabaseConfigured ? await getOpportunitiesForCurrentBusiness() : weeklyReport.topOpportunities;
-  const workflow = await loadWorkflowData(opportunities);
-  const [inboxSummary, ingestionSummary] = await Promise.all([getCommercialInboxSummary(), getCommercialIngestionSummary()]);
+  const [workflow, inboxSummary, ingestionSummary, followUpSummary] = await Promise.all([
+    loadWorkflowData(opportunities), getCommercialInboxSummary(), getCommercialIngestionSummary(), getFollowUpWorkspaceSummary()
+  ]);
   const reportGeneratedAt = new Date().toISOString();
   const today = new Date().toISOString().slice(0, 10);
   const nextWeek = addDays(7).slice(0, 10);
@@ -328,7 +330,9 @@ export default async function ReportsPage() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
-          <MetricCard label="Documente pregatite" value={`${readyDocuments.length}`} detail="Documente editate, copiate, pregatite sau trimise." tone="mint" />
+          <MetricCard label="Drafturi de revizuit" value={String(followUpSummary.awaitingReview)} detail="Drafturi care necesită revizuire și decizie umană." tone="gold" />
+          <MetricCard label="Aprobate · Netrimise" value={String(followUpSummary.approvedNotSent)} detail="Aprobate sau pregătite, fără confirmare de trimitere externă." tone="mint" />
+          <MetricCard label="Follow-up-uri scadente" value={String(followUpSummary.dueFollowUps)} detail="Acțiuni de follow-up deschise și ajunse la termen." />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
           <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
         </div>

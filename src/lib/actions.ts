@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -21,6 +21,7 @@ import { provisionBusinessFromOnboarding } from "@/lib/business/provision-busine
 import { updatePipelineStatus } from "@/lib/revenue-workspace/actions";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { recordProductEvent } from "@/lib/product-events";
+import { canTransitionFollowUpDraft, validateFollowUpDraftFields, type FollowUpEditableStatus } from "@/lib/follow-up-studio";
 
 export async function saveOnboarding(formData: FormData) {
   const result = await provisionBusinessFromOnboarding(formData);
@@ -202,72 +203,111 @@ export async function persistGeneratedDocument(opportunityId: string, type: Oppo
 export async function updateGeneratedDocument(
   opportunityId: string,
   documentId: string,
-  updates: { title?: string; content?: string; status?: "edited" | "copied" | "ready_to_send" | "sent" }
+  updates: { title?: string; content?: string; status?: FollowUpEditableStatus; markCopied?: boolean }
 ) {
   await requireActivePaidAccess();
-  await requirePermission("documents.update");
+  const authorization = await requirePermission("documents.update");
 
   if (!isSupabaseConfigured) {
     return { ok: true, mode: "demo" };
   }
 
   const supabase = createSupabaseServerClient();
-  if (!supabase) {
-    return { ok: false, error: "Supabase nu este disponibil." };
+  const [opportunity, business] = await Promise.all([
+    getOpportunityForCurrentBusiness(opportunityId),
+    getCurrentBusinessOrDemo({ redirectIfMissing: true })
+  ]);
+  if (!supabase || !opportunity || !business) {
+    return { ok: false, error: "Documentul nu este disponibil în workspace-ul curent." };
   }
 
-  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
-  if (!opportunity) {
-    return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
+  const { data: currentDocument, error: currentError } = await supabase
+    .from("opportunity_documents")
+    .select("id,status,title,body,document_type")
+    .eq("id", documentId)
+    .eq("opportunity_id", opportunityId)
+    .eq("business_id", business.id)
+    .maybeSingle();
+  if (currentError || !currentDocument) {
+    return { ok: false, error: "Documentul nu este disponibil în workspace-ul curent." };
   }
+
+  if (updates.status && !canTransitionFollowUpDraft(currentDocument.status, updates.status)) {
+    return { ok: false, error: "Tranziția de status nu este permisă pentru acest draft." };
+  }
+  if (currentDocument.status === "sent" || currentDocument.status === "archived") {
+    return { ok: false, error: "Documentele trimise sau arhivate nu mai pot fi modificate din Studio." };
+  }
+
+  const isMessageDocument = ["outreach_email", "follow_up_email", "linkedin_message", "whatsapp_message"].includes(currentDocument.document_type);
+  const nextTitle = updates.title ?? currentDocument.title ?? "";
+  const nextBody = updates.content ?? currentDocument.body ?? "";
+  const validated = isMessageDocument ? validateFollowUpDraftFields(nextTitle, nextBody) : { ok: true as const, subject: nextTitle.trim().slice(0, 160), body: nextBody.trim().slice(0, 12000) };
+  if (!validated.ok) return validated;
 
   const now = new Date().toISOString();
   const payload: Record<string, string> = {};
-  if (updates.title !== undefined) payload.title = updates.title;
-  if (updates.content !== undefined) payload.body = updates.content;
+  const hasContentChanges = updates.title !== undefined || updates.content !== undefined;
+  if (updates.title !== undefined) payload.title = validated.subject;
+  if (updates.content !== undefined) payload.body = validated.body;
+  if (hasContentChanges) payload.edited_at = now;
   if (updates.status) payload.status = updates.status;
-  if (updates.status === "edited") payload.edited_at = now;
-  if (updates.status === "copied") payload.copied_at = now;
   if (updates.status === "ready_to_send") payload.ready_at = now;
-  if (updates.status === "sent") payload.sent_at = now;
+  if (updates.markCopied) payload.copied_at = now;
 
-  const { error } = await supabase.from("opportunity_documents").update(payload).eq("id", documentId).eq("opportunity_id", opportunityId);
-  if (error) {
-    console.error("Supabase document update error", error);
-    return { ok: false, error: `Documentul nu a putut fi salvat: ${error.message}` };
+  const { data: updatedDocument, error } = await supabase
+    .from("opportunity_documents")
+    .update(payload)
+    .eq("id", documentId)
+    .eq("opportunity_id", opportunityId)
+    .eq("business_id", business.id)
+    .select("id")
+    .maybeSingle();
+  if (error || !updatedDocument) {
+    return { ok: false, error: "Documentul nu a putut fi salvat în workspace-ul curent." };
   }
 
-  const eventType =
-    updates.status === "copied"
-      ? "document_copied"
+  const eventType = updates.markCopied
+    ? "document_copied"
+    : updates.status === "approved"
+      ? "document_approved"
       : updates.status === "ready_to_send"
         ? "document_ready_to_send"
-        : updates.status === "sent"
-          ? "document_marked_sent"
+        : updates.status === "archived"
+          ? "document_archived"
           : "document_edited";
-  const label =
-    updates.status === "copied"
-      ? "Document copiat"
+  const label = updates.markCopied
+    ? "Draft copiat"
+    : updates.status === "approved"
+      ? "Draft aprobat de utilizator"
       : updates.status === "ready_to_send"
-        ? "Document pregatit de trimis"
-        : updates.status === "sent"
-          ? "Document marcat ca trimis"
-          : "Document editat";
+        ? "Draft pregătit pentru utilizare"
+        : updates.status === "archived"
+          ? "Draft arhivat"
+          : "Draft revizuit";
 
-  const eventResult = await supabase.from("opportunity_events").insert({
+  const { error: eventError } = await supabase.from("opportunity_events").insert({
     opportunity_id: opportunityId,
+    business_id: business.id,
+    actor_profile_id: authorization.profileId,
     event_type: eventType,
     label,
-    description: label
+    description: updates.status === "approved"
+      ? "Conținutul a fost aprobat explicit de un utilizator. Nu a fost trimis extern."
+      : label,
+    metadata: { document_id: documentId, document_status: updates.status ?? currentDocument.status, external_send: false }
   });
-  if (eventResult.error) {
-    console.error("Supabase document event insert error", eventResult.error);
-    return { ok: false, error: `Evenimentul nu a putut fi salvat: ${eventResult.error.message}` };
+  if (eventError) {
+    return { ok: false, error: "Documentul a fost actualizat, dar evenimentul de audit nu a putut fi salvat." };
   }
 
-  return { ok: true, updatedAt: now };
+  revalidatePath(`/outreach/${documentId}`);
+  revalidatePath("/outreach");
+  revalidatePath(`/opportunities/${opportunityId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+  return { ok: true, updatedAt: now, status: updates.status ?? currentDocument.status };
 }
-
 export async function persistOpportunityStatus(opportunityId: string, status: OpportunityStatus) {
   const formData = new FormData();
   formData.set("status", status);

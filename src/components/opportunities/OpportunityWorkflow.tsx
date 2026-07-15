@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -48,8 +49,8 @@ const isDevelopmentMode = process.env.NODE_ENV === "development";
 const documentStatusLabels: Record<OpportunityDocument["status"], string> = {
   placeholder: "Draft",
   draft: "Draft",
-  edited: "Editat",
-  copied: "Copiat",
+  edited: "Revizuit",
+  copied: "Revizuit",
   ready_to_send: "Pregătit",
   sent: "Trimis",
   approved: "Aprobat",
@@ -389,7 +390,7 @@ export function OpportunityWorkflow({
     setError("");
   }
 
-  async function saveDocumentEdits(status: "edited" | "ready_to_send" | "sent" = "edited") {
+  async function saveDocumentEdits(status: "edited" | "approved" | "ready_to_send" | "archived" = "edited") {
     if (!selectedDocument) return;
     if (status === "edited" && !hasUnsavedChanges) return;
     const scroll = captureScrollPosition();
@@ -407,7 +408,7 @@ export function OpportunityWorkflow({
       return;
     }
     const timestamp = result.updatedAt ?? new Date().toISOString();
-    const timestampUpdate = status === "sent" ? { sentAt: timestamp } : status === "edited" ? { editedAt: timestamp } : status === "ready_to_send" ? { readyAt: timestamp } : {};
+    const timestampUpdate = status === "edited" ? { editedAt: timestamp } : status === "ready_to_send" ? { readyAt: timestamp } : {};
     setDocuments((current) =>
       current.map((document) =>
         document.id === selectedDocument.id ? { ...document, title: editorTitle, content: editorContent, status, ...timestampUpdate } : document
@@ -421,9 +422,10 @@ export function OpportunityWorkflow({
     setSavedEditorContent(editorContent);
     setSavedRecipientEmail(recipientEmail);
     setSavedCcEmail(ccEmail);
-    if (status === "sent") setSuccess("Documentul a fost marcat ca trimis.");
-    else if (status === "ready_to_send") setSuccess("Documentul a fost marcat ca pregatit.");
-    else setSuccess("Modificarile au fost salvate.");
+    if (status === "approved") setSuccess("Draftul a fost aprobat explicit. Nu a fost trimis extern.");
+    else if (status === "ready_to_send") setSuccess("Draftul a fost pregătit pentru utilizare manuală.");
+    else if (status === "archived") setSuccess("Draftul a fost arhivat.");
+    else setSuccess("Modificările au fost salvate pentru revizuire.");
     setLoading("");
     restoreScrollPosition(scroll.top, scroll.left);
   }
@@ -439,17 +441,17 @@ export function OpportunityWorkflow({
       restoreScrollPosition(scroll.top, scroll.left);
       return;
     }
-    const result = await updateGeneratedDocument(opportunity.id, selectedDocument.id, { status: "copied" });
+    const result = await updateGeneratedDocument(opportunity.id, selectedDocument.id, { markCopied: true });
     if (!result.ok) {
       setError(result.error ?? "Documentul a fost copiat, dar statusul nu a putut fi salvat.");
       restoreScrollPosition(scroll.top, scroll.left);
       return;
     }
     const copiedAt = result.updatedAt ?? new Date().toISOString();
-    setDocuments((current) => current.map((document) => (document.id === selectedDocument.id ? { ...document, status: "copied", copiedAt } : document)));
+    setDocuments((current) => current.map((document) => (document.id === selectedDocument.id ? { ...document, copiedAt } : document)));
     setDocumentOverrides((current) => ({
       ...current,
-      [selectedDocument.id]: { status: "copied", copiedAt }
+      [selectedDocument.id]: { copiedAt }
     }));
     setSuccess("Emailul a fost copiat.");
     restoreScrollPosition(scroll.top, scroll.left);
@@ -753,10 +755,11 @@ export function OpportunityWorkflow({
           <div className="mb-5 grid gap-4 rounded-lg border border-mint-400/20 bg-mint-400/5 p-4">
             <div className="flex flex-wrap gap-2">
               <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentTypeLabel(selectedDocument.type)}</span>
-              {isDevelopmentMode && selectedDocument.generationMode ? (
-                <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{selectedDocument.generationMode}</span>
+              {selectedDocument.generationMode ? (
+                <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{selectedDocument.generationMode === "ai" ? "Draft asistat AI" : "Draft standard"}</span>
               ) : null}
               <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[selectedDocument.status]}</span>
+              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">Netrimis automat</span>
             </div>
             <dl className="grid gap-2 text-xs text-zinc-400 sm:grid-cols-3">
               <div>
@@ -802,7 +805,7 @@ export function OpportunityWorkflow({
                 Salvează modificările
               </button>
               <button type="button" onClick={copyDocument} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white">Copiază</button>
-              {(selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email") && recipientEmail ? (
+              {(selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email") && recipientEmail && ["approved", "ready_to_send"].includes(selectedDocument.status) ? (
                 <a
                   href={`mailto:${encodeURIComponent(recipientEmail)}?cc=${encodeURIComponent(ccEmail)}&subject=${encodeURIComponent(editorTitle)}&body=${encodeURIComponent(editorContent)}`}
                   onClick={preserveScrollAfterUtilityClick}
@@ -811,8 +814,9 @@ export function OpportunityWorkflow({
                   Deschide în client email
                 </a>
               ) : null}
-              <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Marchează pregătit</button>
-              <button type="button" onClick={() => saveDocumentEdits("sent")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Marchează trimis</button>
+              <Link href={`/outreach/${selectedDocument.id}`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-300">Deschide Follow-up Studio</Link>
+              {!['approved', 'ready_to_send'].includes(selectedDocument.status) ? <button type="button" onClick={() => saveDocumentEdits("approved")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Aprobă draftul</button> : null}
+              {selectedDocument.status === "approved" ? <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Pregătit pentru utilizare</button> : null}
               <a
                 href={`data:text/plain;charset=utf-8,${encodeURIComponent(`${editorTitle}\n\n${editorContent}`)}`}
                 download={`${editorTitle || "document"}.txt`}
@@ -821,9 +825,7 @@ export function OpportunityWorkflow({
               >
                 Descarcă .txt
               </a>
-              <button type="button" disabled className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-600" title="Trimiterea directa va fi disponibila dupa conectarea providerului de email.">
-                Trimite din aplicație
-              </button>
+              <span className="inline-flex items-center rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-500">Trimiterea din aplicație nu este activă</span>
               <button type="button" onClick={closeDocumentEditor} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Închide</button>
             </div>
           </div>

@@ -11,6 +11,7 @@ import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ function OpportunityException({ opportunity, reasons }: { opportunity: Opportuni
 
 export default async function DashboardPage() {
   try {
-    const [summary, ingestion] = await Promise.all([getRevenueWorkspaceSummary(), getCommercialIngestionSummary()]);
+    const [summary, ingestion, followUp] = await Promise.all([getRevenueWorkspaceSummary(), getCommercialIngestionSummary(), getFollowUpWorkspaceSummary()]);
     const activeSignals = summary.signals.filter((signal) => !signal.convertedOpportunityId && !["converted", "dismissed", "duplicate", "ignored", "archived"].includes(signal.status));
     const reviewSignals = summary.signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
     const signalValue = activeSignals
@@ -75,6 +76,9 @@ export default async function DashboardPage() {
           <MetricCard label="Importate în așteptare" value={`${ingestion.awaitingImportedReview}`} detail="Semnale CSV care necesită analiză sau decizie umană." tone="gold" />
           <MetricCard label="Oportunități detectate" value={`${ingestion.detectedSignals}`} detail="Semnale create explicit din oportunități neglijate." />
           <MetricCard label="Valoare importată estimată" value={formatCurrency(ingestion.estimatedImportedRecoverableValue, "RON")} detail="Estimare separată de venitul câștigat confirmat." />
+          <MetricCard label="Drafturi de revizuit" value={String(followUp.awaitingReview)} detail="Conținut comercial care necesită decizie umană." tone="gold" />
+          <MetricCard label="Aprobate · Netrimise" value={String(followUp.approvedNotSent)} detail="Aprobarea nu confirmă o trimitere externă." tone="mint" />
+          <MetricCard label="Follow-up-uri scadente" value={String(followUp.dueFollowUps)} detail="Acțiuni de follow-up încă deschise." />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
