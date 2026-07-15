@@ -4,6 +4,7 @@ import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { runRecoverabilityAnalysis } from "@/lib/recoverability-analysis";
+import { formatRecoveryDraft, packRecoverabilityInsights, parseRecoveryDraft, unpackRecoverabilityInsights } from "@/lib/recoverability-review";
 import type {
   CommercialSignal,
   CommercialSignalEvent,
@@ -321,6 +322,8 @@ function mapEvent(row: CommercialSignalEventRow): CommercialSignalEvent {
 }
 
 function mapSignal(row: CommercialSignalRow, events: CommercialSignalEvent[] = []): CommercialSignal {
+  const insights = unpackRecoverabilityInsights(stringArray(row.uncertainty_notes));
+  const draft = parseRecoveryDraft(row.reviewed_draft);
   return {
     id: row.id,
     businessId: row.business_id,
@@ -340,8 +343,14 @@ function mapSignal(row: CommercialSignalRow, events: CommercialSignalEvent[] = [
     urgencyLevel: row.urgency_level,
     primaryRecoveryReason: row.primary_recovery_reason,
     analysisExplanation: row.analysis_explanation,
+    detectedCommercialIntent: insights.detectedCommercialIntent,
+    relationshipContext: insights.relationshipContext,
+    scoreFactors: insights.scoreFactors,
     missingInformation: stringArray(row.missing_information),
-    uncertaintyNotes: stringArray(row.uncertainty_notes),
+    riskNotes: insights.riskNotes,
+    uncertaintyNotes: insights.uncertaintyNotes,
+    humanReviewChecklist: insights.humanReviewChecklist,
+    alternativeDraftAngle: insights.alternativeDraftAngle,
     suggestedDueDate: row.suggested_due_date,
     suggestedOwnerProfileId: row.suggested_owner_profile_id,
     matchedOrganizationId: row.matched_organization_id,
@@ -350,6 +359,8 @@ function mapSignal(row: CommercialSignalRow, events: CommercialSignalEvent[] = [
     duplicateSignalId: row.duplicate_signal_id,
     reviewDueAt: row.review_due_at,
     reviewedDraft: row.reviewed_draft,
+    draftSubject: draft.subject,
+    draftBody: draft.body,
     dismissalReason: row.dismissal_reason,
     analyzedAt: row.analyzed_at,
     reviewedAt: row.reviewed_at,
@@ -547,7 +558,20 @@ export async function updateCommercialSignal(id: string, input: CommercialSignal
   }
 
   const signal = mapSignal(data as CommercialSignalRow);
-  await addCommercialSignalEvent(id, input.status === "reviewed" ? "signal_reviewed" : "signal_updated", input.status === "reviewed" ? "Semnal comercial revizuit." : "Semnal comercial actualizat.");
+  const hasHumanReviewChanges = [
+    input.reviewedDraft,
+    input.recommendedAction,
+    input.suggestedDueDate,
+    input.assignedToProfileId,
+    input.matchedOrganizationId,
+    input.matchedContactId
+  ].some((value) => value !== undefined);
+  const eventResult = await addCommercialSignalEvent(
+    id,
+    hasHumanReviewChanges ? "analysis_review_edited" : input.status === "reviewed" ? "signal_reviewed" : "signal_updated",
+    hasHumanReviewChanges ? "Recomandarea analizei a fost editată de utilizator." : input.status === "reviewed" ? "Semnal comercial revizuit." : "Semnal comercial actualizat."
+  );
+  if (eventResult.ok && eventResult.event) signal.events = [eventResult.event, ...(signal.events ?? [])];
   revalidatePath("/inbox");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
@@ -667,16 +691,25 @@ export async function analyzeCommercialSignal(signalId: string, planId?: string 
       currency: analysis.currency,
       urgency_level: analysis.urgency,
       primary_recovery_reason: analysis.primaryRecoveryReason,
-      analysis_explanation: analysis.explanation,
+      analysis_explanation: analysis.executiveExplanation,
       missing_information: analysis.missingInformation,
-      uncertainty_notes: analysis.safetyNotes,
+      uncertainty_notes: packRecoverabilityInsights({
+        detectedCommercialIntent: analysis.detectedCommercialIntent,
+        relationshipContext: analysis.relationshipContext,
+        scoreFactors: analysis.scoreFactors,
+        riskNotes: analysis.riskNotes,
+        uncertaintyNotes: analysis.uncertaintyNotes,
+        humanReviewChecklist: analysis.humanReviewChecklist,
+        alternativeDraftAngle: analysis.alternativeDraftAngle
+      }),
       suggested_due_date: analysis.suggestedDueDate,
+      suggested_owner_profile_id: analysis.suggestedOwnerProfileId,
       recommended_action: analysis.recommendedNextAction,
       duplicate_risk: analysis.duplicateRisk,
       duplicate_signal_id: duplicate?.id ?? null,
       matched_organization_id: matchedOrganizationId,
       matched_contact_id: matchedContactId,
-      reviewed_draft: analysis.draftPreview,
+      reviewed_draft: formatRecoveryDraft(analysis.recommendedDraftSubject, analysis.recommendedDraftBody),
       analyzed_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })

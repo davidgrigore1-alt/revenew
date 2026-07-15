@@ -330,8 +330,14 @@ export type CommercialSignal = {
   urgencyLevel?: RecoverabilityUrgency | null;
   primaryRecoveryReason?: string | null;
   analysisExplanation?: string | null;
+  detectedCommercialIntent?: string | null;
+  relationshipContext?: string | null;
+  scoreFactors?: string[];
   missingInformation: string[];
+  riskNotes?: string[];
   uncertaintyNotes: string[];
+  humanReviewChecklist?: string[];
+  alternativeDraftAngle?: string | null;
   suggestedDueDate?: string | null;
   suggestedOwnerProfileId?: string | null;
   matchedOrganizationId?: string | null;
@@ -340,6 +346,8 @@ export type CommercialSignal = {
   duplicateSignalId?: string | null;
   reviewDueAt?: string | null;
   reviewedDraft?: string | null;
+  draftSubject?: string | null;
+  draftBody?: string | null;
   dismissalReason?: string | null;
   analyzedAt?: string | null;
   reviewedAt?: string | null;

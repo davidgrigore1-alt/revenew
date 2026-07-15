@@ -21,6 +21,7 @@ import type {
   RecoverabilityConfidence,
   RecoverabilityUrgency
 } from "@/lib/types";
+import { formatRecoveryDraft } from "@/lib/recoverability-review";
 import { formatCurrency, formatDateTimeWithSeconds } from "@/lib/utils";
 
 type OrganizationOption = { id: string; name: string };
@@ -69,7 +70,8 @@ type ReviewForm = {
   newContactName: string;
   newContactEmail: string;
   newContactPhone: string;
-  reviewedDraft: string;
+  draftSubject: string;
+  draftBody: string;
 };
 
 const sourceLabels: Record<CommercialSignalSource, string> = {
@@ -146,7 +148,8 @@ function reviewFormFor(signal: CommercialSignal): ReviewForm {
     newContactName: "",
     newContactEmail: "",
     newContactPhone: "",
-    reviewedDraft: signal.reviewedDraft ?? ""
+    draftSubject: signal.draftSubject ?? "",
+    draftBody: signal.draftBody ?? signal.reviewedDraft ?? ""
   };
 }
 
@@ -156,6 +159,18 @@ function fieldClasses() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]"><span>{label}</span>{children}</label>;
+}
+
+function InsightList({ title, items }: { title: string; items?: string[] }) {
+  if (!items?.length) return null;
+  return (
+    <div>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <ul className="mt-2 grid gap-1 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
+        {items.map((item) => <li key={`${title}:${item}`}>• {item}</li>)}
+      </ul>
+    </div>
+  );
 }
 
 function urgencyRank(value?: RecoverabilityUrgency | null) {
@@ -226,7 +241,12 @@ export function CommercialInboxClient({
   const converted = signals.filter((signal) => signal.reviewStatus === "converted").length;
 
   function replaceSignal(signal: CommercialSignal) {
-    setSignals((items) => items.map((item) => item.id === signal.id ? signal : item));
+    setSignals((items) => items.map((item) => {
+      if (item.id !== signal.id) return item;
+      const events = [...(signal.events ?? []), ...(item.events ?? [])]
+        .filter((event, index, all) => all.findIndex((candidate) => candidate.id === event.id) === index);
+      return { ...signal, events };
+    }));
     setSelectedId(signal.id);
     setReviewForm(reviewFormFor(signal));
   }
@@ -303,7 +323,7 @@ export function CommercialInboxClient({
       assignedToProfileId: reviewForm.ownerProfileId,
       matchedOrganizationId: reviewForm.organizationId,
       matchedContactId: reviewForm.contactId,
-      reviewedDraft: reviewForm.reviewedDraft
+      reviewedDraft: formatRecoveryDraft(reviewForm.draftSubject, reviewForm.draftBody)
     }), "Câmpurile revizuite au fost salvate.");
   }
 
@@ -325,7 +345,7 @@ export function CommercialInboxClient({
       ownerProfileId: reviewForm.ownerProfileId,
       dueAt: reviewForm.dueAt,
       recommendedAction: reviewForm.recommendedAction,
-      reviewedDraft: reviewForm.reviewedDraft
+      reviewedDraft: formatRecoveryDraft(reviewForm.draftSubject, reviewForm.draftBody)
     }), "Semnalul a fost aprobat și convertit într-un caz de recuperare urmărit.");
   }
 
@@ -424,6 +444,9 @@ export function CommercialInboxClient({
                 <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">{reviewLabels[selectedSignal.reviewStatus]}</span>
                 <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(selectedSignal.urgencyLevel)}`}>{selectedSignal.urgencyLevel ? urgencyLabels[selectedSignal.urgencyLevel] : "Neanalizat"}</span>
                 {selectedSignal.duplicateRisk ? <span className="rounded border border-red-400/30 bg-red-400/10 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-200">Posibil duplicat</span> : null}
+                {selectedSignal.analysisMode ? <span className="rounded border border-[rgb(var(--border))] bg-[rgb(var(--muted))] px-2 py-1 text-xs font-semibold text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisMode === "ai" ? "Analiză AI" : "Analiză pe reguli"}</span> : null}
+                {(selectedSignal.events ?? []).some((event) => event.eventType === "analysis_review_edited") ? <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">Editat de utilizator</span> : null}
+                <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">Netrimis automat</span>
                 <span className="text-xs text-[rgb(var(--muted-foreground))]">Primit {formatDateTimeWithSeconds(selectedSignal.createdAt ?? undefined)}</span>
               </div>
 
@@ -437,9 +460,28 @@ export function CommercialInboxClient({
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
 
-              {selectedSignal.analysisExplanation ? <div><h3 className="text-sm font-semibold">De ce merită atenție</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p></div> : null}
-              {selectedSignal.missingInformation.length > 0 ? <div><h3 className="text-sm font-semibold">Ce trebuie verificat</h3><ul className="mt-2 grid gap-1 text-sm text-[rgb(var(--muted-foreground))]">{selectedSignal.missingInformation.map((item) => <li key={item}>• {item}</li>)}</ul></div> : null}
+              {selectedSignal.analysisExplanation ? (
+                <div className="grid gap-2 border-l-2 border-[rgb(var(--primary))] pl-4">
+                  <h3 className="text-sm font-semibold">{selectedSignal.analysisMode === "ai" ? "Rezumat AI" : "Rezumat pe reguli"}</h3>
+                  <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p>
+                </div>
+              ) : null}
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <h3 className="text-sm font-semibold">De ce contează</h3>
+                  <div className="mt-2 grid gap-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
+                    {selectedSignal.primaryRecoveryReason ? <p>{selectedSignal.primaryRecoveryReason}</p> : null}
+                    {selectedSignal.detectedCommercialIntent ? <p><strong className="text-[rgb(var(--foreground))]">Intenție:</strong> {selectedSignal.detectedCommercialIntent}</p> : null}
+                    {selectedSignal.relationshipContext ? <p><strong className="text-[rgb(var(--foreground))]">Relație:</strong> {selectedSignal.relationshipContext}</p> : null}
+                  </div>
+                </div>
+                <InsightList title="Cum a fost calculat scorul" items={selectedSignal.scoreFactors} />
+                <InsightList title="Informații lipsă" items={selectedSignal.missingInformation} />
+                <InsightList title="Riscuri" items={selectedSignal.riskNotes} />
+              </div>
               {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
+              <InsightList title="Checklist înainte de aprobare" items={selectedSignal.humanReviewChecklist} />
+              {selectedSignal.alternativeDraftAngle ? <div><h3 className="text-sm font-semibold">Unghi alternativ</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.alternativeDraftAngle}</p></div> : null}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Titlu"><input value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} className={fieldClasses()} /></Field>
@@ -463,7 +505,14 @@ export function CommercialInboxClient({
               {!reviewForm.organizationId ? <div className="grid gap-4 md:grid-cols-2"><Field label="Companie CRM nouă"><input value={reviewForm.newOrganizationName} onChange={(event) => setReviewForm({ ...reviewForm, newOrganizationName: event.target.value })} placeholder={reviewForm.company || "Denumire companie"} className={fieldClasses()} /></Field></div> : null}
               {!reviewForm.contactId ? <div className="grid gap-4 md:grid-cols-3"><Field label="Contact CRM nou"><input value={reviewForm.newContactName} onChange={(event) => setReviewForm({ ...reviewForm, newContactName: event.target.value })} placeholder={reviewForm.contact || "Nume contact"} className={fieldClasses()} /></Field><Field label="Email contact nou"><input type="email" value={reviewForm.newContactEmail} onChange={(event) => setReviewForm({ ...reviewForm, newContactEmail: event.target.value })} className={fieldClasses()} /></Field><Field label="Telefon contact nou"><input value={reviewForm.newContactPhone} onChange={(event) => setReviewForm({ ...reviewForm, newContactPhone: event.target.value })} className={fieldClasses()} /></Field></div> : null}
 
-              <Field label="Draft comercial revizuit"><textarea rows={7} value={reviewForm.reviewedDraft} onChange={(event) => setReviewForm({ ...reviewForm, reviewedDraft: event.target.value })} placeholder="Draft opțional; nu va fi trimis automat." className={`${fieldClasses()} py-3`} /></Field>
+              <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold">Draft recomandat</h3>
+                  <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți edita conținutul. ReveNew îl păstrează ca draft intern și nu îl trimite automat.</p>
+                </div>
+                <Field label="Subiect"><input maxLength={160} value={reviewForm.draftSubject} onChange={(event) => setReviewForm({ ...reviewForm, draftSubject: event.target.value })} className={fieldClasses()} /></Field>
+                <Field label="Mesaj"><textarea rows={7} maxLength={4000} value={reviewForm.draftBody} onChange={(event) => setReviewForm({ ...reviewForm, draftBody: event.target.value })} placeholder="Draft opțional; necesită revizuire umană." className={`${fieldClasses()} py-3`} /></Field>
+              </div>
 
               <div className="flex flex-wrap gap-3">
                 <Button onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza este pregătită pentru revizuire.")} disabled={isPending || selectedSignal.status === "converted"}>{selectedSignal.analysisStatus === "completed" ? "Reanalizează" : "Analizează"}</Button>

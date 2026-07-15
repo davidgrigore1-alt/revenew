@@ -35,6 +35,16 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     notFound();
   }
 
+  const workflowOpportunity = sourceSignal ? {
+    ...opportunity,
+    relevance: Array.from(new Set([
+      sourceSignal.primaryRecoveryReason,
+      sourceSignal.detectedCommercialIntent,
+      sourceSignal.relationshipContext
+    ].filter((item): item is string => Boolean(item)))),
+    risks: Array.from(new Set([...(sourceSignal.riskNotes ?? []), ...sourceSignal.uncertaintyNotes]))
+  } : opportunity;
+
   return (
     <PageShell
       eyebrow={getOpportunityTypeLabel(opportunity.type)}
@@ -70,7 +80,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
           <CreateTaskForm opportunityId={opportunity.id} assignableProfiles={assignableProfiles} />
         </DataCard>
         <OpportunityWorkflow
-          opportunity={opportunity}
+          opportunity={workflowOpportunity}
           business={demoBusiness}
           openAIConfigured={isOpenAIConfigured()}
           existingContacts={crm.ready ? crm.contacts.map((contact) => ({

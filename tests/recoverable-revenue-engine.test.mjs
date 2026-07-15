@@ -5,6 +5,7 @@ import test from "node:test";
 const migrationPath = new URL("../supabase/migrations/20260714143000_recoverable_revenue_engine_v1.sql", import.meta.url);
 const approvalFixMigrationPath = new URL("../supabase/migrations/20260714234500_fix_recoverable_signal_approval_draft.sql", import.meta.url);
 const analysisPath = new URL("../src/lib/recoverability-analysis.ts", import.meta.url);
+const analysisCorePath = new URL("../src/lib/recoverability-analysis-core.ts", import.meta.url);
 const inboxPath = new URL("../src/lib/commercial-inbox.ts", import.meta.url);
 const actionsPath = new URL("../src/lib/commercial-inbox-actions.ts", import.meta.url);
 const clientPath = new URL("../src/components/inbox/CommercialInboxClient.tsx", import.meta.url);
@@ -48,22 +49,25 @@ test("approval draft persistence disambiguates the RPC argument without widening
   assert.match(sql, /grant execute .* to authenticated/i);
 });
 
-test("analysis validates one strict shape and falls back deterministically", async () => {
-  const source = await readFile(analysisPath, "utf8");
-  assert.match(source, /export type RecoverabilityAnalysis =/);
+test("analysis validates one rich shape and falls back deterministically", async () => {
+  const providerSource = await readFile(analysisPath, "utf8");
+  const coreSource = await readFile(analysisCorePath, "utf8");
   for (const field of [
     "recoverabilityScore", "confidence", "estimatedRecoverableValue", "currency", "urgency",
-    "primaryRecoveryReason", "explanation", "missingInformation", "recommendedNextAction",
-    "suggestedDueDate", "duplicateRisk", "safetyNotes"
-  ]) assert.match(source, new RegExp(`${field}:`));
-  assert.match(source, /buildDeterministicRecoverabilityAnalysis/);
-  assert.match(source, /validateRecoverabilityAnalysis/);
-  assert.match(source, /return fallback;/);
-  assert.match(source, /ageDays >= 30/);
-  assert.match(source, /hasContact/);
-  assert.match(source, /proposalWithoutResponse/);
-  assert.match(source, /!signal\.assignedToProfileId/);
-  assert.match(source, /maximumKnownValue/);
+    "primaryRecoveryReason", "executiveExplanation", "detectedCommercialIntent", "relationshipContext",
+    "scoreFactors", "missingInformation", "recommendedNextAction", "riskNotes", "uncertaintyNotes",
+    "humanReviewChecklist", "recommendedDraftSubject", "recommendedDraftBody", "alternativeDraftAngle"
+  ]) assert.match(coreSource, new RegExp(`${field}:`));
+  assert.match(coreSource, /buildDeterministicRecoverabilityAnalysis/);
+  assert.match(coreSource, /validateRecoverabilityAnalysis/);
+  assert.match(coreSource, /ageDays >= 30/);
+  assert.match(coreSource, /hasContact/);
+  assert.match(coreSource, /proposalWithoutResponse/);
+  assert.match(coreSource, /!signal\.assignedToProfileId/);
+  assert.match(coreSource, /maximumKnownValue/);
+  assert.match(providerSource, /return fallback;/);
+  assert.match(providerSource, /safeProviderDiagnostic/);
+  assert.doesNotMatch(providerSource, /redactForLog\(error\)|console\.error\([^\n]*content/);
 });
 
 test("signal operations derive the workspace server-side and prevent cross-tenant matching", async () => {
@@ -88,7 +92,10 @@ test("review UI requires human approval and supports all decision paths", async 
   assert.match(source, /Companie CRM/);
   assert.match(source, /Contact CRM/);
   assert.match(source, /Responsabil/);
-  assert.match(source, /Draft comercial revizuit/);
+  assert.match(source, /Draft recomandat/);
+  assert.match(source, /Rezumat AI/);
+  assert.match(source, /Checklist înainte de aprobare/);
+  assert.match(source, /Netrimis automat/);
   assert.match(source, /Risc duplicat/);
   assert.match(source, /Fără responsabil/);
   assert.doesNotMatch(source, /sendEmail|send_mail|scheduled_at/);
