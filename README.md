@@ -2,6 +2,10 @@
 
 ReveNew este un MVP Next.js pentru oportunități B2B: autentificare, onboarding de business, oportunități, acțiuni, documente generate mock, lead-uri, outreach și rapoarte.
 
+## Siguranța dezvoltării
+
+Înainte de commit rulează `npm run validate:quick`; înainte de merge sau push rulează `npm run validate`. Pașii pentru migrații, două calculatoare, Docker și recuperarea asset-urilor sunt în [ghidul de siguranță](docs/development-safety.md).
+
 ## Rulare locală
 
 ```powershell

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "reviewedThrough": "20260714234600_data_ingestion_continuous_recovery_v1.sql",
+  "files": {
+    "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
+    "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
+    "202606100003_fix_auth_profile_business_rls.sql": "2ff6e1125ca0e86d381950914611e7ea9689503076a2ee4404d88c0689049ebe",
+    "202606100007_stabilize_supabase_rls.sql": "361e51b56c53256174c8c3894eb2ae9502b3bbefa2a6df17771c41669108d396",
+    "202606110008_add_phase5_ai_metadata.sql": "8fe61cbf0e1850db722f7868bae65df6869b6528318a6df345b6f24d0dde6170",
+    "202606110009_phase6_workflow_polish.sql": "e4b882f8098966ec7004c059c93f0605dbe68f31e9a5df0b3b1a4b84025fe5a6",
+    "202606110010_commercial_inbox.sql": "528e2c280cbfea06e0d73612bd79b2706b689f2fbeac3b711a51cde5038515c3",
+    "202606240001_usage_metering.sql": "c599960a8da96c1a1a2d3451e2ca9d0a1514855f9476724563f53f1f80f990e3",
+    "202606240002_separate_platform_and_business_roles.sql": "b9409eaeb79a705804c8503344dab20afce97ad5586cf403729f6a8c9f76ed3d",
+    "202606240003_usage_metering_platform_role_policies.sql": "4174b9dbdc2d0c67236f75b84236744e4fa2b2769a7da6473602360a9dcc733c",
+    "202606260001_harden_business_members_rls.sql": "7dc4d5cbae7867ad32fe6e5d94877d00dc239237e3ce54e8923a7b14388de646",
+    "202607060001_crm_contacts_foundation.sql": "b0788c02b0b4ab80d9616fd416d4e3d5dbbc995c97d9d60822c21b82c53b9472",
+    "202607060002_crm_workspace_crud.sql": "1990469e4e38a9cb130150cdb921bc14ec9a5481a0e7bff3ab4c87e9e87cca59",
+    "202607130001_phase1_revenue_control_center.sql": "00353ab434a8776ca94685d5544e86b9597e9a42fb5af7b4f6bddf7b8deca3b5",
+    "20260713100040_phase1_profile_role_contract.sql": "4ca62ca57ff2337a3eb5f28c380a91c52379ad2c2604df6a6594e4c186544b21",
+    "20260713100616_phase1_trusted_trigger_rls_context.sql": "b32375c8e50ae4bb94113a2c51c1e898fdac669089f0fa0a74f61bcdbad99295",
+    "20260713101205_phase1_business_member_workspace_read.sql": "4f1024e0ccb633d70d42e48ccb108828f1df982754d59551881e40c063bafe60",
+    "20260713135440_add_business_onboarding_location_fields.sql": "964c2e6dd1b19d4681345c00d8c31bbc47f96dba187c78c7aff6e8ed5429f2cc",
+    "202607140001_phase2_activation_search_import_views.sql": "497fb814b2cdadd0c9d401d7bc889737bbb978c86489d2bb9fda13bd8ac78c2b",
+    "20260714100223_complete_commercial_workflow.sql": "0435837ed8228c6e1fbc9c3e3746fc7e4923fd2155595f85b96cf346a69d820a",
+    "20260714143000_recoverable_revenue_engine_v1.sql": "9ccc2a0e61664708578489dc57def53e767899d4db7d971e29e103125dad07d1",
+    "20260714234500_fix_recoverable_signal_approval_draft.sql": "5c43d2d5ce09fbd07c8c3db3780ac05a43d6aac92b390e49d241e9655cb2ff25",
+    "20260714234600_data_ingestion_continuous_recovery_v1.sql": "08620212f36323f72cacd4779741dba941b1443fbde26d916848026f51519552"
+  }
+}

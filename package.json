@@ -6,8 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "test:targeted": "node --test tests/auth-account-flow.test.mjs tests/auth-session-recovery.test.mjs tests/authorization-surface.test.mjs tests/business-members-rls.test.mjs tests/commercial-ingestion.test.mjs tests/navigation-serialization.test.mjs tests/recoverable-revenue-engine.test.mjs",
+    "validate:migrations": "node scripts/validation/check-migrations.mjs",
+    "validate:security": "node scripts/validation/check-repository-safety.mjs",
+    "validate:diff": "git diff --check",
+    "validate:quick": "npm run typecheck && npm run lint && npm run test:targeted && npm run validate:migrations && npm run validate:security && npm run validate:diff",
+    "validate": "npm run typecheck && npm run lint && npm test && npm run validate:migrations && npm run validate:security && npm run build && npm run validate:diff"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
