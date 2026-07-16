@@ -13,6 +13,10 @@ function digest(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function matchesDigest(value, expectedHash) {
+  return digest(value) === expectedHash || digest(value.replace(/\r\n?/g, "\n")) === expectedHash;
+}
+
 function lineNumberAt(source, index) {
   return source.slice(0, index).split("\n").length;
 }
@@ -62,7 +66,7 @@ async function main() {
       continue;
     }
     const sql = await readFile(path.join(migrationsDirectory, fileName), "utf8");
-    if (digest(sql) !== expectedHash) findings.push(`${fileName} [reviewed migration changed]`);
+    if (!matchesDigest(sql, expectedHash)) findings.push(`${fileName} [reviewed migration changed]`);
   }
 
   const newMigrations = migrationNames.filter((name) => !baseline.files[name]);

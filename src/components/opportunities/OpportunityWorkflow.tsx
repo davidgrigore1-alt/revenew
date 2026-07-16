@@ -110,7 +110,10 @@ export function OpportunityWorkflow({
 
   const source = opportunity.source ?? getOpportunityTypeLabel(opportunity.type);
   const savedDocuments = opportunity.documents.map((document) => ({ ...document, ...(documentOverrides[document.id] ?? {}) }));
-  const allDocuments = [...documents, ...savedDocuments];
+  const allDocuments = [
+    ...documents,
+    ...savedDocuments.filter((savedDocument) => !documents.some((document) => document.id === savedDocument.id))
+  ];
   const selectedDocument = allDocuments.find((document) => document.id === selectedDocumentId);
   const isEmailDocument = selectedDocument?.type === "outreach_email" || selectedDocument?.type === "follow_up_email";
   const hasUnsavedChanges = Boolean(

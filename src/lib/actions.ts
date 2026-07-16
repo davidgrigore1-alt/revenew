@@ -13,6 +13,7 @@ import { scoreOpportunity } from "@/lib/scoring";
 import type { Business, Opportunity, OpportunityDocumentType, OpportunityStatus, OpportunityType } from "@/lib/types";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { ValidatedGeneratedDocument, ValidatedOpportunityAnalysis } from "@/lib/openai/validation";
@@ -22,6 +23,7 @@ import { updatePipelineStatus } from "@/lib/revenue-workspace/actions";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { recordProductEvent } from "@/lib/product-events";
 import { canTransitionFollowUpDraft, validateFollowUpDraftFields, type FollowUpEditableStatus } from "@/lib/follow-up-studio";
+import { createFollowUpContentFingerprint, normalizeEmail } from "@/lib/follow-up-sending";
 
 export async function saveOnboarding(formData: FormData) {
   const result = await provisionBusinessFromOnboarding(formData);
@@ -213,17 +215,18 @@ export async function updateGeneratedDocument(
   }
 
   const supabase = createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
   const [opportunity, business] = await Promise.all([
     getOpportunityForCurrentBusiness(opportunityId),
     getCurrentBusinessOrDemo({ redirectIfMissing: true })
   ]);
-  if (!supabase || !opportunity || !business) {
+  if (!supabase || !admin || !opportunity || !business) {
     return { ok: false, error: "Documentul nu este disponibil în workspace-ul curent." };
   }
 
   const { data: currentDocument, error: currentError } = await supabase
     .from("opportunity_documents")
-    .select("id,status,title,body,document_type")
+    .select("id,status,title,body,document_type,approved_content_fingerprint")
     .eq("id", documentId)
     .eq("opportunity_id", opportunityId)
     .eq("business_id", business.id)
@@ -245,17 +248,45 @@ export async function updateGeneratedDocument(
   const validated = isMessageDocument ? validateFollowUpDraftFields(nextTitle, nextBody) : { ok: true as const, subject: nextTitle.trim().slice(0, 160), body: nextBody.trim().slice(0, 12000) };
   if (!validated.ok) return validated;
 
+  const opportunityContacts = opportunity.contacts ?? [];
+  const primaryContact = opportunityContacts.find((contact) => contact.isPrimary) ?? opportunityContacts[0];
+  const currentFingerprint = createFollowUpContentFingerprint({
+    businessId: business.id,
+    documentId,
+    opportunityId,
+    recipient: normalizeEmail(opportunity.contact?.email ?? primaryContact?.contact.email),
+    subject: validated.subject,
+    body: validated.body
+  });
+  if (updates.status === "ready_to_send" && currentDocument.approved_content_fingerprint !== currentFingerprint) {
+    return { ok: false, error: "Conținutul sau destinatarul diferă de versiunea aprobată. Revizuiește și aprobă din nou draftul." };
+  }
+
   const now = new Date().toISOString();
-  const payload: Record<string, string> = {};
-  const hasContentChanges = updates.title !== undefined || updates.content !== undefined;
+  const payload: Record<string, string | null> = {};
+  const hasContentChanges = (updates.title !== undefined && validated.subject !== (currentDocument.title ?? ""))
+    || (updates.content !== undefined && validated.body !== (currentDocument.body ?? ""));
+  const approvalInvalidated = ["approved", "ready_to_send"].includes(currentDocument.status)
+    && (hasContentChanges || updates.status === "edited");
   if (updates.title !== undefined) payload.title = validated.subject;
   if (updates.content !== undefined) payload.body = validated.body;
   if (hasContentChanges) payload.edited_at = now;
   if (updates.status) payload.status = updates.status;
+  if (approvalInvalidated && updates.status !== "approved") {
+    payload.status = "edited";
+    payload.approved_content_fingerprint = null;
+    payload.approved_at = null;
+    payload.approved_by = null;
+  }
+  if (updates.status === "approved") {
+    payload.approved_content_fingerprint = currentFingerprint;
+    payload.approved_at = now;
+    payload.approved_by = authorization.profileId;
+  }
   if (updates.status === "ready_to_send") payload.ready_at = now;
   if (updates.markCopied) payload.copied_at = now;
 
-  const { data: updatedDocument, error } = await supabase
+  const { data: updatedDocument, error } = await admin
     .from("opportunity_documents")
     .update(payload)
     .eq("id", documentId)
@@ -267,7 +298,9 @@ export async function updateGeneratedDocument(
     return { ok: false, error: "Documentul nu a putut fi salvat în workspace-ul curent." };
   }
 
-  const eventType = updates.markCopied
+  const eventType = approvalInvalidated && updates.status !== "approved"
+    ? "follow_up_approval_invalidated"
+    : updates.markCopied
     ? "document_copied"
     : updates.status === "approved"
       ? "document_approved"
@@ -276,7 +309,9 @@ export async function updateGeneratedDocument(
         : updates.status === "archived"
           ? "document_archived"
           : "document_edited";
-  const label = updates.markCopied
+  const label = approvalInvalidated && updates.status !== "approved"
+    ? "Aprobare invalidată"
+    : updates.markCopied
     ? "Draft copiat"
     : updates.status === "approved"
       ? "Draft aprobat de utilizator"
@@ -292,10 +327,12 @@ export async function updateGeneratedDocument(
     actor_profile_id: authorization.profileId,
     event_type: eventType,
     label,
-    description: updates.status === "approved"
+    description: approvalInvalidated && updates.status !== "approved"
+      ? "Conținutul material al draftului s-a schimbat. Este necesară o nouă revizuire și aprobare înainte de trimitere."
+      : updates.status === "approved"
       ? "Conținutul a fost aprobat explicit de un utilizator. Nu a fost trimis extern."
       : label,
-    metadata: { document_id: documentId, document_status: updates.status ?? currentDocument.status, external_send: false }
+    metadata: { document_id: documentId, document_status: payload.status ?? currentDocument.status, external_send: false, approval_invalidated: approvalInvalidated }
   });
   if (eventError) {
     return { ok: false, error: "Documentul a fost actualizat, dar evenimentul de audit nu a putut fi salvat." };

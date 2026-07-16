@@ -332,6 +332,9 @@ export default async function ReportsPage() {
           <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
           <MetricCard label="Drafturi de revizuit" value={String(followUpSummary.awaitingReview)} detail="Drafturi care necesită revizuire și decizie umană." tone="gold" />
           <MetricCard label="Aprobate · Netrimise" value={String(followUpSummary.approvedNotSent)} detail="Aprobate sau pregătite, fără confirmare de trimitere externă." tone="mint" />
+          <MetricCard label="Încercări în mod test" value={String(followUpSummary.testModeAttempts)} detail="Fluxuri interne fără livrare externă." />
+          <MetricCard label="Livrări reale confirmate" value={String(followUpSummary.realDeliveries)} detail="Confirmate de furnizorul live; nu reprezintă venit câștigat." tone="mint" />
+          <MetricCard label="Încercări eșuate" value={String(followUpSummary.failedAttempts)} detail="Încercări fără confirmare de livrare." tone="gold" />
           <MetricCard label="Follow-up-uri scadente" value={String(followUpSummary.dueFollowUps)} detail="Acțiuni de follow-up deschise și ajunse la termen." />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
           <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />

@@ -78,6 +78,9 @@ export default async function DashboardPage() {
           <MetricCard label="Valoare importată estimată" value={formatCurrency(ingestion.estimatedImportedRecoverableValue, "RON")} detail="Estimare separată de venitul câștigat confirmat." />
           <MetricCard label="Drafturi de revizuit" value={String(followUp.awaitingReview)} detail="Conținut comercial care necesită decizie umană." tone="gold" />
           <MetricCard label="Aprobate · Netrimise" value={String(followUp.approvedNotSent)} detail="Aprobarea nu confirmă o trimitere externă." tone="mint" />
+          <MetricCard label="Încercări în mod test" value={String(followUp.testModeAttempts)} detail="Fluxuri interne fără livrare externă." />
+          <MetricCard label="Livrări reale confirmate" value={String(followUp.realDeliveries)} detail="Confirmate exclusiv de furnizorul live; separat de venitul câștigat." tone="mint" />
+          <MetricCard label="Încercări eșuate" value={String(followUp.failedAttempts)} detail="Fără confirmare de livrare externă." tone="gold" />
           <MetricCard label="Follow-up-uri scadente" value={String(followUp.dueFollowUps)} detail="Acțiuni de follow-up încă deschise." />
         </div>
 

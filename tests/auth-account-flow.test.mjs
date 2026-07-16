@@ -8,6 +8,10 @@ import vm from "node:vm";
 
 const nodeRequire = createRequire(import.meta.url);
 
+function normalizeNewlines(value) {
+  return value.replace(/\r\n?/g, "\n");
+}
+
 function loadTsModule(relativePath) {
   const filename = path.resolve(relativePath);
   const source = fs.readFileSync(filename, "utf8");
@@ -121,9 +125,15 @@ test("manual profile role SQL package is present and non-destructive", () => {
     assert.equal(fs.existsSync(path.join(base, file)), true, `${file} missing`);
   }
 
-  const preflight = fs.readFileSync(path.join(base, "00_PROFILE_ROLE_PREFLIGHT.sql"), "utf8");
-  const apply = fs.readFileSync(path.join(base, "01_APPLY_PROFILE_ROLE_FIX.sql"), "utf8");
-  const verify = fs.readFileSync(path.join(base, "02_PROFILE_ROLE_VERIFY.sql"), "utf8");
+  const preflight = normalizeNewlines(
+    fs.readFileSync(path.join(base, "00_PROFILE_ROLE_PREFLIGHT.sql"), "utf8")
+  );
+  const apply = normalizeNewlines(
+    fs.readFileSync(path.join(base, "01_APPLY_PROFILE_ROLE_FIX.sql"), "utf8")
+  );
+  const verify = normalizeNewlines(
+    fs.readFileSync(path.join(base, "02_PROFILE_ROLE_VERIFY.sql"), "utf8")
+  );
 
   assert.equal(preflight.includes("profiles_role_column"), true);
   assert.equal(preflight.includes("auth_users_profile_triggers"), true);

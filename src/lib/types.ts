@@ -126,6 +126,9 @@ export type OpportunityDocument = {
   copiedAt?: string;
   readyAt?: string;
   sentAt?: string;
+  approvedContentFingerprint?: string | null;
+  sendStatus?: "not_sent" | "sending" | "test_completed" | "sent" | "failed" | "disabled";
+  sendingMode?: "disabled" | "test" | "live" | null;
 };
 
 export type OpportunityEvent = {

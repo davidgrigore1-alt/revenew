@@ -1,5 +1,7 @@
 # ReveNew
 
+Pentru contextul permanent de produs, arhitectură, securitate și faza activă, citește mai întâi [docs/CODEX_CONTEXT.md](docs/CODEX_CONTEXT.md).
+
 ReveNew este un MVP Next.js pentru oportunități B2B: autentificare, onboarding de business, oportunități, acțiuni, documente generate mock, lead-uri, outreach și rapoarte.
 
 ## Siguranța dezvoltării
@@ -26,9 +28,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 RESEND_API_KEY=
+EMAIL_SENDING_MODE=disabled
+EMAIL_FROM_ADDRESS=
 ```
 
-`OPENAI_API_KEY` activeaza analiza si generarea cu OpenAI. `RESEND_API_KEY` este doar placeholder si nu este folosita încă.
+`OPENAI_API_KEY` activează analiza și generarea cu OpenAI. Trimiterea rămâne sigură implicit prin `EMAIL_SENDING_MODE=disabled`; `test` verifică numai fluxul intern, iar `live` necesită atât `RESEND_API_KEY`, cât și `EMAIL_FROM_ADDRESS`. Cheile sunt citite exclusiv pe server.
 
 ## Supabase setup
 
