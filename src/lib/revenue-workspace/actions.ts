@@ -264,6 +264,12 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu este disponibilă." };
 
+  if (safeText(formData.get("finalConfirmation"), "", 5) !== "true") return { ok: false, error: "Confirmarea finală explicită este obligatorie." };
+  if (opportunity.lifecycleStatus !== "open" || opportunity.outcomeRecordedAt) {
+    await eventForOpportunity({ opportunityId, businessId: business.id, actorProfileId: actorProfileId(authorization), eventType: "duplicate_outcome_blocked", label: "Rezultat duplicat blocat", description: "Oportunitatea are deja un rezultat confirmat; nu a fost înregistrat un venit suplimentar." });
+    return { ok: false, duplicate: true, error: "Oportunitatea are deja un rezultat confirmat." };
+  }
+
   const lifecycleStatus = safeText(formData.get("lifecycleStatus"), "", 24) as OpportunityLifecycleStatus;
   const outcomeReason = safeText(formData.get("outcomeReason"), "", 40);
   const outcomeDate = safeText(formData.get("outcomeDate"), "", 10);
@@ -291,18 +297,21 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
     outcome_recorded_by_profile_id: actorProfileId(authorization),
     outcome_recorded_at: now
   };
-  let query = supabase.from("opportunities").update(payload).eq("id", opportunityId).eq("business_id", business.id);
+  let query = supabase.from("opportunities").update(payload).eq("id", opportunityId).eq("business_id", business.id).eq("lifecycle_status", "open").is("outcome_recorded_at", null);
   const expectedUpdatedAt = safeText(formData.get("expectedUpdatedAt"), "", 64);
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
   const { data, error } = await query.select("id").maybeSingle();
   if (error) return { ok: false, error: "Rezultatul nu a putut fi înregistrat. Verifică datele și migrarea Phase 1." };
-  if (!data) return { ok: false, error: "Oportunitatea a fost modificată între timp. Reîncarcă pagina și verifică schimbările." };
+  if (!data) {
+    await eventForOpportunity({ opportunityId, businessId: business.id, actorProfileId: actorProfileId(authorization), eventType: "duplicate_outcome_blocked", label: "Rezultat duplicat blocat", description: "O altă confirmare a închis deja oportunitatea; venitul nu a fost duplicat." });
+    return { ok: false, duplicate: true, error: "Oportunitatea a fost deja închisă sau modificată. Reîncarcă pagina." };
+  }
 
   await eventForOpportunity({
     opportunityId,
     businessId: business.id,
     actorProfileId: actorProfileId(authorization),
-    eventType: opportunity.lifecycleStatus === lifecycleStatus ? "outcome_corrected" : "outcome_recorded",
+    eventType: lifecycleStatus === "won" ? "opportunity_won" : lifecycleStatus === "lost" ? "opportunity_lost" : "outcome_recorded",
     label: lifecycleStatus === "won" ? "Rezultat câștigat înregistrat" : lifecycleStatus === "lost" ? "Rezultat pierdut înregistrat" : "Oportunitate descalificată",
     description: outcomeNote ?? "Rezultat comercial înregistrat de echipă.",
     metadata: {
@@ -311,6 +320,12 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
       actual_outcome_amount: lifecycleStatus === "won" ? amount : null,
       currency
     }
+  });
+  if (lifecycleStatus === "won") await eventForOpportunity({
+    opportunityId, businessId: business.id, actorProfileId: actorProfileId(authorization),
+    eventType: "confirmed_revenue_recorded", label: "Venit recuperat confirmat",
+    description: "Valoarea efectivă a fost confirmată explicit odată cu rezultatul câștigat.",
+    metadata: { actual_outcome_amount: amount, currency }
   });
   revalidateOpportunity(opportunityId);
   return { ok: true };

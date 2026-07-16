@@ -101,3 +101,16 @@ HUMAN-APPROVED EMAIL SENDING V1 este implementat. Configurația implicită este 
 ## Următoarea fază activă
 
 Validarea operațională continuă a fluxului de trimitere și orice extindere ulterioară a livrării live trebuie să păstreze aprobarea umană, idempotency, auditul și separarea strictă dintre test, livrare reală și venit confirmat.
+
+## Commercial Response & Outcome Loop V1
+
+Fluxul comercial continuă acum după follow-up prin răspunsuri înregistrate manual, clasificare profesională, următoare acțiune confirmată de utilizator, milestone-uri și rezultate câștigate sau pierdute confirmate explicit.
+
+- răspunsurile sunt persistate tenant-safe în `commercial_responses`, cu RLS și identitatea workspace-ului derivată pe server
+- recomandările de next action sunt deterministe, editabile și nu execută acțiuni externe autonome
+- `unsubscribe` și `bounced` persistă o restricție de outreach pe oportunitate
+- rezultatele câștigate și pierdute cer confirmare finală; venitul confirmat este permis numai pentru rezultat câștigat și rămâne separat de estimări
+- dashboard-ul, rapoartele și timeline-ul oportunității includ răspunsuri, milestone-uri, rezultate și venitul confirmat
+- migrarea `20260716224633_commercial_response_outcome_loop_v1.sql` este aplicată și sincronizată local/remote
+
+Faza următoare poate extinde integrarea cu inbox-uri externe, dar mailbox sync și acțiunile externe autonome nu sunt implementate.

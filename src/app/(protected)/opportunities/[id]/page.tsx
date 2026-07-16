@@ -6,6 +6,7 @@ import { getOpportunityTypeLabel } from "@/components/dashboard/OpportunityCard"
 import { Button } from "@/components/ui/Button";
 import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
+import { CommercialResponsePanel } from "@/components/opportunities/CommercialResponsePanel";
 import { getCommercialSignalForOpportunity } from "@/lib/commercial-inbox";
 import { OpportunityWorkflow } from "@/components/opportunities/OpportunityWorkflow";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
@@ -76,6 +77,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
           </DataCard>
         ) : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
+        <CommercialResponsePanel opportunity={opportunity} />
         <DataCard title="Programează o acțiune internă" description="Creează un follow-up sau task intern. Nu se trimite nimic către client.">
           <CreateTaskForm opportunityId={opportunity.id} assignableProfiles={assignableProfiles} />
         </DataCard>

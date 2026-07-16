@@ -68,7 +68,7 @@ async function loadSendContext(documentId: string) {
 
   const { data: opportunity, error: opportunityError } = await supabase
     .from("opportunities")
-    .select("id,business_id,contact_email,contact_name,organization_id")
+    .select("id,business_id,contact_email,contact_name,organization_id,outreach_restricted_at,outreach_restriction_reason")
     .eq("id", document.opportunity_id)
     .eq("business_id", business.id)
     .maybeSingle();
@@ -105,6 +105,7 @@ async function loadSendContext(documentId: string) {
     { key: "workspace", label: "Apartenență validă la workspace", passed: Boolean(authorization.profileId && business.id) },
     { key: "scope", label: "Draft și oportunitate în workspace-ul curent", passed: document.business_id === business.id },
     { key: "relationships", label: "Relații oportunitate/contact valide", passed: relationshipValid },
+    { key: "outreach_allowed", label: "Fără restricție de dezabonare sau adresă respinsă", passed: !opportunity.outreach_restricted_at },
     { key: "recipient", label: "Adresă de email validă", passed: isValidRecipientEmail(recipient) },
     { key: "subject", label: "Subiect complet", passed: subject.length > 0 },
     { key: "body", label: "Mesaj complet", passed: body.length > 0 },

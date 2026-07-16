@@ -1,3 +1,5 @@
+import type { CommercialMilestone, CommercialResponseCategory, CommercialResponseChannel } from "@/lib/commercial-response";
+
 export type OpportunityType =
   | "public_procurement"
   | "b2b_lead"
@@ -165,6 +167,25 @@ export type OpportunityEvent = {
   metadata?: Record<string, unknown>;
 };
 
+export type CommercialResponse = {
+  id: string;
+  businessId: string;
+  opportunityId: string;
+  contactId?: string | null;
+  sourceDocumentId?: string | null;
+  category: CommercialResponseCategory;
+  channel: CommercialResponseChannel;
+  summary: string;
+  respondedAt: string;
+  nextActionType?: OpportunityActionType | null;
+  nextActionTitle?: string | null;
+  nextActionDueAt?: string | null;
+  milestone?: CommercialMilestone | null;
+  recordedBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CrmOrganization = {
   id: string;
   businessId: string;
@@ -237,6 +258,8 @@ export type Opportunity = {
   outcomeNote?: string | null;
   outcomeRecordedByProfileId?: string | null;
   outcomeRecordedAt?: string | null;
+  outreachRestrictedAt?: string | null;
+  outreachRestrictionReason?: "unsubscribe" | "bounced" | null;
   createdAt?: string;
   updatedAt?: string;
   source?: string;
@@ -264,6 +287,7 @@ export type Opportunity = {
   recommendedAction: string;
   rawSourceText: string;
   timeline: OpportunityEvent[];
+  responses?: CommercialResponse[];
   documents: OpportunityDocument[];
   actions: OpportunityAction[];
   contacts?: OpportunityContact[];

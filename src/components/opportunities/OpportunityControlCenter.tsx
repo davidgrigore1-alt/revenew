@@ -19,6 +19,7 @@ import {
   reopenOpportunity,
   updateOpportunityCommercialDetails
 } from "@/lib/revenue-workspace/actions";
+import { openOutcomeConfirmation } from "@/lib/commercial-response-actions";
 import type { Opportunity, OpportunityLifecycleStatus } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [outcomeStatus, setOutcomeStatus] = useState<OpportunityLifecycleStatus>("won");
+  const [pendingOutcome, setPendingOutcome] = useState<FormData | null>(null);
   const lifecycle = lifecycleForOpportunity(opportunity);
   const attention = assessOpportunityAttention(opportunity);
   const primaryContact = opportunity.contacts?.find((contact) => contact.isPrimary) ?? null;
@@ -52,6 +54,24 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
       setNotice("");
       setError(result.error ?? "Schimbarea nu a putut fi salvată.");
     }
+  }
+
+  function reviewOutcome(formData: FormData) {
+    startTransition(async () => {
+      const status = String(formData.get("lifecycleStatus")) as "won" | "lost";
+      const result = await openOutcomeConfirmation(opportunity.id, status);
+      if (!result.ok) handleResult(result, ""); else setPendingOutcome(formData);
+    });
+  }
+
+  function confirmOutcome() {
+    if (!pendingOutcome) return;
+    pendingOutcome.set("finalConfirmation", "true");
+    startTransition(async () => {
+      const result = await recordOpportunityOutcome(opportunity.id, pendingOutcome);
+      if (result.ok) setPendingOutcome(null);
+      handleResult(result, "Rezultatul comercial a fost confirmat.");
+    });
   }
 
   return (
@@ -127,13 +147,12 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
           </DataCard>
 
           <DataCard title="Înregistrează rezultatul" description="ReveNew păstrează rezultatul declarat de echipă; estimările nu devin automat venit.">
-            <form action={(formData) => startTransition(async () => handleResult(await recordOpportunityOutcome(opportunity.id, formData), "Rezultatul comercial a fost înregistrat."))} className="grid gap-3">
+            <form action={reviewOutcome} className="grid gap-3">
               <input type="hidden" name="expectedUpdatedAt" value={opportunity.updatedAt ?? ""} />
               <label className="grid gap-2 text-sm font-semibold">Rezultat
                 <select name="lifecycleStatus" value={outcomeStatus} onChange={(event) => setOutcomeStatus(event.target.value as OpportunityLifecycleStatus)} className={fieldClass}>
                   <option value="won">Câștigată / recuperată</option>
                   <option value="lost">Pierdută</option>
-                  <option value="disqualified">Descalificată</option>
                 </select>
               </label>
               <label className="grid gap-2 text-sm font-semibold">Motiv
@@ -151,7 +170,7 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
               </div>
               <label className="grid gap-2 text-sm font-semibold">Monedă<input name="currency" required maxLength={3} defaultValue={opportunity.currency ?? "RON"} className={fieldClass} /></label>
               <label className="grid gap-2 text-sm font-semibold">Notă opțională<textarea name="outcomeNote" rows={3} maxLength={1000} className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" /></label>
-              <Button type="submit" disabled={isPending}>{isPending ? "Se înregistrează..." : "Înregistrează rezultatul"}</Button>
+              <Button type="submit" disabled={isPending}>{isPending ? "Se verifică..." : "Verifică și confirmă rezultatul"}</Button>
             </form>
           </DataCard>
         </div>
@@ -163,6 +182,7 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
           </div>
         </DataCard>
       )}
+      {pendingOutcome ? <div role="dialog" aria-modal="true" aria-labelledby="outcome-confirmation-title" className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4"><div className="w-full max-w-lg rounded-xl border border-white/15 bg-[rgb(var(--background))] p-6 shadow-2xl"><h2 id="outcome-confirmation-title" className="text-xl font-semibold">Confirmare finală rezultat</h2><p className="mt-3 text-sm text-[rgb(var(--muted-foreground))]">Confirmă explicit rezultatul <strong>{String(pendingOutcome.get("lifecycleStatus")) === "won" ? "câștigat" : "pierdut"}</strong>. Emailul trimis, răspunsul, întâlnirea sau propunerea nu marchează automat această oportunitate ca fiind câștigată.</p>{String(pendingOutcome.get("lifecycleStatus")) === "won" ? <div className="mt-4 rounded-lg border border-emerald-400/25 bg-emerald-400/10 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em]">Venit recuperat confirmat</p><p className="mt-2 text-lg font-semibold">{String(pendingOutcome.get("actualOutcomeAmount"))} {String(pendingOutcome.get("currency"))}</p><p className="mt-1 text-xs">Separat de valoarea estimată a oportunității.</p></div> : <p className="mt-4 rounded-lg border border-amber-400/25 bg-amber-400/10 p-4 text-sm">Un rezultat pierdut nu înregistrează venit confirmat.</p>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="secondary" disabled={isPending} onClick={() => setPendingOutcome(null)}>Renunță</Button><Button disabled={isPending} onClick={confirmOutcome}>{isPending ? "Se confirmă..." : "Confirm explicit rezultatul"}</Button></div></div></div> : null}
     </div>
   );
 }

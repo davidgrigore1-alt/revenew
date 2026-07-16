@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { opportunities as demoOpportunities } from "@/lib/mock-data";
 import type {
+  CommercialResponse,
   CrmOrganization,
   Opportunity,
   OpportunityAction,
@@ -54,6 +55,8 @@ type OpportunityRow = {
   outcome_note?: string | null;
   outcome_recorded_by_profile_id?: string | null;
   outcome_recorded_at?: string | null;
+  outreach_restricted_at?: string | null;
+  outreach_restriction_reason?: "unsubscribe" | "bounced" | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -186,12 +189,28 @@ function mapOpportunityEvent(event: Record<string, unknown>): OpportunityEvent {
   };
 }
 
+function mapCommercialResponse(row: Record<string, unknown>): CommercialResponse {
+  return {
+    id: String(row.id), businessId: String(row.business_id), opportunityId: String(row.opportunity_id),
+    contactId: typeof row.contact_id === "string" ? row.contact_id : null,
+    sourceDocumentId: typeof row.source_document_id === "string" ? row.source_document_id : null,
+    category: row.response_category as CommercialResponse["category"], channel: row.channel as CommercialResponse["channel"],
+    summary: String(row.response_summary ?? ""), respondedAt: String(row.responded_at),
+    nextActionType: row.next_action_type as CommercialResponse["nextActionType"],
+    nextActionTitle: typeof row.next_action_title === "string" ? row.next_action_title : null,
+    nextActionDueAt: typeof row.next_action_due_at === "string" ? row.next_action_due_at : null,
+    milestone: row.milestone as CommercialResponse["milestone"], recordedBy: String(row.recorded_by),
+    createdAt: String(row.created_at), updatedAt: String(row.updated_at)
+  };
+}
+
 function mapOpportunity(
   row: OpportunityRow,
   actions: OpportunityAction[] = [],
   documents: OpportunityDocument[] = [],
   events: OpportunityEvent[] = [],
-  contacts: OpportunityContact[] = []
+  contacts: OpportunityContact[] = [],
+  responses: CommercialResponse[] = []
 ): Opportunity {
   const primaryContact = contacts.find((item) => item.isPrimary) ?? contacts[0];
   const legacyContact =
@@ -230,6 +249,8 @@ function mapOpportunity(
     outcomeNote: row.outcome_note ?? null,
     outcomeRecordedByProfileId: row.outcome_recorded_by_profile_id ?? null,
     outcomeRecordedAt: row.outcome_recorded_at ?? null,
+    outreachRestrictedAt: row.outreach_restricted_at ?? null,
+    outreachRestrictionReason: row.outreach_restriction_reason ?? null,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
     source: row.analysis_mode === "ai" ? "Supabase + AI" : "Supabase",
@@ -251,6 +272,7 @@ function mapOpportunity(
     recommendedAction: row.recommended_action ?? "",
     rawSourceText: row.raw_source_text ?? "",
     timeline: events,
+    responses,
     documents,
     actions,
     contacts
@@ -388,7 +410,8 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     { data: actions, error: actionsError },
     { data: documents, error: documentsError },
     { data: events, error: eventsError },
-    { data: contacts, error: contactsError }
+    { data: contacts, error: contactsError },
+    { data: responses, error: responsesError }
   ] = await Promise.all([
     supabase.from("opportunities").select("*").eq("id", id).eq("business_id", business.id).single(),
     supabase.from("opportunity_actions").select("*").eq("opportunity_id", id).order("created_at", { ascending: false }),
@@ -402,7 +425,8 @@ export async function getOpportunityForCurrentBusiness(id: string) {
       .eq("opportunity_id", id)
       .eq("business_id", business.id)
       .order("is_primary", { ascending: false })
-      .order("updated_at", { ascending: false })
+      .order("updated_at", { ascending: false }),
+    supabase.from("commercial_responses").select("*").eq("opportunity_id", id).eq("business_id", business.id).order("responded_at", { ascending: false })
   ]);
 
   if (opportunityError) {
@@ -427,6 +451,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
   if (contactsError && !isMissingRelationError(contactsError, "opportunity_contacts")) {
     throw new Error(`Opportunity contacts load error: ${contactsError.message}`);
   }
+  if (responsesError) throw new Error(`Commercial responses load error: ${responsesError.message}`);
 
   if (!opportunity) {
     return null;
@@ -451,6 +476,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
   const mappedEvents: OpportunityEvent[] = (events ?? []).map((event) => mapOpportunityEvent(event));
 
   const mappedContacts = contactsError ? [] : mapOpportunityContacts((contacts ?? []) as OpportunityContactRow[]);
+  const mappedResponses = (responses ?? []).map((response) => mapCommercialResponse(response as Record<string, unknown>));
 
-  return mapOpportunity(opportunity as OpportunityRow, mappedActions, mappedDocuments, mappedEvents, mappedContacts);
+  return mapOpportunity(opportunity as OpportunityRow, mappedActions, mappedDocuments, mappedEvents, mappedContacts, mappedResponses);
 }

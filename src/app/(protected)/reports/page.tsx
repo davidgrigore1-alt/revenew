@@ -17,6 +17,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
+import { getCommercialResponseSummary } from "@/lib/commercial-response-summary";
 
 type ReportAction = {
   id: string;
@@ -230,8 +231,8 @@ function CompactOpportunity({ opportunity }: { opportunity: Opportunity }) {
 export default async function ReportsPage() {
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunities = isSupabaseConfigured ? await getOpportunitiesForCurrentBusiness() : weeklyReport.topOpportunities;
-  const [workflow, inboxSummary, ingestionSummary, followUpSummary] = await Promise.all([
-    loadWorkflowData(opportunities), getCommercialInboxSummary(), getCommercialIngestionSummary(), getFollowUpWorkspaceSummary()
+  const [workflow, inboxSummary, ingestionSummary, followUpSummary, responseLoop] = await Promise.all([
+    loadWorkflowData(opportunities), getCommercialInboxSummary(), getCommercialIngestionSummary(), getFollowUpWorkspaceSummary(), getCommercialResponseSummary()
   ]);
   const reportGeneratedAt = new Date().toISOString();
   const today = new Date().toISOString().slice(0, 10);
@@ -336,6 +337,15 @@ export default async function ReportsPage() {
           <MetricCard label="Livrări reale confirmate" value={String(followUpSummary.realDeliveries)} detail="Confirmate de furnizorul live; nu reprezintă venit câștigat." tone="mint" />
           <MetricCard label="Încercări eșuate" value={String(followUpSummary.failedAttempts)} detail="Încercări fără confirmare de livrare." tone="gold" />
           <MetricCard label="Follow-up-uri scadente" value={String(followUpSummary.dueFollowUps)} detail="Acțiuni de follow-up deschise și ajunse la termen." />
+          <MetricCard label="Răspunsuri primite" value={String(responseLoop.responsesReceived)} detail="Răspunsuri comerciale înregistrate manual." tone="mint" />
+          <MetricCard label="Răspunsuri pozitive" value={String(responseLoop.positiveResponses)} detail="Interes pozitiv, întâlnire sau informații solicitate." tone="mint" />
+          <MetricCard label="Întâlniri" value={String(responseLoop.meetings)} detail="Solicitate sau programate explicit." />
+          <MetricCard label="Propuneri" value={String(responseLoop.proposals)} detail="Solicitate sau trimise explicit." />
+          <MetricCard label="În așteptarea răspunsului" value={String(responseLoop.awaitingResponse)} detail="Livrări live fără răspuns înregistrat." tone="gold" />
+          <MetricCard label="Fără răspuns" value={String(responseLoop.noResponse)} detail="Clasificări explicite fără răspuns." tone="gold" />
+          <MetricCard label="Câștigate / Pierdute" value={`${responseLoop.won} / ${responseLoop.lost}`} detail="Rezultate confirmate explicit." />
+          <MetricCard label="Venit recuperat confirmat" value={formatCurrency(responseLoop.confirmedRevenueRon, "RON")} detail="Valoare efectivă separată de estimări." tone="mint" />
+          <MetricCard label="Rată de răspuns" value={responseLoop.responseRate === null ? "Date insuficiente" : `${responseLoop.responseRate}%`} detail="Oportunități cu răspuns din cele clasificate." />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
           <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
         </div>

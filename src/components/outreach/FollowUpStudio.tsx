@@ -131,6 +131,7 @@ export function FollowUpStudio({ initialDraft, timeline, initialReadiness }: { i
         {status === "approved" && !localRevisionMismatch ? <button type="button" disabled={Boolean(busy)} onClick={() => save("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Pregătit pentru trimitere</button> : null}
         {["approved", "ready_to_send"].includes(status) && !readOnly ? <button type="button" disabled={Boolean(busy) || localRevisionMismatch} onClick={openConfirmation} className="rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-50">Verifică și confirmă trimiterea</button> : null}
         <button type="button" onClick={copy} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Copiază</button>
+        <Link href={`/opportunities/${initialDraft.opportunityId}#commercial-response-loop`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-200">Înregistrează răspuns</Link>
         {!readOnly ? <button type="button" disabled={Boolean(busy)} onClick={() => save("archived")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-400">Arhivează</button> : null}
       </div>
       <p className="text-xs leading-5 text-zinc-500">ReveNew nu trimite automat. Numai confirmarea finală inițiază o încercare server-side; modul test nu reprezintă livrare.</p>
