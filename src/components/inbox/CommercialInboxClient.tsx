@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-import { MetricCard } from "@/components/dashboard/MetricCard";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { Button } from "@/components/ui/Button";
 import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
@@ -362,6 +361,10 @@ export function CommercialInboxClient({
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
+      <ol className="grid overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
+        {[['01', 'Semnal primit', 'Date încă neaprobate'], ['02', 'Revizuire', 'Context și estimări verificate'], ['03', 'Decizie umană', 'Aprobă, amână sau ignoră'], ['04', 'Oportunitate', 'Ownership și acțiune următoare']].map(([number, title, copy], index) => <li key={number} className="relative border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><span className="text-xs font-semibold text-[rgb(var(--primary))]">{number}</span><strong className="mt-1 block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{copy}</span>{index < 3 ? <span className="absolute right-[-5px] top-1/2 z-10 hidden size-2.5 -translate-y-1/2 rotate-45 border-r border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:block" aria-hidden="true" /> : null}</li>)}
+      </ol>
+
       <DataSummaryStrip label="Rezumat Inbox Comercial" items={[
         { label: "În revizuire", value: awaitingReview.length, note: "Necesită decizia echipei.", tone: "warning" },
         { label: "Potențial estimat · RON", value: formatCurrency(estimatedUnderReview, "RON"), note: "Separat de venitul confirmat.", tone: "brand" },
@@ -459,11 +462,12 @@ export function CommercialInboxClient({
               </div>
 
               {selectedSignal.analysisStatus === "completed" ? (
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <MetricCard label="Scor recuperabilitate" value={`${selectedSignal.recoverabilityScore ?? 0}/100`} detail="Prioritate estimată; necesită revizuire." tone="gold" />
-                  <MetricCard label="Potențial estimat" value={formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency)} detail="Nu reprezintă venit garantat sau câștigat." />
-                  <MetricCard label="Încredere" value={selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută"} detail={selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare."} />
-                </div>
+                <DataSummaryStrip label="Interpretarea semnalului selectat" items={[
+                  { label: "Scor recuperabilitate", value: `${selectedSignal.recoverabilityScore ?? 0}/100`, note: "Prioritate estimată; necesită revizuire.", tone: "brand" },
+                  { label: "Potențial estimat", value: formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency), note: "Nu reprezintă venit confirmat.", tone: "neutral" },
+                  { label: "Încredere", value: selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută", note: selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare.", tone: "warning" },
+                  { label: "Decizie", value: "Umană", note: "Aprobarea creează oportunitatea; nu trimite mesaje.", tone: "success" }
+                ]} />
               ) : (
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}

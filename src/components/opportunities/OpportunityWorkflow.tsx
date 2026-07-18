@@ -129,15 +129,6 @@ export function OpportunityWorkflow({
       ? "Documentele sunt generate pe baza datelor oportunității și pot fi editate înainte de trimitere."
       : "Documentele sunt pregătite pe baza datelor oportunității și pot fi editate înainte de trimitere."
     : "Explorează workflow-ul comercial cu date demonstrative.";
-  const topDetails = useMemo(
-    () => [
-      ["Valoare estimată", `${formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - ${formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}`],
-      ["Deadline", formatDate(opportunity.deadline)],
-      ["Sursa", source],
-      ["Locație", `${opportunity.city}, ${opportunity.county}`]
-    ],
-    [opportunity, source]
-  );
 
   function restoreScrollPosition(top: number, left = 0) {
     requestAnimationFrame(() => {
@@ -509,55 +500,29 @@ export function OpportunityWorkflow({
           </StatusNotice>
         </div>
       ) : null}
-      <DataCard title="Ce vezi aici?">
-        <p className="text-sm leading-6 text-zinc-300">
-          Această pagină transformă un semnal comercial într-o oportunitate concretă. Vezi scorurile, riscurile,
-          următorul pas și poți genera documente sau acțiuni comerciale.
-        </p>
-      </DataCard>
+      <nav className="flex gap-2 overflow-x-auto rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-2" aria-label="Secțiuni oportunitate">
+        {[['#workflow-actions', 'Execuție'], ['#opportunity-contacts', 'Contacte'], ['#opportunity-timeline', 'Istoric'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+      </nav>
 
-      <div className="flex flex-wrap gap-2">
-        <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">
-          {getOpportunityTypeLabel(opportunity.type)}
-        </span>
+      <div className="flex flex-wrap items-center gap-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">Semnale de evaluare</span>
+        <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-semibold">{getOpportunityTypeLabel(opportunity.type)}</span>
         <StatusBadge status={status} />
         <ScoreBadge label="Fit" score={opportunity.fitScore} />
-        <ScoreBadge label="Urgenta" score={opportunity.urgencyScore} />
-        <ScoreBadge label="Bani" score={opportunity.moneyScore} />
-        <ScoreBadge label="Incredere" score={opportunity.confidenceScore} />
+        <ScoreBadge label="Urgență" score={opportunity.urgencyScore} />
+        <ScoreBadge label="Valoare" score={opportunity.moneyScore} />
+        <ScoreBadge label="Încredere" score={opportunity.confidenceScore} />
+        <span className="ml-auto text-xs text-[rgb(var(--text-muted))]">Scorurile susțin prioritizarea; nu confirmă venit.</span>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        <DataCard title="Detalii oportunitate">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            {topDetails.map(([label, value]) => (
-              <div key={label}>
-                <dt className="text-xs uppercase tracking-[0.14em] text-zinc-500">{label}</dt>
-                <dd className="mt-1 font-semibold text-white">{value}</dd>
-              </div>
-            ))}
-            <div className="sm:col-span-2">
-              <dt className="text-xs uppercase tracking-[0.14em] text-zinc-500">Contact</dt>
-              <dd className="mt-1 font-semibold text-white">
-                {opportunity.contact
-                  ? `${opportunity.contact.name}, ${opportunity.contact.role}, ${opportunity.contact.company}`
-                  : "Contact neconfirmat"}
-              </dd>
-              {opportunity.contact?.email ? <p className="mt-1 text-sm text-zinc-400">{opportunity.contact.email}</p> : null}
-              {opportunity.contact?.phone ? <p className="text-sm text-zinc-400">{opportunity.contact.phone}</p> : null}
-            </div>
-          </dl>
-        </DataCard>
-
+      <div id="workflow-actions" className="scroll-mt-24">
         <DataCard title="Proces comercial" description={workflowDescription}>
-          <p className="mb-4 text-sm leading-6 text-zinc-400">
-            Alege următorul pas comercial, apoi revizuiește documentul înainte de a-l folosi.
-          </p>
+          <p className="mb-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Alege un rezultat concret, pregătește documentul și revizuiește-l înainte de orice utilizare externă.</p>
           <div className="grid gap-4">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Comunicare</p>
             <div className="flex items-center gap-2">
-              <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg bg-mint-500 px-4 py-3 text-sm font-semibold text-ink-950 hover:bg-mint-400 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("outreach_email", "Email outreach", generateOutreachEmail(opportunity, business))}>
+              <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button bg-[rgb(var(--primary))] px-4 py-3 text-sm font-semibold text-[rgb(var(--primary-foreground))] hover:bg-[rgb(var(--primary-hover))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("outreach_email", "Email outreach", generateOutreachEmail(opportunity, business))}>
                 {loading === "outreach_email" ? "Se pregătește documentul..." : "Generează email outreach"}
               </button>
             </div>
@@ -624,13 +589,13 @@ export function OpportunityWorkflow({
         </DataCard>
       </div>
 
-      <OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} />
+      <div id="opportunity-contacts" className="scroll-mt-24"><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <DataCard title="Sumar tip AI">
+        <DataCard title="Rezumat de lucru">
           <p className="text-sm leading-6 text-zinc-300">{opportunity.summary}</p>
         </DataCard>
-        <DataCard title="De ce conteaza">
+        <DataCard title="De ce contează">
           <ul className="space-y-3 text-sm leading-6 text-zinc-300">
             {opportunity.relevance.map((item, index) => (
               <li key={`${index}-${item}`}>{item}</li>
@@ -646,7 +611,7 @@ export function OpportunityWorkflow({
         </DataCard>
       </div>
 
-        <DataCard title="Acțiuni programate">
+        <div id="workflow-actions-list" className="scroll-mt-24"><DataCard title="Acțiuni programate">
         <div className="mb-4">
           <button
             type="button"
@@ -710,7 +675,7 @@ export function OpportunityWorkflow({
         ) : (
           <EmptyState title="Nu există acțiuni programate" description="Programează un follow-up sau marchează oportunitatea ca contactată." />
         )}
-      </DataCard>
+      </DataCard></div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <DataCard title="Text sursă brut">
@@ -718,7 +683,7 @@ export function OpportunityWorkflow({
             {opportunity.rawSourceText}
           </p>
         </DataCard>
-        <DataCard title="Istoric și acțiuni">
+        <div id="opportunity-timeline" className="scroll-mt-24"><DataCard title="Istoric și acțiuni">
           <div className="space-y-4">
             {opportunity.timeline.length > 0 ? (
               opportunity.timeline.map((event) => (
@@ -744,10 +709,10 @@ export function OpportunityWorkflow({
               </div>
             ) : null}
           </div>
-        </DataCard>
+        </DataCard></div>
       </div>
 
-      <div ref={documentsSectionRef}>
+      <div id="opportunity-documents" ref={documentsSectionRef} className="scroll-mt-24">
       <DataCard
         title="Documente generate"
         description={

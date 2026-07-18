@@ -42,9 +42,9 @@ export default async function SignupPage({ searchParams }: { searchParams?: { in
     <AuthCardShell
       eyebrow="CONT NOU"
       title="Creează contul ReveNew"
-      description="Începi cu datele tale de contact. După confirmarea emailului, configurăm firma și contextul comercial."
+      description="Acesta este primul pas. După confirmarea emailului vei configura firma, contextul comercial și primul flux de lucru."
       accent="gold"
-      trustLine="Contul personal nu creează automat o firmă și nu acordă roluri de administrare."
+      trustLine="Crearea contului nu configurează automat firma și nu pornește acțiuni comerciale în numele tău."
       footerPrompt="Ai deja cont?"
       footerHref={authPath("/login", "login")}
       footerLabel="Intră aici"

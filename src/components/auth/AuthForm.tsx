@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { authIntentQuery, sanitizeAuthIntent, type AuthIntent } from "@/lib/auth/redirects";
@@ -44,7 +46,7 @@ function ErrorSummary({ errors }: { errors: FieldErrors<SignupField> }) {
   if (!entries.length) return null;
 
   return (
-    <div className="mt-5 rounded-lg border border-red-400/30 bg-red-950/30 p-4 text-sm text-red-100" role="alert" tabIndex={-1}>
+    <div className="mt-5 rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]" role="alert" tabIndex={-1}>
       <p className="font-semibold">Verifică aceste câmpuri:</p>
       <ul className="mt-2 grid gap-1">
         {entries.map(([field, message]) => (
@@ -58,7 +60,7 @@ function ErrorSummary({ errors }: { errors: FieldErrors<SignupField> }) {
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) {
-  return message ? <p id={id} className="mt-2 text-sm text-red-300">{message}</p> : null;
+  return message ? <p id={id} className="mt-2 text-sm text-[rgb(var(--danger-text))]">{message}</p> : null;
 }
 
 export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
@@ -209,12 +211,12 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         <ErrorSummary errors={errors} />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4" noValidate>
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
         {isSignup ? (
           <>
             <label className="block">
-              <span className="text-sm font-medium text-zinc-300">Nume complet</span>
-              <input
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Nume complet</span>
+              <Input
                 id="fullName"
                 required
                 name="fullName"
@@ -223,20 +225,21 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
                 aria-invalid={Boolean(errors.fullName)}
                 aria-describedby={errors.fullName ? "fullName-error" : undefined}
                 placeholder="Nume Prenume"
-                className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+                invalid={Boolean(errors.fullName)}
+                className="mt-2 min-h-11"
               />
               <FieldError id="fullName-error" message={errors.fullName} />
             </label>
             <div className="grid gap-3 sm:grid-cols-[0.95fr_1.05fr]">
               <label className="block">
-                <span className="text-sm font-medium text-zinc-300">Țara numărului</span>
-                <select id="phoneCountry" name="phoneCountry" defaultValue="RO" autoComplete="country" className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-3 text-white outline-none transition focus:border-mint-400/60">
+                <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara numărului</span>
+                <Select id="phoneCountry" name="phoneCountry" defaultValue="RO" autoComplete="country" className="mt-2 min-h-11">
                   {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label} {country.callingCode}</option>)}
-                </select>
+                </Select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-zinc-300">Telefon de contact</span>
-                <input
+                <span className="text-sm font-medium text-[rgb(var(--foreground))]">Telefon de contact</span>
+                <Input
                   id="phone"
                   required
                   name="phone"
@@ -245,9 +248,10 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
                   aria-invalid={Boolean(errors.phone)}
                   aria-describedby={errors.phone ? "phone-error" : "phone-help"}
                   placeholder="+40 721 000 000"
-                  className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+                  invalid={Boolean(errors.phone)}
+                  className="mt-2 min-h-11"
                 />
-                <p id="phone-help" className="mt-2 text-xs text-zinc-500">Validăm formatul numărului, nu proprietarul lui.</p>
+                <p id="phone-help" className="mt-2 text-xs text-[rgb(var(--text-muted))]">Validăm formatul numărului, nu proprietarul lui.</p>
                 <FieldError id="phone-error" message={errors.phone} />
               </label>
             </div>
@@ -255,8 +259,8 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         ) : null}
 
         <label className="block">
-          <span className="text-sm font-medium text-zinc-300">Email</span>
-          <input
+          <span className="text-sm font-medium text-[rgb(var(--foreground))]">Email</span>
+          <Input
             id="email"
             required
             name="email"
@@ -265,26 +269,27 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
             placeholder="nume@firma.ro"
-            className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+            invalid={Boolean(errors.email)}
+            className="mt-2 min-h-11"
           />
           <FieldError id="email-error" message={errors.email} />
         </label>
 
         <PasswordField name="password" label="Parolă" autoComplete={isSignup ? "new-password" : "current-password"} />
-        {errors.password ? <p id="password-error" className="text-sm text-red-300">{errors.password}</p> : null}
+        {errors.password ? <p id="password-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.password}</p> : null}
 
         {isSignup ? (
           <>
-            <p className="text-xs leading-5 text-zinc-500">Parola trebuie să respecte politica Supabase configurată pentru proiect. Folosește cel puțin 8 caractere.</p>
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Folosește cel puțin 8 caractere și evită parolele utilizate în alte servicii.</p>
             <PasswordField name="confirmPassword" label="Confirmă parola" autoComplete="new-password" placeholder="Repetă parola" />
-            {errors.confirmPassword ? <p id="confirmPassword-error" className="text-sm text-red-300">{errors.confirmPassword}</p> : null}
-            <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm leading-6 text-zinc-300">
-              <input id="acceptedTerms" required name="acceptedTerms" type="checkbox" aria-invalid={Boolean(errors.acceptedTerms)} aria-describedby={errors.acceptedTerms ? "acceptedTerms-error" : undefined} className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent accent-mint-400" />
+            {errors.confirmPassword ? <p id="confirmPassword-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.confirmPassword}</p> : null}
+            <label className="flex items-start gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] p-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
+              <input id="acceptedTerms" required name="acceptedTerms" type="checkbox" aria-invalid={Boolean(errors.acceptedTerms)} aria-describedby={errors.acceptedTerms ? "acceptedTerms-error" : undefined} className="mt-1 h-4 w-4 rounded border-[rgb(var(--border-strong))] bg-transparent accent-[rgb(var(--primary))]" />
               <span>
                 Accept{" "}
-                <Link href="/terms" className="font-semibold text-mint-300 hover:text-mint-200">Termenii</Link>{" "}
+                <Link href="/terms" className="font-semibold text-[rgb(var(--primary))] hover:underline">Termenii</Link>{" "}
                 și{" "}
-                <Link href="/privacy" className="font-semibold text-mint-300 hover:text-mint-200">Politica de confidențialitate</Link>
+                <Link href="/privacy" className="font-semibold text-[rgb(var(--primary))] hover:underline">Politica de confidențialitate</Link>
               </span>
             </label>
             <FieldError id="acceptedTerms-error" message={errors.acceptedTerms} />
@@ -293,7 +298,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
 
         {!isSignup ? (
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="focus-ring rounded px-1 text-sm font-semibold text-mint-300 hover:text-mint-200">Ai uitat parola?</Link>
+            <Link href="/forgot-password" className="focus-ring rounded px-1 text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Ai uitat parola?</Link>
           </div>
         ) : null}
 

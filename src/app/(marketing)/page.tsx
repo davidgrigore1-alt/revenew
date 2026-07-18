@@ -309,7 +309,7 @@ export default function LandingPage() {
                     <ul className="mt-5 grid gap-2.5 text-sm text-[rgb(var(--text-secondary))]">
                       {plan.items.slice(0, 6).map((item) => <li key={item} className="flex gap-2.5"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}
                     </ul>
-                    <div className="mt-auto pt-5"><Button href={authPath("/signup", audit ? "audit" : "select_plan")} variant={featured ? "primary" : "secondary"} className="group w-full">{custom ? "Solicită o discuție" : plan.cta}<ArrowUpRightIcon className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" /></Button></div>
+                    <div className="mt-auto pt-6"><Button href={authPath("/signup", audit ? "audit" : "select_plan")} variant={featured ? "primary" : "secondary"} className="group w-full">{custom ? "Solicită o discuție" : plan.cta}<ArrowUpRightIcon className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" /></Button></div>
                   </div>
                 </article>
               </Reveal>

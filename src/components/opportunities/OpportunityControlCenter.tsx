@@ -76,56 +76,45 @@ export function OpportunityControlCenter({ opportunity, assignableProfiles }: { 
 
   return (
     <div className="grid gap-6">
-      <DataCard title="Control comercial" description="Situația operațională și motivele care cer intervenție.">
-        <div className="grid gap-4">
-          {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
-          {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
-          <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              ["Etapă pipeline", stageLabels[stageForLegacyStatus(opportunity.status)]],
-              ["Ciclu de viață", lifecycleLabels[lifecycle]],
-              ["Responsabil", ownerName ?? "Neatribuit"],
-              ["Tip comercial", commercialTypeLabels[commercialTypeForOpportunity(opportunity)]],
-              ["Valoare recuperabilă estimată", formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")],
-              ["Atenție", attentionLabels[attention.state]],
-              ["Contact principal", primaryContact?.contact.fullName ?? "Lipsește"],
-              ["Decident", decisionMaker?.contact.fullName ?? "Neconfirmat"]
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-3">
-                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">{label}</dt>
-                <dd className="mt-2 text-sm font-semibold text-[rgb(var(--foreground))]">{value}</dd>
+      <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="execution-brief-title">
+        <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.65fr)]">
+          <div className="border-b border-[rgb(var(--border))] p-5 sm:p-6 xl:border-b-0 xl:border-r xl:p-8">
+            {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
+            {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
+            <div className={notice || error ? "mt-6" : ""}>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold">{stageLabels[stageForLegacyStatus(opportunity.status)]}</span>
+                <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-3 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
+                <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
               </div>
-            ))}
-          </dl>
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.15em] text-[rgb(var(--primary))]">Acțiunea care deblochează progresul</p>
+              <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{attention.primaryNextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{attention.primaryNextAction?.dueDate ? `Termen: ${formatDate(attention.primaryNextAction.dueDate)}. Verifică responsabilul și contextul înainte de execuție.` : "O oportunitate fără acțiune și termen nu poate fi urmărită operațional. Completează pasul următor înainte de follow-up."}</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button href="#workflow-actions">{attention.primaryNextAction ? "Continuă acțiunea" : "Programează acțiunea"}</Button>
+                <Button href="#opportunity-timeline" variant="secondary">Vezi istoricul</Button>
+              </div>
+              <p className="mt-4 text-xs text-[rgb(var(--text-muted))]">Aprobarea umană rămâne obligatorie pentru orice comunicare externă sau rezultat comercial.</p>
+            </div>
 
-          {attention.reasons.length > 0 ? (
-            <div aria-label="Motive de atenție" className="flex flex-wrap gap-2">
-              {attention.reasons.map((reason) => (
-                <span key={reason.code} title={reason.explanation} className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">
-                  {reason.label}
-                </span>
-              ))}
-            </div>
-          ) : <StatusNotice tone="success">Nu există excepții operaționale determinate din datele disponibile.</StatusNotice>}
-
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg bg-[rgb(var(--surface-elevated))] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">Următoarea acțiune</p>
-              <p className="mt-2 text-sm font-semibold">{attention.primaryNextAction?.title ?? "Nicio acțiune programată"}</p>
-              <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{attention.primaryNextAction?.dueDate ? formatDate(attention.primaryNextAction.dueDate) : "Fără termen"}</p>
-            </div>
-            <div className="rounded-lg bg-[rgb(var(--surface-elevated))] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">Ultima activitate</p>
-              <p className="mt-2 text-sm font-semibold">{attention.lastMeaningfulActivityAt ? formatDate(attention.lastMeaningfulActivityAt) : "Date insuficiente"}</p>
-            </div>
-            <div className="rounded-lg bg-[rgb(var(--surface-elevated))] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">Valoare efectivă</p>
-              <p className="mt-2 text-sm font-semibold">{opportunity.actualOutcomeAmount == null ? "Neînregistrată" : formatCurrency(opportunity.actualOutcomeAmount, opportunity.currency ?? "RON")}</p>
-              <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">Separată de estimare</p>
+            <div className="mt-8 border-t border-[rgb(var(--border))] pt-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--text-muted))]">Blocaje și excepții</p>
+              {attention.reasons.length > 0 ? <div aria-label="Motive de atenție" className="mt-3 grid gap-2 sm:grid-cols-2">{attention.reasons.map((reason) => <div key={reason.code} className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3"><p className="text-sm font-semibold text-[rgb(var(--warning-text))]">{reason.label}</p><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{reason.explanation}</p></div>)}</div> : <StatusNotice tone="success">Nu există excepții operaționale determinate din datele disponibile.</StatusNotice>}
             </div>
           </div>
+
+          <aside className="bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 xl:p-8" aria-label="Fapte comerciale">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Fapte comerciale</p>
+            <dl className="mt-5 grid gap-5">
+              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Valoare estimată, nu confirmată</dt><dd className="mt-1 text-2xl font-semibold tracking-tight">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
+              <div className="grid grid-cols-2 gap-4 border-y border-[rgb(var(--border))] py-5"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 text-sm font-semibold">{ownerName ?? "Neatribuit"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ciclu de viață</dt><dd className="mt-1 text-sm font-semibold">{lifecycleLabels[lifecycle]}</dd></div></div>
+              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 text-sm font-semibold">{primaryContact?.contact.fullName ?? "Lipsește"}</dd>{primaryContact?.contact.email ? <p className="mt-1 break-all text-xs text-[rgb(var(--text-muted))]">{primaryContact.contact.email}</p> : null}</div>
+              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Decident</dt><dd className="mt-1 text-sm font-semibold">{decisionMaker?.contact.fullName ?? "Neconfirmat"}</dd></div>
+              <div className="grid grid-cols-2 gap-4 border-t border-[rgb(var(--border))] pt-5"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ultima activitate</dt><dd className="mt-1 text-sm font-semibold">{attention.lastMeaningfulActivityAt ? formatDate(attention.lastMeaningfulActivityAt) : "Date insuficiente"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Valoare efectivă</dt><dd className="mt-1 text-sm font-semibold">{opportunity.actualOutcomeAmount == null ? "Neînregistrată" : formatCurrency(opportunity.actualOutcomeAmount, opportunity.currency ?? "RON")}</dd></div></div>
+            </dl>
+          </aside>
         </div>
-      </DataCard>
+      </section>
 
       {lifecycle === "open" ? (
         <div className="grid gap-6 xl:grid-cols-2">

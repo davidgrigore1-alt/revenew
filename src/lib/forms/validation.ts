@@ -24,10 +24,25 @@ export const countryCodes = canonicalCountryCodes;
 
 export const industryOptions = [
   "Auto și mobilitate",
-  "Construcții și servicii tehnice",
-  "Logistică și servicii operaționale",
-  "Servicii profesionale și agenții",
-  "Servicii B2B",
+  "Construcții și infrastructură",
+  "Imobiliare și property management",
+  "Logistică și transport",
+  "Servicii medicale și clinici",
+  "Servicii profesionale și consultanță",
+  "IT și software",
+  "SaaS / tehnologie B2B",
+  "Producție industrială",
+  "Distribuție și wholesale",
+  "Retail B2B",
+  "HoReCa și hospitality",
+  "Educație și training",
+  "Energie și utilități",
+  "Financiar / contabilitate / asigurări",
+  "Legal și servicii juridice",
+  "Marketing și agenții",
+  "Facility management",
+  "Telecomunicații",
+  "Agricultură și supply chain",
   "Alt domeniu"
 ] as const;
 

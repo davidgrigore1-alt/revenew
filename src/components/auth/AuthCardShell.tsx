@@ -24,28 +24,43 @@ export function AuthCardShell({
   footerLabel,
   trustLine
 }: AuthCardShellProps) {
-  const accentClass = accent === "gold" ? "text-gold-400" : "text-mint-400";
+  const accentClass = accent === "gold" ? "text-[rgb(var(--primary))]" : "text-[rgb(var(--primary))]";
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_top,rgba(78,201,176,0.08),transparent_34%),rgb(var(--background))] px-4 py-10">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-ink-900/95 p-6 shadow-premium backdrop-blur">
-        <Logo />
-        <div className="mt-8">
-          <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${accentClass}`}>{eyebrow}</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">{title}</h1>
-          <p className="mt-3 text-sm leading-6 text-zinc-400">{description}</p>
+    <main className="min-h-screen bg-[rgb(var(--background))] px-4 py-4 text-[rgb(var(--foreground))] sm:px-6 sm:py-6 lg:grid lg:place-items-center lg:px-10">
+      <section className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-premium lg:min-h-[720px] lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.78fr)]">
+        <aside className="relative hidden overflow-hidden border-r border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgb(var(--primary)/0.16),transparent_34%),linear-gradient(145deg,transparent_45%,rgb(var(--primary)/0.06))]" />
+          <div className="relative">
+            <Logo />
+            <p className="mt-16 max-w-md font-display text-4xl font-semibold leading-[1.08] tracking-[-0.035em] text-[rgb(var(--foreground))] xl:text-5xl">Claritate comercială, înainte de orice acțiune.</p>
+            <p className="mt-6 max-w-md text-base leading-7 text-[rgb(var(--text-muted))]">ReveNew transformă semnalele comerciale în oportunități urmărite, cu responsabil, termen și decizie umană.</p>
+          </div>
+          <div className="relative grid gap-3" aria-label="Principii de încredere ReveNew">
+            {["Control uman la fiecare decizie", "Date izolate pe spațiu de lucru", "Fără outreach automat"].map((item) => (
+              <div key={item} className="flex items-center gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.72)] px-4 py-3 text-sm text-[rgb(var(--text-muted))] backdrop-blur">
+                <span className="grid size-6 place-items-center rounded-full bg-[rgb(var(--primary)/0.12)] text-[rgb(var(--primary))]" aria-hidden="true">✓</span>
+                {item}
+              </div>
+            ))}
+          </div>
+        </aside>
+        <div className="flex min-w-0 items-center px-5 py-8 sm:px-10 lg:px-12 xl:px-16">
+          <div className="mx-auto w-full max-w-[500px]">
+            <div className="lg:hidden"><Logo /></div>
+            <div className="mt-10 lg:mt-0">
+              <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${accentClass}`}>{eyebrow}</p>
+              <h1 className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-[rgb(var(--foreground))] sm:text-4xl">{title}</h1>
+              <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p>
+            </div>
+            {children}
+            {trustLine ? <p className="mt-5 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] px-3 py-2.5 text-xs leading-5 text-[rgb(var(--text-muted))]">{trustLine}</p> : null}
+            <p className="mt-6 border-t border-[rgb(var(--border))] pt-5 text-center text-sm text-[rgb(var(--text-muted))]">
+              {footerPrompt}{" "}
+              <Link href={footerHref} className="focus-ring rounded-sm font-semibold text-[rgb(var(--primary))] hover:underline hover:underline-offset-4">{footerLabel}</Link>
+            </p>
+          </div>
         </div>
-
-        {children}
-
-        {trustLine ? <p className="mt-5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-5 text-zinc-400">{trustLine}</p> : null}
-
-        <p className="mt-6 border-t border-white/10 pt-5 text-center text-sm text-zinc-400">
-          {footerPrompt}{" "}
-          <Link href={footerHref} className="font-semibold text-mint-400 hover:text-mint-300">
-            {footerLabel}
-          </Link>
-        </p>
       </section>
     </main>
   );

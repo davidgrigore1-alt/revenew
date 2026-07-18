@@ -354,12 +354,13 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-5">
-        <div><h2 className="text-lg font-semibold text-white">Cum vrei să aduci primele date?</h2><p className="mt-1 text-sm text-zinc-400">Mai întâi configurăm workspace-ul. După acest pas poți crea manual sau importa date reale.</p></div>
+      <section className="grid gap-5 overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[linear-gradient(135deg,rgb(var(--surface-subtle)),rgb(var(--surface)))] p-5 shadow-sm sm:p-6">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Metoda de pornire</p><h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Cum construim primul context comercial?</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Configurează manual sau importă datele existente. În ambele variante, echipa verifică informația înainte ca aceasta să devină oportunitate.</p></div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => setEntryMode("manual")} className={`focus-ring rounded-lg border p-4 text-left ${entryMode === "manual" ? "border-mint-400/60 bg-mint-400/10" : "border-white/10"}`}><span className="block font-semibold text-white">Configurez manual</span><span className="mt-1 block text-sm text-zinc-400">Creezi prima companie, contactul și oportunitatea pas cu pas.</span></button>
-          <button type="button" onClick={() => setEntryMode("import")} className={`focus-ring rounded-lg border p-4 text-left ${entryMode === "import" ? "border-mint-400/60 bg-mint-400/10" : "border-white/10"}`}><span className="block font-semibold text-white">Import date</span><span className="mt-1 block text-sm text-zinc-400">După workspace, continui în importul CSV controlat.</span></button>
+          <button type="button" onClick={() => setEntryMode("manual")} aria-pressed={entryMode === "manual"} className={`focus-ring rounded-control border p-4 text-left transition ${entryMode === "manual" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Configurez manual</span><span className="mt-1 block text-sm leading-6 text-[rgb(var(--text-muted))]">Adaug prima companie, contactul principal și o oportunitate urmărită.</span></button>
+          <button type="button" onClick={() => setEntryMode("import")} aria-pressed={entryMode === "import"} className={`focus-ring rounded-control border p-4 text-left transition ${entryMode === "import" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Import controlat</span><span className="mt-1 block text-sm leading-6 text-[rgb(var(--text-muted))]">Încarc date existente prin CSV și le verific înainte de transformarea în oportunități.</span></button>
         </div>
+        <p className="flex items-center gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><span className="text-[rgb(var(--primary))]" aria-hidden="true">✓</span> Importul nu trimite mesaje și nu pornește outreach extern. Tu păstrezi controlul.</p>
         {resumed ? <p className="text-sm font-semibold text-mint-300" role="status">Continui configurarea existentă. Ultimul pas salvat și datele valide au fost restaurate.</p> : null}
       </section>
       <nav aria-label="Pași onboarding" className="grid gap-2 sm:grid-cols-4">
@@ -368,11 +369,11 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             key={label}
             type="button"
             onClick={() => index <= step && setStep(index)}
-            className={`focus-ring rounded-lg border px-3 py-3 text-left text-sm font-semibold transition ${
-              index === step ? "border-mint-400/50 bg-mint-400/[0.08] text-white" : "border-white/10 bg-white/[0.04] text-zinc-400"
+            className={`focus-ring min-h-16 rounded-control border px-3 py-3 text-left text-sm font-semibold transition ${
+              index === step ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] text-[rgb(var(--foreground))]" : index < step ? "border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--foreground))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-muted))]"
             }`}
           >
-            <span className="block text-xs text-mint-300">{index + 1}.</span>
+            <span className="block text-xs text-[rgb(var(--primary))]">Pasul {index + 1}</span>
             {label}
           </button>
         ))}
@@ -382,11 +383,14 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
         <ErrorSummary errors={errors} />
       </div>
 
-      <section className="rounded-xl border border-white/10 bg-white/[0.045] p-5">
-        <h2 className="text-lg font-semibold text-white">{steps[step]}</h2>
+      <section className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-2 border-b border-[rgb(var(--border))] pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Pasul {step + 1} din {steps.length}</p><h2 className="mt-1 font-display text-2xl font-semibold text-[rgb(var(--foreground))]">{steps[step]}</h2></div>
+          <p className="max-w-md text-sm leading-6 text-[rgb(var(--text-muted))]">{step === 0 ? "Definește identitatea și datele de contact ale firmei." : step === 1 ? "Ajută ReveNew să interpreteze valoarea și relevanța comercială." : step === 2 ? "Stabilește unde apar semnalele și ce probleme urmărești." : "Verifică informația înainte de crearea spațiului de lucru."}</p>
+        </div>
 
         {step === 0 ? (
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Field required label="Numele firmei" name="businessName" value={draft.businessName} onChange={updateField} error={errors.businessName} placeholder="Auto Management SRL" autoComplete="organization" />
             <label className="block">
               <span className="text-sm font-medium text-zinc-300">Domeniul de activitate</span>
@@ -396,7 +400,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               </select>
               {errors.industry ? <p className="mt-2 text-sm text-red-300">{errors.industry}</p> : null}
             </label>
-            {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : null}
+            {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" />}
             <label className="block">
               <span className="text-sm font-medium text-zinc-300">Țara</span>
               <select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
@@ -421,7 +425,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               </label>
               <Field required label="Telefonul firmei" name="companyPhone" value={draft.companyPhone} onChange={updateField} error={errors.companyPhone} placeholder="+40 721 000 000" type="tel" autoComplete="tel" />
             </div>
-            <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" />
+            {draft.industry === "Alt domeniu" ? <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" /> : null}
             {draft.countryCode === "RO" ? <Field label="CUI" name="cui" value={draft.cui} onChange={updateField} error={errors.cui} placeholder="RO12345678" /> : null}
             <Field label="Website" name="website" value={draft.website} onChange={updateField} error={errors.website} placeholder="firma.ro" autoComplete="url" />
             <Field label="Cod poștal" name="postalCode" value={draft.postalCode} onChange={updateField} placeholder="077190" autoComplete="postal-code" />
@@ -487,7 +491,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
 
         {step === 3 ? (
           <div className="mt-5 grid gap-4 text-sm leading-6 text-zinc-300">
-            <p className="rounded-lg border border-mint-400/20 bg-mint-400/[0.06] p-4 text-zinc-300">După creare vei continua în workspace. Poți importa date în Inbox Comercial, iar fiecare semnal rămâne sub controlul echipei înainte de conversie sau contact extern.</p>
+            <p className="rounded-control border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--primary)/0.08)] p-4 text-[rgb(var(--text-muted))]">După creare vei continua în spațiul de lucru. Poți importa date în Inbox Comercial, iar fiecare semnal rămâne sub controlul echipei înainte de conversie sau contact extern.</p>
             {[
               ["Firmă", `${draft.businessName} · ${draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry}`],
               ["Localizare", `${draft.countryCode}, ${administrativeAreaDisplayName(draft.countryCode, draft.administrativeArea) || "fără regiune"}, ${draft.city}`],
@@ -521,9 +525,10 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
           </Button>
         ) : (
           <Button type="button" onClick={submit} disabled={loading || !canReview}>
-            {loading ? "Se creează..." : "Creează spațiul firmei"}
+            {loading ? "Se creează..." : "Creează spațiul de lucru"}
           </Button>
         )}
+        {step === steps.length - 1 ? <p className="text-xs text-[rgb(var(--text-muted))]">Poți modifica aceste date ulterior din Setări.</p> : null}
         {serverError ? <p className="text-sm text-red-300">{serverError}</p> : null}
       </div>
     </div>

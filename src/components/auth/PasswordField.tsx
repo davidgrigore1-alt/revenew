@@ -14,8 +14,8 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
 
   return (
     <label className="block">
-      <span className="text-sm font-medium text-zinc-300">{label}</span>
-      <span className="mt-2 flex h-12 items-center rounded-lg border border-white/10 bg-white/[0.06] transition focus-within:border-mint-400/60">
+      <span className="text-sm font-medium text-[rgb(var(--foreground))]">{label}</span>
+      <span className="focus-within:focus-ring mt-2 flex min-h-11 items-center rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]">
         <input
           id={name}
           required
@@ -24,12 +24,12 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
           type={visible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="h-full min-w-0 flex-1 bg-transparent px-4 text-white outline-none placeholder:text-zinc-600"
+          className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[rgb(var(--foreground))] outline-none placeholder:text-[rgb(var(--text-faint))]"
         />
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="focus-ring mr-2 rounded-md px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          className="focus-ring mr-1 min-h-9 rounded-control px-3 py-1.5 text-xs font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]"
           aria-pressed={visible}
         >
           {visible ? "Ascunde" : "Arată"}

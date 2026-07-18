@@ -2,6 +2,7 @@ import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { OpportunitiesExplorer } from "@/components/opportunities/OpportunitiesExplorer";
 import { Button } from "@/components/ui/Button";
+import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { OpportunityFilters, type OpportunityFilterState } from "@/components/filters/OpportunityFilters";
@@ -45,19 +46,28 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   const opportunities = filtered.slice((page - 1) * pageSize, page * pageSize);
   const firstOpportunityCta = isSupabaseConfigured && allOpportunities.length === 0;
   const currentQuery = new URLSearchParams(Object.entries(searchParams).filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1]))).toString();
+  const attentionCount = allOpportunities.filter((opportunity) => !["on_track", "closed"].includes(assessOpportunityAttention(opportunity).state)).length;
+  const missingOwnerCount = allOpportunities.filter((opportunity) => !opportunity.ownerProfileId).length;
+  const dueCount = allOpportunities.filter((opportunity) => opportunity.actions.some((action) => action.status === "pending" && action.dueDate && action.dueDate.slice(0, 10) <= today)).length;
 
   return (
     <PageShell
       eyebrow="Oportunități"
-      title="Oportunități detectate"
-      description={`Filtrează semnalele B2B, granturile, contractele si follow-up-urile care pot aduce venit pentru ${business?.name ?? "firma ta"}.`}
+      title="Oportunități comerciale"
+      description={`Cazuri aprobate și accesibile echipei ${business?.name ?? "firmei tale"}, pregătite pentru ownership, următoarea acțiune și decizie.`}
       actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
+        <DataSummaryStrip label="Rezumat oportunități" items={[
+          { label: "Accesibile", value: allOpportunities.length, note: "Oportunități aprobate în spațiul de lucru", tone: "brand" },
+          { label: "Necesită atenție", value: attentionCount, note: "Cu risc, blocaj sau context incomplet", tone: attentionCount ? "warning" : "neutral" },
+          { label: "Fără responsabil", value: missingOwnerCount, note: "Ownership-ul trebuie clarificat", tone: missingOwnerCount ? "danger" : "neutral" },
+          { label: "Scadente / restante", value: dueCount, note: "Cu acțiune pending până astăzi", tone: dueCount ? "warning" : "neutral" }
+        ]} />
         <OpportunityFilters filters={searchParams} />
         <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />
-        <p className="text-sm text-[rgb(var(--muted-foreground))]">{filtered.length} oportunități accesibile · pagina {page}</p>
+        <p className="text-sm text-[rgb(var(--text-muted))]">{filtered.length} oportunități în selecția curentă · pagina {page}</p>
         <OpportunitiesExplorer
           opportunities={opportunities}
           emptyTitle={isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}

@@ -30,11 +30,11 @@ export function AuthenticatedAccountChoice({ email, intent, mode }: Authenticate
   }
 
   return (
-    <div className="mt-8 rounded-xl border border-mint-400/20 bg-mint-400/[0.06] p-5">
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-mint-300">Sesiune activă</p>
-      <h2 className="mt-3 text-2xl font-semibold text-white">Ești deja autentificat</h2>
-      <p className="mt-3 text-sm leading-6 text-zinc-300">
-        În prezent ești conectat ca <span className="font-semibold text-white">{email}</span>.
+    <div className="mt-8 rounded-card border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--primary)/0.08)] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Sesiune activă</p>
+      <h2 className="mt-3 font-display text-2xl font-semibold text-[rgb(var(--foreground))]">Ești deja autentificat</h2>
+      <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
+        În prezent ești conectat ca <span className="break-all font-semibold text-[rgb(var(--foreground))]">{email}</span>.
       </p>
 
       <div className="mt-6 grid gap-3">
