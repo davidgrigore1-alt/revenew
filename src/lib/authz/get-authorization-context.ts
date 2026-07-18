@@ -67,9 +67,10 @@ async function getBusinessRole(profileId: string): Promise<BusinessRole | null> 
 
   const { data, error } = await supabase
     .from("business_members")
-    .select("role")
+    .select("role,status")
     .eq("business_id", current.business.id)
     .eq("profile_id", profileId)
+    .eq("status", "active")
     .maybeSingle();
 
   if (error) {

@@ -5,6 +5,7 @@ import { demoBusiness } from "@/lib/mock-data";
 import type { Business } from "@/lib/types";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 
 export type CurrentBusinessResult = {
@@ -86,6 +87,8 @@ const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessF
     throw new Error("Supabase nu este disponibil pe server.");
   }
 
+  let dataClient = supabase;
+
   let { data: business, error: ownerError } = await supabase
     .from("businesses")
     .select("*")
@@ -103,6 +106,7 @@ const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessF
       .from("business_members")
       .select("business_id")
       .eq("profile_id", profile.id)
+      .eq("status", "active")
       .limit(1)
       .maybeSingle();
 
@@ -111,7 +115,12 @@ const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessF
     }
 
     if (membership?.business_id) {
-      const lookup = await supabase.from("businesses").select("*").eq("id", membership.business_id).single();
+      const admin = createSupabaseAdminClient();
+      if (!admin) {
+        throw new Error("Supabase admin nu este disponibil pentru încărcarea workspace-ului verificat.");
+      }
+      dataClient = admin;
+      const lookup = await dataClient.from("businesses").select("*").eq("id", membership.business_id).single();
       if (lookup.error) {
         throw new Error(`Business lookup member error: ${lookup.error.message}`);
       }
@@ -127,8 +136,8 @@ const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessF
   }
 
   const [{ data: services, error: servicesError }, { data: targets, error: targetsError }] = await Promise.all([
-    supabase.from("business_services").select("name").eq("business_id", business.id),
-    supabase.from("business_targets").select("target_type,value").eq("business_id", business.id)
+    dataClient.from("business_services").select("name").eq("business_id", business.id),
+    dataClient.from("business_targets").select("target_type,value").eq("business_id", business.id)
   ]);
 
   if (servicesError) {

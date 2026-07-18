@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
+import { consumeGovernedApproval, getOutcomeGovernanceDecision } from "@/lib/enterprise-governance-internal";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
@@ -283,6 +284,14 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
   }
   if (!/^[A-Z]{3}$/.test(currency)) return { ok: false, error: "Moneda trebuie să aibă un cod ISO din trei litere." };
   if (lifecycleStatus === "won" && !validMoney(amount)) return { ok: false, error: "Valoarea efectivă este obligatorie și nu poate fi negativă." };
+
+  const governance = await getOutcomeGovernanceDecision({ opportunityId, outcome: lifecycleStatus as "won" | "lost", amount: Number(amount || 0), currency, reason: outcomeReason, outcomeDate });
+  if (!governance.ok) return governance;
+  if (!governance.allowed) return { ok: false, approvalRequired: true, approvalId: governance.approvalId, error: "Politica workspace-ului necesită aprobarea unei alte persoane autorizate." };
+  if (governance.approvalId) {
+    const consumed = await consumeGovernedApproval(governance.approvalId);
+    if (!consumed.ok) return consumed;
+  }
 
   const now = new Date().toISOString();
   const legacyStatus: OpportunityStatus = lifecycleStatus === "won" ? "won" : lifecycleStatus === "lost" ? "lost" : "ignored";

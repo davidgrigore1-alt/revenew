@@ -114,3 +114,18 @@ Fluxul comercial continuă acum după follow-up prin răspunsuri înregistrate m
 - migrarea `20260716224633_commercial_response_outcome_loop_v1.sql` este aplicată și sincronizată local/remote
 
 Faza următoare poate extinde integrarea cu inbox-uri externe, dar mailbox sync și acțiunile externe autonome nu sunt implementate.
+
+## Enterprise Workspace Governance & Team Operations V1
+
+Fundația enterprise multi-utilizator este implementată peste modelul canonic `business_members`, fără un sistem paralel de autorizare.
+
+- rolurile owner, administrator, manager, commercial member și viewer sunt mapate central la capabilități explicite; membership-ul inactiv nu acordă acces
+- invitațiile sunt tenant-scoped, expirabile și single-use; baza păstrează numai hash-ul SHA-256 al tokenului, iar acceptarea autentificată verifică emailul și creează exact un membership
+- oportunitățile și acțiunile folosesc asignările existente, validate server-side numai către membri activi; managerii au cozi My work, Team, Unassigned, Overdue, Due today și Awaiting approval
+- politicile workspace controlează aprobarea trimiterilor live, rezultatele, pragul de venit confirmat, asignarea și expirarea invitațiilor, cu valori implicite compatibile cu fluxurile existente
+- cererile de aprobare folosesc fingerprint server-side, separarea atribuțiilor, expirare și consum atomic o singură dată; modificările materiale invalidează aprobarea
+- `business_audit_events` este append-only pentru clienți și păstrează numai metadate sigure, tenant-scoped, pentru invitații, membership, asignări, politici, aprobări și operații restricționate
+- zona `Setări > Echipă și guvernanță` oferă administrarea echipei, controale de guvernanță, aprobări, audit, cozi și metrici operaționale de management
+- migrarea aditivă `20260718100927_enterprise_workspace_governance_v1.sql` este aplicată și sincronizată local/remote
+
+Rămân intenționat în afara acestei faze: transferul proprietății, SSO, SCIM, billing, mailbox sync, campanii, ERP, employee surveillance și acțiuni externe autonome. Livrarea externă a invitațiilor în modul live necesită în continuare un furnizor configurat și nu a fost validată prin trimiterea unui email real.

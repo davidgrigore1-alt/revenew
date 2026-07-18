@@ -61,6 +61,11 @@ export default async function SettingsPage() {
       description="Setări pentru companie, temă, recomandări și datele folosite în ReveNew."
     >
       <div className="grid gap-6">
+        <div className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5">
+          <h2 className="text-lg font-semibold">Administrare enterprise</h2>
+          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Gestionează echipa, politicile, aprobările, cozile de lucru și jurnalul de audit.</p>
+          <Link href="/settings/governance" className="focus-ring mt-4 inline-flex min-h-10 items-center rounded-lg bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))]">Deschide Echipă și guvernanță</Link>
+        </div>
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <div className="grid gap-6 xl:grid-cols-2">
           <DataCard title="Companie" description="Informațiile folosite în scoruri, mesaje și rapoarte.">

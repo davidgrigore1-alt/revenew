@@ -12,6 +12,7 @@
     "test:targeted": "node --test tests/auth-account-flow.test.mjs tests/auth-session-recovery.test.mjs tests/authorization-surface.test.mjs tests/business-members-rls.test.mjs tests/commercial-ingestion.test.mjs tests/navigation-serialization.test.mjs tests/recoverable-revenue-engine.test.mjs",
     "test:sending": "node --test tests/ai-follow-up-studio.test.mjs tests/human-approved-email-sending.test.mjs",
     "test:response-loop": "node --test tests/commercial-response-outcome-loop.test.mjs",
+    "test:enterprise": "node --test tests/enterprise-workspace-governance.test.mjs",
     "validate:migrations": "node scripts/validation/check-migrations.mjs",
     "validate:security": "node scripts/validation/check-repository-safety.mjs",
     "validate:diff": "git diff --check",

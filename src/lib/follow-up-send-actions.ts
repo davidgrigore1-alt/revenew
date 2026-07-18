@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/authz/require-permission";
+import { consumeGovernedApproval, getLiveEmailGovernanceDecision } from "@/lib/enterprise-governance-internal";
 import { getCurrentBusinessOrDemo } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -192,6 +193,16 @@ export async function sendApprovedFollowUp(documentId: string, finalConfirmation
     return { ok: true as const, replay: true, status: document.send_status, mode: document.sending_mode, sentAt: document.sent_at };
   }
   if (!readiness.ready) return { ok: false as const, error: "Draftul nu îndeplinește toate condițiile de trimitere.", readiness };
+
+  if (config.mode === "live") {
+    const governance = await getLiveEmailGovernanceDecision({ documentId, contentFingerprint: context.fingerprint });
+    if (!governance.ok) return governance;
+    if (!governance.allowed) return { ok: false as const, approvalRequired: true, approvalId: governance.approvalId, error: "Trimiterea live necesită aprobarea enterprise configurată pentru workspace." };
+    if (governance.approvalId) {
+      const consumed = await consumeGovernedApproval(governance.approvalId);
+      if (!consumed.ok) return consumed;
+    }
+  }
 
   const attempt = document.send_attempt_count + 1;
   const idempotencyKey = createFollowUpIdempotencyKey({

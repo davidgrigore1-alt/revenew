@@ -74,7 +74,7 @@ export async function getRevenueWorkspaceSummary() {
     : summary.actions.filter((action) => action.assignedToProfileId === authorization.profileId);
   const overdue = visiblePersonalActions.filter((action) => action.status === "pending" && beforeDay(action.dueAt, today));
   const dueToday = visiblePersonalActions.filter((action) => action.status === "pending" && sameDay(action.dueAt, today));
-  const isManager = authorization.businessRole === "business_owner" || authorization.businessRole === "business_admin";
+  const isManager = ["business_owner", "business_admin", "business_manager"].includes(authorization.businessRole ?? "");
   const operationallyVisible = isManager ? active : active.filter((opportunity) => Boolean(opportunity.ownerProfileId));
   const withoutPrimaryContact = operationallyVisible.filter((opportunity) => !getPrimaryContact(opportunity));
   const withoutNextAction = operationallyVisible.filter((opportunity) => !hasScheduledNextAction(opportunity));
