@@ -7,9 +7,11 @@ type PasswordFieldProps = {
   label: string;
   autoComplete: string;
   placeholder?: string;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
-export function PasswordField({ name, label, autoComplete, placeholder = "Minim 8 caractere" }: PasswordFieldProps) {
+export function PasswordField({ name, label, autoComplete, placeholder = "Minim 8 caractere", invalid = false, describedBy }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -24,6 +26,8 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
           type={visible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          aria-invalid={invalid}
+          aria-describedby={describedBy}
           className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[rgb(var(--foreground))] outline-none placeholder:text-[rgb(var(--text-faint))]"
         />
         <button
@@ -31,6 +35,7 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
           onClick={() => setVisible((current) => !current)}
           className="focus-ring mr-1 min-h-9 rounded-control px-3 py-1.5 text-xs font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]"
           aria-pressed={visible}
+          aria-label={visible ? `Ascunde ${label.toLocaleLowerCase("ro-RO")}` : `Arată ${label.toLocaleLowerCase("ro-RO")}`}
         >
           {visible ? "Ascunde" : "Arată"}
         </button>

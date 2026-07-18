@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { PasswordField } from "@/components/auth/PasswordField";
+import { SignupConfirmationPanel } from "@/components/auth/SignupConfirmationPanel";
+import { authConfirmationRedirectUrl } from "@/lib/auth/confirmation";
 import { authIntentQuery, sanitizeAuthIntent, type AuthIntent } from "@/lib/auth/redirects";
 import { countryOptions, validateEmail, validateInternationalPhone, validatePersonName, type FieldErrors } from "@/lib/forms/validation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -69,6 +71,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
   const [notice, setNotice] = useState<NoticeState | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors<SignupField>>({});
+  const [confirmationEmail, setConfirmationEmail] = useState("");
   const errorSummaryRef = useRef<HTMLDivElement>(null);
 
   function focusFirstError(nextErrors: FieldErrors<SignupField>) {
@@ -163,7 +166,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
             full_name: validated.fullName,
             phone: validated.phone
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/bootstrap`
+          emailRedirectTo: authConfirmationRedirectUrl(window.location.origin)
         }
       });
 
@@ -174,12 +177,12 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         return;
       }
 
-      setNotice({
-        tone: "success",
-        title: "Verifică adresa de email",
-        message: "Ți-am trimis un email de confirmare. După verificare, revino în ReveNew pentru a configura firma.",
-        email: validated.email
-      });
+      if (data.session) {
+        window.location.assign(`/auth/bootstrap?${authIntentQuery(intent)}`);
+        return;
+      }
+
+      setConfirmationEmail(validated.email);
       setLoading(false);
       return;
     }
@@ -197,21 +200,26 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
 
   return (
     <>
-      {notice ? <AuthNotice tone={notice.tone} title={notice.title} message={notice.email ? `${notice.message} ${notice.email}` : notice.message} /> : null}
-
-      {notice?.tone === "success" && isSignup ? (
-        <div className="mt-5 grid gap-3">
-          <Button type="button" onClick={() => (window.location.href = "/login?reason=email_confirmation_sent")} variant="secondary">
-            Înapoi la autentificare
-          </Button>
-        </div>
+      {confirmationEmail ? (
+        <SignupConfirmationPanel
+          email={confirmationEmail}
+          intent={intent}
+          onChangeEmail={() => {
+            setConfirmationEmail("");
+            setNotice(null);
+          }}
+        />
       ) : null}
+
+      {!confirmationEmail ? (
+        <>
+      {notice ? <AuthNotice tone={notice.tone} title={notice.title} message={notice.email ? `${notice.message} ${notice.email}` : notice.message} /> : null}
 
       <div ref={errorSummaryRef}>
         <ErrorSummary errors={errors} />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
+      <form onSubmit={handleSubmit} className="mt-7 space-y-4" noValidate>
         {isSignup ? (
           <>
             <label className="block">
@@ -275,13 +283,13 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
           <FieldError id="email-error" message={errors.email} />
         </label>
 
-        <PasswordField name="password" label="Parolă" autoComplete={isSignup ? "new-password" : "current-password"} />
+        <PasswordField name="password" label="Parolă" autoComplete={isSignup ? "new-password" : "current-password"} invalid={Boolean(errors.password)} describedBy={errors.password ? "password-error" : undefined} />
         {errors.password ? <p id="password-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.password}</p> : null}
 
         {isSignup ? (
           <>
             <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Folosește cel puțin 8 caractere și evită parolele utilizate în alte servicii.</p>
-            <PasswordField name="confirmPassword" label="Confirmă parola" autoComplete="new-password" placeholder="Repetă parola" />
+            <PasswordField name="confirmPassword" label="Confirmă parola" autoComplete="new-password" placeholder="Repetă parola" invalid={Boolean(errors.confirmPassword)} describedBy={errors.confirmPassword ? "confirmPassword-error" : undefined} />
             {errors.confirmPassword ? <p id="confirmPassword-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.confirmPassword}</p> : null}
             <label className="flex items-start gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] p-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
               <input id="acceptedTerms" required name="acceptedTerms" type="checkbox" aria-invalid={Boolean(errors.acceptedTerms)} aria-describedby={errors.acceptedTerms ? "acceptedTerms-error" : undefined} className="mt-1 h-4 w-4 rounded border-[rgb(var(--border-strong))] bg-transparent accent-[rgb(var(--primary))]" />
@@ -306,6 +314,8 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
           {loading ? "Se procesează..." : isSignup ? "Creează contul" : "Intră în cont"}
         </Button>
       </form>
+        </>
+      ) : null}
     </>
   );
 }

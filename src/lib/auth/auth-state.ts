@@ -4,6 +4,7 @@ import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getOrCreateProfile, ProfileInitializationError, resolveCurrentAuthUser, type ProfileBootstrapCategory, type ProfileRow } from "@/lib/auth/profile";
 import { destinationForAuthIntent, type AuthIntent } from "@/lib/auth/redirects";
+import { getPostBusinessDestination } from "@/lib/billing/paid-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 
@@ -139,7 +140,7 @@ export const resolveAuthState = cache(async function resolveAuthState(options: R
     user: auth.user,
     profile,
     businessId,
-    safeNextPath: destinationForAuthIntent(options.intent ?? "login", "/dashboard")
+    safeNextPath: destinationForAuthIntent(options.intent ?? "login", await getPostBusinessDestination())
   };
 });
 

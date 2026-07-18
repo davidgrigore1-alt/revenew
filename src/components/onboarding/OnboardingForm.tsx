@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { saveOnboarding } from "@/lib/actions";
 import { emptyOnboardingDraft, type OnboardingDraft } from "@/lib/onboarding/draft";
 import { saveOnboardingProgress } from "@/lib/onboarding/progress-actions";
+import { exactSearchableOption, filterSearchableOptions } from "@/lib/forms/searchable-options";
 import {
   administrativeAreaDisplayName,
   administrativeAreaLabel,
@@ -53,7 +54,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-zinc-300">{label}</span>
+      <span className="text-sm font-medium text-[rgb(var(--foreground))]">{label}{required ? " *" : ""}</span>
       <input
         id={name}
         required={required}
@@ -65,9 +66,9 @@ function Field({
         aria-describedby={error ? `${name}-error` : undefined}
         onChange={(event) => onChange(name, event.target.value)}
         placeholder={placeholder}
-        className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+        className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none transition placeholder:text-[rgb(var(--text-faint))] focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]"
       />
-      {error ? <p id={`${name}-error`} className="mt-2 text-sm text-red-300">{error}</p> : null}
+      {error ? <p id={`${name}-error`} className="mt-2 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
     </label>
   );
 }
@@ -100,13 +101,7 @@ function SearchableSelect({
   const [activeIndex, setActiveIndex] = useState(0);
   const selected = options.find((option) => option.value === value);
   const listboxId = `${name}-listbox`;
-  const visibleOptions = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase("ro-RO");
-    const filtered = normalized
-      ? options.filter((option) => option.label.toLocaleLowerCase("ro-RO").includes(normalized))
-      : options;
-    return filtered.slice(0, 60);
-  }, [options, query]);
+  const visibleOptions = useMemo(() => filterSearchableOptions(options, query), [options, query]);
 
   function choose(option: { value: string; label: string }) {
     onChange(name, option.value);
@@ -122,8 +117,8 @@ function SearchableSelect({
   }
 
   return (
-    <label className="relative block">
-      <span className="text-sm font-medium text-zinc-300">{label}{required ? " *" : ""}</span>
+    <div className="relative block">
+      <label htmlFor={name} className="text-sm font-medium text-[rgb(var(--foreground))]">{label}{required ? " *" : ""}</label>
       <input
         id={name}
         role="combobox"
@@ -131,7 +126,6 @@ function SearchableSelect({
         disabled={disabled}
         value={open ? query : selected?.label ?? ""}
         onChange={(event) => updateQuery(event.target.value)}
-        onInput={(event) => updateQuery(event.currentTarget.value)}
         onClick={() => setOpen(true)}
         onFocus={() => {
           setQuery("");
@@ -145,12 +139,14 @@ function SearchableSelect({
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             setOpen(false);
+            setQuery("");
+            setActiveIndex(0);
             return;
           }
           if (event.key === "ArrowDown") {
             event.preventDefault();
             setOpen(true);
-            setActiveIndex((index) => Math.min(index + 1, Math.max(visibleOptions.length - 1, 0)));
+            setActiveIndex((index) => open ? Math.min(index + 1, Math.max(visibleOptions.length - 1, 0)) : 0);
             return;
           }
           if (event.key === "ArrowUp") {
@@ -159,8 +155,7 @@ function SearchableSelect({
             return;
           }
           if (event.key === "Enter") {
-            const typedValue = event.currentTarget.value.trim().toLocaleLowerCase("ro-RO");
-            const exactOption = options.find((option) => option.label.toLocaleLowerCase("ro-RO") === typedValue);
+            const exactOption = exactSearchableOption(options, event.currentTarget.value);
             const option = exactOption ?? (open ? visibleOptions[activeIndex] : undefined);
             if (!option) return;
             event.preventDefault();
@@ -174,28 +169,31 @@ function SearchableSelect({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${name}-error` : undefined}
         placeholder={placeholder}
-        className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60 disabled:cursor-not-allowed disabled:opacity-60"
+        autoComplete="address-level1"
+        className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none transition placeholder:text-[rgb(var(--text-faint))] focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)] disabled:cursor-not-allowed disabled:opacity-60"
       />
       {open && !disabled ? (
-        <div id={listboxId} role="listbox" className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-lg border border-white/10 bg-ink-950 p-1 shadow-xl">
+        <div id={listboxId} role="listbox" className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-1 shadow-premium">
           {visibleOptions.length ? visibleOptions.map((option, index) => (
-            <button
+            <div
               id={`${name}-option-${option.value}`}
               key={option.value}
-              type="button"
               role="option"
               aria-selected={option.value === value}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => choose(option)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${index === activeIndex ? "bg-mint-400/15 text-white" : "text-zinc-200 hover:bg-white/[0.08]"}`}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
+              onPointerMove={() => setActiveIndex(index)}
+              className={`w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm transition ${index === activeIndex ? "bg-[rgb(var(--primary)/0.13)] text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]"}`}
             >
               {option.label}
-            </button>
-          )) : <p className="px-3 py-2 text-sm text-zinc-400">{emptyLabel}</p>}
+            </div>
+          )) : <p className="px-3 py-2 text-sm text-[rgb(var(--text-muted))]">{emptyLabel}</p>}
         </div>
       ) : null}
-      {error ? <p id={`${name}-error`} className="mt-2 text-sm text-red-300">{error}</p> : null}
-    </label>
+      {error ? <p id={`${name}-error`} className="mt-2 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
+    </div>
   );
 }
 
@@ -204,7 +202,7 @@ function ErrorSummary({ errors }: { errors: FieldErrors<FieldName> }) {
   if (!entries.length) return null;
 
   return (
-    <div className="rounded-lg border border-red-400/30 bg-red-950/30 p-4 text-sm text-red-100" role="alert">
+    <div className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]" role="alert">
       <p className="font-semibold">Verifică înainte să continui:</p>
       <ul className="mt-2 grid gap-1">
         {entries.map(([field, message]) => (
@@ -278,6 +276,42 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
     return [0, 1, 2].every((index) => Object.keys(validateStep(draft, index)).length === 0);
   }, [draft]);
 
+  const reviewSections = [
+    {
+      title: "Companie",
+      step: 0,
+      rows: [
+        ["Firmă", `${draft.businessName} · ${draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry}`],
+        ["Date juridice", [draft.legalName, draft.countryCode === "RO" ? draft.cui : ""].filter(Boolean).join(" · ") || "Necompletate"]
+      ]
+    },
+    {
+      title: "Localizare și contact",
+      step: 0,
+      rows: [
+        ["Localizare", `${draft.countryCode}, ${administrativeAreaDisplayName(draft.countryCode, draft.administrativeArea) || "fără regiune"}, ${draft.city}`],
+        ["Contact", [draft.companyPhone, draft.website, draft.postalCode].filter(Boolean).join(" · ") || "Necompletat"]
+      ]
+    },
+    {
+      title: "Ofertă și valoare estimată",
+      step: 1,
+      rows: [
+        ["Ofertă principală", draft.mainOffering],
+        ["Valoare medie estimată", `${draft.averageContractValue} ${draft.currency}`],
+        ["Context", draft.shortDescription]
+      ]
+    },
+    {
+      title: "Surse și problemă comercială",
+      step: 2,
+      rows: [
+        ["Surse", [...draft.leadSources, draft.customLeadSource].filter(Boolean).join(", ")],
+        ["Problemă principală", draft.mainCommercialProblem === "Altă problemă" ? draft.customCommercialProblem : draft.mainCommercialProblem]
+      ]
+    }
+  ] as const;
+
   function focusFirstError(nextErrors: FieldErrors<FieldName>) {
     const first = Object.keys(nextErrors)[0];
     window.requestAnimationFrame(() => {
@@ -287,12 +321,18 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
   }
 
   function updateField(name: FieldName, value: string) {
+    setErrors((current) => {
+      if (!current[name]) return current;
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
     setDraft((current) => {
       if (name === "countryCode") {
-        return { ...current, countryCode: value, companyPhoneCountry: value, administrativeArea: "", city: "", cui: value === "RO" ? current.cui : "" };
+        return { ...current, countryCode: value, companyPhoneCountry: value, administrativeArea: "", cui: value === "RO" ? current.cui : "" };
       }
       if (name === "administrativeArea") {
-        return { ...current, administrativeArea: value, city: "" };
+        return { ...current, administrativeArea: value };
       }
       if (name === "companyPhoneCountry") {
         return { ...current, companyPhoneCountry: value };
@@ -353,28 +393,29 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
   }
 
   return (
-    <div className="grid gap-6">
-      <section className="grid gap-5 overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[linear-gradient(135deg,rgb(var(--surface-subtle)),rgb(var(--surface)))] p-5 shadow-sm sm:p-6">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Metoda de pornire</p><h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Cum construim primul context comercial?</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Configurează manual sau importă datele existente. În ambele variante, echipa verifică informația înainte ca aceasta să devină oportunitate.</p></div>
+    <div className="mx-auto grid w-full max-w-5xl gap-5">
+      <section className="grid gap-4 overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[linear-gradient(135deg,rgb(var(--surface-subtle)),rgb(var(--surface)))] p-4 shadow-sm sm:p-5">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Metoda de pornire</p><h2 className="mt-1 font-display text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Cum aduci primele date în ReveNew?</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Configurează manual sau importă un CSV. Echipa verifică informația înainte ca aceasta să devină oportunitate.</p></div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => setEntryMode("manual")} aria-pressed={entryMode === "manual"} className={`focus-ring rounded-control border p-4 text-left transition ${entryMode === "manual" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Configurez manual</span><span className="mt-1 block text-sm leading-6 text-[rgb(var(--text-muted))]">Adaug prima companie, contactul principal și o oportunitate urmărită.</span></button>
-          <button type="button" onClick={() => setEntryMode("import")} aria-pressed={entryMode === "import"} className={`focus-ring rounded-control border p-4 text-left transition ${entryMode === "import" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Import controlat</span><span className="mt-1 block text-sm leading-6 text-[rgb(var(--text-muted))]">Încarc date existente prin CSV și le verific înainte de transformarea în oportunități.</span></button>
+          <button type="button" onClick={() => setEntryMode("manual")} aria-pressed={entryMode === "manual"} className={`focus-ring rounded-control border p-3 text-left transition ${entryMode === "manual" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Configurare manuală</span><span className="mt-1 block text-sm leading-5 text-[rgb(var(--text-muted))]">Completez contextul firmei, oferta și sursele comerciale.</span></button>
+          <button type="button" onClick={() => setEntryMode("import")} aria-pressed={entryMode === "import"} className={`focus-ring rounded-control border p-3 text-left transition ${entryMode === "import" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Import CSV controlat</span><span className="mt-1 block text-sm leading-5 text-[rgb(var(--text-muted))]">Încarc date existente și verific maparea înainte de import.</span></button>
         </div>
         <p className="flex items-center gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><span className="text-[rgb(var(--primary))]" aria-hidden="true">✓</span> Importul nu trimite mesaje și nu pornește outreach extern. Tu păstrezi controlul.</p>
-        {resumed ? <p className="text-sm font-semibold text-mint-300" role="status">Continui configurarea existentă. Ultimul pas salvat și datele valide au fost restaurate.</p> : null}
+        {resumed ? <p className="text-sm font-semibold text-[rgb(var(--primary))]" role="status">Continui configurarea existentă. Ultimul pas salvat și datele valide au fost restaurate.</p> : null}
       </section>
-      <nav aria-label="Pași onboarding" className="grid gap-2 sm:grid-cols-4">
+      <nav aria-label="Pași onboarding" className="flex gap-1 overflow-x-auto rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-1">
         {steps.map((label, index) => (
           <button
             key={label}
             type="button"
             onClick={() => index <= step && setStep(index)}
-            className={`focus-ring min-h-16 rounded-control border px-3 py-3 text-left text-sm font-semibold transition ${
-              index === step ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] text-[rgb(var(--foreground))]" : index < step ? "border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--foreground))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-muted))]"
+            aria-current={index === step ? "step" : undefined}
+            className={`focus-ring flex min-w-[150px] flex-1 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold transition ${
+              index === step ? "bg-[rgb(var(--primary)/0.12)] text-[rgb(var(--foreground))]" : index < step ? "bg-[rgb(var(--surface))] text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))]"
             }`}
           >
-            <span className="block text-xs text-[rgb(var(--primary))]">Pasul {index + 1}</span>
-            {label}
+            <span className={`grid size-6 shrink-0 place-items-center rounded-full text-xs ${index <= step ? "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]" : "border border-[rgb(var(--border-strong))]"}`}>{index + 1}</span>
+            <span>{label}</span>
           </button>
         ))}
       </nav>
@@ -384,7 +425,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
       </div>
 
       <section className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-2 border-b border-[rgb(var(--border))] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-2 border-b border-[rgb(var(--border))] pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Pasul {step + 1} din {steps.length}</p><h2 className="mt-1 font-display text-2xl font-semibold text-[rgb(var(--foreground))]">{steps[step]}</h2></div>
           <p className="max-w-md text-sm leading-6 text-[rgb(var(--text-muted))]">{step === 0 ? "Definește identitatea și datele de contact ale firmei." : step === 1 ? "Ajută ReveNew să interpreteze valoarea și relevanța comercială." : step === 2 ? "Stabilește unde apar semnalele și ce probleme urmărești." : "Verifică informația înainte de crearea spațiului de lucru."}</p>
         </div>
@@ -393,17 +434,17 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Field required label="Numele firmei" name="businessName" value={draft.businessName} onChange={updateField} error={errors.businessName} placeholder="Auto Management SRL" autoComplete="organization" />
             <label className="block">
-              <span className="text-sm font-medium text-zinc-300">Domeniul de activitate</span>
-              <select id="industry" required value={draft.industry} onChange={(event) => updateField("industry", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Domeniul de activitate *</span>
+              <select id="industry" required value={draft.industry} onChange={(event) => updateField("industry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 <option value="">Alege domeniul</option>
                 {industryOptions.map((item) => <option key={item} value={item}>{item}</option>)}
               </select>
-              {errors.industry ? <p className="mt-2 text-sm text-red-300">{errors.industry}</p> : null}
+              {errors.industry ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.industry}</p> : null}
             </label>
             {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" />}
             <label className="block">
-              <span className="text-sm font-medium text-zinc-300">Țara</span>
-              <select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara *</span>
+              <select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label}</option>)}
               </select>
             </label>
@@ -414,12 +455,12 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             )}
             <div>
               <Field required label="Orașul/localitatea" name="city" value={draft.city} onChange={updateField} error={errors.city} placeholder="Exemplu: Ploiești" autoComplete="address-level2" />
-              <p className="mt-2 text-xs leading-5 text-zinc-500">Introdu localitatea sediului sau punctului principal de lucru.</p>
+              <p className="mt-2 text-[0.8125rem] leading-5 text-[rgb(var(--text-muted))]">Introdu localitatea sediului sau punctului principal de lucru.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr] md:col-span-2">
               <label className="block">
-                <span className="text-sm font-medium text-zinc-300">Țara telefonului</span>
-                <select id="companyPhoneCountry" value={draft.companyPhoneCountry} onChange={(event) => updateField("companyPhoneCountry", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
+                <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara telefonului</span>
+                <select id="companyPhoneCountry" value={draft.companyPhoneCountry} onChange={(event) => updateField("companyPhoneCountry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                   {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label} {country.callingCode}</option>)}
                 </select>
               </label>
@@ -436,7 +477,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
           <div className="mt-5 grid gap-4">
             <Field required label="Serviciul sau produsul principal" name="mainOffering" value={draft.mainOffering} onChange={updateField} error={errors.mainOffering} placeholder="Închiriere auto pentru companii" />
             <label className="block">
-              <span className="text-sm font-medium text-zinc-300">Descriere scurtă</span>
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Descriere scurtă *</span>
               <textarea
                 id="shortDescription"
                 required
@@ -445,15 +486,15 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
                 rows={4}
                 aria-invalid={Boolean(errors.shortDescription)}
                 placeholder="Descrie pe scurt oferta, piața țintă și ce fel de cereri merită urmărite."
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+                className="mt-2 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-3 text-sm text-[rgb(var(--foreground))] outline-none placeholder:text-[rgb(var(--text-faint))] focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]"
               />
-              {errors.shortDescription ? <p className="mt-2 text-sm text-red-300">{errors.shortDescription}</p> : null}
+              {errors.shortDescription ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.shortDescription}</p> : null}
             </label>
             <div className="grid gap-4 md:grid-cols-2">
               <Field required label="Valoarea medie a unui client sau contract" name="averageContractValue" value={draft.averageContractValue} onChange={updateField} error={errors.averageContractValue} placeholder="6200" type="number" />
               <label className="block">
-                <span className="text-sm font-medium text-zinc-300">Moneda</span>
-                <select id="currency" required value={draft.currency} onChange={(event) => updateField("currency", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
+                <span className="text-sm font-medium text-[rgb(var(--foreground))]">Moneda *</span>
+                <select id="currency" required value={draft.currency} onChange={(event) => updateField("currency", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                   {currencyOptions.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
                 </select>
               </label>
@@ -464,56 +505,52 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
         {step === 2 ? (
           <div className="mt-5 grid gap-5">
             <div>
-              <p className="text-sm font-medium text-zinc-300">Surse de cereri</p>
+              <p className="text-sm font-medium text-[rgb(var(--foreground))]">Surse de cereri *</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {leadSourceOptions.map((source) => (
-                  <label key={source} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-zinc-300">
-                    <input type="checkbox" checked={draft.leadSources.includes(source)} onChange={() => toggleSource(source)} className="h-4 w-4 accent-mint-400" />
+                  <label key={source} className={`focus-within:focus-ring flex min-h-11 items-center gap-2 rounded-control border px-3 py-2 text-sm transition ${draft.leadSources.includes(source) ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] text-[rgb(var(--foreground))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-[rgb(var(--text-muted))]"}`}>
+                    <input type="checkbox" checked={draft.leadSources.includes(source)} onChange={() => toggleSource(source)} className="h-4 w-4 accent-[rgb(var(--primary))]" />
                     {source}
                   </label>
                 ))}
               </div>
-              {errors.leadSources ? <p className="mt-2 text-sm text-red-300">{errors.leadSources}</p> : null}
+              {errors.leadSources ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.leadSources}</p> : null}
             </div>
             {draft.leadSources.includes("Alte surse") ? <Field required label="Alte surse" name="customLeadSource" value={draft.customLeadSource} onChange={updateField} error={errors.customLeadSource} placeholder="Descrie sursa" /> : null}
             <label className="block">
-              <span className="text-sm font-medium text-zinc-300">Care este problema comercială principală?</span>
-              <select id="mainCommercialProblem" required value={draft.mainCommercialProblem} onChange={(event) => updateField("mainCommercialProblem", event.target.value)} className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-ink-900 px-4 text-white outline-none transition focus:border-mint-400/60">
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Care este problema comercială principală? *</span>
+              <select id="mainCommercialProblem" required value={draft.mainCommercialProblem} onChange={(event) => updateField("mainCommercialProblem", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 <option value="">Alege problema</option>
                 {commercialProblemOptions.map((problem) => <option key={problem} value={problem}>{problem}</option>)}
               </select>
-              {errors.mainCommercialProblem ? <p className="mt-2 text-sm text-red-300">{errors.mainCommercialProblem}</p> : null}
+              {errors.mainCommercialProblem ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.mainCommercialProblem}</p> : null}
             </label>
             {draft.mainCommercialProblem === "Altă problemă" ? <Field required label="Altă problemă" name="customCommercialProblem" value={draft.customCommercialProblem} onChange={updateField} error={errors.customCommercialProblem} placeholder="Descrie problema" /> : null}
-            <p className="text-xs leading-5 text-zinc-500">Selectarea unei surse precum Gmail, WhatsApp sau CRM nu activează o integrare. Sursele descriu contextul auditului.</p>
+            <p className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3 text-[0.8125rem] leading-5 text-[rgb(var(--text-muted))]">Selectarea unei surse precum Gmail, WhatsApp sau CRM nu activează o integrare. Sursele descriu contextul comercial; nicio conexiune sau acțiune externă nu pornește automat.</p>
           </div>
         ) : null}
 
         {step === 3 ? (
-          <div className="mt-5 grid gap-4 text-sm leading-6 text-zinc-300">
+          <div className="mt-5 grid gap-4 text-sm leading-6 text-[rgb(var(--text-muted))]">
             <p className="rounded-control border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--primary)/0.08)] p-4 text-[rgb(var(--text-muted))]">După creare vei continua în spațiul de lucru. Poți importa date în Inbox Comercial, iar fiecare semnal rămâne sub controlul echipei înainte de conversie sau contact extern.</p>
-            {[
-              ["Firmă", `${draft.businessName} · ${draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry}`],
-              ["Localizare", `${draft.countryCode}, ${administrativeAreaDisplayName(draft.countryCode, draft.administrativeArea) || "fără regiune"}, ${draft.city}`],
-              ["Telefon firmă", draft.companyPhone],
-              ["Date opționale", [draft.legalName, draft.countryCode === "RO" ? draft.cui : "", draft.website, draft.postalCode].filter(Boolean).join(" · ") || "Nicio valoare opțională completată"],
-              ["Ofertă", `${draft.mainOffering} · ${draft.shortDescription}`],
-              ["Valoare medie", `${draft.averageContractValue} ${draft.currency}`],
-              ["Surse", [...draft.leadSources, draft.customLeadSource].filter(Boolean).join(", ")],
-              ["Problemă", draft.mainCommercialProblem === "Altă problemă" ? draft.customCommercialProblem : draft.mainCommercialProblem]
-            ].map(([label, value], index) => (
-              <div key={label} className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <p><span className="font-semibold text-white">{label}:</span> {value}</p>
-                  {index < 4 ? <button type="button" onClick={() => setStep(0)} className="focus-ring rounded px-2 py-1 text-xs font-semibold text-mint-300">Editează</button> : index < 6 ? <button type="button" onClick={() => setStep(1)} className="focus-ring rounded px-2 py-1 text-xs font-semibold text-mint-300">Editează</button> : <button type="button" onClick={() => setStep(2)} className="focus-ring rounded px-2 py-1 text-xs font-semibold text-mint-300">Editează</button>}
+            <div className="grid gap-3 md:grid-cols-2">
+              {reviewSections.map((section) => <section key={section.title} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
+                <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-3">
+                  <h3 className="font-semibold text-[rgb(var(--foreground))]">{section.title}</h3>
+                  <button type="button" onClick={() => setStep(section.step)} className="focus-ring rounded px-2 py-1 text-xs font-semibold text-[rgb(var(--primary))]">Editează</button>
                 </div>
-              </div>
-            ))}
+                <dl className="mt-3 grid gap-3">
+                  {section.rows.map(([label, value]) => <div key={label}><dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">{label}</dt><dd className="mt-1 text-sm text-[rgb(var(--foreground))]">{value || "Necompletat"}</dd></div>)}
+                </dl>
+              </section>
+              )}
+            </div>
           </div>
         ) : null}
       </section>
 
-      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center" aria-live="polite">
+      <div className="flex flex-col gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between" aria-live="polite">
+        <div className="flex flex-wrap gap-3">
         {step > 0 ? (
           <Button type="button" variant="secondary" onClick={() => setStep((current) => current - 1)} disabled={loading}>
             Înapoi
@@ -528,8 +565,9 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             {loading ? "Se creează..." : "Creează spațiul de lucru"}
           </Button>
         )}
-        {step === steps.length - 1 ? <p className="text-xs text-[rgb(var(--text-muted))]">Poți modifica aceste date ulterior din Setări.</p> : null}
-        {serverError ? <p className="text-sm text-red-300">{serverError}</p> : null}
+        </div>
+        {step === steps.length - 1 ? <p className="text-[0.8125rem] text-[rgb(var(--text-muted))]">Poți modifica aceste date ulterior din Setări.</p> : null}
+        {serverError ? <p className="text-sm text-[rgb(var(--danger-text))]">{serverError}</p> : null}
       </div>
     </div>
   );

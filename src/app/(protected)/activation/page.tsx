@@ -12,16 +12,14 @@ export default async function ActivationPage({ searchParams }: { searchParams: {
   const [current, crm, opportunities] = await Promise.all([getCurrentBusinessForUser({ redirectIfMissing: true }), getCrmWorkspaceForCurrentBusiness(), getOpportunitiesForCurrentBusiness()]);
   const organizations = crm.ready ? crm.organizations : [];
   const contacts = crm.ready ? crm.contacts : [];
-  const hasOwnerState = opportunities.some((item) => item.ownerProfileId) || opportunities.length > 0;
-  const hasActionState = opportunities.some((item) => item.actions.some((action) => action.status === "pending")) || opportunities.length > 0;
+  const hasOwnerState = opportunities.some((item) => Boolean(item.ownerProfileId));
+  const hasActionState = opportunities.some((item) => item.actions.some((action) => action.status === "pending"));
   const reviewed = opportunities.some((item) => item.status !== "new");
   const steps = [
     { label: "Workspace configurat", complete: Boolean(current?.business.name), href: "/settings", action: "Verifică profilul" },
-    { label: "Prima companie reală", complete: organizations.length > 0, href: "/companies", action: "Adaugă companie" },
-    { label: "Contact sau lipsă vizibilă", complete: contacts.length > 0 || opportunities.length > 0, href: "/contacts", action: "Adaugă contact" },
+    { label: "Context client verificat", complete: organizations.length > 0 || contacts.length > 0, href: "/companies", action: "Adaugă companie" },
     { label: "Prima oportunitate", complete: opportunities.length > 0, href: "/opportunities/analyze", action: "Creează oportunitate" },
-    { label: "Responsabilitate clară", complete: hasOwnerState, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/opportunities", action: "Stabilește responsabilul" },
-    { label: "Următoarea acțiune", complete: hasActionState, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/today", action: "Programează acțiunea" },
+    { label: "Owner și next action stabilite", complete: hasOwnerState && hasActionState, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/opportunities", action: hasOwnerState ? "Programează acțiunea" : "Stabilește responsabilul" },
     { label: "Oportunitate revizuită", complete: reviewed, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/dashboard", action: "Revizuiește rezultatul" }
   ];
   const completed = steps.filter((step) => step.complete).length;

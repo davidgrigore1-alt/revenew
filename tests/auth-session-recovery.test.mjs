@@ -85,15 +85,19 @@ test("recovery, switch and callback routes use Supabase SSR cookie flows", () =>
   assert.equal(cleanup.includes("supabase.auth.signOut()"), true);
   assert.equal(cleanup.includes("isSupabaseAuthCookie"), true);
   assert.equal(cleanup.includes("response.cookies.set"), true);
-  assert.equal(callbackRoute.includes("exchangeCodeForSession(code)"), true);
+  assert.equal(callbackRoute.includes("exchangeCodeForSession(confirmation.code)"), true);
+  assert.equal(callbackRoute.includes("verifyOtp"), true);
   assert.equal(callbackRoute.includes("/auth/bootstrap"), true);
 });
 
 test("signup sends email confirmations through the auth callback route", () => {
   const authForm = fs.readFileSync(path.resolve("src/components/auth/AuthForm.tsx"), "utf8");
+  const confirmation = fs.readFileSync(path.resolve("src/lib/auth/confirmation.ts"), "utf8");
 
   assert.equal(authForm.includes("emailRedirectTo"), true);
-  assert.equal(authForm.includes("/auth/callback?next=/auth/bootstrap"), true);
+  assert.equal(authForm.includes("authConfirmationRedirectUrl"), true);
+  assert.equal(confirmation.includes("/auth/callback?next="), true);
+  assert.equal(confirmation.includes('"/onboarding"'), true);
   assert.equal(authForm.includes("full_name"), true);
   assert.equal(authForm.includes("phone"), true);
 });

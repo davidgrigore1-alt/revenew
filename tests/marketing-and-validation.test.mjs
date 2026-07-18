@@ -158,7 +158,7 @@ test("Romanian administrative areas are canonical and locality is validated text
   assert.equal(countySource.includes("romanianLocalities"), false);
 });
 
-test("onboarding form clears dependent geography fields and uses controlled Romania selectors", () => {
+test("onboarding form preserves locality while using controlled Romania selectors", () => {
   const source = fs.readFileSync(path.resolve("src/components/onboarding/OnboardingForm.tsx"), "utf8");
 
   assert.equal(source.includes("SearchableSelect"), true);
@@ -169,9 +169,9 @@ test("onboarding form clears dependent geography fields and uses controlled Roma
   assert.equal(source.includes("Exemplu: Ploiești"), true);
   assert.equal(source.includes("Introdu localitatea sediului sau punctului principal de lucru."), true);
   assert.equal(source.includes("companyPhoneCountry: value"), true, "changing country must update phone country context");
-  assert.equal(source.includes('administrativeArea: "", city: ""'), true, "changing country must clear region and locality");
-  assert.equal(source.includes('if (name === "administrativeArea")'), true, "changing region must clear locality");
-  assert.equal(source.includes('return { ...current, administrativeArea: value, city: "" }'), true);
+  assert.equal(source.includes('administrativeArea: "", city: ""'), false, "changing country must not silently erase a legitimate locality");
+  assert.equal(source.includes('if (name === "administrativeArea")'), true, "changing region must use the controlled county value");
+  assert.equal(source.includes('return { ...current, administrativeArea: value }'), true);
 });
 
 test("shared phone validation uses libphonenumber and normalizes E.164", () => {
