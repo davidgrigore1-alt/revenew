@@ -4,6 +4,7 @@ import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
 import { getCurrentPaidAccessContext, getPaidAccessStatusLabel } from "@/lib/billing/paid-access";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { isOpenAIConfigured } from "@/lib/openai/client";
@@ -15,9 +16,9 @@ function DefinitionList({ items }: { items: Array<[string, string]> }) {
   return (
     <dl className="grid gap-4 text-sm">
       {items.map(([label, value]) => (
-        <div key={label} className="flex justify-between gap-4 border-b border-[rgb(var(--border))] pb-3">
+        <div key={label} className="grid min-w-0 gap-1 border-b border-[rgb(var(--border))] pb-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-4">
           <dt className="text-[rgb(var(--muted-foreground))]">{label}</dt>
-          <dd className="max-w-[320px] break-words text-right font-semibold text-[rgb(var(--foreground))]">{value}</dd>
+          <dd className="min-w-0 break-all font-semibold text-[rgb(var(--foreground))] sm:text-right">{value}</dd>
         </div>
       ))}
     </dl>
@@ -29,6 +30,8 @@ export default async function SettingsPage() {
   const paidAccess = await getCurrentPaidAccessContext({ redirectIfMissingBusiness: true });
   const business = currentBusiness?.business;
   const currentProfile = isSupabaseConfigured ? await getCurrentProfile() : { authUser: null, profile: null };
+  const authorization = await getAuthorizationContext();
+  const canSeeGovernance = authorization.permissions.some((permission) => ["workspace.members.read", "workspace.policies.read", "approvals.read"].includes(permission));
   const openAIConnected = isOpenAIConfigured();
   const isDevelopmentMode = process.env.NODE_ENV === "development";
   const isPreviewMode = paidAccess?.accessMode === "preview";
@@ -56,19 +59,18 @@ export default async function SettingsPage() {
 
   return (
     <PageShell
-      eyebrow="Setări"
-      title="Configurare workspace"
-      description="Setări pentru companie, temă, recomandări și datele folosite în ReveNew."
+      eyebrow="Administrare"
+      title="Setări"
+      description="Configurează workspace-ul, accesul, recomandările și capacitatea operațională dintr-un singur punct de control."
     >
       <div className="grid gap-6">
-        <div className="rounded-card border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] p-5">
-          <h2 className="text-lg font-semibold">Administrare enterprise</h2>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Gestionează echipa, politicile, aprobările, cozile de lucru și jurnalul de audit.</p>
-          <Link href="/settings/governance" className="focus-ring mt-4 inline-flex min-h-10 items-center rounded-lg bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))]">Deschide Echipă și guvernanță</Link>
-        </div>
+        {canSeeGovernance ? <div className="grid gap-4 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div><p className="text-label text-[rgb(var(--primary))]">Control workspace</p><h2 className="mt-1 text-lg font-semibold">Echipă și guvernanță</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Rolurile, politicile, aprobările, cozile de lucru și auditul au o zonă dedicată, disponibilă numai conform permisiunilor existente.</p></div>
+          <Link href="/settings/governance" className="focus-ring inline-flex min-h-11 items-center justify-center rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))]">Deschide administrarea →</Link>
+        </div> : null}
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <nav className="sticky top-[4.25rem] z-20 flex gap-1 overflow-x-auto rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.94)] p-1 shadow-card backdrop-blur" aria-label="Secțiuni setări">
-          {[["companie", "Companie"], ["acces", "Acces și control"], ["utilizare", "Utilizare"]].map(([id, label]) => <a key={id} href={`#${id}`} className="focus-ring whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+          {[["#companie", "Companie"], ["#workspace", "Workspace"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
         </nav>
 
         <section id="companie" className="scroll-mt-36 grid gap-4">
@@ -88,18 +90,18 @@ export default async function SettingsPage() {
             />
           </DataCard>
 
-          <DataCard title="Temă" description="Alege modul de afișare. Preferința rămâne salvată în browser.">
+          <div id="workspace" className="scroll-mt-36"><DataCard title="Temă și afișare" description="Alege modul de afișare. Preferința rămâne salvată în browser.">
             <div className="flex flex-wrap items-center gap-3">
               <ThemeToggle />
               <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Butonul alternează între lumină, întuneric și tema sistemului.</p>
             </div>
-          </DataCard>
+          </DataCard></div>
         </div></section>
 
         <section id="acces" className="scroll-mt-36 grid gap-4">
           <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Control</p><h2 className="mt-1 text-lg font-semibold">Acces și recomandări</h2></div>
         <div className="grid gap-4 xl:grid-cols-2">
-          <DataCard title="Recomandări și AI" description="ReveNew pregătește recomandări. Echipa ta păstrează controlul deciziilor și trimiterilor.">
+          <div id="recomandari" className="scroll-mt-36"><DataCard title="Recomandări și AI" description="ReveNew pregătește recomandări. Echipa păstrează controlul deciziilor și trimiterilor.">
             <DefinitionList
               items={[
                 ["Analiză AI", openAIConnected ? "Disponibilă când există credit API" : "Fallback local activ"],
@@ -108,9 +110,9 @@ export default async function SettingsPage() {
                 ["Chei API", "Rămân doar pe server"]
               ]}
             />
-          </DataCard>
+          </DataCard></div>
 
-          <DataCard
+          <div id="plan" className="scroll-mt-36"><DataCard
             title="Plan și acces"
             description={isPreviewMode ? "Accesul este permis în modul de testare după selectarea unui plan demonstrativ." : "Accesul la dashboard este verificat pe server pe baza abonamentului curent."}
           >
@@ -149,7 +151,7 @@ export default async function SettingsPage() {
                 </div>
               </>
             )}
-          </DataCard>
+          </DataCard></div>
 
           <DataCard title="Date și confidențialitate" description="Claritate despre ce folosește aplicația în acest moment.">
             <ul className="grid gap-3 text-sm leading-6 text-[rgb(var(--muted-foreground))]">

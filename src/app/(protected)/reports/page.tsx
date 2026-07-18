@@ -203,28 +203,28 @@ function CompactOpportunity({ opportunity }: { opportunity: Opportunity }) {
   return (
     <Link
       href={`/opportunities/${opportunity.id}`}
-      className="block rounded-lg border border-white/10 bg-ink-900/70 p-4 transition hover:border-mint-400/30 focus:outline-none focus:ring-2 focus:ring-mint-400/35"
+      className="focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))]"
     >
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={opportunity.status} />
         <ScoreBadge label="Fit" score={opportunity.fitScore} />
       </div>
-      <h3 className="mt-3 font-semibold text-white">{opportunity.title}</h3>
-      <div className="mt-3 grid gap-3 text-sm text-zinc-400 sm:grid-cols-3">
+      <h3 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{opportunity.title}</h3>
+      <div className="mt-3 grid gap-3 text-sm text-[rgb(var(--text-muted))] sm:grid-cols-3">
         <p>
-          <span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Valoare</span>
-          <span className="font-semibold text-white">{formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
+          <span className="text-label block text-[rgb(var(--text-faint))]">Valoare estimată</span>
+          <span className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} – {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
         </p>
         <p>
-          <span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Termen</span>
-          <span className="font-semibold text-white">{formatDate(opportunity.deadline)}</span>
+          <span className="text-label block text-[rgb(var(--text-faint))]">Termen</span>
+          <span className="font-semibold text-[rgb(var(--foreground))]">{formatDate(opportunity.deadline)}</span>
         </p>
         <p>
-          <span className="block text-xs uppercase tracking-[0.14em] text-zinc-500">Urmatorul pas</span>
-          <span className="font-semibold text-white">{opportunity.recommendedAction}</span>
+          <span className="text-label block text-[rgb(var(--text-faint))]">Următorul pas</span>
+          <span className="font-semibold text-[rgb(var(--foreground))]">{opportunity.recommendedAction}</span>
         </p>
       </div>
-      <p className="mt-3 text-sm font-semibold text-mint-300">Deschide oportunitatea -&gt;</p>
+      <p className="mt-3 text-sm font-semibold text-[rgb(var(--primary))]">Deschide oportunitatea →</p>
     </Link>
   );
 }
@@ -241,8 +241,8 @@ export default async function ReportsPage() {
   const opportunityById = new Map(opportunities.map((opportunity) => [opportunity.id, opportunity]));
 
   const ronOpportunities = opportunities.filter((item) => (item.currency ?? "RON") === "RON");
-  const pipelineValue = ronOpportunities.reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const activeOpportunities = opportunities.filter((item) => !["won", "lost", "ignored"].includes(item.status));
+  const pipelineValue = activeOpportunities.filter((item) => (item.currency ?? "RON") === "RON").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const wonValue = ronOpportunities.filter((item) => item.status === "won").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const lostValue = ronOpportunities.filter((item) => item.status === "lost").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const deadlinesThisWeek = opportunities.filter((item) => item.deadline && item.deadline.slice(0, 10) >= today && item.deadline.slice(0, 10) <= nextWeek);
@@ -268,6 +268,25 @@ export default async function ReportsPage() {
     : "Nu exista încă suficiente date pentru un raport comercial relevant.";
 
   const recentActivity = workflow.events.slice(0, 8);
+  const reportDistribution = [
+    { label: "Lead", statuses: ["new", "reviewed", "action_generated"] },
+    { label: "Calificat", statuses: ["contacted"] },
+    { label: "Propunere", statuses: ["follow_up_needed"] },
+    { label: "Câștigat", statuses: ["won"] },
+    { label: "Pierdut", statuses: ["lost", "ignored"] }
+  ].map((stage) => {
+    const stageOpportunities = opportunities.filter((opportunity) => stage.statuses.includes(opportunity.status));
+    const ronValue = stageOpportunities
+      .filter((opportunity) => (opportunity.currency ?? "RON") === "RON")
+      .reduce((sum, opportunity) => sum + opportunity.estimatedValueHigh, 0);
+    return { label: stage.label, count: stageOpportunities.length, value: formatCurrency(ronValue, "RON") };
+  });
+  const managementAgenda = [
+    { label: "Acțiuni restante", value: overdueActions.length, href: "/today", tone: overdueActions.length ? "danger" as const : "neutral" as const },
+    { label: "Valoare mare fără acțiune", value: highValueWithoutAction.length, href: "/opportunities", tone: highValueWithoutAction.length ? "warning" as const : "neutral" as const },
+    { label: "Deadline-uri apropiate", value: closeDeadlines.length, href: "/opportunities", tone: closeDeadlines.length ? "warning" as const : "neutral" as const },
+    { label: "Documente de revizuit", value: followUpSummary.awaitingReview, href: "/outreach", tone: followUpSummary.awaitingReview ? "warning" as const : "neutral" as const }
+  ];
   const reportText = [
     "ReveNew - Raport comercial",
     `Business: ${business?.name ?? "Workspace"}`,
@@ -310,7 +329,7 @@ export default async function ReportsPage() {
     >
       <div className="grid gap-6 print:block print:space-y-5">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <p className="text-sm font-semibold text-zinc-400">Raport generat la: {formatDateTimeWithSeconds(reportGeneratedAt)}</p>
+        <p className="text-sm font-semibold text-[rgb(var(--text-muted))]">Raport generat la: {formatDateTimeWithSeconds(reportGeneratedAt)}</p>
         {isSupabaseConfigured && opportunities.length === 0 ? (
           <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." />
         ) : null}
@@ -324,12 +343,10 @@ export default async function ReportsPage() {
           documentsGenerated={generatedDocuments}
           documentsAwaitingReview={followUpSummary.awaitingReview}
           documentsApprovedNotSent={followUpSummary.approvedNotSent}
+          distribution={reportDistribution}
+          agenda={managementAgenda}
           summary={executiveSummary}
         />
-
-        <DataCard title="Export raport" description="Copiază, descarcă sau printează raportul pentru discuția comercială săptămânală.">
-          <ReportActions reportText={reportText} fileName="revenew-raport-comercial.txt" />
-        </DataCard>
 
         <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 print:block">
           <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-2 font-semibold marker:hidden"><span>Indicatori detaliați de execuție</span><span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs text-[rgb(var(--text-muted))]">22 indicatori</span></summary>
@@ -388,14 +405,14 @@ export default async function ReportsPage() {
               <div className="grid gap-3">
                 {inboxSummary.topSignals.length > 0 ? (
                   inboxSummary.topSignals.map((signal) => (
-                    <Link key={signal.id} href={signal.convertedOpportunityId ? `/opportunities/${signal.convertedOpportunityId}` : "/inbox"} className="block rounded-lg border border-white/10 bg-ink-900/70 p-4 transition hover:border-mint-400/30">
+                    <Link key={signal.id} href={signal.convertedOpportunityId ? `/opportunities/${signal.convertedOpportunityId}` : "/inbox"} className="focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 transition-colors hover:border-[rgb(var(--border-strong))]">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded border border-white/10 bg-white/[0.06] px-2 py-1 text-xs font-semibold text-zinc-300">{signal.status}</span>
-                        <span className="rounded border border-white/10 bg-white/[0.06] px-2 py-1 text-xs font-semibold text-zinc-300">{signal.priority}</span>
+                        <span className="status-pill status-pill-neutral">{signal.status}</span>
+                        <span className="status-pill status-pill-warning">{signal.priority}</span>
                       </div>
-                      <h3 className="mt-3 font-semibold text-white">{signal.contactCompany || signal.contactName || "Semnal comercial"}</h3>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">{signal.extractedSummary || signal.detectedNeed || signal.rawMessage || "Fara sumar."}</p>
-                      <p className="mt-3 text-sm font-semibold text-mint-300">{signal.convertedOpportunityId ? "Deschide oportunitatea -&gt;" : "Deschide Inbox Comercial -&gt;"}</p>
+                      <h3 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{signal.contactCompany || signal.contactName || "Semnal comercial"}</h3>
+                      <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{signal.extractedSummary || signal.detectedNeed || signal.rawMessage || "Fără sumar."}</p>
+                      <p className="mt-3 text-sm font-semibold text-[rgb(var(--primary))]">{signal.convertedOpportunityId ? "Deschide oportunitatea →" : "Deschide Inbox Comercial →"}</p>
                     </Link>
                   ))
                 ) : (
@@ -418,15 +435,15 @@ export default async function ReportsPage() {
               <div className="space-y-3">
                 {urgentActions.length > 0 ? (
                   urgentActions.slice(0, 8).map((action) => (
-                    <Link key={action.id} href={`/opportunities/${action.opportunityId ?? ""}`} className="block rounded-lg border border-white/10 bg-ink-900/70 p-4 transition hover:border-mint-400/30">
+                    <Link key={action.id} href={`/opportunities/${action.opportunityId ?? ""}`} className="focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 transition-colors hover:border-[rgb(var(--border-strong))]">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-white">{action.title}</p>
-                        <span className="rounded border border-white/10 px-2 py-1 text-xs text-zinc-300">{priorityLabels[action.priority ?? "medium"]}</span>
-                        <span className="rounded border border-white/10 px-2 py-1 text-xs text-zinc-300">{action.status === "pending" ? "In asteptare" : action.status}</span>
+                        <p className="font-semibold text-[rgb(var(--foreground))]">{action.title}</p>
+                        <span className="status-pill status-pill-warning">{priorityLabels[action.priority ?? "medium"]}</span>
+                        <span className="status-pill status-pill-neutral">{action.status === "pending" ? "În așteptare" : action.status}</span>
                       </div>
-                      <p className="mt-1 text-sm text-zinc-400">{opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-mint-400">Termen: {formatDateTimeWithSeconds(action.dueAt)}</p>
-                      <p className="mt-3 text-sm font-semibold text-mint-300">Deschide oportunitatea -&gt;</p>
+                      <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"}</p>
+                      <p className="text-label mt-2 text-[rgb(var(--warning-text))]">Termen: {formatDateTimeWithSeconds(action.dueAt)}</p>
+                      <p className="mt-3 text-sm font-semibold text-[rgb(var(--primary))]">Deschide oportunitatea →</p>
                     </Link>
                   ))
                 ) : (
@@ -437,13 +454,13 @@ export default async function ReportsPage() {
 
             <DataCard title="Avertizare pierderi">
               {riskWarnings.length > 0 ? (
-                <ul className="space-y-3 text-sm leading-6 text-zinc-300">
+                <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
                   {riskWarnings.map((warning) => (
                     <li key={warning}>{warning}</li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm leading-6 text-zinc-300">Nu exista avertizari majore in acest moment. Mentine follow-up-urile la zi.</p>
+                <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">Nu există avertizări majore în acest moment. Menține follow-up-urile la zi.</p>
               )}
             </DataCard>
           </div>
@@ -454,9 +471,9 @@ export default async function ReportsPage() {
             <div className="space-y-3">
               {deadlinesThisWeek.length > 0 ? (
                 deadlinesThisWeek.map((opportunity) => (
-                  <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`} className="block rounded-lg border border-white/10 bg-ink-900/70 p-4 transition hover:border-mint-400/30">
-                    <p className="font-semibold text-white">{opportunity.title}</p>
-                    <p className="mt-1 text-sm text-zinc-400">Termen: {formatDateTimeWithSeconds(opportunity.deadline)}</p>
+                  <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`} className="focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 transition-colors hover:border-[rgb(var(--border-strong))]">
+                    <p className="font-semibold text-[rgb(var(--foreground))]">{opportunity.title}</p>
+                    <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Termen: {formatDateTimeWithSeconds(opportunity.deadline)}</p>
                   </Link>
                 ))
               ) : (
@@ -469,13 +486,13 @@ export default async function ReportsPage() {
             <div className="space-y-3">
               {recentActivity.length > 0 ? (
                 recentActivity.map((event) => (
-                  <div key={event.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
+                  <div key={event.id} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-white">{event.label}</p>
-                      {isDevelopmentMode ? <span className="rounded border border-white/10 px-2 py-1 text-xs text-zinc-500">{event.type}</span> : null}
+                      <p className="font-semibold text-[rgb(var(--foreground))]">{event.label}</p>
+                      {isDevelopmentMode ? <span className="status-pill status-pill-neutral">{event.type}</span> : null}
                     </div>
-                    <p className="mt-1 text-sm text-zinc-400">{formatDateTimeWithSeconds(event.date)}</p>
-                    {event.description ? <p className="mt-2 text-sm leading-6 text-zinc-300">{event.description}</p> : null}
+                    <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.date)}</p>
+                    {event.description ? <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{event.description}</p> : null}
                   </div>
                 ))
               ) : (
@@ -484,6 +501,10 @@ export default async function ReportsPage() {
             </div>
           </DataCard>
         </div>
+
+        <DataCard title="Export și distribuire" description="Copiază, descarcă sau printează raportul după revizuirea indicatorilor și a agendei manageriale.">
+          <ReportActions reportText={reportText} fileName="revenew-raport-comercial.txt" />
+        </DataCard>
       </div>
     </PageShell>
   );

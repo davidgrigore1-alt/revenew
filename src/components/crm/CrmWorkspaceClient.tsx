@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { BuildingOffice2Icon, EnvelopeIcon, MagnifyingGlassIcon, PhoneIcon, PlusIcon, UserIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
+import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
 import type { CrmContact, CrmOrganization } from "@/lib/types";
@@ -28,6 +29,9 @@ const roleOptions = [
   ["other", "Alt rol"]
 ];
 
+const roleLabels = Object.fromEntries(roleOptions) as Record<string, string>;
+const relationshipLabels: Record<string, string> = { prospect: "Prospect", customer: "Client", partner: "Partener", inactive: "Inactiv" };
+
 export function CrmWorkspaceClient({ organizations, contacts, view = "all", organizationStats = {} }: CrmWorkspaceClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -45,6 +49,12 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
     return matchesQuery && (relationship === "all" || organization.relationshipStatus === relationship);
   }), [organizations, normalizedQuery, relationship]);
   const filteredContacts = useMemo(() => contacts.filter((contact) => !normalizedQuery || `${contact.fullName} ${contact.email ?? ""} ${contact.phone ?? ""} ${contact.jobTitle ?? ""} ${contact.organization?.name ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery)), [contacts, normalizedQuery]);
+  const activeRelationships = organizations.filter((organization) => organization.relationshipStatus !== "inactive").length;
+  const companiesWithPrimaryContact = organizations.filter((organization) => contacts.some((contact) => contact.organizationId === organization.id && contact.isPrimaryForOrganization)).length;
+  const activeOpportunities = Object.values(organizationStats).reduce((sum, stat) => sum + stat.activeOpportunities, 0);
+  const decisionContacts = contacts.filter((contact) => contact.decisionRole === "decision_maker").length;
+  const primaryContacts = contacts.filter((contact) => contact.isPrimaryForOrganization).length;
+  const completeContacts = contacts.filter((contact) => contact.email && contact.phone).length;
 
   useEffect(() => {
     if (!panel) return;
@@ -80,6 +90,23 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
     <div className="grid gap-6">
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
+
+      {view === "companies" ? (
+        <DataSummaryStrip label="Acoperire relații comerciale" items={[
+          { label: "Companii", value: organizations.length, note: "În workspace-ul curent.", tone: "brand" },
+          { label: "Relații active", value: activeRelationships, note: "Prospect, client sau partener.", tone: "neutral" },
+          { label: "Contact principal", value: `${companiesWithPrimaryContact}/${organizations.length}`, note: "Companii cu contact confirmat.", tone: companiesWithPrimaryContact === organizations.length ? "success" : "warning" },
+          { label: "Oportunități active", value: activeOpportunities, note: "Legate de companii.", tone: "neutral" }
+        ]} />
+      ) : null}
+      {view === "contacts" ? (
+        <DataSummaryStrip label="Acoperire contacte comerciale" items={[
+          { label: "Contacte", value: contacts.length, note: "Persoane active în CRM.", tone: "brand" },
+          { label: "Decidenți", value: decisionContacts, note: "Rol de decizie confirmat.", tone: "neutral" },
+          { label: "Contacte principale", value: primaryContacts, note: "Legătura principală a companiei.", tone: "neutral" },
+          { label: "Date complete", value: `${completeContacts}/${contacts.length}`, note: "Email și telefon disponibile.", tone: completeContacts === contacts.length ? "success" : "warning" }
+        ]} />
+      ) : null}
 
       <div className="flex flex-col gap-3 border-b border-[rgb(var(--border))] pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
@@ -231,11 +258,11 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
             const primary = organizationContacts.find((contact) => contact.isPrimaryForOrganization);
             return (
-              <article key={organization.id} className="grid gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)_auto] lg:items-center">
+              <article key={organization.id} className="grid gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-[border-color,box-shadow] hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)_auto] lg:items-center">
                 <div className="flex min-w-0 items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--brand-100))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--surface-muted))] dark:text-[rgb(var(--brand-300))]"><BuildingOffice2Icon className="h-5 w-5" aria-hidden="true" /></span>
-                  <div className="min-w-0"><a href={`/crm/organizations/${organization.id}`} className="break-words font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{organization.name}</a>
-                  <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Detalii necompletate"}</p></div>
+                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><a href={`/crm/organizations/${organization.id}`} className="focus-ring break-words rounded-button font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{organization.name}</a><span className={`status-pill ${organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand"}`}>{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Relație neclasificată"}</span></div>
+                  <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Industrie și localizare necompletate"}</p></div>
                 </div>
                 <div className="grid gap-1.5 text-xs text-[rgb(var(--text-muted))] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                   <p><span className="text-[rgb(var(--text-faint))]">Contact</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</strong></p>
@@ -257,12 +284,12 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
         <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2>
         <div className="grid gap-3 xl:grid-cols-2">
           {filteredContacts.map((contact) => (
-            <article key={contact.id} className="flex min-h-full flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card">
+            <article key={contact.id} className="flex min-h-full flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-[border-color,box-shadow] hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover">
               <div className="flex min-w-0 items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-secondary))]"><UserIcon className="h-5 w-5" aria-hidden="true" /></span>
                 <div className="min-w-0"><h3 className="break-words font-semibold text-[rgb(var(--foreground))]">{contact.fullName}</h3>
-                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p>
-                {contact.isPrimaryForOrganization ? <p className="mt-1.5 text-xs font-semibold text-[rgb(var(--primary))]">Contact principal</p> : null}</div>
+                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Funcție sau companie neconfirmată"}</p>
+                <div className="mt-2 flex flex-wrap gap-2"><span className="status-pill status-pill-brand">{roleLabels[contact.decisionRole ?? "other"] ?? "Rol neconfirmat"}</span>{contact.isPrimaryForOrganization ? <span className="status-pill status-pill-success">Contact principal</span> : null}</div></div>
               </div>
               <dl className="mt-4 grid gap-2 border-t border-[rgb(var(--border))] pt-3 text-sm text-[rgb(var(--muted-foreground))] sm:grid-cols-2">
                 <div className="flex min-w-0 items-center gap-2"><EnvelopeIcon className="h-4 w-4 shrink-0" aria-hidden="true" /><dt className="sr-only">Email</dt><dd className="truncate">{contact.email ?? "Email necompletat"}</dd></div>
