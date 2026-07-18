@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { BuildingOffice2Icon, EnvelopeIcon, MagnifyingGlassIcon, PhoneIcon, PlusIcon, UserIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
@@ -231,19 +231,21 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
             const primary = organizationContacts.find((contact) => contact.isPrimaryForOrganization);
             return (
-              <article key={organization.id} className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <a href={`/crm/organizations/${organization.id}`} className="break-words text-lg font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{organization.name}</a>
-                    <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Detalii necompletate"}</p>
-                    <p className="mt-2 text-sm">Contact principal: <span className="font-semibold">{primary?.fullName ?? "Neconfirmat"}</span></p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
+              <article key={organization.id} className="grid gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)_auto] lg:items-center">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--brand-100))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--surface-muted))] dark:text-[rgb(var(--brand-300))]"><BuildingOffice2Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <div className="min-w-0"><a href={`/crm/organizations/${organization.id}`} className="break-words font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{organization.name}</a>
+                  <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Detalii necompletate"}</p></div>
+                </div>
+                <div className="grid gap-1.5 text-xs text-[rgb(var(--text-muted))] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <p><span className="text-[rgb(var(--text-faint))]">Contact</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</strong></p>
+                  <p><span className="text-[rgb(var(--text-faint))]">Activitate</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</strong></p>
+                  <p className="sm:col-span-2 lg:col-span-1 xl:col-span-2">{organizationContacts.length} contacte · {organizationStats[organization.id]?.activeOpportunities ?? 0} oportunități active</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                     <Button variant="secondary" onClick={() => { setEditingOrganization(organization); setPanel("organization"); }}>Editează</Button>
                     <Button variant="ghost" onClick={() => runAction(() => archiveCrmOrganization(organization.id))}>Arhivează</Button>
-                  </div>
                 </div>
-                <p className="mt-3 text-xs text-[rgb(var(--muted-foreground))]">{organizationContacts.length} contacte · {organizationStats[organization.id]?.activeOpportunities ?? 0} oportunități active · Ultima activitate {formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</p>
               </article>
             );
           })}
@@ -253,24 +255,23 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
 
       {view !== "companies" ? <section className="grid gap-4">
         <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 xl:grid-cols-2">
           {filteredContacts.map((contact) => (
-            <article key={contact.id} className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="break-words font-semibold text-[rgb(var(--foreground))]">{contact.fullName}</h3>
-                  <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p>
-                  {contact.isPrimaryForOrganization ? <p className="mt-2 text-xs font-semibold text-[rgb(var(--primary))]">Contact principal companie</p> : null}
-                </div>
-                <div className="flex flex-wrap gap-2">
+            <article key={contact.id} className="flex min-h-full flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-secondary))]"><UserIcon className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0"><h3 className="break-words font-semibold text-[rgb(var(--foreground))]">{contact.fullName}</h3>
+                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p>
+                {contact.isPrimaryForOrganization ? <p className="mt-1.5 text-xs font-semibold text-[rgb(var(--primary))]">Contact principal</p> : null}</div>
+              </div>
+              <dl className="mt-4 grid gap-2 border-t border-[rgb(var(--border))] pt-3 text-sm text-[rgb(var(--muted-foreground))] sm:grid-cols-2">
+                <div className="flex min-w-0 items-center gap-2"><EnvelopeIcon className="h-4 w-4 shrink-0" aria-hidden="true" /><dt className="sr-only">Email</dt><dd className="truncate">{contact.email ?? "Email necompletat"}</dd></div>
+                <div className="flex min-w-0 items-center gap-2"><PhoneIcon className="h-4 w-4 shrink-0" aria-hidden="true" /><dt className="sr-only">Telefon</dt><dd>{contact.phone ?? "Telefon necompletat"}</dd></div>
+              </dl>
+              <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
                   <Button variant="secondary" onClick={() => { setEditingContact(contact); setPanel("contact"); }}>Editează</Button>
                   <Button variant="ghost" onClick={() => runAction(() => archiveCrmContact(contact.id))}>Arhivează</Button>
-                </div>
               </div>
-              <dl className="mt-3 grid gap-1 text-sm text-[rgb(var(--muted-foreground))]">
-                <div className="flex justify-between gap-3"><dt>Email</dt><dd className="break-all text-right">{contact.email ?? "Necompletat"}</dd></div>
-                <div className="flex justify-between gap-3"><dt>Telefon</dt><dd>{contact.phone ?? "Necompletat"}</dd></div>
-              </dl>
             </article>
           ))}
         </div>

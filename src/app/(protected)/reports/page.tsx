@@ -8,6 +8,7 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { ReportActions } from "@/components/reports/ReportActions";
+import { ExecutiveSummaryVisual } from "@/components/reports/ExecutiveSummaryVisual";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { weeklyReport } from "@/lib/mock-data";
@@ -314,22 +315,32 @@ export default async function ReportsPage() {
           <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." />
         ) : null}
 
-        <DataCard title="Export raport" description="Copiaza, descarca sau printeaza raportul pentru discutia comerciala saptamanala.">
+        <ExecutiveSummaryVisual
+          pipelineValue={formatCurrency(pipelineValue, "RON")}
+          activeCount={activeOpportunities.length}
+          urgentCount={urgentActions.length}
+          wonCount={responseLoop.won}
+          lostCount={responseLoop.lost}
+          documentsGenerated={generatedDocuments}
+          documentsAwaitingReview={followUpSummary.awaitingReview}
+          documentsApprovedNotSent={followUpSummary.approvedNotSent}
+          summary={executiveSummary}
+        />
+
+        <DataCard title="Export raport" description="Copiază, descarcă sau printează raportul pentru discuția comercială săptămânală.">
           <ReportActions reportText={reportText} fileName="revenew-raport-comercial.txt" />
         </DataCard>
 
-        <DataCard title="Rezumat executiv" description="Estimările descriu potențialul urmărit; doar oportunitățile marcate câștigate intră în rezultate confirmate.">
-          <p className="text-sm leading-6 text-zinc-300">{executiveSummary}</p>
-        </DataCard>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 print:block">
+          <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-2 font-semibold marker:hidden"><span>Indicatori detaliați de execuție</span><span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs text-[rgb(var(--text-muted))]">22 indicatori</span></summary>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Pipeline activ · Estimat (RON)" value={formatCurrency(pipelineValue, "RON")} detail="Valoarea maximă estimată doar pentru oportunitățile în RON." tone="mint" />
           <MetricCard label="Oportunități active" value={`${activeOpportunities.length}`} detail="Oportunități deschise care nu sunt marcate câștigate, pierdute sau ignorate." />
           <MetricCard label="Actiuni urgente" value={`${urgentActions.length}`} detail="Actiuni scadente sau apropiate, deduplicate pe oportunitate si termen." tone="gold" />
           <MetricCard label="Conversie confirmată" value={opportunities.length ? `${conversionRate}%` : "Date insuficiente"} detail="Ponderea oportunităților marcate câștigate din total." />
-        </div>
+          </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
           <MetricCard label="Drafturi de revizuit" value={String(followUpSummary.awaitingReview)} detail="Drafturi care necesită revizuire și decizie umană." tone="gold" />
           <MetricCard label="Aprobate · Netrimise" value={String(followUpSummary.approvedNotSent)} detail="Aprobate sau pregătite, fără confirmare de trimitere externă." tone="mint" />
@@ -348,11 +359,14 @@ export default async function ReportsPage() {
           <MetricCard label="Rată de răspuns" value={responseLoop.responseRate === null ? "Date insuficiente" : `${responseLoop.responseRate}%`} detail="Oportunități cu răspuns din cele clasificate." />
           <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
           <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
-        </div>
+          </div>
+        </details>
 
         {inboxSummary.tableReady ? (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <details className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 print:block">
+              <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-2 font-semibold marker:hidden"><span>Inbox și importuri</span><span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs text-[rgb(var(--text-muted))]">14 indicatori</span></summary>
+              <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <MetricCard label="Semnale de revizuit" value={`${inboxSummary.awaitingReviewCount}`} detail="Analizate și pregătite pentru decizia echipei." tone="gold" />
               <MetricCard label="Potențial estimat în revizuire" value={formatCurrency(inboxSummary.estimatedValueUnderReview, "RON")} detail="Estimare activă, separată de venitul confirmat." />
               <MetricCard label="Convertite" value={`${inboxSummary.convertedCount}`} detail="Semnale aprobate și transformate în oportunități." tone="mint" />
@@ -367,7 +381,8 @@ export default async function ReportsPage() {
               <MetricCard label="Rată duplicate" value={`${ingestionSummary.duplicateRate}%`} detail="Rânduri omise prin protecția de idempotency." />
               <MetricCard label="Conversii din import" value={`${ingestionSummary.convertedImportedSignals}`} detail="Semnale CSV aprobate și transformate prin workflow-ul existent." />
               <MetricCard label="Import · Potențial estimat" value={formatCurrency(ingestionSummary.estimatedImportedRecoverableValue, "RON")} detail="Potențial estimat; venitul câștigat rămâne separat." />
-            </div>
+              </div>
+            </details>
 
             <DataCard title="Semnale comerciale noi" description="Top semnale urgente sau noi din Inbox Comercial.">
               <div className="grid gap-3">

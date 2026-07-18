@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { Button } from "@/components/ui/Button";
+import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import {
   analyzeCommercialSignal,
@@ -239,6 +240,7 @@ export function CommercialInboxClient({
   const awaitingReview = signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
   const estimatedUnderReview = awaitingReview.reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0);
   const converted = signals.filter((signal) => signal.reviewStatus === "converted").length;
+  const advancedFilterCount = [confidence !== "all", source !== "all", Boolean(minimumValue), matchFilter !== "all", duplicateFilter !== "all" || ownerFilter !== "all"].filter(Boolean).length;
 
   function replaceSignal(signal: CommercialSignal) {
     setSignals((items) => items.map((item) => {
@@ -360,11 +362,12 @@ export function CommercialInboxClient({
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="În revizuire" value={`${awaitingReview.length}`} detail="Semnale analizate care necesită decizia echipei." tone="gold" />
-        <MetricCard label="Valoare estimată în revizuire" value={formatCurrency(estimatedUnderReview, "RON")} detail="Potențial estimat; nu reprezintă venit confirmat." />
-        <MetricCard label="Convertite" value={`${converted}`} detail="Cazuri aprobate și transformate în oportunități." tone="mint" />
-      </div>
+      <DataSummaryStrip label="Rezumat Inbox Comercial" items={[
+        { label: "În revizuire", value: awaitingReview.length, note: "Necesită decizia echipei.", tone: "warning" },
+        { label: "Potențial estimat · RON", value: formatCurrency(estimatedUnderReview, "RON"), note: "Separat de venitul confirmat.", tone: "brand" },
+        { label: "Convertite", value: converted, note: "Aprobate de echipă.", tone: "success" },
+        { label: "Control extern", value: "Manual", note: "Nicio trimitere automată.", tone: "neutral" }
+      ]} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-[rgb(var(--muted-foreground))]">ReveNew recomandă. Echipa ta verifică, editează și aprobă înainte de orice acțiune externă.</p>
@@ -392,17 +395,22 @@ export function CommercialInboxClient({
         </DataCard>
       ) : null}
 
-      <DataCard title="Coadă de recuperare" description="Ordine implicită: urgență, scor, valoare și vechimea interacțiunii.">
-        <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-8">
+      <DataCard title="Coadă de recuperare" description="Ordine: urgență, scor, valoare și vechime.">
+        <div className="grid gap-3 md:grid-cols-3">
           <Field label="Caută"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className={fieldClasses()} /></Field>
           <Field label="Revizuire"><select value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value as CommercialSignalReviewStatus | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
           <Field label="Urgență"><select value={urgency} onChange={(event) => setUrgency(event.target.value as RecoverabilityUrgency | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(urgencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-          <Field label="Încredere"><select value={confidence} onChange={(event) => setConfidence(event.target.value as RecoverabilityConfidence | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(confidenceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-          <Field label="Sursă"><select value={source} onChange={(event) => setSource(event.target.value as CommercialSignalSource | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-          <Field label="Valoare minimă"><input type="number" min="0" value={minimumValue} onChange={(event) => setMinimumValue(event.target.value)} className={fieldClasses()} /></Field>
-          <Field label="Potrivire"><select value={matchFilter} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)} className={fieldClasses()}><option value="all">Toate</option><option value="matched">Potrivite</option><option value="unmatched">Nepotrivite</option></select></Field>
-          <Field label="Excepții"><select value={`${duplicateFilter}:${ownerFilter}`} onChange={(event) => { const [duplicate, owner] = event.target.value.split(":"); setDuplicateFilter(duplicate as typeof duplicateFilter); setOwnerFilter(owner as typeof ownerFilter); }} className={fieldClasses()}><option value="all:all">Toate</option><option value="risk:all">Risc duplicat</option><option value="all:unassigned">Fără responsabil</option><option value="all:assigned">Cu responsabil</option></select></Field>
         </div>
+        <details className="group mt-4 border-t border-[rgb(var(--border))] pt-3" open={advancedFilterCount > 0}>
+          <summary className="focus-ring inline-flex min-h-10 cursor-pointer list-none items-center rounded-button px-2 text-sm font-semibold text-[rgb(var(--text-secondary))] marker:hidden">Filtre avansate {advancedFilterCount ? <span className="ml-2 rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-xs">{advancedFilterCount} active</span> : null}</summary>
+          <div className="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+            <Field label="Încredere"><select value={confidence} onChange={(event) => setConfidence(event.target.value as RecoverabilityConfidence | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(confidenceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+            <Field label="Sursă"><select value={source} onChange={(event) => setSource(event.target.value as CommercialSignalSource | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+            <Field label="Valoare minimă"><input type="number" min="0" value={minimumValue} onChange={(event) => setMinimumValue(event.target.value)} className={fieldClasses()} /></Field>
+            <Field label="Potrivire"><select value={matchFilter} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)} className={fieldClasses()}><option value="all">Toate</option><option value="matched">Potrivite</option><option value="unmatched">Nepotrivite</option></select></Field>
+            <Field label="Excepții"><select value={`${duplicateFilter}:${ownerFilter}`} onChange={(event) => { const [duplicate, owner] = event.target.value.split(":"); setDuplicateFilter(duplicate as typeof duplicateFilter); setOwnerFilter(owner as typeof ownerFilter); }} className={fieldClasses()}><option value="all:all">Toate</option><option value="risk:all">Risc duplicat</option><option value="all:unassigned">Fără responsabil</option><option value="all:assigned">Cu responsabil</option></select></Field>
+          </div>
+        </details>
       </DataCard>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)]">

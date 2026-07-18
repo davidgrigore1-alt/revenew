@@ -46,9 +46,9 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
     <div className="grid gap-4">
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
-      <div className="grid gap-4 xl:grid-cols-5">
+      <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-5">
         {columns.map((column) => (
-          <section key={column.id} className="min-w-0 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
+          <section key={column.id} className={`min-w-0 rounded-card border p-3.5 ${column.count ? "border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" : "border-dashed border-[rgb(var(--border))] bg-transparent"}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-[rgb(var(--foreground))]">{column.label}</h2>
@@ -57,7 +57,7 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 grid gap-3">
+            <div className={column.count ? "mt-4 grid gap-3" : "mt-2"}>
               {column.opportunities.length > 0 ? (
                 column.opportunities.map((opportunity) => (
                   <article key={opportunity.id} className="min-w-0 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-3">
@@ -107,7 +107,7 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
                   </article>
                 ))
               ) : (
-                <p className="rounded-lg bg-[rgb(var(--surface-elevated))] px-3 py-4 text-sm text-[rgb(var(--muted-foreground))]">Nu există oportunități în această etapă.</p>
+                <p className="py-1 text-xs text-[rgb(var(--text-faint))]">Etapă disponibilă · fără înregistrări</p>
               )}
             </div>
           </section>

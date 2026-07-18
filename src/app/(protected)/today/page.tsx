@@ -1,8 +1,8 @@
-import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
 import { Button } from "@/components/ui/Button";
+import { CompactEmptyState } from "@/components/ui/CompactEmptyState";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import type { RecoveryAction } from "@/lib/recovery";
 
@@ -22,10 +22,6 @@ function groupActions(actions: RecoveryAction[]) {
   };
 }
 
-function CompactEmpty({ label }: { label: string }) {
-  return <p className="rounded-lg bg-[rgb(var(--surface-elevated))] px-4 py-3 text-sm text-[rgb(var(--muted-foreground))]">Nu există acțiuni {label}.</p>;
-}
-
 export default async function TodayPage() {
   const summary = await getRevenueWorkspaceSummary();
   const pending = summary.workQueue.allPersonal.filter((action) => action.status === "pending");
@@ -37,7 +33,7 @@ export default async function TodayPage() {
   }
 
   return (
-    <PageShell eyebrow="Activitate" title="Activitatea mea" description="Acțiunile atribuite ție, ordonate după termen și prioritate."><div className="grid gap-5">
+    <PageShell eyebrow="Activitate" title="Activitatea mea" description="Acțiunile atribuite ție, ordonate după termen și prioritate."><div className="grid gap-3">
       {[
         ["Urgente", groups.urgent, "urgente"],
         ["Astăzi", groups.today, "pentru astăzi"],
@@ -45,15 +41,19 @@ export default async function TodayPage() {
         ["Fără termen", groups.none, "fără termen"],
         ["Finalizate astăzi", summary.workQueue.completedToday, "finalizate astăzi"]
       ].map(([title, actions, emptyLabel]) => (
-        <DataCard key={String(title)} title={String(title)}>
+        <section key={String(title)} className={`rounded-card border p-4 ${((actions as RecoveryAction[]).length > 0) ? "border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" : "border-transparent bg-transparent py-2"}`}>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <h2 className="text-sm font-semibold text-[rgb(var(--foreground))]">{String(title)}</h2>
+            <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs font-semibold tabular-nums text-[rgb(var(--text-muted))]">{(actions as RecoveryAction[]).length}</span>
+          </div>
           <div className="grid gap-3 lg:grid-cols-2">
             {(actions as RecoveryAction[]).length > 0 ? (
               (actions as RecoveryAction[]).map((action) => <TodayActionCard key={`${title}-${action.id}`} action={action} compact />)
             ) : (
-              <CompactEmpty label={String(emptyLabel)} />
+              <div className="lg:col-span-2"><CompactEmptyState>Nu există acțiuni {String(emptyLabel)}.</CompactEmptyState></div>
             )}
           </div>
-        </DataCard>
+        </section>
       ))}
     </div></PageShell>
   );

@@ -3,6 +3,7 @@ import type { Config } from "tailwindcss";
 const semanticColor = (token: string) => `rgb(var(--${token}) / <alpha-value>)`;
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -49,15 +50,18 @@ const config: Config = {
           800: "#1f2229"
         },
         gold: {
-          700: "#8a6424",
-          500: "#c99a3c",
-          400: "#edc776",
-          300: "#e9c878",
-          100: "#f8edce"
+          700: semanticColor("gold-700"),
+          500: semanticColor("gold-500"),
+          400: semanticColor("brand-400"),
+          300: semanticColor("gold-300"),
+          100: semanticColor("gold-100")
         },
         mint: {
-          500: "#2fd19b",
-          400: "#62e5bb"
+          500: semanticColor("brand-500"),
+          400: semanticColor("brand-400"),
+          300: semanticColor("brand-300"),
+          200: semanticColor("brand-100"),
+          100: semanticColor("brand-50")
         }
       },
       fontFamily: {
@@ -82,7 +86,7 @@ const config: Config = {
         elevated: "var(--shadow-elevated)",
         modal: "var(--shadow-modal)",
         premium: "0 24px 80px rgba(0, 0, 0, 0.42)",
-        glow: "0 0 36px rgba(47, 209, 155, 0.16)"
+        glow: "0 0 42px rgb(var(--brand-500) / 0.16)"
       },
       transitionDuration: {
         fast: "var(--motion-fast)",

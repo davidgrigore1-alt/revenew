@@ -61,13 +61,19 @@ export default async function SettingsPage() {
       description="Setări pentru companie, temă, recomandări și datele folosite în ReveNew."
     >
       <div className="grid gap-6">
-        <div className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5">
+        <div className="rounded-card border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] p-5">
           <h2 className="text-lg font-semibold">Administrare enterprise</h2>
           <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Gestionează echipa, politicile, aprobările, cozile de lucru și jurnalul de audit.</p>
           <Link href="/settings/governance" className="focus-ring mt-4 inline-flex min-h-10 items-center rounded-lg bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))]">Deschide Echipă și guvernanță</Link>
         </div>
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <div className="grid gap-6 xl:grid-cols-2">
+        <nav className="sticky top-[4.25rem] z-20 flex gap-1 overflow-x-auto rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.94)] p-1 shadow-card backdrop-blur" aria-label="Secțiuni setări">
+          {[["companie", "Companie"], ["acces", "Acces și control"], ["utilizare", "Utilizare"]].map(([id, label]) => <a key={id} href={`#${id}`} className="focus-ring whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+        </nav>
+
+        <section id="companie" className="scroll-mt-36 grid gap-4">
+          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Configurație</p><h2 className="mt-1 text-lg font-semibold">Companie și afișare</h2></div>
+        <div className="grid gap-4 xl:grid-cols-2">
           <DataCard title="Companie" description="Informațiile folosite în scoruri, mesaje și rapoarte.">
             <DefinitionList
               items={[
@@ -88,9 +94,11 @@ export default async function SettingsPage() {
               <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Butonul alternează între lumină, întuneric și tema sistemului.</p>
             </div>
           </DataCard>
-        </div>
+        </div></section>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+        <section id="acces" className="scroll-mt-36 grid gap-4">
+          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Control</p><h2 className="mt-1 text-lg font-semibold">Acces și recomandări</h2></div>
+        <div className="grid gap-4 xl:grid-cols-2">
           <DataCard title="Recomandări și AI" description="ReveNew pregătește recomandări. Echipa ta păstrează controlul deciziilor și trimiterilor.">
             <DefinitionList
               items={[
@@ -151,9 +159,11 @@ export default async function SettingsPage() {
               <li>Datele sunt folosite pentru recomandări, mesaje pregătite și rapoarte comerciale.</li>
             </ul>
           </DataCard>
-        </div>
+        </div></section>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+        <section id="utilizare" className="scroll-mt-36 grid gap-4">
+          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Capacitate</p><h2 className="mt-1 text-lg font-semibold">Plan și utilizare</h2></div>
+        <div className="grid gap-4 xl:grid-cols-2">
           <DataCard title="Plan și utilizare" description="Contoare orientate pe operațiuni comerciale, fără expunerea costurilor interne de provider.">
             {usageSnapshot?.unavailable ? (
               <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Utilizarea va fi afișată după aplicarea migrației de metering. Accesul curent rămâne controlat de modul activ.</p>
@@ -189,10 +199,12 @@ export default async function SettingsPage() {
               ))}
             </ul>
           </DataCard>
-        </div>
+        </div></section>
 
         {isDevelopmentMode ? (
-          <DataCard title="Mod dezvoltare / Debug">
+          <details id="date" className="scroll-mt-36 rounded-card border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
+            <summary className="focus-ring cursor-pointer list-none rounded-button px-2 py-2 text-sm font-semibold marker:hidden">Date tehnice locale · dezvoltare</summary>
+            <div className="mt-4"><DataCard title="Mod dezvoltare / Debug">
             <DefinitionList
               items={[
                 ["Supabase", isSupabaseConfigured ? "Conectat" : "Neconectat"],
@@ -208,7 +220,8 @@ export default async function SettingsPage() {
                 ["Business-uri deținute", String(ownedBusinesses.length)]
               ]}
             />
-          </DataCard>
+            </DataCard></div>
+          </details>
         ) : null}
       </div>
     </PageShell>
