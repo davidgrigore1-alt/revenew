@@ -1,194 +1,168 @@
-# AGENTS.md — ReveNew
+# AGENTS.md — ReveNew Codex Instructions
 
-## Scope
+## Project Identity
 
-These instructions apply to the entire ReveNew repository unless a deeper `AGENTS.md` overrides a local implementation detail.
+This repository may still be named `moneyhunter-ai`, but the product is now called **ReveNew**.
 
-## Project
+Always use **ReveNew** in product UI, user-facing copy, metadata, headings, navigation, pricing pages, and documentation unless referring to legacy repository history.
 
-- Product: ReveNew
-- Previous name: MoneyHunterAI
-- Primary local repository: `C:\Projects\M`
-- Stack: Next.js App Router, TypeScript, Supabase/PostgreSQL/RLS, OpenAI with local fallback
-- Product language: Romanian
-- Implementation/task prompts: usually English
+ReveNew is a production-grade B2B SaaS for revenue recovery and opportunity management. It is not a demo, not a generic AI app, and not just a landing page.
 
-## Source of truth
+The product helps businesses identify, prioritize, and track lost or underused commercial opportunities with clear ownership, next actions, auditability, and human control.
 
-1. The local working tree is primary.
-2. GitHub is secondary committed history.
-3. Live Supabase state is authoritative for current database contracts.
-4. Never assume migration files were applied.
-5. Inspect before editing:
-   - `git status --short`
-   - `git diff --stat`
-   - `git diff --check`
-   - relevant `AGENTS.md` files
+## Core Design Source
 
-Do not use `git reset --hard`. Do not discard unrelated work.
+Before making frontend or UX changes, read:
 
-## External mutation policy
+- `DESIGN.md`
 
-Without David's explicit approval, do not:
+`DESIGN.md` is the design contract for the redesign. Follow it unless the user explicitly overrides it.
 
-- apply SQL;
-- push Supabase migrations;
-- change RLS/policies/grants in the live DB;
-- delete or change live Auth users/data;
-- deploy;
-- push/merge;
-- send email;
-- mutate Gmail/Calendar/Google data;
-- create or alter external provider resources.
+Do not copy Aura templates directly. Use them only as visual and structural inspiration. The final UI must be adapted to ReveNew’s existing product, data model, business logic, and workflows.
 
-Read-only inspection is allowed when needed.
+## Language and Copy
 
-## Security invariants
+All user-facing product copy must be in premium Romanian business language.
 
-- Security/privacy/compliance by design.
-- Keep strict tenant isolation.
-- RLS must remain enabled.
-- Never expose service-role/API secrets in client code.
-- Never log passwords, tokens, cookies, full provider payloads, raw commercial prompts or sensitive customer data.
-- No email-based authorization.
-- No autonomous message sending without human control.
-- Validate redirects; no open redirects.
-- Validate all server inputs.
-- Derive ownership and identity server-side.
-- Use transactions/idempotency for multi-write/costly workflows.
+Use clear, mature, specific wording.
 
-## Database invariants
+Avoid:
+- hype;
+- “revoluționar”;
+- “garantat”;
+- fake ROI promises;
+- generic AI startup language;
+- childish tone;
+- overpromising automation.
+
+The product should emphasize:
+- venit recuperabil;
+- oportunități comerciale;
+- follow-up;
+- ownership;
+- next action;
+- control uman;
+- auditabilitate;
+- risc;
+- prioritate;
+- decizii comerciale.
+
+## Security Rules
+
+Security is non-negotiable.
+
+Do not:
+- expose API keys in frontend code;
+- expose Supabase service role keys;
+- move privileged server-side logic into client components;
+- weaken Supabase auth;
+- weaken RLS;
+- modify RLS policies for styling/design;
+- modify database schema for visual design unless explicitly required and justified;
+- add unnecessary tracking scripts;
+- show raw secrets, tokens, env values, or internal errors in UI;
+- introduce autonomous risky commercial actions without human review.
 
 Preserve:
+- Supabase auth;
+- protected routes;
+- server/client boundaries;
+- workspace/business data isolation;
+- privacy/security by design;
+- auditability;
+- human approval flows.
 
-- `auth.users.id -> profiles.user_id`
-- `profiles.id -> businesses.owner_profile_id`
-- `business_members.profile_id -> profiles.id`
-- `business_members.business_id -> businesses.id`
-- `opportunities.business_id -> businesses.id`
+## Implementation Workflow
 
-`businesses.owner_id` must never be introduced or referenced.
+Do not implement the full redesign in one massive pass.
 
-## Authorization invariants
+Work in phases:
 
-Platform roles come only from:
+1. Audit current UI architecture.
+2. Refactor design tokens and shared UI components.
+3. Refactor app shell, sidebar, topbar, and page headers.
+4. Redesign Dashboard / Control Center.
+5. Redesign Opportunities list and Opportunity detail/workflow.
+6. Redesign Landing, Access, and Pricing pages.
+7. Redesign Onboarding, Reports, Settings, and Help.
+8. Polish responsive behavior, accessibility, loading states, empty states, and QA.
 
-- `public.platform_user_roles`
+For each phase:
+- inspect relevant files first;
+- preserve existing functionality;
+- keep changes focused;
+- report changed files;
+- explain any risk;
+- run relevant validation commands.
 
-Business ownership comes from:
+## Design Priorities
 
-- `public.businesses.owner_profile_id`
+Priority pages:
 
-Business membership comes from:
+1. Dashboard / Control Center
+2. Opportunities list
+3. Opportunity detail / workflow
+4. Landing page
+5. Access / pricing activation page
+6. Onboarding
+7. Reports
+8. Settings
+9. Login / Signup
+10. Help / secondary pages
 
-- `public.business_members`
+The app must not become a pretty landing page with a weak dashboard. The authenticated product experience is the core.
 
-`public.profiles.role` is deprecated compatibility metadata and must not authorize anything.
+## UI Rules
 
-Never put platform roles into `profiles.role`.
+Use:
+- premium emerald/teal accents;
+- slate/zinc/neutral foundations;
+- subtle borders;
+- clear surfaces;
+- compact operational density;
+- strong typography hierarchy;
+- restrained motion;
+- accessible focus states;
+- professional tables;
+- useful empty states;
+- clear status pills;
+- action-oriented dashboards.
 
-## Auth state that must remain stable
+Avoid:
+- generic purple SaaS gradients;
+- neon;
+- cyberpunk;
+- excessive glassmorphism;
+- decorative charts;
+- huge useless cards;
+- fake dashboard data;
+- AI slop visuals;
+- copying template colors blindly.
 
-- No persisted session -> anonymous.
-- `session_not_found` without Auth cookies -> anonymous.
-- Persisted invalid session -> stale session -> one recovery pass.
-- Temporary provider failure -> retry state without destructive cleanup.
-- `/login?reason=session_expired` renders; reason is presentation-only.
-- `Continuă cu acest cont` navigates to `/auth/bootstrap`.
-- Valid account:
-  - profile + business -> `/dashboard`
-  - profile + no business -> `/onboarding`
-  - no profile -> create exactly one profile -> continue
-- `Folosește alt cont` clears the old session/workspace context.
+## Data Rules
 
-Do not perform another broad auth rewrite without a confirmed new root cause.
+Do not hardcode fake data into authenticated production flows.
 
-## Final profiles.role contract
+Demo-looking data may only be used in isolated mock/demo components if clearly separated from real app logic.
 
-Expected final live contract:
+If live data is missing, create proper empty states instead of fake numbers.
 
-- nullable;
-- no `user` default;
-- new rows omit role / store NULL;
-- historical `business_owner` may remain;
-- `user` not permitted;
-- `platform_admin` not permitted;
-- no authorization reads this field.
+## Routing Rules
 
-Authenticated users must not effectively update:
+Do not rename routes, files, or exported functions casually.
 
-- `profiles.id`
-- `profiles.user_id`
-- `profiles.email`
-- `profiles.role`
-- `profiles.created_at`
+Route changes must be explicitly justified because they can break navigation, auth redirects, and Vercel deployment behavior.
 
-Normal editable fields may include only confirmed fields such as:
+## Validation Commands
 
-- `full_name`
-- `avatar_url`
-- `phone`
+Use the project’s existing scripts where available.
 
-## New-account target lifecycle
+Preferred validation:
 
-```text
-confirmed Auth user
--> exactly one personal profile
--> /onboarding when no accessible business
--> four-step company setup
--> exactly one correctly owned business
--> /dashboard
-```
-
-Onboarding must not require a pre-existing business, membership, platform role, plan or paid access.
-
-## Product / UI principles
-
-- Professional Romanian B2B interface.
-- Clear, calm, premium, not flashy.
-- Highly intuitive; explain what actions do.
-- Dashboard: left navigation, central cards, responsive dark/light mode.
-- No empty gaps for unauthorized tools.
-- Admin/Demo/internal tools rendered only when centrally authorized.
-- Green for success; red only for actual errors.
-- No raw Supabase/PostgreSQL/JWT errors.
-- Human-in-the-loop: “ReveNew recomandă. Echipa ta decide.”
-- Estimations are not guarantees.
-- Original data sources remain visible.
-- Avoid PR hype and absolute revenue claims.
-
-## Current next priorities
-
-1. Verify and checkpoint the final auth/profile-role fix.
-2. Complete and test end-to-end onboarding/business provisioning.
-3. Implement/verify usage metering and redesign Admin cost analytics.
-4. Then public guide, landing-page restructuring, SEO, Resend and staging.
-
-## Validation
-
-For code changes, run as applicable:
-
-- `npm run lint`
-- `npm run build`
-- `npm run test --if-present`
-- `git diff --check`
-- `git status --short`
-
-Do not run `npm audit fix --force`.
-
-## Reporting
-
-Final reports must include:
-
-- confirmed root cause;
-- files changed/created/removed;
-- architecture decision;
-- security impact;
-- tests and exact results;
-- SQL applied or not;
-- migration applied or not;
-- deployment performed or not;
-- remaining risks;
-- exact next manual step.
-
-Never claim completion merely because an error page is hidden or a UI renders.
+```bash
+npm run typecheck
+npm run lint
+npm run validate:security
+npm run validate:migrations
+npm run validate:diff
+npm run build
