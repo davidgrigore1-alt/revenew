@@ -1,60 +1,34 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { clsx } from "clsx";
-import { isNavItemActive, primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
+import { ShellNavigation } from "@/components/dashboard/ShellNavigation";
 import { Logo } from "@/components/ui/Logo";
-import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
-
-function NavLink({ item }: { item: NavigationItem }) {
-  const pathname = usePathname();
-  const active = isNavItemActive(pathname, item.href);
-
-  return (
-    <Link
-      href={item.href}
-      aria-current={active ? "page" : undefined}
-      className={clsx(
-        "focus-ring flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition",
-        active
-          ? "bg-[rgb(var(--primary)_/_0.12)] text-[rgb(var(--primary))] shadow-[inset_3px_0_0_rgb(var(--primary))]"
-          : "text-[rgb(var(--muted-foreground))] hover:bg-[rgb(var(--muted))] hover:text-[rgb(var(--foreground))]"
-      )}
-    >
-      <NavigationIcon name={item.icon} className="h-5 w-5 shrink-0" />
-      <span className="truncate">{item.name}</span>
-    </Link>
-  );
-}
+import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 export function Sidebar({
   primaryItems = primaryNavigation,
-  utilityItems = utilityNavigation
+  utilityItems = utilityNavigation,
+  businessName,
+  isDemo = false
 }: {
   primaryItems?: NavigationItem[];
   utilityItems?: NavigationItem[];
+  businessName?: string;
+  isDemo?: boolean;
 }) {
+  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Workspace activ";
+
   return (
-    <aside className="app-scrollbar fixed left-0 top-0 z-40 hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-[rgb(var(--border))] bg-[rgb(var(--sidebar))] px-4 py-5 xl:block">
-      <div className="h-[72px]">
-        <Logo />
+    <aside className="app-scrollbar fixed inset-y-0 left-0 z-40 hidden w-[260px] overflow-y-auto border-r border-[rgb(var(--border))] bg-[rgb(var(--sidebar))] lg:flex lg:flex-col" aria-label="Navigare ReveNew">
+      <div className="border-b border-[rgb(var(--border))] px-5 py-4">
+        <Logo href="/dashboard" />
       </div>
 
-      <nav className="flex min-h-[calc(100dvh-112px)] flex-col">
-        <div>
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--muted-foreground))]">Principal</p>
-          <div className="mt-3 space-y-1">
-            {primaryItems.map((item) => <NavLink key={item.href} item={item} />)}
-          </div>
-        </div>
+      <div className="mx-3 mt-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Workspace</p>
+        <p className="mt-1 truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={displayName}>{displayName}</p>
+      </div>
 
-        <div className="mt-auto border-t border-[rgb(var(--border))] pt-4">
-          <div className="space-y-1">
-            {utilityItems.map((item) => <NavLink key={item.href} item={item} />)}
-          </div>
-        </div>
-      </nav>
+      <div className="min-h-0 flex-1 px-3 py-4">
+        <ShellNavigation items={[...primaryItems, ...utilityItems]} />
+      </div>
     </aside>
   );
 }

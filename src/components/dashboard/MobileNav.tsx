@@ -2,17 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clsx } from "clsx";
-import { isNavItemActive, primaryNavigation, type NavigationItem } from "@/lib/navigation";
 import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
+import { cn } from "@/lib/utils";
+import { isNavItemActive, primaryNavigation, type NavigationItem } from "@/lib/navigation";
+
+const mobileRouteOrder = ["/dashboard", "/inbox", "/today", "/opportunities"];
 
 export function MobileNav({ items = primaryNavigation }: { items?: NavigationItem[] }) {
   const pathname = usePathname();
-  const mobileLabels: Record<string, string> = { "/inbox": "Inbox", "/today": "Activitate", "/opportunities": "Oportunități" };
-  const mobileItems = items.filter((item) => ["/dashboard", "/inbox", "/today", "/pipeline", "/companies", "/opportunities"].includes(item.href));
+  const availableItems = new Map(items.map((item) => [item.href, item]));
+  const mobileItems = mobileRouteOrder.flatMap((href) => {
+    const item = availableItems.get(href);
+    return item ? [item] : [];
+  });
+
+  if (mobileItems.length === 0) return null;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)_/_0.96)] px-2 py-2 shadow-[var(--shadow-card)] backdrop-blur xl:hidden">
+    <nav aria-label="Navigare rapidă" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.96)] px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 shadow-elevated backdrop-blur-md lg:hidden">
       {mobileItems.map((item) => {
         const active = isNavItemActive(pathname, item.href);
 
@@ -20,14 +27,17 @@ export function MobileNav({ items = primaryNavigation }: { items?: NavigationIte
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             aria-label={item.name}
-            className={clsx(
-              "focus-ring flex h-12 flex-col items-center justify-center rounded-lg text-[11px] font-semibold transition",
-              active ? "bg-[rgb(var(--primary)_/_0.12)] text-[rgb(var(--primary))]" : "text-[rgb(var(--muted-foreground))]"
+            className={cn(
+              "focus-ring flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-control px-1 text-[0.6875rem] font-semibold transition-colors duration-fast",
+              active
+                ? "bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--brand-950))] dark:text-[rgb(var(--brand-300))]"
+                : "text-[rgb(var(--text-muted))] active:bg-[rgb(var(--surface-muted))]"
             )}
           >
-            <NavigationIcon name={item.icon} className="h-5 w-5" />
-            <span className="mt-1 max-w-full text-center">{mobileLabels[item.href] ?? item.name}</span>
+            <NavigationIcon name={item.icon} className="h-5 w-5 shrink-0" />
+            <span className="mt-0.5 max-w-full truncate">{item.shortName ?? item.name}</span>
           </Link>
         );
       })}

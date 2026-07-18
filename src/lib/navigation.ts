@@ -22,12 +22,21 @@ export type NavigationItem = {
   icon: NavigationIconName;
   permission: Permission;
   description?: string;
+  shortName?: string;
+};
+
+export type NavigationGroupId = "control" | "commercial-flow" | "relationships" | "execution" | "management" | "utility";
+
+export type NavigationGroup = {
+  id: NavigationGroupId;
+  label: string;
+  items: NavigationItem[];
 };
 
 export const primaryNavigation = [
-  { name: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
-  { name: "Inbox Comercial", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
-  { name: "Activitatea mea", href: "/today", icon: "clipboard-check", permission: "actions.read" },
+  { name: "Control Center", shortName: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
+  { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
+  { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
   { name: "Contacte", href: "/contacts", icon: "user-group", permission: "workspace.read" },
@@ -53,6 +62,30 @@ export const advancedNavigation = [
 ] satisfies NavigationItem[];
 
 export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, ...advancedNavigation] satisfies NavigationItem[];
+
+const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
+  { id: "control", label: "Control", hrefs: ["/dashboard", "/today"] },
+  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/opportunities", "/pipeline"] },
+  { id: "relationships", label: "Relații", hrefs: ["/companies", "/contacts"] },
+  { id: "execution", label: "Execuție", hrefs: ["/outreach"] },
+  { id: "management", label: "Management", hrefs: ["/reports"] },
+  { id: "utility", label: "Utilitare", hrefs: ["/settings", "/help"] }
+];
+
+export function groupNavigationItems(items: NavigationItem[]): NavigationGroup[] {
+  const availableItems = new Map(items.map((item) => [item.href, item]));
+
+  return groupDefinitions
+    .map((group) => ({
+      id: group.id,
+      label: group.label,
+      items: group.hrefs.flatMap((href) => {
+        const item = availableItems.get(href);
+        return item ? [item] : [];
+      })
+    }))
+    .filter((group) => group.items.length > 0);
+}
 
 export function isNavItemActive(pathname: string, href: string) {
   return pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
