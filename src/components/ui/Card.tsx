@@ -1,7 +1,8 @@
-import type { HTMLAttributes } from "react";
+import type { ElementType, HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export type CardProps = HTMLAttributes<HTMLDivElement> & {
+  as?: ElementType;
   variant?: "default" | "subtle" | "muted" | "elevated" | "interactive";
   padding?: "none" | "compact" | "default" | "spacious";
 };
@@ -21,8 +22,8 @@ const paddings = {
   spacious: "p-6"
 };
 
-export function Card({ variant = "default", padding = "default", className, ...props }: CardProps) {
-  return <div className={cn("rounded-card border", variants[variant], paddings[padding], className)} {...props} />;
+export function Card({ as: Component = "div", variant = "default", padding = "default", className, ...props }: CardProps) {
+  return <Component className={cn("rounded-card border", variants[variant], paddings[padding], className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

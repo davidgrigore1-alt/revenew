@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { Textarea } from "@/components/ui/Textarea";
 import { completeOpportunityTask, createOpportunityTask } from "@/lib/revenue-workspace/actions";
 import type { OpportunityActionType } from "@/lib/types";
 
@@ -63,47 +66,47 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Titlu
-          <input name="title" required defaultValue="Follow-up comercial" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+          <Input name="title" required defaultValue="Follow-up comercial" className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Tip
-          <select name="type" defaultValue={"follow_up" satisfies OpportunityActionType} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+          <Select name="type" defaultValue={"follow_up" satisfies OpportunityActionType} className="min-h-11 bg-[rgb(var(--background))]">
             <option value="call_contact">Apel</option>
             <option value="send_email">Email</option>
             <option value="follow_up">Follow-up</option>
             <option value="prepare_offer">Pregătește ofertă</option>
             <option value="prepare_documents">Revizuire documente</option>
             <option value="research_more">Task general</option>
-          </select>
+          </Select>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Data
-          <input name="dueDate" type="date" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+          <Input name="dueDate" type="date" className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Ora
-          <input name="dueTime" type="time" defaultValue="09:00" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+          <Input name="dueTime" type="time" defaultValue="09:00" className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Prioritate
-          <select name="priority" defaultValue="medium" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+          <Select name="priority" defaultValue="medium" className="min-h-11 bg-[rgb(var(--background))]">
             <option value="high">Ridicată</option>
             <option value="medium">Medie</option>
             <option value="low">Scăzută</option>
-          </select>
+          </Select>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Responsabil
-          <select name="assignedToProfileId" defaultValue="" className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+          <Select name="assignedToProfileId" defaultValue="" className="min-h-11 bg-[rgb(var(--background))]">
             <option value="">Eu</option>
             {assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}
-          </select>
+          </Select>
         </label>
       </div>
       {!compact ? (
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
           Note
-          <textarea name="description" rows={3} className="resize-y rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" />
+          <Textarea name="description" rows={3} className="bg-[rgb(var(--background))]" />
         </label>
       ) : null}
       <div>

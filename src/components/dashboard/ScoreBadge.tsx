@@ -1,10 +1,12 @@
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { getScorePresentation } from "@/lib/ui/domain-state-presentation";
 
 type ScoreBadgeProps = {
   label?: string;
   score: number;
-  info?: React.ReactNode;
+  info?: ReactNode;
 };
 
 const scoreInfo: Record<string, string> = {
@@ -15,19 +17,12 @@ const scoreInfo: Record<string, string> = {
 };
 
 export function ScoreBadge({ label = "Scor", score, info }: ScoreBadgeProps) {
-  const tone =
-    score >= 85
-      ? "border-mint-400/25 bg-mint-400/10 text-mint-400"
-      : score >= 70
-        ? "border-gold-400/25 bg-gold-400/10 text-gold-400"
-        : "border-white/10 bg-white/[0.06] text-zinc-300";
+  const presentation = getScorePresentation(score);
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold", tone)}>
-      <span>
-        {label}: {score}
-      </span>
+    <Badge tone={presentation.tone} className="gap-1.5">
+      <span>{label}: {score}</span>
       {info || scoreInfo[label] ? <InfoTooltip content={info ?? scoreInfo[label]} /> : null}
-    </span>
+    </Badge>
   );
 }

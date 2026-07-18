@@ -1,21 +1,24 @@
+import type { ReactNode } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+
 type DataCardProps = {
   title: string;
   description?: string;
-  children?: React.ReactNode;
-  action?: React.ReactNode;
+  children?: ReactNode;
+  action?: ReactNode;
 };
 
 export function DataCard({ title, description, children, action }: DataCardProps) {
   return (
-    <section className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-[var(--shadow-card)]">
+    <Card as="section">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{title}</h2>
-          {description ? <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{description}</p> : null}
-        </div>
-        {action}
+        <CardHeader>
+          <CardTitle className="text-base">{title}</CardTitle>
+          {description ? <CardDescription>{description}</CardDescription> : null}
+        </CardHeader>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
-      {children ? <div className="mt-5">{children}</div> : null}
-    </section>
+      {children ? <CardContent>{children}</CardContent> : null}
+    </Card>
   );
 }

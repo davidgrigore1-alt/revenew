@@ -1,16 +1,8 @@
-const labels = {
-  low: "Scăzută",
-  medium: "Medie",
-  high: "Ridicată",
-  urgent: "Urgentă"
-};
+import { Badge } from "@/components/ui/Badge";
+import { domainStatePresentation, type PresentationPriority } from "@/lib/ui/domain-state-presentation";
 
-export function PriorityBadge({ priority }: { priority?: "low" | "medium" | "high" | "urgent" }) {
-  const tone = priority === "high" || priority === "urgent" ? "text-[rgb(var(--warning))]" : "text-[rgb(var(--muted-foreground))]";
+export function PriorityBadge({ priority }: { priority?: PresentationPriority }) {
+  const presentation = domainStatePresentation.priority[priority ?? "medium"];
 
-  return (
-    <span className={`inline-flex rounded border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-2 py-1 text-xs font-semibold ${tone}`}>
-      Prioritate {labels[priority ?? "medium"]}
-    </span>
-  );
+  return <Badge tone={presentation.tone}>Prioritate {presentation.label}</Badge>;
 }
