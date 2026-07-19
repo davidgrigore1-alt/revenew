@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { SignalPreparationPanel } from "@/components/signals/SignalPreparationPanel";
+import { RecommendationFeedbackPanel } from "@/components/signals/RecommendationFeedbackPanel";
 import { approveCommercialSignal, setCommercialSignalReviewDecision } from "@/lib/commercial-inbox-actions";
 import {
   approvalCenterSignals,
@@ -14,6 +15,7 @@ import {
   type ApprovalCenterState
 } from "@/lib/approval-center";
 import type { CommercialSignal } from "@/lib/types";
+import { recommendationFeedbackCounts } from "@/lib/recommendation-feedback";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { Button } from "@/components/ui/Button";
@@ -89,11 +91,7 @@ export function ApprovalCenterClient({
   useEffect(() => setSignals(initialSignals), [initialSignals]);
 
   const items = useMemo(() => approvalCenterSignals(signals, filter), [signals, filter]);
-  const counts = useMemo(() => ({
-    pending: approvalCenterSignals(signals, "pending").length,
-    applied: approvalCenterSignals(signals, "applied").length,
-    rejected: approvalCenterSignals(signals, "rejected").length
-  }), [signals]);
+  const qualityCounts = useMemo(() => recommendationFeedbackCounts(signals), [signals]);
 
   function selectSignal(signal: CommercialSignal) {
     setSelectedId(signal.id);
@@ -165,11 +163,16 @@ export function ApprovalCenterClient({
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-3 sm:grid-cols-3" aria-label="Rezumat aprobări">
-        <Card padding="compact"><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">De aprobat</p><p className="mt-2 text-2xl font-semibold tabular-nums">{counts.pending}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Necesită decizie umană.</p></Card>
-        <Card padding="compact"><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Aplicat</p><p className="mt-2 text-2xl font-semibold tabular-nums">{counts.applied}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Modificări interne confirmate.</p></Card>
-        <Card padding="compact"><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Respins</p><p className="mt-2 text-2xl font-semibold tabular-nums">{counts.rejected}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Decizii păstrate în audit.</p></Card>
-      </div>
+      <Card padding="none" aria-label="Calitatea recomandărilor pregătite">
+        <dl className="grid grid-cols-2 divide-x divide-y divide-[rgb(var(--border))] sm:grid-cols-4 sm:divide-y-0">
+          {([
+            ["De revizuit", qualityCounts.pending],
+            ["Aplicate", qualityCounts.applied],
+            ["Editate", qualityCounts.edited],
+            ["Respinse", qualityCounts.rejected]
+          ] as const).map(([label, value]) => <div key={label} className="px-4 py-3 sm:px-5"><dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">{label}</dt><dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd></div>)}
+        </dl>
+      </Card>
 
       {error ? <AlertBanner tone="danger" title="Acțiunea nu a fost aplicată">{error}</AlertBanner> : null}
       {notice ? <AlertBanner tone="success" title="Decizie înregistrată">{notice}</AlertBanner> : null}
@@ -220,6 +223,7 @@ export function ApprovalCenterClient({
                 </div>
 
                 <SignalPreparationPanel signal={selectedSignal} compact />
+                <RecommendationFeedbackPanel signal={selectedSignal} auditHref="#approval-audit-trail" />
 
                 <div className="grid gap-4 lg:grid-cols-2">
                   <div><h3 className="text-sm font-semibold">Înregistrări afectate</h3><div className="mt-2 grid gap-2 text-sm text-[rgb(var(--text-secondary))]"><p><span className="text-[rgb(var(--text-muted))]">Companie:</span> {selectedSignal.contactCompany || "Neconfirmată"}</p><p><span className="text-[rgb(var(--text-muted))]">Contact:</span> {selectedSignal.contactName || selectedSignal.contactEmail || "Neconfirmat"}</p><p><span className="text-[rgb(var(--text-muted))]">Oportunitate:</span> {linkedOpportunity?.title ?? (selectedSignal.detectedFromOpportunityId ? "Oportunitate existentă" : "Va fi creată după aprobare")}</p>{selectedSignal.estimatedRecoverableValue !== null && selectedSignal.estimatedRecoverableValue !== undefined ? <p><span className="text-[rgb(var(--text-muted))]">Valoare estimată:</span> {formatCurrency(selectedSignal.estimatedRecoverableValue, selectedSignal.currency)}</p> : null}</div><div className="mt-3 flex flex-wrap gap-2"><Link href={`/inbox?signal=${selectedSignal.id}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide semnalul</Link>{selectedSignal.matchedOrganizationId ? <Link href={`/crm/organizations/${selectedSignal.matchedOrganizationId}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Vezi compania</Link> : null}{selectedSignal.detectedFromOpportunityId ? <Link href={`/opportunities/${selectedSignal.detectedFromOpportunityId}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Vezi oportunitatea</Link> : null}</div></div>
@@ -240,7 +244,7 @@ export function ApprovalCenterClient({
                   </div>
                 ) : null}
 
-                <div className="border-t border-[rgb(var(--border))] pt-5"><h3 className="text-sm font-semibold">Istoric de audit</h3>{(selectedSignal.events ?? []).length > 0 ? <ol className="mt-3 grid gap-3">{(selectedSignal.events ?? []).slice(0, 8).map((event) => <li key={event.id} className="border-l-2 border-[rgb(var(--border-strong))] pl-3"><p className="text-sm font-medium">{event.description}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.createdAt)}</p></li>)}</ol> : <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Nu există evenimente disponibile pentru această decizie.</p>}</div>
+                <div id="approval-audit-trail" className="scroll-mt-24 border-t border-[rgb(var(--border))] pt-5"><h3 className="text-sm font-semibold">Istoric de audit</h3>{(selectedSignal.events ?? []).length > 0 ? <ol className="mt-3 grid gap-3">{(selectedSignal.events ?? []).slice(0, 8).map((event) => <li key={event.id} className="border-l-2 border-[rgb(var(--border-strong))] pl-3"><p className="text-sm font-medium">{event.description}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.createdAt)}</p></li>)}</ol> : <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Nu există evenimente disponibile pentru această decizie.</p>}</div>
               </div>
             </>
           ) : <div className="p-5"><h2 id="approval-detail-title" className="font-semibold">Selectează o aprobare</h2><p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Detaliile, efectele și auditul vor apărea aici.</p></div>}

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { buildSignalPreparation } from "@/lib/ai-preparation";
+import { recommendationFeedbackForSignal } from "@/lib/recommendation-feedback";
 import type { CommercialSignal } from "@/lib/types";
 import { StatusPill } from "@/components/ui/StatusPill";
 
@@ -24,6 +25,14 @@ function DetailList({ title, items, empty }: { title: string; items: string[]; e
 export function SignalPreparationPanel({ signal, action, compact = false }: SignalPreparationPanelProps) {
   const preparation = buildSignalPreparation(signal);
   const prepared = preparation.mode !== "not_prepared";
+  const feedback = recommendationFeedbackForSignal(signal);
+  const feedbackMessage = feedback.state === "applied"
+    ? feedback.wasEdited ? "Aprobată cu modificări. Schimbarea internă a fost aplicată." : "Recomandarea a fost aprobată și aplicată."
+    : feedback.state === "rejected" || feedback.state === "not_useful"
+      ? "Respinsă cu motiv."
+      : feedback.state === "edited_before_approval"
+        ? "Modificată și în așteptarea unei decizii umane."
+        : "În așteptarea unei decizii umane.";
 
   return (
     <section aria-labelledby={`signal-preparation-${signal.id}`} className="overflow-hidden rounded-card border border-[rgb(var(--gold-500)/0.3)] bg-[linear-gradient(145deg,rgb(var(--surface)),rgb(var(--surface-subtle)))] shadow-card">
@@ -84,8 +93,9 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
         </div>
       )}
 
-      <div className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-muted)/0.5)] px-4 py-3 text-xs font-medium text-[rgb(var(--text-muted))] sm:px-5">
-        Nu se aplică și nu se trimite nimic fără aprobare. Nimic nu este trimis extern.
+      <div className="flex flex-col gap-1 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-muted)/0.5)] px-4 py-3 text-xs sm:px-5">
+        {prepared ? <span className="font-semibold text-[rgb(var(--text-secondary))]">{feedbackMessage}</span> : null}
+        <span className="font-medium text-[rgb(var(--text-muted))]">Nu se aplică și nu se trimite nimic fără aprobare. Nimic nu este trimis extern.</span>
       </div>
     </section>
   );

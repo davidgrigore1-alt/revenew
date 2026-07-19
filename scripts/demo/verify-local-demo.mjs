@@ -214,6 +214,11 @@ async function main() {
       ,'ai_preparation_fallback_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and analysis_mode = 'deterministic_fallback')
       ,'ai_preparation_provider_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_mode = 'ai')
       ,'ai_preparation_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and review_status in ('ready_for_review','postponed'))
+      ,'recommendation_feedback_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and review_status in ('ready_for_review','postponed'))
+      ,'recommendation_feedback_applied_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}' and event_type = 'recommendation_feedback_recorded' and metadata->>'feedback_state' = 'accepted_as_is')
+      ,'recommendation_feedback_edited_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}' and event_type = 'analysis_review_edited')
+      ,'recommendation_feedback_rejected_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and review_status in ('dismissed','duplicate') and nullif(btrim(dismissal_reason), '') is not null)
+      ,'recommendation_feedback_external_action_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}' and event_type in ('recommendation_feedback_recorded','analysis_review_edited') and coalesce((metadata->>'external_action')::boolean, false) = true)
     );
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
@@ -240,6 +245,11 @@ async function main() {
   assert(Number(stats.ai_preparation_fallback_count) > 0, "Demo-ul local nu acoperă pregătirea structurată prin fallback local.");
   assert(Number(stats.ai_preparation_provider_count) === 0, "Demo-ul local nu trebuie să pretindă utilizarea unui provider AI.");
   assert(Number(stats.ai_preparation_pending_count) > 0, "Pregătirea demo trebuie să rămână în așteptarea aprobării umane.");
+  assert(Number(stats.recommendation_feedback_pending_count) > 0, "Feedback-ul demo nu acoperă recomandările în așteptare.");
+  assert(Number(stats.recommendation_feedback_applied_count) > 0, "Feedback-ul demo nu acoperă o recomandare acceptată și aplicată.");
+  assert(Number(stats.recommendation_feedback_edited_count) > 0, "Feedback-ul demo nu acoperă o recomandare editată înainte de aprobare.");
+  assert(Number(stats.recommendation_feedback_rejected_count) > 0, "Feedback-ul demo nu păstrează motivul unei respingeri.");
+  assert(Number(stats.recommendation_feedback_external_action_count) === 0, "Feedback-ul demo nu poate reprezenta o acțiune externă automată.");
   await verifyTenantIsolation(admin, local);
   await verifySignalConversionAuthorization(admin, local);
   console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");

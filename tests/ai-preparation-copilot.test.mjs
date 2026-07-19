@@ -109,7 +109,9 @@ test("client UI contains no provider key, service role or external execution int
   const client = read("src/components/inbox/CommercialInboxClient.tsx");
   const approval = read("src/components/approvals/ApprovalCenterClient.tsx");
   const panel = read("src/components/signals/SignalPreparationPanel.tsx");
-  const source = client + approval + panel;
+  const feedbackPanel = read("src/components/signals/RecommendationFeedbackPanel.tsx");
+  const feedbackModel = read("src/lib/recommendation-feedback.ts");
+  const source = client + approval + panel + feedbackPanel + feedbackModel;
   assert.doesNotMatch(source, /OPENAI_API_KEY|SUPABASE_SERVICE_ROLE_KEY|createSupabaseAdminClient|service_role/i);
   assert.doesNotMatch(source, /fetch\s*\(|gmail|twilio|webhook|sendEmail|sendMessage|phoneAgent/i);
   assert.match(panel, /Nimic nu este trimis extern/);

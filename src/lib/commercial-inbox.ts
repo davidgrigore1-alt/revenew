@@ -592,6 +592,13 @@ export async function updateCommercialSignal(id: string, input: CommercialSignal
   const linkValidationMessage = await validateWorkspaceLinks(input);
   if (linkValidationMessage) return { ok: false, tableReady: true, message: linkValidationMessage };
   const { supabase, business } = await getCurrentInboxContext();
+  const { data: existingSignal, error: existingSignalError } = await supabase
+    .from("commercial_signals")
+    .select("id,analysis_status,analysis_mode,analysis_explanation,extracted_summary,recommended_action,suggested_due_date,assigned_to_profile_id,matched_organization_id,matched_contact_id")
+    .eq("id", id)
+    .eq("business_id", business.id)
+    .single();
+  if (existingSignalError || !existingSignal) return { ok: false, tableReady: true, message: "Semnalul comercial nu este disponibil." };
   const { data, error } = await supabase
     .from("commercial_signals")
     .update(signalUpdateToRow(input))
@@ -608,18 +615,28 @@ export async function updateCommercialSignal(id: string, input: CommercialSignal
   }
 
   const signal = mapSignal(data as CommercialSignalRow);
-  const hasHumanReviewChanges = [
-    input.reviewedDraft,
-    input.recommendedAction,
-    input.suggestedDueDate,
-    input.assignedToProfileId,
-    input.matchedOrganizationId,
-    input.matchedContactId
-  ].some((value) => value !== undefined);
+  const reviewComparisons = [
+    ["next_action", existingSignal.recommended_action, input.recommendedAction],
+    ["due_date", existingSignal.suggested_due_date, input.suggestedDueDate],
+    ["owner", existingSignal.assigned_to_profile_id, input.assignedToProfileId],
+    ["organization", existingSignal.matched_organization_id, input.matchedOrganizationId],
+    ["contact", existingSignal.matched_contact_id, input.matchedContactId]
+  ] as const;
+  const editedFields = reviewComparisons
+    .filter(([, original, final]) => final !== undefined && normalizedMatch(original) !== normalizedMatch(final))
+    .map(([field]) => field);
+  const hasHumanReviewChanges = existingSignal.analysis_status === "completed" && (editedFields.length > 0 || input.reviewedDraft !== undefined);
   const eventResult = await addCommercialSignalEvent(
     id,
     hasHumanReviewChanges ? "analysis_review_edited" : input.status === "reviewed" ? "signal_reviewed" : "signal_updated",
-    hasHumanReviewChanges ? "Recomandarea analizei a fost editată de utilizator." : input.status === "reviewed" ? "Semnal comercial revizuit." : "Semnal comercial actualizat."
+    hasHumanReviewChanges ? "Recomandarea analizei a fost editată de utilizator." : input.status === "reviewed" ? "Semnal comercial revizuit." : "Semnal comercial actualizat.",
+    hasHumanReviewChanges ? {
+      preparation_mode: existingSignal.analysis_mode ?? "reguli_locale",
+      recommendation_summary: toNullString(existingSignal.analysis_explanation ?? existingSignal.extracted_summary, 800),
+      original_recommended_action: toNullString(existingSignal.recommended_action, 500),
+      final_recommended_action: toNullString(input.recommendedAction ?? existingSignal.recommended_action, 500),
+      edited_fields: editedFields
+    } : {}
   );
   if (eventResult.ok && eventResult.event) signal.events = [eventResult.event, ...(signal.events ?? [])];
   revalidatePath("/inbox");
@@ -845,6 +862,12 @@ export async function setCommercialSignalReviewDecision(
   }
   const cleanReason = reason.trim().slice(0, 500);
   if (decision !== "postponed" && !cleanReason) return { ok: false, tableReady: true, message: "Motivul este obligatoriu." };
+  const { data: originalSignal, error: originalSignalError } = await supabase.from("commercial_signals")
+    .select("id,analysis_mode,analysis_explanation,extracted_summary,recommended_action")
+    .eq("id", signalId)
+    .eq("business_id", business.id)
+    .single();
+  if (originalSignalError || !originalSignal) return { ok: false, tableReady: true, message: "Semnalul nu este disponibil pentru decizie." };
   const { data, error } = await supabase.from("commercial_signals").update({
     status: decision,
     review_status: decision,
@@ -855,12 +878,25 @@ export async function setCommercialSignalReviewDecision(
     updated_at: new Date().toISOString()
   }).eq("id", signalId).eq("business_id", business.id).select("*,recoverability_score").single();
   if (error) return { ok: false, tableReady: !isMissingRecoverabilitySchema(error), message: isMissingRecoverabilitySchema(error) ? commercialInboxSetupMessage : "Decizia nu a putut fi salvată." };
-  await addCommercialSignalEvent(signalId, decision === "duplicate" ? "duplicate_marked" : decision === "dismissed" ? "signal_dismissed" : "review_postponed", cleanReason || "Revizuire amânată.");
+  const eventResult = await addCommercialSignalEvent(
+    signalId,
+    decision === "duplicate" ? "duplicate_marked" : decision === "dismissed" ? "signal_dismissed" : "review_postponed",
+    cleanReason || "Revizuire amânată.",
+    {
+      preparation_mode: originalSignal.analysis_mode ?? "reguli_locale",
+      feedback_state: decision === "postponed" ? "pending_review" : "rejected",
+      recommendation_summary: toNullString(originalSignal.analysis_explanation ?? originalSignal.extracted_summary, 800),
+      original_recommended_action: toNullString(originalSignal.recommended_action, 500),
+      reason: cleanReason || null
+    }
+  );
+  const signal = mapSignal(data as CommercialSignalRow);
+  if (eventResult.ok && eventResult.event) signal.events = [eventResult.event];
   revalidatePath("/inbox");
   revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
-  return { ok: true, tableReady: true, signal: mapSignal(data as CommercialSignalRow) };
+  return { ok: true, tableReady: true, signal };
 }
 
 export async function approveCommercialSignal(signalId: string, input: SignalApprovalInput) {
@@ -878,7 +914,8 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
     if (linkError) return { ok: false, tableReady: true, message: "Legătura cu oportunitatea nu a putut fi salvată." };
   }
   const { data: signalLink, error: signalLinkError } = await supabase.from("commercial_signals")
-    .select("detected_from_opportunity_id").eq("id", signalId).eq("business_id", business.id).single();
+    .select("detected_from_opportunity_id,matched_organization_id,matched_contact_id,analysis_mode,analysis_explanation,extracted_summary,recommended_action,suggested_due_date,suggested_owner_profile_id,assigned_to_profile_id")
+    .eq("id", signalId).eq("business_id", business.id).single();
   if (signalLinkError) return { ok: false, tableReady: !isMissingRecoverabilitySchema(signalLinkError), message: "Semnalul nu este disponibil pentru aprobare." };
   const commonApproval = {
     target_signal_id: signalId,
@@ -902,6 +939,32 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
     return { ok: false, tableReady: !isMissingRecoverabilitySchema(error), message: isMissingRecoverabilitySchema(error) ? commercialInboxSetupMessage : "Aprobarea nu a putut fi finalizată. Verifică potrivirea companiei, contactului și responsabilului." };
   }
   const result = data as { opportunity_id?: string; already_converted?: boolean } | null;
+  const finalAction = toNullString(input.recommendedAction, 500) ?? toNullString(signalLink.recommended_action, 500);
+  const editedFields = [
+    ["next_action", signalLink.recommended_action, finalAction],
+    ["due_date", signalLink.suggested_due_date, input.dueAt],
+    ["owner", signalLink.assigned_to_profile_id ?? signalLink.suggested_owner_profile_id, input.ownerProfileId],
+    ["organization", signalLink.matched_organization_id, input.organizationId],
+    ["contact", signalLink.matched_contact_id, input.contactId]
+  ].filter(([, original, final]) => final !== undefined && normalizedMatch(original) !== normalizedMatch(final)).map(([field]) => field);
+  const feedbackEvent = result?.already_converted ? null : await addCommercialSignalEvent(
+    signalId,
+    "recommendation_feedback_recorded",
+    editedFields.length > 0 ? "Recomandare aprobată cu modificări și aplicată intern." : "Recomandare acceptată fără modificări și aplicată intern.",
+    {
+      preparation_mode: signalLink.analysis_mode ?? "reguli_locale",
+      feedback_state: editedFields.length > 0 ? "edited_before_approval" : "accepted_as_is",
+      recommendation_summary: toNullString(signalLink.analysis_explanation ?? signalLink.extracted_summary, 800),
+      original_recommended_action: toNullString(signalLink.recommended_action, 500),
+      final_approved_action: finalAction,
+      edited: editedFields.length > 0,
+      edited_fields: editedFields,
+      conversion_type: signalLink.detected_from_opportunity_id ? "existing_opportunity_action" : "new_opportunity",
+      opportunity_id: result?.opportunity_id ?? null,
+      organization_id: safeUuid(input.organizationId) ?? signalLink.matched_organization_id,
+      contact_id: safeUuid(input.contactId) ?? signalLink.matched_contact_id
+    }
+  );
   const { data: updatedRow } = await supabase.from("commercial_signals").select("*,recoverability_score").eq("id", signalId).eq("business_id", business.id).single();
   revalidatePath("/inbox");
   revalidatePath("/approvals");
@@ -909,12 +972,14 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
   revalidatePath("/reports");
   revalidatePath("/opportunities");
   if (result?.opportunity_id) revalidatePath(`/opportunities/${result.opportunity_id}`);
+  const updatedSignal = updatedRow ? mapSignal(updatedRow as CommercialSignalRow) : undefined;
+  if (updatedSignal && feedbackEvent?.ok && feedbackEvent.event) updatedSignal.events = [feedbackEvent.event];
   return {
     ok: true,
     tableReady: true,
     opportunityId: result?.opportunity_id,
     alreadyConverted: Boolean(result?.already_converted),
-    signal: updatedRow ? mapSignal(updatedRow as CommercialSignalRow) : undefined
+    signal: updatedSignal
   };
 }
 
