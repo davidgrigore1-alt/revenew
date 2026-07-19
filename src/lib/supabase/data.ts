@@ -210,7 +210,8 @@ function mapOpportunity(
   documents: OpportunityDocument[] = [],
   events: OpportunityEvent[] = [],
   contacts: OpportunityContact[] = [],
-  responses: CommercialResponse[] = []
+  responses: CommercialResponse[] = [],
+  ownerName: string | null = null
 ): Opportunity {
   const primaryContact = contacts.find((item) => item.isPrimary) ?? contacts[0];
   const legacyContact =
@@ -242,6 +243,7 @@ function mapOpportunity(
     lifecycleStatus: row.lifecycle_status,
     commercialType: row.commercial_type ?? null,
     ownerProfileId: row.owner_profile_id ?? null,
+    ownerName,
     currency: row.currency ?? "RON",
     actualOutcomeAmount: row.actual_outcome_amount == null ? null : Number(row.actual_outcome_amount),
     outcomeDate: row.outcome_date ?? null,
@@ -328,7 +330,7 @@ export async function getOpportunitiesForCurrentBusiness() {
   const opportunityIds = rows.map((row) => row.id);
   if (opportunityIds.length === 0) return [];
 
-  const [actionResult, eventResult, contactResult] = await Promise.all([
+  const [actionResult, eventResult, contactResult, ownerResult] = await Promise.all([
     supabase
       .from("opportunity_actions")
       .select("*")
@@ -350,7 +352,8 @@ export async function getOpportunitiesForCurrentBusiness() {
       .eq("business_id", business.id)
       .in("opportunity_id", opportunityIds)
       .order("is_primary", { ascending: false })
-      .limit(500)
+      .limit(500),
+    supabase.rpc("business_assignable_profiles", { target_business_id: business.id })
   ]);
 
   if (actionResult.error) throw new Error(`Opportunity actions load error: ${actionResult.error.message}`);
@@ -358,6 +361,8 @@ export async function getOpportunitiesForCurrentBusiness() {
   if (contactResult.error && !isMissingRelationError(contactResult.error, "opportunity_contacts")) {
     throw new Error(`Opportunity contacts load error: ${contactResult.error.message}`);
   }
+  if (ownerResult.error) console.warn("assignable_profiles_unavailable", { code: ownerResult.error.code });
+  const ownerNames = new Map<string, string>((ownerResult.data ?? []).map((owner: { profile_id: string; full_name: string }) => [owner.profile_id, owner.full_name]));
 
   const actionsByOpportunity = new Map<string, OpportunityAction[]>();
   for (const action of actionResult.data ?? []) {
@@ -385,7 +390,9 @@ export async function getOpportunitiesForCurrentBusiness() {
     actionsByOpportunity.get(row.id) ?? [],
     [],
     eventsByOpportunity.get(row.id) ?? [],
-    contactsByOpportunity.get(row.id) ?? []
+    contactsByOpportunity.get(row.id) ?? [],
+    [],
+    row.owner_profile_id ? ownerNames.get(row.owner_profile_id) ?? null : null
   ));
 }
 
@@ -411,7 +418,8 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     { data: documents, error: documentsError },
     { data: events, error: eventsError },
     { data: contacts, error: contactsError },
-    { data: responses, error: responsesError }
+    { data: responses, error: responsesError },
+    { data: owners, error: ownersError }
   ] = await Promise.all([
     supabase.from("opportunities").select("*").eq("id", id).eq("business_id", business.id).single(),
     supabase.from("opportunity_actions").select("*").eq("opportunity_id", id).order("created_at", { ascending: false }),
@@ -426,7 +434,8 @@ export async function getOpportunityForCurrentBusiness(id: string) {
       .eq("business_id", business.id)
       .order("is_primary", { ascending: false })
       .order("updated_at", { ascending: false }),
-    supabase.from("commercial_responses").select("*").eq("opportunity_id", id).eq("business_id", business.id).order("responded_at", { ascending: false })
+    supabase.from("commercial_responses").select("*").eq("opportunity_id", id).eq("business_id", business.id).order("responded_at", { ascending: false }),
+    supabase.rpc("business_assignable_profiles", { target_business_id: business.id })
   ]);
 
   if (opportunityError) {
@@ -452,6 +461,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     throw new Error(`Opportunity contacts load error: ${contactsError.message}`);
   }
   if (responsesError) throw new Error(`Commercial responses load error: ${responsesError.message}`);
+  if (ownersError) console.warn("assignable_profiles_unavailable", { code: ownersError.code });
 
   if (!opportunity) {
     return null;
@@ -478,5 +488,9 @@ export async function getOpportunityForCurrentBusiness(id: string) {
   const mappedContacts = contactsError ? [] : mapOpportunityContacts((contacts ?? []) as OpportunityContactRow[]);
   const mappedResponses = (responses ?? []).map((response) => mapCommercialResponse(response as Record<string, unknown>));
 
-  return mapOpportunity(opportunity as OpportunityRow, mappedActions, mappedDocuments, mappedEvents, mappedContacts, mappedResponses);
+  const ownerProfileId = (opportunity as OpportunityRow).owner_profile_id;
+  const ownerName = ownerProfileId
+    ? (owners ?? []).find((owner: { profile_id: string; full_name: string }) => owner.profile_id === ownerProfileId)?.full_name ?? null
+    : null;
+  return mapOpportunity(opportunity as OpportunityRow, mappedActions, mappedDocuments, mappedEvents, mappedContacts, mappedResponses, ownerName);
 }

@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "demo:dev": "node scripts/demo/dev-local-demo.mjs",
+    "demo:seed": "node scripts/demo/seed-local-demo.mjs",
+    "demo:verify": "node scripts/demo/verify-local-demo.mjs",
+    "demo:reset": "node scripts/demo/reset-local-demo.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
