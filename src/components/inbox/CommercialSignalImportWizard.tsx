@@ -17,6 +17,7 @@ import {
 } from "@/lib/commercial-ingestion-fields";
 import {
   createSingleIntakeRow,
+  isAllowedCommercialCsvFile,
   parseBulkCommercialText,
   parseCommercialCsvText,
   type CommercialIntakeSource,
@@ -124,7 +125,7 @@ export function CommercialSignalImportWizard({ history }: { history: CommercialI
 
   async function loadFile(file?: File) {
     if (!file) return;
-    if (!file.name.toLocaleLowerCase("ro-RO").endsWith(".csv") && file.type !== "text/csv") { setInputError("Selectează un fișier CSV."); return; }
+    if (!isAllowedCommercialCsvFile(file.name, file.type)) { setInputError("Selectează un fișier cu extensia .csv și un tip de conținut CSV acceptat."); return; }
     if (file.size > COMMERCIAL_IMPORT_LIMITS.maxFileBytes) { setInputError("Fișierul depășește limita de 2 MB."); return; }
     loadCsv(await file.text(), file.name, COMMERCIAL_IMPORT_LIMITS.maxFileBytes);
   }
@@ -197,7 +198,7 @@ export function CommercialSignalImportWizard({ history }: { history: CommercialI
             <div className="hidden items-center text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-faint))] lg:flex">sau</div>
             <label className="focus-within:focus-ring grid min-h-44 cursor-pointer place-items-center rounded-card border border-dashed border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] p-6 text-center">
               <span><DocumentArrowUpIcon className="mx-auto h-8 w-8 text-[rgb(var(--primary))]" /><span className="mt-2 block text-sm font-semibold">Alege un fișier CSV</span><span className="mt-1 block text-xs text-[rgb(var(--text-muted))]">Maximum 2 MB · fără încărcare în stocare publică</span></span>
-              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(event) => void loadFile(event.target.files?.[0])} />
+              <input type="file" accept=".csv,text/csv,application/vnd.ms-excel,text/plain" className="sr-only" onChange={(event) => void loadFile(event.target.files?.[0])} />
             </label>
           </div>
           {rows.length ? <div className="grid gap-5 border-t border-[rgb(var(--border))] pt-5">

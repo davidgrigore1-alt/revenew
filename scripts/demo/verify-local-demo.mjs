@@ -1,10 +1,20 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createLocalAdminClient, runLocalSql } from "./local-supabase.mjs";
 import { DEMO } from "./fixtures.mjs";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function sourceIntakeFingerprint(row) {
+  const normalized = (value) => String(value ?? "").normalize("NFKC").toLocaleLowerCase("ro-RO").replace(/\s+/g, " ").trim();
+  return createHash("sha256").update([
+    normalized(row.source_label), row.source_type || "csv_import", normalized(row.title), normalized(row.company),
+    normalized(row.contact), String(row.email ?? "").toLocaleLowerCase("ro-RO"), String(row.phone ?? "").replace(/[^+\d]/g, ""),
+    row.estimated_value ?? "", row.currency || "RON", String(row.last_interaction_at ?? "").slice(0, 10),
+    String(row.requested_date ?? "").slice(0, 10), normalized(row.context), normalized(row.source_reference)
+  ].join("\u001f")).digest("hex");
 }
 
 async function verifyTenantIsolation(admin, local) {
@@ -60,15 +70,16 @@ async function verifySourceIntakeAuthorization(admin, local) {
     const userClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const login = await userClient.auth.signInWithPassword({ email, password });
     if (login.error) throw new Error(`Autentificarea Source Intake a eșuat: ${login.error.message}`);
-    const fingerprint = randomBytes(32).toString("hex");
     const row = {
-      row_number: 2, row_fingerprint: fingerprint, source_label: "Email copiat", source_type: "email",
-      title: "[TEST] Semnal importat controlat", company: "[TEST] Companie", contact: "Contact Test",
+      row_number: 2, row_fingerprint: "", source_label: "Email copiat", source_type: "email",
+      title: "'=SUM(A1:A2) Semnal importat controlat", company: "[TEST] Companie", contact: "Contact Test",
       email: "", phone: "", estimated_value: "12500", currency: "RON", last_interaction_at: "",
-      requested_date: "2026-07-31T00:00:00.000Z", context: "Text simplu pentru revizuire umană.",
+      requested_date: "2026-07-31T00:00:00.000Z", context: "'@Text simplu pentru revizuire umană.",
       status_label: "", owner_label: "", owner_profile_id: profileId, source_reference: `INTAKE-${suffix}`,
       probable_signal_match: false, probable_company_match: false, probable_contact_match: false, probable_opportunity_match: false
     };
+    row.row_fingerprint = sourceIntakeFingerprint(row);
+    const fingerprint = row.row_fingerprint;
     const imported = await userClient.rpc("import_commercial_signal_batch", {
       target_business_id: businessId,
       source_file_name: `intake-bulk-${suffix}.csv`,
@@ -79,11 +90,24 @@ async function verifySourceIntakeAuthorization(admin, local) {
     assert(!imported.error && Number(imported.data?.created) === 1, `Importul autorizat a eșuat: ${imported.error?.message ?? "răspuns invalid"}`);
     const state = runLocalSql(`select json_build_object(
       'pending_count', (select count(*) from public.commercial_signals where business_id='${businessId}' and ingestion_fingerprint='${fingerprint}' and source='email' and status='new' and review_status='new' and analysis_status='not_started' and requested_date='2026-07-31T00:00:00.000Z'::timestamptz and converted_opportunity_id is null),
+      'neutralized_count', (select count(*) from public.commercial_signals where business_id='${businessId}' and ingestion_fingerprint='${fingerprint}' and title like '''=%' and raw_message like '''@%'),
       'audit_count', (select count(*) from public.commercial_signal_events e join public.commercial_signals s on s.id=e.signal_id where s.business_id='${businessId}' and s.ingestion_fingerprint='${fingerprint}' and e.event_type='signal_imported'),
       'automatic_event_count', (select count(*) from public.commercial_signal_events e join public.commercial_signals s on s.id=e.signal_id where s.business_id='${businessId}' and s.ingestion_fingerprint='${fingerprint}' and e.event_type in ('analysis_completed','signal_approved','signal_converted'))
     );`, { json: true });
     assert(Number(state.pending_count) === 1 && Number(state.audit_count) === 1, "Importul nu a păstrat starea pending, sursa, termenul și auditul.");
+    assert(Number(state.neutralized_count) === 1, "Conținutul de tip formulă nu a rămas neutralizat la limita bazei de date.");
     assert(Number(state.automatic_event_count) === 0, "Importul a pornit automat analiza, aprobarea sau conversia.");
+    const unsafeRow = { ...row, row_number: 3, title: "=Formula neprotejata", row_fingerprint: randomBytes(32).toString("hex") };
+    const unsafeImport = await userClient.rpc("import_commercial_signal_batch", {
+      target_business_id: businessId,
+      source_file_name: `intake-unsafe-${suffix}.csv`,
+      batch_fingerprint: randomBytes(32).toString("hex"),
+      accepted_rows: [unsafeRow],
+      rejected_rows: []
+    });
+    assert(Boolean(unsafeImport.error), "RPC-ul a acceptat text de tip formulă nenormalizat sau un fingerprint falsificat.");
+    const unsafeWrites = runLocalSql(`select count(*) from public.data_import_batches where business_id='${businessId}' and file_name='intake-unsafe-${suffix}.csv';`);
+    assert(Number(unsafeWrites) === 0, "Validarea RPC eșuată a lăsat o scriere parțială.");
     const demoBefore = runLocalSql(`select count(*) from public.commercial_signals where business_id='${DEMO.businessId}';`);
     const crossTenant = await userClient.rpc("import_commercial_signal_batch", {
       target_business_id: DEMO.businessId,

@@ -8,6 +8,7 @@ export const COMMERCIAL_IMPORT_LIMITS = {
 
 export type CommercialImportFieldKey =
   | "source"
+  | "source_type"
   | "title"
   | "company"
   | "contact"
@@ -30,7 +31,8 @@ export type CommercialImportField = {
 };
 
 export const commercialImportFields: CommercialImportField[] = [
-  { key: "source", label: "Sursă originală", aliases: ["source", "source type", "source_type", "sursa", "tip sursa"] },
+  { key: "source", label: "Sursă originală", aliases: ["source", "sursa", "eticheta sursa", "source label"] },
+  { key: "source_type", label: "Tip sursă", aliases: ["source type", "source_type", "tip sursa", "tip sursă"] },
   { key: "title", label: "Titlu semnal", required: true, aliases: ["title", "titlu", "subject", "subiect", "opportunity", "oportunitate"] },
   { key: "company", label: "Companie", aliases: ["companie", "firma", "firmă", "client", "company", "organization", "organizatie"] },
   { key: "contact", label: "Persoană de contact", aliases: ["contact", "persoana", "persoană", "nume contact", "contact name", "full name"] },
@@ -63,7 +65,10 @@ export function suggestedCommercialMapping(headers: string[]) {
 }
 
 export function safeSpreadsheetText(value: string) {
-  const text = value.normalize("NFKC").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+  const text = value.normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return /^[=+\-@]/.test(text) ? `'${text}` : text;
 }
 

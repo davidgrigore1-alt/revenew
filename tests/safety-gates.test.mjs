@@ -64,3 +64,8 @@ test("migration integrity baseline covers the complete reviewed history", async 
   const migrations = (await readdir(new URL("../supabase/migrations", import.meta.url))).filter((name) => name.endsWith(".sql")).sort();
   assert.deepEqual(Object.keys(baseline.files).sort(), migrations);
 });
+
+test("migration gate permits privilege revocation without permitting destructive truncate", () => {
+  assert.deepEqual(scanMigration("20990101000002_revoke.sql", "revoke truncate on public.commercial_signals from authenticated;"), []);
+  assert.match(scanMigration("20990101000003_truncate.sql", "truncate table public.commercial_signals;").join("\n"), /TRUNCATE/);
+});

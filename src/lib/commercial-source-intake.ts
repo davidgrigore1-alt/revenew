@@ -68,18 +68,20 @@ function fold(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("ro-RO").trim();
 }
 
-function safeText(value: string, max: number = SOURCE_INTAKE_LIMITS.maxCandidateTextLength) {
-  return value.normalize("NFKC").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").trim().slice(0, max);
+function safeText(value: string) {
+  return value.normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g, " ")
+    .trim();
 }
 
-function normalizeSource(value: string, fallback: CommercialIntakeSource) {
-  return sourceAliases[fold(value)] ?? fallback;
+function normalizeSource(value: string) {
+  return sourceAliases[fold(value)] ?? safeText(value);
 }
 
 function parseCandidate(block: string, fallbackSource: CommercialIntakeSource): SourceIntakeRow {
   const row: SourceIntakeRow = { source_type: fallbackSource };
   const contextLines: string[] = [];
-  const lines = block.split(/\r?\n/).map((line) => safeText(line, 1_000)).filter(Boolean);
+  const lines = block.split(/\r?\n/).map((line) => safeText(line)).filter(Boolean);
 
   for (const line of lines) {
     const match = /^([^:]{2,32}):\s*(.*)$/.exec(line);
@@ -88,12 +90,12 @@ function parseCandidate(block: string, fallbackSource: CommercialIntakeSource): 
       contextLines.push(line);
       continue;
     }
-    if (key === "source_type") row.source_type = normalizeSource(match[2], fallbackSource);
+    if (key === "source_type") row.source_type = normalizeSource(match[2]);
     else if (key === "context") contextLines.push(match[2]);
-    else row[key] = safeText(match[2], key === "title" || key === "company" || key === "contact" ? 240 : 500);
+    else row[key] = safeText(match[2]);
   }
 
-  if (!row.title && contextLines.length) row.title = contextLines.shift()?.slice(0, 240) ?? "";
+  if (!row.title && contextLines.length) row.title = contextLines.shift() ?? "";
   row.context = safeText(contextLines.join("\n"));
   return row;
 }
@@ -110,15 +112,15 @@ export function createSingleIntakeRow(input: {
   sourceReference?: string;
 }): SourceIntakeRow {
   return {
-    title: safeText(input.title, 240),
+    title: safeText(input.title),
     source_type: input.sourceType,
     context: safeText(input.rawText),
-    company: safeText(input.company ?? "", 240),
-    contact: safeText(input.contact ?? "", 240),
-    estimated_value: safeText(input.estimatedValue ?? "", 40),
-    currency: safeText(input.currency ?? "RON", 3),
-    due_date: safeText(input.dueDate ?? "", 40),
-    source_reference: safeText(input.sourceReference ?? "", 500)
+    company: safeText(input.company ?? ""),
+    contact: safeText(input.contact ?? ""),
+    estimated_value: safeText(input.estimatedValue ?? ""),
+    currency: safeText(input.currency ?? "RON"),
+    due_date: safeText(input.dueDate ?? ""),
+    source_reference: safeText(input.sourceReference ?? "")
   };
 }
 
@@ -145,10 +147,17 @@ export function parseCommercialCsvText(text: string, maxLength: number = SOURCE_
   const [headers = [], ...rows] = parsed.data;
   if (!headers.length || !rows.length) return { ok: false, headers: [], rows: [], error: "CSV-ul trebuie să conțină antet și cel puțin un rând." };
   if (headers.length > 30) return { ok: false, headers: [], rows: [], error: "CSV-ul poate avea cel mult 30 de coloane." };
+  if (headers.some((value) => String(value).normalize("NFKC").trim().length > 80)) return { ok: false, headers: [], rows: [], error: "Antetul CSV conține o coloană mai lungă de 80 de caractere." };
+  if (rows.some((row) => row.length > 30)) return { ok: false, headers: [], rows: [], error: "Fiecare rând CSV poate avea cel mult 30 de coloane." };
   if (rows.length > SOURCE_INTAKE_LIMITS.maxCandidates) return { ok: false, headers: [], rows: [], error: "Importul este limitat la 1.000 de rânduri." };
   return {
     ok: true,
-    headers: headers.map((value) => safeText(String(value), 80)),
-    rows: rows.map((row) => row.slice(0, 30).map((value) => safeText(String(value))))
+    headers: headers.map((value) => safeText(String(value))),
+    rows: rows.map((row) => row.map((value) => safeText(String(value))))
   };
+}
+
+export function isAllowedCommercialCsvFile(fileName: string, mimeType: string) {
+  const allowedMimeTypes = new Set(["", "text/csv", "application/vnd.ms-excel", "text/plain"]);
+  return fileName.toLocaleLowerCase("ro-RO").endsWith(".csv") && allowedMimeTypes.has(mimeType.toLocaleLowerCase("ro-RO"));
 }

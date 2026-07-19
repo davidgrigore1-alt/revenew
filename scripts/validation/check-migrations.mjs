@@ -36,7 +36,7 @@ export function scanMigration(fileName, sql) {
 
   addMatches("DROP TABLE", /\bdrop\s+table\b/gi);
   addMatches("DROP SCHEMA", /\bdrop\s+schema\b/gi);
-  addMatches("TRUNCATE", /\btruncate(?:\s+table)?\b/gi);
+  addMatches("TRUNCATE", /(?<!\brevoke\s)\btruncate(?:\s+table)?\b/gi);
   addMatches("DROP COLUMN", /\balter\s+table[\s\S]{0,500}?\bdrop\s+column\b/gi);
   addMatches("RLS DISABLED", /\bdisable\s+row\s+level\s+security\b/gi);
   addMatches("forbidden businesses.owner_id", /\bbusinesses\b[\s\S]{0,200}?\bowner_id\b|\bowner_id\b[\s\S]{0,200}?\bbusinesses\b/gi);

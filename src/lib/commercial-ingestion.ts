@@ -6,6 +6,7 @@ import {
   batchFingerprint,
   normalizeCommercialValue,
   selectConfirmedCommercialRows,
+  validateCommercialImportEnvelope,
   validateCommercialImportRows,
   type CommercialImportRowIssue,
   type CommercialMappedRow,
@@ -66,9 +67,8 @@ function safeFileName(value: string) {
 }
 
 export async function previewCommercialSignalImport(fileNameInput: string, rawRows: CommercialMappedRow[]): Promise<CommercialImportPreview> {
-  if (!Array.isArray(rawRows) || rawRows.length < 1 || rawRows.length > 1000) {
-    return { ok: false, fileName: "", batchFingerprint: "", accepted: [], rejected: [], error: "Importul trebuie să conțină între 1 și 1.000 de rânduri." };
-  }
+  const envelopeError = validateCommercialImportEnvelope(rawRows);
+  if (envelopeError) return { ok: false, fileName: "", batchFingerprint: "", accepted: [], rejected: [], error: envelopeError };
   const fileName = safeFileName(fileNameInput);
   const { accepted: initiallyAccepted, rejected } = validateCommercialImportRows(rawRows);
   const { business, supabase } = await ingestionContext();
@@ -162,7 +162,7 @@ export async function confirmCommercialSignalImport(fileName: string, rawRows: C
     batchId: String(result.batch_id ?? ""),
     created: Number(result.created ?? 0),
     rejected: Number(result.rejected ?? 0),
-    duplicates: Number(result.duplicates ?? 0),
+    duplicates: Number(result.duplicates ?? 0) + exactDuplicates.length,
     failed: Number(result.failed ?? 0),
     duplicateBatch: Boolean(result.duplicate_batch),
     notSelected
