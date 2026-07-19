@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
 import { CommercialResponsePanel } from "@/components/opportunities/CommercialResponsePanel";
+import { AssistedPreparation } from "@/components/recovery/AssistedPreparation";
 import { getCommercialSignalForOpportunity } from "@/lib/commercial-inbox";
 import { OpportunityWorkflow } from "@/components/opportunities/OpportunityWorkflow";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
-import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
+import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness, recommendNextBestAction } from "@/lib/revenue-workspace";
 import { opportunities } from "@/lib/mock-data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { isOpenAIConfigured } from "@/lib/openai/client";
@@ -45,6 +46,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     ].filter((item): item is string => Boolean(item)))),
     risks: Array.from(new Set([...(sourceSignal.riskNotes ?? []), ...sourceSignal.uncertaintyNotes]))
   } : opportunity;
+  const assistedPreparation = recommendNextBestAction(opportunity);
 
   return (
     <PageShell
@@ -77,6 +79,14 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
           </DataCard>
         ) : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
+        <AssistedPreparation
+          context="Recomandarea folosește starea oportunității, contactul principal, acțiunile și termenele deja înregistrate."
+          suggestion={assistedPreparation.action}
+          reason={assistedPreparation.reason}
+          missingInformation={assistedPreparation.missingInformation}
+          href="#workflow-actions"
+          actionLabel="Revizuiește și programează"
+        />
         <CommercialResponsePanel opportunity={opportunity} />
         <DataCard title="Programează o acțiune internă" description="Creează un follow-up sau task intern. Nu se trimite nimic către client.">
           <CreateTaskForm opportunityId={opportunity.id} assignableProfiles={assignableProfiles} />

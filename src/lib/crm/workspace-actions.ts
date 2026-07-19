@@ -7,6 +7,7 @@ import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { isMissingRelationError } from "@/lib/supabase/database-errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
 
 type CrmActionResult = { ok: true; id?: string; message: string } | { ok: false; error: string; schemaMissing?: boolean };
 
@@ -83,12 +84,14 @@ export async function saveCrmOrganization(formData: FormData): Promise<CrmAction
     const id = field(formData, "id");
     const name = field(formData, "name", 180);
     if (!name) throw new Error("Numele organizației este obligatoriu.");
+    const website = normalizeOptionalCompanyWebsite(field(formData, "website", 300));
+    if (!website.ok) throw new Error(website.error);
 
     const payload = {
       business_id: context.businessId,
       name,
       normalized_name: normalize(name),
-      website: nullableField(formData, "website", 300),
+      website: website.value,
       industry: nullableField(formData, "industry", 120),
       phone: nullableField(formData, "phone", 60),
       city: nullableField(formData, "city", 120),
@@ -105,6 +108,7 @@ export async function saveCrmOrganization(formData: FormData): Promise<CrmAction
     if (error || !data) throw error ?? new Error("Organizația nu a fost salvată.");
 
     revalidatePath("/crm");
+    revalidatePath("/companies");
     revalidatePath(`/crm/organizations/${data.id}`);
     return { ok: true, id: data.id, message: id ? "Organizația a fost actualizată." : "Organizația a fost creată." };
   } catch (error) {
@@ -125,6 +129,7 @@ export async function archiveCrmOrganization(id: string): Promise<CrmActionResul
     if (error) throw error;
 
     revalidatePath("/crm");
+    revalidatePath("/companies");
     return { ok: true, message: "Organizația a fost arhivată." };
   } catch (error) {
     return crmDatabaseError(error);
@@ -190,6 +195,8 @@ export async function saveCrmContact(formData: FormData): Promise<CrmActionResul
     if (error || !data) throw error ?? new Error("Contactul nu a fost salvat.");
 
     revalidatePath("/crm");
+    revalidatePath("/contacts");
+    revalidatePath("/companies");
     if (data.organization_id) revalidatePath(`/crm/organizations/${data.organization_id}`);
     return { ok: true, id: data.id, message: id ? "Contactul a fost actualizat." : "Contactul a fost creat." };
   } catch (error) {
@@ -212,6 +219,8 @@ export async function archiveCrmContact(id: string): Promise<CrmActionResult> {
     if (error) throw error;
 
     revalidatePath("/crm");
+    revalidatePath("/contacts");
+    revalidatePath("/companies");
     if (data?.organization_id) revalidatePath(`/crm/organizations/${data.organization_id}`);
     return { ok: true, message: "Contactul a fost arhivat." };
   } catch (error) {

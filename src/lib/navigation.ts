@@ -51,7 +51,7 @@ export const utilityNavigation = [
 ] satisfies NavigationItem[];
 
 export const advancedNavigation = [
-  { name: "Bani recuperabili", href: "/recoverable", icon: "banknotes", description: "Vezi valoarea recuperabilă și cererile active.", permission: "opportunities.read" },
+  { name: "Coada de recuperare", href: "/recoverable", icon: "banknotes", description: "Vezi oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Verifică potențialul", href: "/opportunities/analyze", icon: "sparkles", description: "Transformă o cerere într-o oportunitate verificată.", permission: "opportunities.analyze" },
   { name: "Lead-uri", href: "/leads", icon: "user-group", description: "Gestionează companii și contacte comerciale.", permission: "workspace.read" },
   { name: "Outreach", href: "/outreach", icon: "megaphone", description: "Lucrează mesajele și comunicarea comercială.", permission: "documents.read" },

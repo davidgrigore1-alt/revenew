@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import { BuildingOffice2Icon, EnvelopeIcon, MagnifyingGlassIcon, PhoneIcon, PlusIcon, UserIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
+import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
 import type { CrmContact, CrmOrganization } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -42,7 +43,9 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   const [panel, setPanel] = useState<"organization" | "contact" | null>(null);
   const [query, setQuery] = useState("");
   const [relationship, setRelationship] = useState("all");
+  const [websiteError, setWebsiteError] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
+  const websiteRef = useRef<HTMLInputElement>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO");
   const filteredOrganizations = useMemo(() => organizations.filter((organization) => {
     const matchesQuery = !normalizedQuery || `${organization.name} ${organization.industry ?? ""} ${organization.city ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery);
@@ -59,7 +62,26 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   useEffect(() => {
     if (!panel) return;
     panelRef.current?.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea")?.focus();
+    if (panel === "organization") setWebsiteError("");
   }, [panel, editingOrganization, editingContact]);
+
+  function validateWebsiteField() {
+    const input = websiteRef.current;
+    if (!input) return true;
+    const result = normalizeOptionalCompanyWebsite(input.value);
+    if (!result.ok) {
+      setWebsiteError(result.error);
+      input.focus();
+      return false;
+    }
+    input.value = result.value ?? "";
+    setWebsiteError("");
+    return true;
+  }
+
+  function organizationFormSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!validateWebsiteField()) event.preventDefault();
+  }
 
   function runAction(action: () => Promise<{ ok: boolean; message?: string; error?: string }>) {
     startTransition(async () => {
@@ -132,15 +154,33 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează compania" : "Adaugă companie"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
           <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din workspace-ul curent.</p>
         </div>
-        <form action={organizationSubmit} className="grid gap-3 md:grid-cols-2">
+        <form action={organizationSubmit} onSubmit={organizationFormSubmit} noValidate className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingOrganization?.id ?? ""} />
+          {error ? <p role="alert" className="md:col-span-2 rounded-lg border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] px-3 py-2 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
           <label className="grid gap-2 text-sm font-semibold">
             Nume companie
             <input name="name" required defaultValue={editingOrganization?.name ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
           </label>
           <label className="grid gap-2 text-sm font-semibold">
-            Website
-            <input name="website" type="url" defaultValue={editingOrganization?.website ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+            Website / Domeniu <span className="font-normal text-[rgb(var(--text-muted))]">(opțional)</span>
+            <input
+              ref={websiteRef}
+              key={editingOrganization?.id ?? "new-organization-website"}
+              name="website"
+              type="text"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              defaultValue={editingOrganization?.website ?? ""}
+              onBlur={validateWebsiteField}
+              onChange={() => { if (websiteError) setWebsiteError(""); }}
+              aria-invalid={Boolean(websiteError)}
+              aria-describedby="company-website-help company-website-error"
+              className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3"
+            />
+            <span id="company-website-help" className="text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">Website-ul este opțional. Poți introduce direct domeniul companiei.</span>
+            {websiteError ? <span id="company-website-error" role="alert" className="text-xs font-normal leading-5 text-[rgb(var(--danger-text))]">{websiteError}</span> : null}
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Industrie
