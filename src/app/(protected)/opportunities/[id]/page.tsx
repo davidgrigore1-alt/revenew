@@ -58,15 +58,6 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        {sourceSignal ? (
-          <DataCard
-            title="Semnale asociate"
-            description="Context comercial legat explicit de această oportunitate. Următoarea acțiune rămâne prioritară."
-            action={<Button href={`/inbox?signal=${sourceSignal.id}`} variant="secondary">Deschide în Inbox</Button>}
-          >
-            <div className="divide-y divide-[rgb(var(--border))]">{linkedSignals.slice(0, 5).map((signal) => <div key={signal.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto]"><div><p className="text-sm font-semibold">{signal.title}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {[signal.contactName, signal.contactCompany].filter(Boolean).join(" · ") || "Contact neconfirmat"}</p></div><p className="max-w-md text-sm text-[rgb(var(--text-secondary))]">{signal.recommendedAction || signal.extractedSummary || "Necesită verificare."}</p></div>)}</div>
-          </DataCard>
-        ) : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
         <AssistedPreparation
           context="Recomandarea folosește starea oportunității, contactul principal, acțiunile și termenele deja înregistrate."
@@ -76,6 +67,15 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
           href="#workflow-actions"
           actionLabel="Revizuiește și programează"
         />
+        {sourceSignal ? (
+          <DataCard
+            title="Semnale asociate"
+            description="Contextul de origine rămâne verificabil; execuția continuă din următoarea acțiune a oportunității."
+            action={<Button href={`/inbox?signal=${sourceSignal.id}`} variant="secondary">Revizuiește semnalul</Button>}
+          >
+            <div className="divide-y divide-[rgb(var(--border))]">{linkedSignals.slice(0, 5).map((signal) => <div key={signal.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto]"><div><p className="text-sm font-semibold">{signal.title}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {[signal.contactName, signal.contactCompany].filter(Boolean).join(" · ") || "Contact neconfirmat"}</p></div><p className="max-w-md text-sm text-[rgb(var(--text-secondary))]"><span className="font-medium text-[rgb(var(--foreground))]">Context pentru execuție:</span> {signal.recommendedAction || signal.extractedSummary || "Necesită verificare."}</p></div>)}</div>
+          </DataCard>
+        ) : null}
         <CommercialResponsePanel opportunity={opportunity} />
         <DataCard title="Programează o acțiune internă" description="Creează un follow-up sau task intern. Nu se trimite nimic către client.">
           <CreateTaskForm opportunityId={opportunity.id} assignableProfiles={assignableProfiles} />

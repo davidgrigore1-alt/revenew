@@ -311,6 +311,17 @@ export function CommercialInboxClient({
     setError("");
   }
 
+  function updateCreateForm(patch: Partial<CreateForm>) {
+    setCreateForm((current) => ({ ...current, ...patch }));
+    const changedFields = Object.keys(patch) as Array<keyof CreateForm>;
+    setCreateErrors((current) => {
+      if (!changedFields.some((field) => current[field])) return current;
+      const next = { ...current };
+      changedFields.forEach((field) => delete next[field]);
+      return next;
+    });
+  }
+
   function runAction(action: () => Promise<{ ok: boolean; message?: string; signal?: CommercialSignal; fallbackUsed?: boolean; opportunityId?: string; alreadyConverted?: boolean }>, successMessage: string) {
     setNotice("");
     setError("");
@@ -367,7 +378,7 @@ export function CommercialInboxClient({
         setCreateOpen(false);
       }
       return result;
-    }, "Semnalul a fost creat și așteaptă analiza.");
+    }, "Semnalul a fost salvat în coada de triere. Echipa decide următorul pas.");
   }
 
   function saveReviewFields() {
@@ -412,7 +423,9 @@ export function CommercialInboxClient({
       recommendedAction: reviewForm.recommendedAction,
       reviewedDraft: formatRecoveryDraft(reviewForm.draftSubject, reviewForm.draftBody),
       opportunityId: reviewForm.opportunityId
-    }), "Semnalul a fost aprobat și convertit într-un caz de recuperare urmărit.");
+    }), reviewForm.opportunityId
+      ? "Semnalul a fost aprobat, iar acțiunea internă a fost creată în oportunitatea selectată."
+      : "Semnalul a fost aprobat, iar oportunitatea și prima acțiune internă au fost create.");
   }
 
   function archive() {
@@ -431,7 +444,12 @@ export function CommercialInboxClient({
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
-      <ol className="grid overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
+      <div className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:hidden" role="group" aria-label="Fluxul de la semnal la oportunitate">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Flux controlat</p>
+        <p className="mt-2 text-sm font-semibold">Semnal <span aria-hidden="true">→</span> Revizuire <span aria-hidden="true">→</span> Decizie <span aria-hidden="true">→</span> Oportunitate</p>
+        <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Nimic nu este convertit sau trimis fără confirmarea echipei.</p>
+      </div>
+      <ol className="hidden overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
         {[['01', 'Semnal primit', 'Date încă neaprobate'], ['02', 'Revizuire', 'Context și estimări verificate'], ['03', 'Decizie umană', 'Aprobă, amână sau ignoră'], ['04', 'Oportunitate', 'Ownership și acțiune următoare']].map(([number, title, copy], index) => <li key={number} className="relative border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><span className="text-xs font-semibold text-[rgb(var(--primary))]">{number}</span><strong className="mt-1 block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{copy}</span>{index < 3 ? <span className="absolute right-[-5px] top-1/2 z-10 hidden size-2.5 -translate-y-1/2 rotate-45 border-r border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:block" aria-hidden="true" /> : null}</li>)}
       </ol>
 
@@ -451,18 +469,18 @@ export function CommercialInboxClient({
         <DataCard title="Adaugă un semnal comercial" description="Copiază mesajul sau nota exact așa cum a fost primită. ReveNew pregătește contextul, iar tu alegi ce se aplică.">
           <form onSubmit={handleCreate} noValidate className="grid gap-5">
             <div className="grid gap-4 md:grid-cols-3">
-              <Field label="Titlu"><Input maxLength={240} value={createForm.title} onChange={(event) => setCreateForm({ ...createForm, title: event.target.value })} invalid={Boolean(createErrors.title)} aria-describedby={createErrors.title ? "signal-title-error" : undefined} />{createErrors.title ? <span id="signal-title-error" className="text-xs text-[rgb(var(--danger-text))]">{createErrors.title}</span> : null}</Field>
-              <Field label="Sursă"><Select value={createForm.source} onChange={(event) => setCreateForm({ ...createForm, source: event.target.value as CommercialSignalSource })} invalid={Boolean(createErrors.source)}>{captureSources.map((value) => <option key={value} value={value}>{sourceLabels[value]}</option>)}</Select></Field>
+              <Field label="Titlu"><Input maxLength={240} value={createForm.title} onChange={(event) => updateCreateForm({ title: event.target.value })} invalid={Boolean(createErrors.title)} aria-describedby={createErrors.title ? "signal-title-error" : undefined} />{createErrors.title ? <span id="signal-title-error" className="text-xs text-[rgb(var(--danger-text))]">{createErrors.title}</span> : null}</Field>
+              <Field label="Sursă"><Select value={createForm.source} onChange={(event) => updateCreateForm({ source: event.target.value as CommercialSignalSource })} invalid={Boolean(createErrors.source)}>{captureSources.map((value) => <option key={value} value={value}>{sourceLabels[value]}</option>)}</Select></Field>
               <Field label="Referință sursă"><Input maxLength={500} value={createForm.sourceReference} onChange={(event) => setCreateForm({ ...createForm, sourceReference: event.target.value })} placeholder="Opțional: subiect, ID intern sau fișier" /></Field>
               <Field label="Companie menționată"><Input value={createForm.company} onChange={(event) => setCreateForm({ ...createForm, company: event.target.value })} /></Field>
               <Field label="Contact menționat"><Input value={createForm.contact} onChange={(event) => setCreateForm({ ...createForm, contact: event.target.value })} /></Field>
-              <Field label="Email"><Input type="text" inputMode="email" value={createForm.email} onChange={(event) => setCreateForm({ ...createForm, email: event.target.value })} invalid={Boolean(createErrors.email)} />{createErrors.email ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.email}</span> : null}</Field>
+              <Field label="Email"><Input type="text" inputMode="email" value={createForm.email} onChange={(event) => updateCreateForm({ email: event.target.value })} invalid={Boolean(createErrors.email)} />{createErrors.email ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.email}</span> : null}</Field>
               <Field label="Telefon"><Input value={createForm.phone} onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })} /></Field>
-              <Field label="Valoare estimată"><Input type="number" min="0" value={createForm.value} onChange={(event) => setCreateForm({ ...createForm, value: event.target.value })} invalid={Boolean(createErrors.value)} />{createErrors.value ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.value}</span> : null}</Field>
+              <Field label="Valoare estimată"><Input type="number" min="0" value={createForm.value} onChange={(event) => updateCreateForm({ value: event.target.value })} invalid={Boolean(createErrors.value)} />{createErrors.value ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.value}</span> : null}</Field>
               <Field label="Monedă"><Select value={createForm.currency} onChange={(event) => setCreateForm({ ...createForm, currency: event.target.value })}><option>RON</option><option>EUR</option><option>USD</option></Select></Field>
               <Field label="Data semnalului"><Input type="datetime-local" value={createForm.lastInteractionAt} onChange={(event) => setCreateForm({ ...createForm, lastInteractionAt: event.target.value })} /></Field>
             </div>
-            <Field label="Text sau notă"><Textarea rows={5} maxLength={12000} value={createForm.context} onChange={(event) => setCreateForm({ ...createForm, context: event.target.value })} invalid={Boolean(createErrors.context)} aria-describedby={createErrors.context ? "signal-context-error" : "signal-context-help"} placeholder="Lipește emailul, mesajul WhatsApp sau nota după apel." /><span id={createErrors.context ? "signal-context-error" : "signal-context-help"} className={`text-xs ${createErrors.context ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`}>{createErrors.context ?? "Textul rămâne context neconfirmat și nu declanșează nicio acțiune externă."}</span></Field>
+            <Field label="Text sau notă"><Textarea rows={5} maxLength={12000} value={createForm.context} onChange={(event) => updateCreateForm({ context: event.target.value })} invalid={Boolean(createErrors.context)} aria-describedby={createErrors.context ? "signal-context-error" : "signal-context-help"} placeholder="Lipește emailul, mesajul WhatsApp sau nota după apel." /><span id={createErrors.context ? "signal-context-error" : "signal-context-help"} className={`text-xs ${createErrors.context ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`}>{createErrors.context ?? "Textul rămâne context neconfirmat și nu declanșează nicio acțiune externă."}</span></Field>
             <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5 md:grid-cols-2 xl:grid-cols-5">
               <Field label="Companie CRM"><Select value={createForm.organizationId} onChange={(event) => setCreateForm({ ...createForm, organizationId: event.target.value, contactId: "", opportunityId: "" })}><option value="">Leagă ulterior</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</Select></Field>
               <Field label="Contact CRM"><Select value={createForm.contactId} onChange={(event) => setCreateForm({ ...createForm, contactId: event.target.value })}><option value="">Leagă ulterior</option>{contacts.filter((contact) => !createForm.organizationId || !contact.organizationId || contact.organizationId === createForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}</option>)}</Select></Field>
@@ -509,10 +527,11 @@ export function CommercialInboxClient({
                 <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{signal.contactCompany || signal.contactName || "Companie neconfirmată"}</p>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
                   <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Scor</span><strong>{signal.recoverabilityScore ?? "—"}</strong></div>
-                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Potențial</span><strong>{formatCurrency(Number(signal.estimatedRecoverableValue ?? 0), signal.currency)}</strong></div>
+                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Potențial</span><strong>{signal.estimatedRecoverableValue === null || signal.estimatedRecoverableValue === undefined ? "—" : formatCurrency(Number(signal.estimatedRecoverableValue), signal.currency)}</strong></div>
                   <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Stare</span><strong>{reviewLabels[signal.reviewStatus]}</strong></div>
                 </div>
                 <p className="mt-3 line-clamp-2 text-sm text-[rgb(var(--muted-foreground))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
+                <span className="mt-3 inline-flex text-xs font-semibold text-[rgb(var(--primary))]">{signal.status === "converted" ? "Vezi conversia" : signal.status === "archived" ? "Vezi decizia" : "Revizuiește semnalul"} <span className="ml-1" aria-hidden="true">→</span></span>
               </button>
             ))}
             {filteredSignals.length === 0 ? signals.length === 0 ? (
@@ -528,14 +547,14 @@ export function CommercialInboxClient({
           </div>
         </DataCard>
 
-        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description="Analizează contextul, verifică datele și decide. Aprobarea creează cazul urmărit, dar nu trimite mesaje externe.">
+        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description={reviewForm.opportunityId ? "Verifică datele și confirmă acțiunea internă pentru oportunitatea existentă. Nu se trimite niciun mesaj." : "Verifică datele și confirmă oportunitatea nouă. Nu se trimite niciun mesaj."}>
           {selectedSignal ? (
             <div className="grid gap-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">{reviewLabels[selectedSignal.reviewStatus]}</span>
                 <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(selectedSignal.urgencyLevel)}`}>{selectedSignal.urgencyLevel ? urgencyLabels[selectedSignal.urgencyLevel] : "Neanalizat"}</span>
                 {selectedSignal.duplicateRisk ? <span className="rounded border border-red-400/30 bg-red-400/10 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-200">Posibil duplicat</span> : null}
-                {selectedSignal.analysisMode ? <span className="rounded border border-[rgb(var(--border))] bg-[rgb(var(--muted))] px-2 py-1 text-xs font-semibold text-[rgb(var(--muted-foreground))]">Pregătire asistată · reguli transparente</span> : null}
+                {selectedSignal.analysisMode ? <span className="rounded border border-[rgb(var(--border))] bg-[rgb(var(--muted))] px-2 py-1 text-xs font-semibold text-[rgb(var(--muted-foreground))]">Triere asistată · date și reguli vizibile</span> : null}
                 {(selectedSignal.events ?? []).some((event) => event.eventType === "analysis_review_edited") ? <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">Editat de utilizator</span> : null}
                 <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">Netrimis automat</span>
                 <span className="text-xs text-[rgb(var(--muted-foreground))]">Primit {formatDateTimeWithSeconds(selectedSignal.createdAt ?? undefined)}</span>
@@ -546,7 +565,7 @@ export function CommercialInboxClient({
                   { label: "Scor recuperabilitate", value: `${selectedSignal.recoverabilityScore ?? 0}/100`, note: "Prioritate estimată; necesită revizuire.", tone: "brand" },
                   { label: "Potențial estimat", value: formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency), note: "Nu reprezintă venit confirmat.", tone: "neutral" },
                   { label: "Încredere", value: selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută", note: selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare.", tone: "warning" },
-                  { label: "Decizie", value: "Umană", note: "Aprobarea creează oportunitatea; nu trimite mesaje.", tone: "success" }
+                  { label: "Decizie", value: "Umană", note: reviewForm.opportunityId ? "Aprobarea creează o acțiune internă." : "Aprobarea creează oportunitatea.", tone: "success" }
                 ]} />
               ) : (
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
@@ -554,7 +573,7 @@ export function CommercialInboxClient({
 
               {selectedSignal.analysisExplanation ? (
                 <div className="grid gap-2 border-l-2 border-[rgb(var(--primary))] pl-4">
-                  <h3 className="text-sm font-semibold">Pregătire asistată</h3>
+                  <h3 className="text-sm font-semibold">Triere asistată, verificată de echipă</h3>
                   <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p>
                   <p className="text-xs text-[rgb(var(--text-muted))]">ReveNew pregătește contextul. Tu alegi ce se aplică. Nu se modifică și nu se trimite nimic fără o acțiune explicită.</p>
                 </div>

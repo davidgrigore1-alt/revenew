@@ -93,8 +93,8 @@ test("review UI requires human approval and supports all decision paths", async 
   assert.match(source, /Contact CRM/);
   assert.match(source, /Responsabil/);
   assert.match(source, /Draft recomandat/);
-  assert.match(source, /Pregătire asistată/);
-  assert.match(source, /reguli transparente/);
+  assert.match(source, /Triere asistată/);
+  assert.match(source, /date și reguli vizibile/);
   assert.match(source, /Checklist înainte de aprobare/);
   assert.match(source, /Netrimis automat/);
   assert.match(source, /Risc duplicat/);

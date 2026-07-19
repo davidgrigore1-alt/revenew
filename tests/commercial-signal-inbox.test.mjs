@@ -45,6 +45,11 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(client, /Companie CRM/);
   assert.match(client, /Oportunitate existentă/);
   assert.match(client, /Aprobă și creează acțiunea/);
+  assert.match(client, /Semnal .*Revizuire .*Decizie .*Oportunitate/);
+  assert.match(client, /Revizuiește semnalul/);
+  assert.match(client, /acțiunea internă a fost creată în oportunitatea selectată/);
+  assert.match(client, /oportunitatea și prima acțiune internă au fost create/);
+  assert.match(client, /estimatedRecoverableValue === null/);
   assert.match(client, /Arhivează/);
   assert.match(inbox, /detected_from_opportunity_id/);
   assert.match(inbox, /signal_archived/);
@@ -58,8 +63,10 @@ test("signals are visible in Company 360 and opportunity context with inbox wayf
   const navigation = await read("../src/lib/navigation.ts");
   assert.match(company, /Semnale recente/);
   assert.match(company, /getCommercialSignalsForOrganization/);
+  assert.match(company, /Următor pas propus:/);
   assert.match(opportunity, /Semnale asociate/);
   assert.match(opportunity, /getCommercialSignalsForOpportunity/);
+  assert.match(opportunity, /Context pentru execuție:/);
   assert.match(navigation, /href: "\/inbox"/);
   assert.match(navigation, /matchesRoutePrefix\(pathname, item\.href\)/);
 });
