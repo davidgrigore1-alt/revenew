@@ -2,9 +2,27 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import ts from "typescript";
+import vm from "node:vm";
 
 async function importTypeScript(path) {
   const source = await readFile(new URL(path, import.meta.url), "utf8");
+  if (path.endsWith("recoverability-analysis-core.ts")) {
+    const dependencySource = await readFile(new URL("../src/lib/commercial-signal-intelligence.ts", import.meta.url), "utf8");
+    const compilerOptions = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 };
+    const dependencyModule = { exports: {} };
+    vm.runInNewContext(`(function(module,exports,require){${ts.transpileModule(dependencySource, { compilerOptions }).outputText}\n})(module,module.exports,require)`, {
+      module: dependencyModule,
+      exports: dependencyModule.exports,
+      require: () => ({})
+    });
+    const module = { exports: {} };
+    vm.runInNewContext(`(function(module,exports,require){${ts.transpileModule(source, { compilerOptions }).outputText}\n})(module,module.exports,require)`, {
+      module,
+      exports: module.exports,
+      require: (specifier) => specifier === "@/lib/commercial-signal-intelligence" ? dependencyModule.exports : {}
+    });
+    return module.exports;
+  }
   const output = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }
   }).outputText;

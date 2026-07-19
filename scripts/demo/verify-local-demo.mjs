@@ -204,6 +204,10 @@ async function main() {
       ,'signal_converted_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and status = 'converted' and converted_opportunity_id is not null)
       ,'signal_event_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}')
       ,'external_signal_source_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and source in ('ai_receptionist','instagram','website_form','missed_call'))
+      ,'signal_intent_type_count', (select count(distinct note) from public.commercial_signals s cross join lateral jsonb_array_elements_text(coalesce(s.uncertainty_notes, '[]'::jsonb)) note where s.business_id = '${DEMO.businessId}' and note like 'SIGNAL_TYPE: %')
+      ,'signal_deadline_clue_count', (select count(*) from public.commercial_signals s cross join lateral jsonb_array_elements_text(coalesce(s.uncertainty_notes, '[]'::jsonb)) note where s.business_id = '${DEMO.businessId}' and note like 'DEADLINE_CLUE: %')
+      ,'signal_value_clue_count', (select count(*) from public.commercial_signals s cross join lateral jsonb_array_elements_text(coalesce(s.uncertainty_notes, '[]'::jsonb)) note where s.business_id = '${DEMO.businessId}' and note like 'VALUE_CLUE: %')
+      ,'signal_gap_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and jsonb_array_length(coalesce(missing_information, '[]'::jsonb)) > 0)
     );
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
@@ -221,6 +225,9 @@ async function main() {
   assert(Number(stats.signal_review_count) > 0 && Number(stats.signal_linked_count) > 0, "Semnalele demo nu acoperă revizuirea și legarea.");
   assert(Number(stats.signal_converted_count) > 0 && Number(stats.signal_event_count) >= 10, "Conversia și auditul semnalelor demo sunt incomplete.");
   assert(Number(stats.external_signal_source_count) === 0, "Demo-ul nu trebuie să sugereze conectori externi activi.");
+  assert(Number(stats.signal_intent_type_count) >= 4, "Demo-ul nu acoperă suficiente tipuri de semnale determinate prin reguli.");
+  assert(Number(stats.signal_deadline_clue_count) > 0 && Number(stats.signal_value_clue_count) > 0, "Demo-ul nu acoperă indicii verificabile de termen și valoare.");
+  assert(Number(stats.signal_gap_count) > 0, "Demo-ul nu acoperă informații comerciale lipsă.");
   await verifyTenantIsolation(admin, local);
   await verifySignalConversionAuthorization(admin, local);
   console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");

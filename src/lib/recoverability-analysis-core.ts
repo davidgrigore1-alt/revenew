@@ -1,4 +1,5 @@
 import type { Business, CommercialSignal, RecoverabilityConfidence, RecoverabilityUrgency } from "@/lib/types";
+import { analyzeCommercialSignalIntelligence, type CommercialSignalIntelligenceContext, type CommercialSignalIntent } from "@/lib/commercial-signal-intelligence";
 
 export type RecoverabilityAnalysisMode = "ai" | "deterministic_fallback";
 
@@ -12,6 +13,12 @@ export type RecoverabilityAnalysis = {
   primaryRecoveryReason: string;
   executiveExplanation: string;
   detectedCommercialIntent: string;
+  signalType: CommercialSignalIntent;
+  signalTypeLabel: string;
+  deadlineClue: string | null;
+  valueClue: string | null;
+  contextHints: string[];
+  detectionReasons: string[];
   relationshipContext: string;
   scoreFactors: string[];
   missingInformation: string[];
@@ -85,7 +92,8 @@ function draftFor(signal: CommercialSignal, previousRelationship: boolean) {
 export function buildDeterministicRecoverabilityAnalysis(
   signal: CommercialSignal,
   duplicateRisk: boolean,
-  now = new Date()
+  now = new Date(),
+  context: CommercialSignalIntelligenceContext = {}
 ): RecoverabilityAnalysis {
   const missing: string[] = [];
   const scoreFactors: string[] = [];
@@ -100,6 +108,7 @@ export function buildDeterministicRecoverabilityAnalysis(
   const previousRelationship = /client|colabor|contract|reînno|reactiv|fost/.test(text);
   const proposalWithoutResponse = /ofert|propuner|cerere|fără răspuns|follow.?up|revenim/.test(text);
   const staleOpportunity = signal.ingestionOrigin === "stale_detection" || Boolean(signal.detectedFromOpportunityId);
+  const intelligence = analyzeCommercialSignalIntelligence(signal, { ...context, duplicateRisk }, now);
 
   let score = 20;
   scoreFactors.push("Semnal comercial disponibil pentru revizuire (+20)");
@@ -157,9 +166,14 @@ export function buildDeterministicRecoverabilityAnalysis(
   }
   score = Math.max(0, Math.min(100, score));
 
-  const urgency: RecoverabilityUrgency = ageDays !== null && ageDays >= 45 && value > 0
+  const ageUrgency: RecoverabilityUrgency = ageDays !== null && ageDays >= 45 && value > 0
     ? "critical" : ageDays !== null && ageDays >= 21 ? "high" : ageDays !== null && ageDays >= 7 ? "medium" : "low";
-  const confidence: RecoverabilityConfidence = hasContact && value > 0 && ageDays !== null ? "high" : hasContact || value > 0 ? "medium" : "low";
+  const urgencyRank: Record<RecoverabilityUrgency, number> = { low: 0, medium: 1, high: 2, critical: 3 };
+  const deadlineUrgency = intelligence.deadlineClue?.urgency ?? "low";
+  const urgency = urgencyRank[deadlineUrgency] > urgencyRank[ageUrgency] ? deadlineUrgency : ageUrgency;
+  const dataConfidence: RecoverabilityConfidence = hasContact && value > 0 && ageDays !== null ? "high" : hasContact || value > 0 ? "medium" : "low";
+  const confidence: RecoverabilityConfidence = intelligence.confidence === "high" && dataConfidence !== "low"
+    ? "high" : intelligence.confidence === "low" || dataConfidence === "low" ? "low" : "medium";
   const reason = staleOpportunity
     ? "Oportunitate existentă fără progres comercial recent"
     : proposalWithoutResponse
@@ -167,11 +181,7 @@ export function buildDeterministicRecoverabilityAnalysis(
       : previousRelationship
         ? "Relație comercială posibil existentă care poate fi reactivată"
         : "Semnal comercial fără următor pas clar";
-  const intent = proposalWithoutResponse
-    ? "Confirmarea interesului și reluarea unei discuții comerciale"
-    : previousRelationship
-      ? "Reactivarea prudentă a unei relații comerciale"
-      : "Clarificarea nevoii și calificarea oportunității";
+  const intent = intelligence.signalTypeLabel;
   const relationship = signal.matchedContactId
     ? "Contact existent potrivit în CRM; identitatea trebuie confirmată înainte de folosire."
     : signal.matchedOrganizationId
@@ -179,9 +189,7 @@ export function buildDeterministicRecoverabilityAnalysis(
       : previousRelationship
         ? "Textul sugerează o relație anterioară, dar aceasta nu este confirmată în CRM."
         : "Nu există o relație comercială confirmată în datele disponibile.";
-  const action = signal.recommendedAction || signal.nextStep || (hasContact
-    ? "Confirmă interesul și stabilește următorul pas comercial."
-    : "Completează și confirmă persoana de contact înainte de orice follow-up.");
+  const action = signal.nextStep || intelligence.recommendedNextAction;
   const draft = draftFor(signal, previousRelationship);
   const checklist = [
     "Confirmă compania, persoana de contact și relația comercială.",
@@ -201,12 +209,18 @@ export function buildDeterministicRecoverabilityAnalysis(
     primaryRecoveryReason: reason,
     executiveExplanation: "Semnalul poate merita recuperat dacă nevoia este încă activă. Scorul combină doar date observabile; valoarea este potențială, nu venit confirmat.",
     detectedCommercialIntent: intent,
+    signalType: intelligence.signalType,
+    signalTypeLabel: intelligence.signalTypeLabel,
+    deadlineClue: intelligence.deadlineClue?.label ?? null,
+    valueClue: intelligence.valueClue?.label ?? null,
+    contextHints: intelligence.contextHints,
+    detectionReasons: intelligence.detectionReasons,
     relationshipContext: relationship,
     scoreFactors,
-    missingInformation: Array.from(new Set(missing)),
+    missingInformation: Array.from(new Set([...missing, ...intelligence.missingInformation])),
     recommendedNextAction: action,
     suggestedOwnerProfileId: signal.assignedToProfileId || signal.createdByProfileId || null,
-    suggestedDueDate: dueDateFromUrgency(urgency, now),
+    suggestedDueDate: intelligence.deadlineClue?.exactDate ?? dueDateFromUrgency(urgency, now),
     duplicateRisk,
     riskNotes,
     uncertaintyNotes,
@@ -269,6 +283,12 @@ export function validateRecoverabilityAnalysis(
     primaryRecoveryReason,
     executiveExplanation,
     detectedCommercialIntent,
+    signalType: fallback.signalType,
+    signalTypeLabel: fallback.signalTypeLabel,
+    deadlineClue: fallback.deadlineClue,
+    valueClue: fallback.valueClue,
+    contextHints: fallback.contextHints,
+    detectionReasons: fallback.detectionReasons,
     relationshipContext,
     scoreFactors: list(data.score_factors, 10, true),
     missingInformation: list(data.missing_information, 10),

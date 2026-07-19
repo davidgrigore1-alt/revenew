@@ -358,6 +358,12 @@ export type CommercialSignal = {
   primaryRecoveryReason?: string | null;
   analysisExplanation?: string | null;
   detectedCommercialIntent?: string | null;
+  signalType?: string | null;
+  signalTypeLabel?: string | null;
+  deadlineClue?: string | null;
+  valueClue?: string | null;
+  contextHints?: string[];
+  detectionReasons?: string[];
   relationshipContext?: string | null;
   scoreFactors?: string[];
   missingInformation: string[];

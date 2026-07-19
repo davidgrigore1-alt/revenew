@@ -571,29 +571,42 @@ export function CommercialInboxClient({
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
 
-              {selectedSignal.analysisExplanation ? (
-                <div className="grid gap-2 border-l-2 border-[rgb(var(--primary))] pl-4">
-                  <h3 className="text-sm font-semibold">Triere asistată, verificată de echipă</h3>
-                  <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.analysisExplanation}</p>
-                  <p className="text-xs text-[rgb(var(--text-muted))]">ReveNew pregătește contextul. Tu alegi ce se aplică. Nu se modifică și nu se trimite nimic fără o acțiune explicită.</p>
+              <section aria-labelledby="signal-intelligence-title" className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Tip semnal · triere asistată</p>
+                    <h3 id="signal-intelligence-title" className="mt-1 text-base font-semibold">{selectedSignal.signalTypeLabel || selectedSignal.detectedCommercialIntent || "Semnal de clarificat"}</h3>
+                  </div>
+                  <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1 text-xs font-semibold">
+                    Încredere {selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel].toLocaleLowerCase("ro-RO") : "necunoscută"}
+                  </span>
                 </div>
-              ) : null}
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <h3 className="text-sm font-semibold">De ce contează</h3>
-                  <div className="mt-2 grid gap-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-                    {selectedSignal.primaryRecoveryReason ? <p>{selectedSignal.primaryRecoveryReason}</p> : null}
-                    {selectedSignal.detectedCommercialIntent ? <p><strong className="text-[rgb(var(--foreground))]">Intenție:</strong> {selectedSignal.detectedCommercialIntent}</p> : null}
-                    {selectedSignal.relationshipContext ? <p><strong className="text-[rgb(var(--foreground))]">Relație:</strong> {selectedSignal.relationshipContext}</p> : null}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
+                    <h4 className="text-sm font-semibold">Ce a detectat ReveNew</h4>
+                    <ul className="mt-2 grid gap-2 text-sm leading-5 text-[rgb(var(--muted-foreground))]">
+                      {selectedSignal.deadlineClue ? <li>• {selectedSignal.deadlineClue}</li> : null}
+                      {selectedSignal.valueClue ? <li>• {selectedSignal.valueClue}</li> : null}
+                      {(selectedSignal.contextHints ?? []).slice(0, 3).map((item) => <li key={item}>• {item}</li>)}
+                      {(selectedSignal.detectionReasons ?? []).slice(0, 1).map((item) => <li key={item}>• {item}</li>)}
+                      {!selectedSignal.deadlineClue && !selectedSignal.valueClue && !(selectedSignal.contextHints?.length) && !(selectedSignal.detectionReasons?.length) ? <li>• Contextul necesită completare și verificare umană.</li> : null}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
+                    <InsightList title="Informații lipsă" items={selectedSignal.missingInformation.length ? selectedSignal.missingInformation : ["Nu au fost identificate lipsuri critice; datele trebuie totuși confirmate."]} />
                   </div>
                 </div>
-                <InsightList title="Cum a fost calculat scorul" items={selectedSignal.scoreFactors} />
-                <InsightList title="Informații lipsă" items={selectedSignal.missingInformation} />
-                <InsightList title="Riscuri" items={selectedSignal.riskNotes} />
-              </div>
+
+                <Field label="Următorul pas recomandat"><textarea rows={3} value={reviewForm.recommendedAction} onChange={(event) => setReviewForm({ ...reviewForm, recommendedAction: event.target.value })} className={`${fieldClasses()} bg-[rgb(var(--surface))] py-3`} /></Field>
+
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                  <h4 className="text-sm font-semibold">Ce nu se întâmplă automat</h4>
+                  <p className="mt-1 text-sm leading-5 text-[rgb(var(--muted-foreground))]">ReveNew nu trimite mesaje, nu schimbă valori și nu creează oportunități sau acțiuni fără confirmarea ta explicită.</p>
+                </div>
+              </section>
+
               {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
-              <InsightList title="Checklist înainte de aprobare" items={selectedSignal.humanReviewChecklist} />
-              {selectedSignal.alternativeDraftAngle ? <div><h3 className="text-sm font-semibold">Unghi alternativ</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{selectedSignal.alternativeDraftAngle}</p></div> : null}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Titlu"><input value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} className={fieldClasses()} /></Field>
@@ -606,7 +619,6 @@ export function CommercialInboxClient({
                 <Field label="Termen recomandat"><input type="date" value={reviewForm.dueAt} onChange={(event) => setReviewForm({ ...reviewForm, dueAt: event.target.value })} className={fieldClasses()} /></Field>
               </div>
               <Field label="Context original"><textarea rows={4} value={reviewForm.context} onChange={(event) => setReviewForm({ ...reviewForm, context: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
-              <Field label="Acțiune recomandată"><textarea rows={3} value={reviewForm.recommendedAction} onChange={(event) => setReviewForm({ ...reviewForm, recommendedAction: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Field label="Responsabil"><select value={reviewForm.ownerProfileId} onChange={(event) => setReviewForm({ ...reviewForm, ownerProfileId: event.target.value })} className={fieldClasses()}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</select></Field>

@@ -6,6 +6,12 @@ export type PersistedRecoverabilityInsights = {
   uncertaintyNotes: string[];
   humanReviewChecklist: string[];
   alternativeDraftAngle: string | null;
+  signalType?: string | null;
+  signalTypeLabel?: string | null;
+  deadlineClue?: string | null;
+  valueClue?: string | null;
+  contextHints?: string[];
+  detectionReasons?: string[];
 };
 
 const tags = {
@@ -15,7 +21,13 @@ const tags = {
   risk: "RISC: ",
   uncertainty: "INCERTITUDINE: ",
   checklist: "VERIFICĂ: ",
-  alternative: "ALTERNATIVĂ: "
+  alternative: "ALTERNATIVĂ: ",
+  signalType: "SIGNAL_TYPE: ",
+  signalTypeLabel: "SIGNAL_TYPE_LABEL: ",
+  deadlineClue: "DEADLINE_CLUE: ",
+  valueClue: "VALUE_CLUE: ",
+  contextHint: "CONTEXT_HINT: ",
+  detectionReason: "DETECTION_REASON: "
 } as const;
 
 export function packRecoverabilityInsights(insights: PersistedRecoverabilityInsights) {
@@ -26,7 +38,13 @@ export function packRecoverabilityInsights(insights: PersistedRecoverabilityInsi
     ...insights.riskNotes.map((item) => `${tags.risk}${item}`),
     ...insights.uncertaintyNotes.map((item) => `${tags.uncertainty}${item}`),
     ...insights.humanReviewChecklist.map((item) => `${tags.checklist}${item}`),
-    insights.alternativeDraftAngle ? `${tags.alternative}${insights.alternativeDraftAngle}` : ""
+    insights.alternativeDraftAngle ? `${tags.alternative}${insights.alternativeDraftAngle}` : "",
+    insights.signalType ? `${tags.signalType}${insights.signalType}` : "",
+    insights.signalTypeLabel ? `${tags.signalTypeLabel}${insights.signalTypeLabel}` : "",
+    ...(insights.contextHints ?? []).map((item) => `${tags.contextHint}${item}`),
+    ...(insights.detectionReasons ?? []).map((item) => `${tags.detectionReason}${item}`),
+    insights.deadlineClue ? `${tags.deadlineClue}${insights.deadlineClue}` : "",
+    insights.valueClue ? `${tags.valueClue}${insights.valueClue}` : ""
   ].filter(Boolean);
 }
 
@@ -38,7 +56,13 @@ export function unpackRecoverabilityInsights(notes: string[]): PersistedRecovera
     riskNotes: [],
     uncertaintyNotes: [],
     humanReviewChecklist: [],
-    alternativeDraftAngle: null
+    alternativeDraftAngle: null,
+    signalType: null,
+    signalTypeLabel: null,
+    deadlineClue: null,
+    valueClue: null,
+    contextHints: [],
+    detectionReasons: []
   };
   for (const note of notes) {
     if (note.startsWith(tags.intent)) result.detectedCommercialIntent = note.slice(tags.intent.length);
@@ -48,6 +72,12 @@ export function unpackRecoverabilityInsights(notes: string[]): PersistedRecovera
     else if (note.startsWith(tags.uncertainty)) result.uncertaintyNotes.push(note.slice(tags.uncertainty.length));
     else if (note.startsWith(tags.checklist)) result.humanReviewChecklist.push(note.slice(tags.checklist.length));
     else if (note.startsWith(tags.alternative)) result.alternativeDraftAngle = note.slice(tags.alternative.length);
+    else if (note.startsWith(tags.signalType)) result.signalType = note.slice(tags.signalType.length);
+    else if (note.startsWith(tags.signalTypeLabel)) result.signalTypeLabel = note.slice(tags.signalTypeLabel.length);
+    else if (note.startsWith(tags.deadlineClue)) result.deadlineClue = note.slice(tags.deadlineClue.length);
+    else if (note.startsWith(tags.valueClue)) result.valueClue = note.slice(tags.valueClue.length);
+    else if (note.startsWith(tags.contextHint)) result.contextHints?.push(note.slice(tags.contextHint.length));
+    else if (note.startsWith(tags.detectionReason)) result.detectionReasons?.push(note.slice(tags.detectionReason.length));
     else result.uncertaintyNotes.push(note);
   }
   return result;

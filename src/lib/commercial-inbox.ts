@@ -349,6 +349,12 @@ function mapSignal(row: CommercialSignalRow, events: CommercialSignalEvent[] = [
     primaryRecoveryReason: row.primary_recovery_reason,
     analysisExplanation: row.analysis_explanation,
     detectedCommercialIntent: insights.detectedCommercialIntent,
+    signalType: insights.signalType,
+    signalTypeLabel: insights.signalTypeLabel,
+    deadlineClue: insights.deadlineClue,
+    valueClue: insights.valueClue,
+    contextHints: insights.contextHints,
+    detectionReasons: insights.detectionReasons,
     relationshipContext: insights.relationshipContext,
     scoreFactors: insights.scoreFactors,
     missingInformation: stringArray(row.missing_information),
@@ -735,7 +741,25 @@ export async function analyzeCommercialSignal(signalId: string, _planId?: string
     matchedOrganizationId = matchedOrganizationId ?? data?.organization_id ?? null;
   }
 
-  const analysis = buildDeterministicRecoverabilityAnalysis(signal, Boolean(duplicate));
+  let activeOpportunityTitle: string | null = null;
+  if (matchedOrganizationId) {
+    const { data: activeOpportunity } = await supabase
+      .from("opportunities")
+      .select("title")
+      .eq("business_id", business.id)
+      .eq("organization_id", matchedOrganizationId)
+      .eq("lifecycle_status", "open")
+      .limit(1)
+      .maybeSingle();
+    activeOpportunityTitle = activeOpportunity?.title ?? null;
+  }
+
+  const analysis = buildDeterministicRecoverabilityAnalysis(
+    { ...signal, matchedOrganizationId, matchedContactId },
+    Boolean(duplicate),
+    new Date(),
+    { activeOpportunityTitle }
+  );
   const { data: updatedRow, error: updateError } = await supabase
     .from("commercial_signals")
     .update({
@@ -758,7 +782,13 @@ export async function analyzeCommercialSignal(signalId: string, _planId?: string
         riskNotes: analysis.riskNotes,
         uncertaintyNotes: analysis.uncertaintyNotes,
         humanReviewChecklist: analysis.humanReviewChecklist,
-        alternativeDraftAngle: analysis.alternativeDraftAngle
+        alternativeDraftAngle: analysis.alternativeDraftAngle,
+        signalType: analysis.signalType,
+        signalTypeLabel: analysis.signalTypeLabel,
+        deadlineClue: analysis.deadlineClue,
+        valueClue: analysis.valueClue,
+        contextHints: analysis.contextHints,
+        detectionReasons: analysis.detectionReasons
       }),
       suggested_due_date: analysis.suggestedDueDate,
       suggested_owner_profile_id: analysis.suggestedOwnerProfileId,

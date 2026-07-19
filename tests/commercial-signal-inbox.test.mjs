@@ -32,6 +32,7 @@ test("signal operations remain tenant-scoped, explicit and deterministic", async
   assert.match(inbox, /validateWorkspaceLinks/);
   assert.match(inbox, /\.eq\("business_id", business\.id\)/);
   assert.match(inbox, /buildDeterministicRecoverabilityAnalysis/);
+  assert.match(inbox, /activeOpportunityTitle/);
   assert.doesNotMatch(inbox, /runRecoverabilityAnalysis|createOpenAIClient|fetch\(/);
   assert.match(actions, /requirePermission\("signals\.create"\)/);
   assert.match(actions, /requirePermission\("signals\.convert"\)/);
@@ -51,6 +52,10 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(client, /oportunitatea și prima acțiune internă au fost create/);
   assert.match(client, /estimatedRecoverableValue === null/);
   assert.match(client, /Arhivează/);
+  assert.match(client, /Tip semnal|Semnal de clarificat/);
+  assert.match(client, /Ce a detectat ReveNew/);
+  assert.match(client, /Următorul pas recomandat/);
+  assert.match(client, /Ce nu se întâmplă automat/);
   assert.match(inbox, /detected_from_opportunity_id/);
   assert.match(inbox, /signal_archived/);
   assert.match(migration, /insert into public\.opportunity_actions/);
@@ -78,7 +83,16 @@ test("demo fixtures cover review, links, conversion and no external connector", 
   assert.match(fixtures, /Text WhatsApp copiat manual/);
   assert.match(fixtures, /converted_opportunity_id/);
   assert.match(fixtures, /detected_from_opportunity_id/);
+  assert.match(fixtures, /SIGNAL_TYPE: quote_request/);
+  assert.match(fixtures, /SIGNAL_TYPE: follow_up/);
+  assert.match(fixtures, /SIGNAL_TYPE: renewal/);
+  assert.match(fixtures, /SIGNAL_TYPE: complaint_risk/);
+  assert.match(fixtures, /DEADLINE_CLUE:/);
+  assert.match(fixtures, /VALUE_CLUE:/);
   assert.match(verify, /signal_count/);
   assert.match(verify, /foreignSignal/);
   assert.match(verify, /external_signal_source_count/);
+  assert.match(verify, /signal_intent_type_count/);
+  assert.match(verify, /signal_deadline_clue_count/);
+  assert.match(verify, /signal_value_clue_count/);
 });
