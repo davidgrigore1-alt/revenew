@@ -120,8 +120,8 @@ export default async function DashboardPage() {
     ].slice(0, 8);
 
     const brief = urgentActionCount > 0 || attentionCount > 0
-      ? `Ai ${urgentActionCount} ${urgentActionCount === 1 ? "acțiune scadentă" : "acțiuni scadente"} și ${attentionCount} ${attentionCount === 1 ? "oportunitate care necesită intervenție" : "oportunități care necesită intervenție"}. Prioritizează ownership-ul și următorul pas înainte de a extinde pipeline-ul.`
-      : "Nu există intervenții urgente în datele disponibile. Folosește această fereastră pentru a confirma ownership-ul și următoarele acțiuni din pipeline.";
+      ? `Ai ${urgentActionCount} ${urgentActionCount === 1 ? "acțiune scadentă" : "acțiuni scadente"} și ${attentionCount} ${attentionCount === 1 ? "oportunitate care necesită intervenție" : "oportunități care necesită intervenție"}. Clarifică responsabilitatea și următorul pas înainte de a extinde pipeline-ul.`
+      : "Nu există intervenții urgente în datele disponibile. Folosește această fereastră pentru a confirma responsabilii și următoarele acțiuni din pipeline.";
 
     const urgentColumns: DashboardTableColumn<AttentionRow>[] = [
       {
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
       },
       {
         key: "owner",
-        label: "Owner",
+        label: "Responsabil",
         className: "w-[13%]",
         render: (row) => <span className="text-[rgb(var(--text-secondary))]">{row.opportunity.ownerName ?? "Neatribuit"}</span>
       },
@@ -215,7 +215,7 @@ export default async function DashboardPage() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
               <Button href="/opportunities/analyze">Adaugă oportunitate</Button>
-              <Button href="/inbox/import" variant="secondary">Importă date</Button>
+              <Button href="/companies" variant="secondary">Vezi companiile</Button>
             </div>
           </div>
         </PremiumPanel>
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
           <KpiCard label="Risc operațional" value={String(attentionCount)} detail={`${highRiskCount} oportunități cu valoare mare sunt evaluate ca fiind în risc.`} tone={highRiskCount > 0 ? "danger" : attentionCount > 0 ? "warning" : "neutral"} icon={<ExclamationTriangleIcon className="h-5 w-5" aria-hidden="true" />} />
         </section>
 
-        <DashboardSection eyebrow="Prioritatea zilei" title="Ce necesită atenție acum" description="Acțiunile scadente au prioritate, urmate de oportunitățile fără ownership, contact sau următor pas." action={<Button href="/recoverable" variant="ghost" size="small">Vezi coada de recuperare <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
+        <DashboardSection eyebrow="Prioritatea zilei" title="Ce necesită atenție acum" description="Acțiunile scadente au prioritate, urmate de oportunitățile fără responsabil, contact sau următor pas." action={<Button href="/recoverable" variant="ghost" size="small">Vezi coada de recuperare <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
           <DashboardTable
             rows={attentionRows}
             columns={urgentColumns}
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
                 </div>
                 <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                   <div><dt className="text-[rgb(var(--text-faint))]">Valoare</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatCurrency(row.opportunity.estimatedValueHigh, row.opportunity.currency ?? "RON")}</dd></div>
-                  <div><dt className="text-[rgb(var(--text-faint))]">Owner</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{row.opportunity.ownerName ?? "Neatribuit"}</dd></div>
+                  <div><dt className="text-[rgb(var(--text-faint))]">Responsabil</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{row.opportunity.ownerName ?? "Neatribuit"}</dd></div>
                   <div className="col-span-2"><dt className="text-[rgb(var(--text-faint))]">Următorul pas</dt><dd className="mt-1 text-sm text-[rgb(var(--text-secondary))]">{row.nextAction} · {row.dueLabel}</dd></div>
                 </dl>
                 <Button href={`/opportunities/${row.opportunity.id}`} variant="secondary" size="small" className="mt-4 w-full">Continuă workflow-ul</Button>

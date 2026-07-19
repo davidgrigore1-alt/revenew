@@ -70,7 +70,7 @@ export default async function RecoverablePage() {
               <div className="app-scrollbar hidden max-w-full overflow-x-auto lg:block">
                 <table className="w-full min-w-[980px] table-fixed border-collapse text-left text-sm">
                   <thead className="bg-[rgb(var(--surface-muted))] text-xs uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">
-                    <tr><th className="w-[19%] px-4 py-3 font-semibold">Companie / oportunitate</th><th className="w-[12%] px-4 py-3 font-semibold">Valoare estimată</th><th className="w-[22%] px-4 py-3 font-semibold">Motiv</th><th className="w-[12%] px-4 py-3 font-semibold">Responsabil</th><th className="w-[17%] px-4 py-3 font-semibold">Următoarea acțiune</th><th className="w-[13%] px-4 py-3 font-semibold">Ultima activitate</th><th className="w-[5%] px-4 py-3"><span className="sr-only">Acțiune</span></th></tr>
+                    <tr><th className="w-[18%] px-4 py-3 font-semibold">Companie / oportunitate</th><th className="w-[11%] px-4 py-3 font-semibold">Valoare estimată</th><th className="w-[21%] px-4 py-3 font-semibold">Motiv</th><th className="w-[11%] px-4 py-3 font-semibold">Responsabil</th><th className="w-[17%] px-4 py-3 font-semibold">Următoarea acțiune</th><th className="w-[13%] px-4 py-3 font-semibold">Ultima activitate</th><th className="w-[9%] px-4 py-3"><span className="sr-only">Acțiune</span></th></tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--border))]">
                     {queue.map(({ opportunity, assessment, primaryReason }) => (
@@ -81,7 +81,7 @@ export default async function RecoverablePage() {
                         <td className="px-4 py-3">{assessment.primaryNextAction?.assignedToName ?? opportunity.ownerName ?? "Neatribuit"}</td>
                         <td className="px-4 py-3"><p className="font-medium">{assessment.primaryNextAction?.title ?? "Lipsește"}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{assessment.primaryNextAction ? formatDate(assessment.primaryNextAction.dueDate) : "Fără termen"}</p></td>
                         <td className="whitespace-nowrap px-4 py-3 text-[rgb(var(--text-muted))]">{formatDate(assessment.lastMeaningfulActivityAt ?? undefined)}</td>
-                        <td className="px-4 py-3"><Button href={`/opportunities/${opportunity.id}`} variant="ghost" size="small" aria-label={`Continuă lucrul la ${opportunity.title}`}><ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></td>
+                        <td className="px-4 py-3"><Button href={`/opportunities/${opportunity.id}`} variant="ghost" size="small" aria-label={`Continuă lucrul la ${opportunity.title}`}>Continuă <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></td>
                       </tr>
                     ))}
                   </tbody>

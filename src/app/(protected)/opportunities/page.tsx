@@ -54,7 +54,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
     <PageShell
       eyebrow="Oportunități"
       title="Oportunități comerciale"
-      description={`Cazuri aprobate și accesibile echipei ${business?.name ?? "firmei tale"}, pregătite pentru ownership, următoarea acțiune și decizie.`}
+      description={`Cazuri aprobate și accesibile echipei ${business?.name ?? "firmei tale"}, pregătite pentru atribuirea responsabilului, următoarea acțiune și decizie.`}
       actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
     >
       <div className="grid gap-6">
@@ -62,7 +62,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         <DataSummaryStrip label="Rezumat oportunități" items={[
           { label: "Accesibile", value: allOpportunities.length, note: "Oportunități aprobate în spațiul de lucru", tone: "brand" },
           { label: "Necesită atenție", value: attentionCount, note: "Cu risc, blocaj sau context incomplet", tone: attentionCount ? "warning" : "neutral" },
-          { label: "Fără responsabil", value: missingOwnerCount, note: "Ownership-ul trebuie clarificat", tone: missingOwnerCount ? "danger" : "neutral" },
+          { label: "Fără responsabil", value: missingOwnerCount, note: "Responsabilul trebuie clarificat", tone: missingOwnerCount ? "danger" : "neutral" },
           { label: "Scadente / restante", value: dueCount, note: "Cu acțiune pending până astăzi", tone: dueCount ? "warning" : "neutral" }
         ]} />
         <OpportunityFilters filters={searchParams} />

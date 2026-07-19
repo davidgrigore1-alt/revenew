@@ -91,7 +91,7 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
                 {organization.industry ? <span className="text-sm text-[rgb(var(--text-muted))]">{organization.industry}</span> : null}
               </div>
               <h2 className="mt-4 text-section-title font-semibold tracking-[-0.015em]">Context comercial</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{organization.notes || "Păstrează aici contextul necesar echipei pentru ownership, follow-up și deciziile comerciale legate de companie."}</p>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{organization.notes || "Păstrează aici contextul necesar echipei pentru responsabilitate, follow-up și deciziile comerciale legate de companie."}</p>
               <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
                 <div><dt className="text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 font-semibold">{primaryContact?.fullName ?? "Neconfirmat"}</dd></div>
                 <div><dt className="text-[rgb(var(--text-muted))]">Localizare</dt><dd className="mt-1 font-semibold">{[organization.city, organization.county, organization.country].filter(Boolean).join(", ") || "Necompletată"}</dd></div>
@@ -111,7 +111,7 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
         </Card>
 
         <Card as="section" variant="default" padding="default">
-          <SectionHeader title="Situație operațională" description="Ce este activ, ce este blocat și cine trebuie să continue lucrul." />
+          <SectionHeader title="Situație operațională" description="Ce este activ, ce este blocat și cine trebuie să continue lucrul." actions={attentionItem ? <Button href="/recoverable" variant="secondary" size="small">Vezi în Recuperare venituri</Button> : undefined} />
           <dl className="mt-5 grid gap-4 border-t border-[rgb(var(--border))] pt-5 sm:grid-cols-2 xl:grid-cols-4">
             <div><dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Oportunități active</dt><dd className="mt-2 text-2xl font-semibold">{activeOpportunities.length}</dd></div>
             <div><dt className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Necesită atenție</dt><dd className="mt-2"><StatusPill tone={attentionItem ? "warning" : "success"}>{attentionItem?.primaryReason.label ?? "Fără blocaje active"}</StatusPill></dd></div>
@@ -138,7 +138,7 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           </div>
 
           <div className="xl:col-span-7">
-          <DataCard title="Oportunități asociate" description="Valoare, ownership și următorul pas pentru fiecare context comercial.">
+          <DataCard title="Oportunități asociate" description="Valoare, responsabil și următorul pas pentru fiecare context comercial.">
             {opportunities.length > 0 ? (
               <div className="divide-y divide-[rgb(var(--border))]">
                 {opportunities.map((opportunity) => {

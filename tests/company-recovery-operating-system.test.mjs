@@ -122,9 +122,15 @@ test("company wayfinding exposes an explicit detail action and accessible breadc
   assert.match(breadcrumbs, /aria-current=\{current \? "page" : undefined\}/);
 });
 
-test("dashboard provides a direct entry to the recovery queue", () => {
+test("dashboard provides direct entries to companies and the recovery queue", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
+  assert.match(dashboard, /href="\/companies"[\s\S]{0,180}Vezi companiile/);
   assert.match(dashboard, /href="\/recoverable"[\s\S]{0,180}Vezi coada de recuperare/);
+});
+
+test("Company 360 connects blocked company context to the recovery queue", () => {
+  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  assert.match(route, /attentionItem \? <Button href="\/recoverable"[\s\S]{0,180}Vezi în Recuperare venituri/);
 });
 
 test("recovery queue is deterministic and overdue work precedes a lower-risk gap", () => {
@@ -147,6 +153,7 @@ test("recovery queue empty state contains no fake metrics and populated rows exp
   assert.match(route, /Responsabil/);
   assert.match(route, /Următoarea acțiune/);
   assert.match(route, /Ultima activitate/);
+  assert.match(route, />Continuă <ArrowRightIcon/);
   assert.match(loader, /getRecoverySummary\(\)/);
   assert.match(loader, /getAuthorizationContext\(\)/);
   assert.doesNotMatch(route, /Math\.random|fake|mock-data/i);

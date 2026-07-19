@@ -43,7 +43,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
             {formatCurrency(opportunity.estimatedValueLow)} - {formatCurrency(opportunity.estimatedValueHigh)}
           </dd>
         </div>
-        <div><dt className="text-[0.65rem] uppercase tracking-[0.12em] text-[rgb(var(--text-faint))]">Owner</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{opportunity.ownerName ?? "Neatribuit"}</dd></div>
+        <div><dt className="text-[0.65rem] uppercase tracking-[0.12em] text-[rgb(var(--text-faint))]">Responsabil</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{opportunity.ownerName ?? "Neatribuit"}</dd></div>
         <div><dt className="text-[0.65rem] uppercase tracking-[0.12em] text-[rgb(var(--text-faint))]">Termen</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatDate(opportunity.deadline)}</dd></div>
         <div><dt className="text-[0.65rem] uppercase tracking-[0.12em] text-[rgb(var(--text-faint))]">Contact</dt><dd className="mt-1 truncate font-semibold text-[rgb(var(--foreground))]">{primaryContact}</dd></div>
         <div className="sm:col-span-2 xl:col-span-4"><dt className="text-[0.65rem] uppercase tracking-[0.12em] text-[rgb(var(--text-faint))]">Următorul pas</dt><dd className="mt-1 line-clamp-1 font-medium text-[rgb(var(--text-secondary))]">{nextAction}</dd></div>
