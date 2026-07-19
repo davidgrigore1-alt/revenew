@@ -92,3 +92,15 @@ test("internal governance helpers are not exposed as browser-callable server act
   assert.match(internal,/import "server-only"/);
   assert.match(internal,/\.gt\("expires_at", new Date\(\)\.toISOString\(\)\)/);
 });
+
+test("governance route renders an intentional forbidden state before loading privileged data", async () => {
+  const page = await source("src/app/(protected)/settings/governance/page.tsx");
+
+  assert.match(page, /getAuthorizationContext/);
+  assert.match(page, /hasPermission\(authorization, "workspace\.members\.read"\)/);
+  assert.match(page, /hasPermission\(authorization, "workspace\.policies\.read"\)/);
+  assert.match(page, /hasPermission\(authorization, "approvals\.read"\)/);
+  assert.match(page, /ForbiddenState/);
+  assert.ok(page.indexOf("if (!canAccessGovernance)") < page.indexOf("getEnterpriseWorkspaceSnapshot()"));
+  assert.doesNotMatch(page, /requireAnyPermission/);
+});

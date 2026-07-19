@@ -1,13 +1,35 @@
 import Link from "next/link";
+import { ForbiddenState } from "@/components/authz/ForbiddenState";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { EnterpriseGovernancePanel } from "@/components/settings/EnterpriseGovernancePanel";
-import { requireAnyPermission } from "@/lib/authz/require-permission";
+import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
+import { hasPermission } from "@/lib/authz/has-permission";
 import { getEnterpriseWorkspaceSnapshot } from "@/lib/enterprise-governance-internal";
 
 export const dynamic = "force-dynamic";
 
 export default async function GovernancePage() {
-  await requireAnyPermission(["workspace.members.read", "workspace.policies.read", "approvals.read"]);
+  const authorization = await getAuthorizationContext();
+  const canAccessGovernance =
+    hasPermission(authorization, "workspace.members.read") ||
+    hasPermission(authorization, "workspace.policies.read") ||
+    hasPermission(authorization, "approvals.read");
+
+  if (!canAccessGovernance) {
+    return (
+      <PageShell
+        eyebrow="Setări workspace"
+        title="Echipă și guvernanță"
+        description="Administrarea accesului este disponibilă numai rolurilor autorizate."
+      >
+        <ForbiddenState
+          title="Acces restricționat"
+          description="Rolul tău nu include administrarea echipei, politicilor sau aprobărilor acestui workspace."
+        />
+      </PageShell>
+    );
+  }
+
   const snapshot = await getEnterpriseWorkspaceSnapshot();
   if (!snapshot) return <PageShell eyebrow="Setări" title="Administrare enterprise" description="Guvernanța nu este disponibilă în modul curent." />;
   return (

@@ -17,9 +17,9 @@ const toneClasses = {
 
 export function DataSummaryStrip({ items, label }: { items: DataSummaryItem[]; label: string }) {
   return (
-    <dl className="grid overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card sm:grid-cols-2 xl:grid-cols-4" aria-label={label}>
+    <dl className="grid grid-cols-2 overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card xl:grid-cols-4" aria-label={label}>
       {items.map((item) => (
-        <div key={item.label} className="relative min-w-0 border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 sm:[&:nth-child(odd)]:border-r xl:border-b-0 xl:border-r xl:last:border-r-0">
+        <div key={item.label} className="relative min-w-0 border-b border-[rgb(var(--border))] p-3.5 last:border-b-0 [&:nth-child(odd)]:border-r [&:nth-last-child(-n+2)]:border-b-0 sm:p-4 xl:border-b-0 xl:border-r xl:last:border-r-0">
           <span aria-hidden="true" className={`absolute inset-x-4 top-0 h-px ${toneClasses[item.tone ?? "neutral"]}`} />
           <dt className="text-[0.68rem] font-bold uppercase tracking-[0.13em] text-[rgb(var(--text-muted))]">{item.label}</dt>
           <dd className="mt-2 text-xl font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">{item.value}</dd>

@@ -78,6 +78,7 @@ test("Supabase configuration never auto-seeds demonstration data", () => {
   const config = read("supabase/config.toml");
 
   assert.match(config, /\[db\.seed\][\s\S]*enabled = false/);
+  assert.match(config, /auto_expose_new_tables = false/);
 });
 
 test("CRM loader detects missing tables and missing CRUD columns explicitly", () => {

@@ -172,6 +172,21 @@ test("Admin unauthorized and usage unavailable states are intentional", () => {
   assert.match(costsPage, /usageAvailable/);
 });
 
+test("QA-polished operational copy remains accurate and uses shared primitives", () => {
+  const dashboard = read("src/app/(protected)/dashboard/page.tsx");
+  const opportunities = read("src/app/(protected)/opportunities/page.tsx");
+  const analyze = read("src/app/(protected)/opportunities/analyze/page.tsx");
+  const reportActions = read("src/components/reports/ReportActions.tsx");
+
+  assert.match(dashboard, /oportunități sunt evaluate cu risc ridicat/);
+  assert.doesNotMatch(dashboard, /oportunități cu valoare mare sunt evaluate/);
+  assert.match(opportunities, /filtered\.length === 1 \? "oportunitate" : "oportunități"/);
+  assert.match(analyze, /Analizează o oportunitate nouă/);
+  assert.match(reportActions, /import \{ Button \} from "@\/components\/ui\/Button"/);
+  assert.match(reportActions, /role="status"/);
+  assert.doesNotMatch(reportActions, /bg-mint-|text-ink-|text-mint-/);
+});
+
 test("security invariants remain explicit in hardened source", () => {
   const files = [
     "src/app/(protected)/admin/layout.tsx",

@@ -67,7 +67,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         ]} />
         <OpportunityFilters filters={searchParams} />
         <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />
-        <p className="text-sm text-[rgb(var(--text-muted))]">{filtered.length} oportunități în selecția curentă · pagina {page}</p>
+        <p className="text-sm text-[rgb(var(--text-muted))]">
+          {filtered.length} {filtered.length === 1 ? "oportunitate" : "oportunități"} în selecția curentă · pagina {page}
+        </p>
         <OpportunitiesExplorer
           opportunities={opportunities}
           emptyTitle={isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}

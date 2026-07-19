@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 export function ReportActions({ reportText, fileName = "revenew-report.txt" }: { reportText: string; fileName?: string }) {
   const [message, setMessage] = useState("");
@@ -23,21 +24,15 @@ export function ReportActions({ reportText, fileName = "revenew-report.txt" }: {
     anchor.download = fileName;
     anchor.click();
     URL.revokeObjectURL(url);
-    setMessage("Raport descarcat.");
+    setMessage("Raport descărcat.");
   }
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">
-      <button type="button" onClick={copyReport} className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-mint-400">
-        Copiaza raport
-      </button>
-      <button type="button" onClick={downloadReport} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white hover:bg-white/[0.1]">
-        Descarca .txt
-      </button>
-      <button type="button" onClick={() => window.print()} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white hover:bg-white/[0.1]">
-        Print / PDF
-      </button>
-      {message ? <span className="text-sm font-semibold text-mint-300">{message}</span> : null}
+      <Button onClick={copyReport}>Copiază raportul</Button>
+      <Button onClick={downloadReport} variant="secondary">Descarcă .txt</Button>
+      <Button onClick={() => window.print()} variant="secondary">Tipărește / PDF</Button>
+      {message ? <span className="text-sm font-semibold text-[rgb(var(--success-text))]" role="status">{message}</span> : null}
     </div>
   );
 }
