@@ -9,6 +9,7 @@ const analysisCorePath = new URL("../src/lib/recoverability-analysis-core.ts", i
 const inboxPath = new URL("../src/lib/commercial-inbox.ts", import.meta.url);
 const actionsPath = new URL("../src/lib/commercial-inbox-actions.ts", import.meta.url);
 const clientPath = new URL("../src/components/inbox/CommercialInboxClient.tsx", import.meta.url);
+const preparationPanelPath = new URL("../src/components/signals/SignalPreparationPanel.tsx", import.meta.url);
 const dashboardPath = new URL("../src/app/(protected)/dashboard/page.tsx", import.meta.url);
 const reportsPath = new URL("../src/app/(protected)/reports/page.tsx", import.meta.url);
 
@@ -86,6 +87,7 @@ test("signal operations derive the workspace server-side and prevent cross-tenan
 
 test("review UI requires human approval and supports all decision paths", async () => {
   const source = await readFile(clientPath, "utf8");
+  const preparationPanel = await readFile(preparationPanelPath, "utf8");
   assert.match(source, /Aprobă și creează oportunitatea/);
   assert.match(source, /Respinge/);
   assert.match(source, /Marchează duplicat/);
@@ -96,9 +98,9 @@ test("review UI requires human approval and supports all decision paths", async 
   assert.match(source, /Draft recomandat/);
   assert.match(source, /Triere asistată/);
   assert.match(source, /date și reguli vizibile/);
-  assert.match(source, /Ce a detectat ReveNew/);
-  assert.match(source, /Informații lipsă/);
-  assert.match(source, /Ce nu se întâmplă automat/);
+  assert.match(preparationPanel, /Ce a detectat ReveNew/);
+  assert.match(preparationPanel, /Informații lipsă/);
+  assert.match(preparationPanel, /Nu se aplică și nu se trimite nimic fără aprobare/);
   assert.match(source, /Netrimis automat/);
   assert.match(source, /Risc duplicat/);
   assert.match(source, /Fără responsabil/);

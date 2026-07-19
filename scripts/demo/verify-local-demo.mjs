@@ -211,6 +211,9 @@ async function main() {
       ,'approval_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and review_status in ('ready_for_review','postponed'))
       ,'approval_applied_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and (review_status = 'converted' or status = 'converted'))
       ,'approval_rejected_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and (review_status in ('dismissed','duplicate') or status in ('dismissed','duplicate','ignored','archived')))
+      ,'ai_preparation_fallback_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and analysis_mode = 'deterministic_fallback')
+      ,'ai_preparation_provider_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_mode = 'ai')
+      ,'ai_preparation_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and review_status in ('ready_for_review','postponed'))
     );
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
@@ -234,6 +237,9 @@ async function main() {
   assert(Number(stats.approval_pending_count) > 0, "Approval Center nu are recomandări demo în așteptare.");
   assert(Number(stats.approval_applied_count) > 0, "Approval Center nu are o decizie demo aplicată.");
   assert(Number(stats.approval_rejected_count) > 0, "Approval Center nu are o decizie demo respinsă.");
+  assert(Number(stats.ai_preparation_fallback_count) > 0, "Demo-ul local nu acoperă pregătirea structurată prin fallback local.");
+  assert(Number(stats.ai_preparation_provider_count) === 0, "Demo-ul local nu trebuie să pretindă utilizarea unui provider AI.");
+  assert(Number(stats.ai_preparation_pending_count) > 0, "Pregătirea demo trebuie să rămână în așteptarea aprobării umane.");
   await verifyTenantIsolation(admin, local);
   await verifySignalConversionAuthorization(admin, local);
   console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");

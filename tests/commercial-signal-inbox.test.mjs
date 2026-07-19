@@ -25,15 +25,15 @@ test("manual signal capture uses Romanian deterministic validation", async () =>
   assert.equal(validation.validateCommercialSignalCapture({ title: "Cerere", source: "whatsapp", rawMessage: "Mesaj copiat manual" }), null);
 });
 
-test("signal operations remain tenant-scoped, explicit and deterministic", async () => {
+test("signal operations remain tenant-scoped and AI preparation is explicit", async () => {
   const inbox = await read("../src/lib/commercial-inbox.ts");
   const actions = await read("../src/lib/commercial-inbox-actions.ts");
   assert.match(inbox, /getCurrentBusinessForUser\(\{ redirectIfMissing: true \}\)/);
   assert.match(inbox, /validateWorkspaceLinks/);
   assert.match(inbox, /\.eq\("business_id", business\.id\)/);
-  assert.match(inbox, /buildDeterministicRecoverabilityAnalysis/);
+  assert.match(inbox, /runRecoverabilityAnalysis/);
   assert.match(inbox, /activeOpportunityTitle/);
-  assert.doesNotMatch(inbox, /runRecoverabilityAnalysis|createOpenAIClient|fetch\(/);
+  assert.doesNotMatch(inbox, /createOpenAIClient|fetch\(/);
   assert.match(actions, /requirePermission\("signals\.create"\)/);
   assert.match(actions, /requirePermission\("signals\.convert"\)/);
   assert.match(actions, /requirePermission\("signals\.archive"\)/);
@@ -41,6 +41,7 @@ test("signal operations remain tenant-scoped, explicit and deterministic", async
 
 test("inbox supports linking, conversion, next action and reasoned archive without external execution", async () => {
   const client = await read("../src/components/inbox/CommercialInboxClient.tsx");
+  const preparation = await read("../src/components/signals/SignalPreparationPanel.tsx");
   const inbox = await read("../src/lib/commercial-inbox.ts");
   const migration = await read("../supabase/migrations/20260714234600_data_ingestion_continuous_recovery_v1.sql");
   assert.match(client, /Companie CRM/);
@@ -52,14 +53,15 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(client, /oportunitatea și prima acțiune internă au fost create/);
   assert.match(client, /estimatedRecoverableValue === null/);
   assert.match(client, /Arhivează/);
-  assert.match(client, /Tip semnal|Semnal de clarificat/);
-  assert.match(client, /Ce a detectat ReveNew/);
-  assert.match(client, /Următorul pas recomandat/);
-  assert.match(client, /Ce nu se întâmplă automat/);
   assert.match(inbox, /detected_from_opportunity_id/);
   assert.match(inbox, /signal_archived/);
   assert.match(migration, /insert into public\.opportunity_actions/);
-  assert.doesNotMatch(client + inbox, /sendEmail|sendMessage|webhook|twilio|gmail/i);
+  assert.match(client, /Pregătește cu AI/);
+  assert.match(client, /Trimite spre aprobare/);
+  assert.match(preparation, /Asistent de pregătire/);
+  assert.match(preparation, /Următoarea acțiune recomandată/);
+  assert.match(preparation, /Nu se aplică și nu se trimite nimic fără aprobare/);
+  assert.doesNotMatch(client + inbox + preparation, /sendEmail|sendMessage|webhook|twilio|gmail/i);
 });
 
 test("signals are visible in Company 360 and opportunity context with inbox wayfinding", async () => {

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
-import { buildDeterministicRecoverabilityAnalysis } from "@/lib/recoverability-analysis-core";
+import { runRecoverabilityAnalysis } from "@/lib/recoverability-analysis";
 import { validateCommercialSignalCapture } from "@/lib/commercial-signal-capture";
 import { formatRecoveryDraft, packRecoverabilityInsights, parseRecoveryDraft, unpackRecoverabilityInsights } from "@/lib/recoverability-review";
 import type {
@@ -696,7 +696,7 @@ function normalizedMatch(value?: string | null) {
   return value?.trim().toLocaleLowerCase("ro-RO") ?? "";
 }
 
-export async function analyzeCommercialSignal(signalId: string, _planId?: string | null) {
+export async function analyzeCommercialSignal(signalId: string, planId?: string | null) {
   const { supabase, business, profileId } = await getCurrentInboxContext();
   const { data: signalRow, error: signalError } = await supabase
     .from("commercial_signals")
@@ -757,12 +757,15 @@ export async function analyzeCommercialSignal(signalId: string, _planId?: string
     activeOpportunityTitle = activeOpportunity?.title ?? null;
   }
 
-  const analysis = buildDeterministicRecoverabilityAnalysis(
-    { ...signal, matchedOrganizationId, matchedContactId },
-    Boolean(duplicate),
-    new Date(),
-    { activeOpportunityTitle }
-  );
+  const analysis = await runRecoverabilityAnalysis({
+    signal: { ...signal, matchedOrganizationId, matchedContactId },
+    business,
+    profileId,
+    planId,
+    duplicateRisk: Boolean(duplicate),
+    now: new Date(),
+    intelligenceContext: { activeOpportunityTitle }
+  });
   const { data: updatedRow, error: updateError } = await supabase
     .from("commercial_signals")
     .update({

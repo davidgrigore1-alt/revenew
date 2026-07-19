@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
+import { SignalPreparationPanel } from "@/components/signals/SignalPreparationPanel";
 import { Button } from "@/components/ui/Button";
 import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { Input } from "@/components/ui/Input";
@@ -188,18 +189,6 @@ function fieldClasses() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]"><span>{label}</span>{children}</label>;
-}
-
-function InsightList({ title, items }: { title: string; items?: string[] }) {
-  if (!items?.length) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <ul className="mt-2 grid gap-1 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-        {items.map((item) => <li key={`${title}:${item}`}>• {item}</li>)}
-      </ul>
-    </div>
-  );
 }
 
 function urgencyRank(value?: RecoverabilityUrgency | null) {
@@ -571,40 +560,15 @@ export function CommercialInboxClient({
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
 
-              <section aria-labelledby="signal-intelligence-title" className="grid gap-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Tip semnal · triere asistată</p>
-                    <h3 id="signal-intelligence-title" className="mt-1 text-base font-semibold">{selectedSignal.signalTypeLabel || selectedSignal.detectedCommercialIntent || "Semnal de clarificat"}</h3>
-                  </div>
-                  <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1 text-xs font-semibold">
-                    Încredere {selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel].toLocaleLowerCase("ro-RO") : "necunoscută"}
-                  </span>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
-                    <h4 className="text-sm font-semibold">Ce a detectat ReveNew</h4>
-                    <ul className="mt-2 grid gap-2 text-sm leading-5 text-[rgb(var(--muted-foreground))]">
-                      {selectedSignal.deadlineClue ? <li>• {selectedSignal.deadlineClue}</li> : null}
-                      {selectedSignal.valueClue ? <li>• {selectedSignal.valueClue}</li> : null}
-                      {(selectedSignal.contextHints ?? []).slice(0, 3).map((item) => <li key={item}>• {item}</li>)}
-                      {(selectedSignal.detectionReasons ?? []).slice(0, 1).map((item) => <li key={item}>• {item}</li>)}
-                      {!selectedSignal.deadlineClue && !selectedSignal.valueClue && !(selectedSignal.contextHints?.length) && !(selectedSignal.detectionReasons?.length) ? <li>• Contextul necesită completare și verificare umană.</li> : null}
-                    </ul>
-                  </div>
-                  <div className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
-                    <InsightList title="Informații lipsă" items={selectedSignal.missingInformation.length ? selectedSignal.missingInformation : ["Nu au fost identificate lipsuri critice; datele trebuie totuși confirmate."]} />
-                  </div>
-                </div>
-
-                <Field label="Următorul pas recomandat"><textarea rows={3} value={reviewForm.recommendedAction} onChange={(event) => setReviewForm({ ...reviewForm, recommendedAction: event.target.value })} className={`${fieldClasses()} bg-[rgb(var(--surface))] py-3`} /></Field>
-
-                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
-                  <h4 className="text-sm font-semibold">Ce nu se întâmplă automat</h4>
-                  <p className="mt-1 text-sm leading-5 text-[rgb(var(--muted-foreground))]">ReveNew nu trimite mesaje, nu schimbă valori și nu creează oportunități sau acțiuni fără confirmarea ta explicită.</p>
-                </div>
-              </section>
+              <SignalPreparationPanel
+                signal={selectedSignal}
+                action={<Button
+                  onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Pregătirea AI este gata pentru revizuire și aprobare umană.")}
+                  disabled={isPending || selectedSignal.status === "converted"}
+                  loading={isPending}
+                  size="small"
+                >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou cu AI" : "Pregătește cu AI"}</Button>}
+              />
 
               {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
 
@@ -640,10 +604,9 @@ export function CommercialInboxClient({
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Pregătirea asistată este gata pentru revizuire.")} disabled={isPending || selectedSignal.status === "converted"}>{selectedSignal.analysisStatus === "completed" ? "Recalculează trierea" : "Pregătește trierea"}</Button>
                 <Button variant="secondary" onClick={saveReviewFields} disabled={isPending}>Salvează legăturile și contextul</Button>
                 {["ready_for_review", "postponed"].includes(selectedSignal.reviewStatus) && selectedSignal.status !== "converted"
-                  ? <Button href={`/approvals?signal=${selectedSignal.id}`} variant="secondary">Revizuiește în Aprobări</Button>
+                  ? <Button href={`/approvals?signal=${selectedSignal.id}`} variant="secondary">Trimite spre aprobare</Button>
                   : null}
                 <Button onClick={approve} disabled={isPending || selectedSignal.analysisStatus !== "completed" || selectedSignal.status === "converted"}>{reviewForm.opportunityId ? "Aprobă și creează acțiunea" : "Aprobă și creează oportunitatea"}</Button>
                 {selectedSignal.convertedOpportunityId ? <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary">Deschide oportunitatea</Button> : null}

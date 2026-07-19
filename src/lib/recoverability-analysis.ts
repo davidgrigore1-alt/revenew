@@ -8,6 +8,7 @@ import {
   validateRecoverabilityAnalysis,
   type RecoverabilityAnalysis
 } from "@/lib/recoverability-analysis-core";
+import type { CommercialSignalIntelligenceContext } from "@/lib/commercial-signal-intelligence";
 import { releaseUsage, reserveUsage, resolveUsagePlanId, settleUsage } from "@/lib/usage/reserve-usage";
 import type { Business, CommercialSignal } from "@/lib/types";
 
@@ -20,6 +21,7 @@ type AnalysisContext = {
   profileId: string;
   planId?: string | null;
   duplicateRisk: boolean;
+  intelligenceContext?: CommercialSignalIntelligenceContext;
   now?: Date;
 };
 
@@ -32,7 +34,12 @@ function safeProviderDiagnostic(error: unknown) {
 }
 
 export async function runRecoverabilityAnalysis(context: AnalysisContext): Promise<RecoverabilityAnalysis> {
-  const fallback = buildDeterministicRecoverabilityAnalysis(context.signal, context.duplicateRisk, context.now);
+  const fallback = buildDeterministicRecoverabilityAnalysis(
+    context.signal,
+    context.duplicateRisk,
+    context.now,
+    context.intelligenceContext
+  );
   if (!isOpenAIConfigured()) return fallback;
   const client = createOpenAIClient();
   if (!client) return fallback;
