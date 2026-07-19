@@ -109,6 +109,24 @@ test("Company 360 remains protected and presents empty and populated operating c
   assert.match(route, /CreateOpportunityPanel/);
 });
 
+test("company wayfinding exposes an explicit detail action and accessible breadcrumbs", () => {
+  const client = read("src/components/crm/CrmWorkspaceClient.tsx");
+  const companyRoute = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const opportunityRoute = read("src/app/(protected)/opportunities/[id]/page.tsx");
+  const breadcrumbs = read("src/components/dashboard/Breadcrumbs.tsx");
+
+  assert.match(client, /href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}[\s\S]{0,180}>Vezi detalii<\/Button>/);
+  assert.match(companyRoute, /breadcrumbs=\{\[\{ label: "Companii", href: "\/companies" \}/);
+  assert.match(opportunityRoute, /breadcrumbs=\{\[\{ label: [^,]+, href: "\/opportunities" \}/);
+  assert.match(breadcrumbs, /aria-label="Navigare contextual/);
+  assert.match(breadcrumbs, /aria-current=\{current \? "page" : undefined\}/);
+});
+
+test("dashboard provides a direct entry to the recovery queue", () => {
+  const dashboard = read("src/app/(protected)/dashboard/page.tsx");
+  assert.match(dashboard, /href="\/recoverable"[\s\S]{0,180}Vezi coada de recuperare/);
+});
+
 test("recovery queue is deterministic and overdue work precedes a lower-risk gap", () => {
   const queue = load("src/lib/revenue-recovery-queue.ts");
   const now = new Date("2026-07-13T12:00:00.000Z");

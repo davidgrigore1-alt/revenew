@@ -53,6 +53,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
       eyebrow={getOpportunityTypeLabel(opportunity.type)}
       title={opportunity.title}
       description={opportunity.summary}
+      breadcrumbs={[{ label: "Oportunități", href: "/opportunities" }, { label: opportunity.title }]}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}

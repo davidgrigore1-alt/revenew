@@ -37,6 +37,7 @@ export const primaryNavigation = [
   { name: "Control Center", shortName: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
   { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
   { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
+  { name: "Recuperare venituri", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
   { name: "Contacte", href: "/contacts", icon: "user-group", permission: "workspace.read" },
@@ -51,7 +52,6 @@ export const utilityNavigation = [
 ] satisfies NavigationItem[];
 
 export const advancedNavigation = [
-  { name: "Coada de recuperare", href: "/recoverable", icon: "banknotes", description: "Vezi oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Verifică potențialul", href: "/opportunities/analyze", icon: "sparkles", description: "Transformă o cerere într-o oportunitate verificată.", permission: "opportunities.analyze" },
   { name: "Lead-uri", href: "/leads", icon: "user-group", description: "Gestionează companii și contacte comerciale.", permission: "workspace.read" },
   { name: "Outreach", href: "/outreach", icon: "megaphone", description: "Lucrează mesajele și comunicarea comercială.", permission: "documents.read" },
@@ -65,7 +65,7 @@ export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, 
 
 const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
   { id: "control", label: "Control", hrefs: ["/dashboard", "/today"] },
-  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/opportunities", "/pipeline"] },
+  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/opportunities", "/recoverable", "/pipeline"] },
   { id: "relationships", label: "Relații", hrefs: ["/companies", "/contacts"] },
   { id: "execution", label: "Execuție", hrefs: ["/outreach"] },
   { id: "management", label: "Management", hrefs: ["/reports"] },
@@ -87,6 +87,33 @@ export function groupNavigationItems(items: NavigationItem[]): NavigationGroup[]
     .filter((group) => group.items.length > 0);
 }
 
+const sectionRouteMappings: Array<{ href: string; routePrefixes: string[] }> = [
+  { href: "/companies", routePrefixes: ["/companies", "/crm/organizations"] },
+  { href: "/contacts", routePrefixes: ["/contacts", "/crm/contacts"] },
+  { href: "/opportunities", routePrefixes: ["/opportunities"] },
+  { href: "/recoverable", routePrefixes: ["/recoverable"] }
+];
+
+function matchesRoutePrefix(pathname: string, routePrefix: string) {
+  return pathname === routePrefix || pathname.startsWith(`${routePrefix}/`);
+}
+
+export function getActiveNavigationHref(pathname: string) {
+  if (pathname === "/dashboard") return "/dashboard";
+
+  const mappedSection = sectionRouteMappings.find(({ routePrefixes }) =>
+    routePrefixes.some((routePrefix) => matchesRoutePrefix(pathname, routePrefix))
+  );
+
+  if (mappedSection) return mappedSection.href;
+
+  const directItem = dashboardNavigation.find((item) =>
+    item.href !== "/dashboard" && matchesRoutePrefix(pathname, item.href)
+  );
+
+  return directItem?.href ?? null;
+}
+
 export function isNavItemActive(pathname: string, href: string) {
-  return pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+  return getActiveNavigationHref(pathname) === href;
 }

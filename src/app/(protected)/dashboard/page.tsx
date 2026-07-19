@@ -229,7 +229,7 @@ export default async function DashboardPage() {
           <KpiCard label="Risc operațional" value={String(attentionCount)} detail={`${highRiskCount} oportunități cu valoare mare sunt evaluate ca fiind în risc.`} tone={highRiskCount > 0 ? "danger" : attentionCount > 0 ? "warning" : "neutral"} icon={<ExclamationTriangleIcon className="h-5 w-5" aria-hidden="true" />} />
         </section>
 
-        <DashboardSection eyebrow="Prioritatea zilei" title="Ce necesită atenție acum" description="Acțiunile scadente au prioritate, urmate de oportunitățile fără ownership, contact sau următor pas." action={<Button href="/recoverable" variant="ghost" size="small">Deschide coada completă <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
+        <DashboardSection eyebrow="Prioritatea zilei" title="Ce necesită atenție acum" description="Acțiunile scadente au prioritate, urmate de oportunitățile fără ownership, contact sau următor pas." action={<Button href="/recoverable" variant="ghost" size="small">Vezi coada de recuperare <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
           <DashboardTable
             rows={attentionRows}
             columns={urgentColumns}

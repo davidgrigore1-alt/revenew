@@ -33,6 +33,7 @@ export default async function RecoverablePage() {
       title="Coada de recuperare venituri"
       description="Oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune. Ordinea este deterministă și explicabilă."
       actions={<Button href="/opportunities/analyze">Adaugă oportunitate</Button>}
+      breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Recuperare venituri" }]}
     >
       <div className="grid gap-6">
         {first && recommendation ? (
@@ -66,10 +67,10 @@ export default async function RecoverablePage() {
             </div>
           ) : (
             <>
-              <div className="hidden overflow-x-auto lg:block">
-                <table className="w-full border-collapse text-left text-sm">
+              <div className="app-scrollbar hidden max-w-full overflow-x-auto lg:block">
+                <table className="w-full min-w-[980px] table-fixed border-collapse text-left text-sm">
                   <thead className="bg-[rgb(var(--surface-muted))] text-xs uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">
-                    <tr><th className="px-4 py-3 font-semibold">Companie / oportunitate</th><th className="px-4 py-3 font-semibold">Valoare estimată</th><th className="px-4 py-3 font-semibold">Motiv</th><th className="px-4 py-3 font-semibold">Responsabil</th><th className="px-4 py-3 font-semibold">Următoarea acțiune</th><th className="px-4 py-3 font-semibold">Ultima activitate</th><th className="px-4 py-3"><span className="sr-only">Acțiune</span></th></tr>
+                    <tr><th className="w-[19%] px-4 py-3 font-semibold">Companie / oportunitate</th><th className="w-[12%] px-4 py-3 font-semibold">Valoare estimată</th><th className="w-[22%] px-4 py-3 font-semibold">Motiv</th><th className="w-[12%] px-4 py-3 font-semibold">Responsabil</th><th className="w-[17%] px-4 py-3 font-semibold">Următoarea acțiune</th><th className="w-[13%] px-4 py-3 font-semibold">Ultima activitate</th><th className="w-[5%] px-4 py-3"><span className="sr-only">Acțiune</span></th></tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--border))]">
                     {queue.map(({ opportunity, assessment, primaryReason }) => (

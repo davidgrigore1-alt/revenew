@@ -71,3 +71,23 @@ test("commercial inbox is a unique primary route directly after home", () => {
   assert.equal(isNavItemActive("/inbox", "/inbox"), true);
   assert.equal(isNavItemActive("/inbox/review", "/inbox"), true);
 });
+
+test("nested operational routes map to one stable parent navigation section", () => {
+  assert.equal(isNavItemActive("/crm/organizations/company-123", "/companies"), true);
+  assert.equal(isNavItemActive("/crm/organizations/company-123", "/opportunities"), false);
+  assert.equal(isNavItemActive("/opportunities/opportunity-123", "/opportunities"), true);
+  assert.equal(isNavItemActive("/opportunities/opportunity-123", "/companies"), false);
+  assert.equal(isNavItemActive("/dashboard", "/dashboard"), true);
+  assert.equal(isNavItemActive("/dashboarding", "/dashboard"), false);
+});
+
+test("recovery queue is a unique permission-aware primary navigation route", () => {
+  const recoveryItems = dashboardNavigation.filter((item) => item.href === "/recoverable");
+  const primaryRecovery = primaryNavigation.find((item) => item.href === "/recoverable");
+
+  assert.equal(recoveryItems.length, 1);
+  assert.ok(primaryRecovery);
+  assert.equal(primaryRecovery.name, "Recuperare venituri");
+  assert.equal(primaryRecovery.permission, "opportunities.read");
+  assert.equal(isNavItemActive("/recoverable", "/recoverable"), true);
+});

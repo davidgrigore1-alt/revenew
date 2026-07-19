@@ -309,7 +309,8 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
                   <p><span className="text-[rgb(var(--text-faint))]">Activitate</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</strong></p>
                   <p className="sm:col-span-2 lg:col-span-1 xl:col-span-2">{organizationContacts.length} contacte · {organizationStats[organization.id]?.activeOpportunities ?? 0} oportunități active</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center lg:justify-end">
+                    <Button href={`/crm/organizations/${organization.id}`} className="w-full sm:w-auto" aria-label={`Vezi detalii pentru ${organization.name}`}>Vezi detalii</Button>
                     <Button variant="secondary" onClick={() => { setEditingOrganization(organization); setPanel("organization"); }}>Editează</Button>
                     <Button variant="ghost" onClick={() => runAction(() => archiveCrmOrganization(organization.id))}>Arhivează</Button>
                 </div>

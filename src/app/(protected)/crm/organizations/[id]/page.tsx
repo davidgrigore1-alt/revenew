@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { safeCompanyWebsiteHref } from "@/lib/crm/website";
-import { isOpenOpportunity } from "@/lib/opportunity-domain";
+import { isOpenOpportunity, selectPrimaryNextAction } from "@/lib/opportunity-domain";
 import { buildRevenueRecoveryQueue } from "@/lib/revenue-recovery-queue";
 import { getCrmOrganizationDetail, recommendNextBestAction } from "@/lib/revenue-workspace";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -40,11 +40,12 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
   const { organization, contacts, opportunities, events } = detail;
   const activeOpportunities = opportunities.filter(isOpenOpportunity);
   const recoveryQueue = buildRevenueRecoveryQueue(activeOpportunities);
+  const recoveryByOpportunityId = new Map(recoveryQueue.map((item) => [item.opportunity.id, item]));
   const attentionItem = recoveryQueue[0] ?? null;
   const operationalOpportunity = attentionItem?.opportunity ?? activeOpportunities[0] ?? null;
   const operationalAssessment = attentionItem?.assessment ?? null;
   const nextAction = operationalAssessment?.primaryNextAction
-    ?? operationalOpportunity?.actions.filter((action) => action.status === "pending").sort((left, right) => String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")))[0]
+    ?? (operationalOpportunity ? selectPrimaryNextAction(operationalOpportunity.actions) : null)
     ?? null;
   const owner = nextAction?.assignedToName ?? operationalOpportunity?.ownerName ?? "Neatribuit";
   const primaryContact = contacts.find((contact) => contact.isPrimaryForOrganization) ?? null;
@@ -79,9 +80,10 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
       title={organization.name}
       description={[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Context comercial centralizat pentru această companie."}
       actions={<CreateOpportunityPanel organizations={[organization]} />}
+      breadcrumbs={[{ label: "Companii", href: "/companies" }, { label: organization.name }]}
     >
-      <div className="grid gap-6">
-        <Card variant="elevated" padding="none" className="overflow-hidden">
+      <div className="grid gap-5 sm:gap-6">
+        <Card variant="default" padding="none" className="overflow-hidden">
           <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)] lg:p-6">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -118,15 +120,6 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           </dl>
         </Card>
 
-        <AssistedPreparation
-          context={operationalOpportunity ? `Sugestie pentru „${operationalOpportunity.title}”, derivată exclusiv din datele operaționale vizibile.` : "Compania nu are încă o oportunitate activă din care ReveNew să poată pregăti următorul pas."}
-          suggestion={recommendation?.action ?? "Creează prima oportunitate comercială"}
-          reason={recommendation?.reason ?? "O oportunitate leagă valoarea, responsabilul, termenul și decizia de contextul companiei."}
-          missingInformation={recommendation?.missingInformation ?? ["context comercial", "valoare estimată", "responsabil"]}
-          href={operationalOpportunity ? `/opportunities/${operationalOpportunity.id}#workflow-actions` : undefined}
-          actionLabel="Revizuiește și programează"
-        />
-
         <div className="grid gap-6 xl:grid-cols-12">
           <div className="xl:col-span-5">
           <DataCard title="Contacte" description="Persoanele reale implicate în relație și în deciziile comerciale.">
@@ -149,8 +142,8 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
             {opportunities.length > 0 ? (
               <div className="divide-y divide-[rgb(var(--border))]">
                 {opportunities.map((opportunity) => {
-                  const queueItem = buildRevenueRecoveryQueue([opportunity])[0];
-                  const opportunityNextAction = queueItem?.assessment.primaryNextAction ?? opportunity.actions.find((action) => action.status === "pending") ?? null;
+                  const queueItem = recoveryByOpportunityId.get(opportunity.id);
+                  const opportunityNextAction = queueItem?.assessment.primaryNextAction ?? selectPrimaryNextAction(opportunity.actions);
                   return (
                     <Link key={opportunity.id} href={`/opportunities/${opportunity.id}`} className="focus-ring group grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                       <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate font-semibold group-hover:text-[rgb(var(--primary))]">{opportunity.title}</h3><StatusPill tone={queueItem ? "warning" : "neutral"}>{queueItem?.primaryReason.label ?? getStatusLabel(opportunity.status)}</StatusPill></div><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{opportunity.ownerName ?? "Fără responsabil"} · {opportunityNextAction?.title ?? "Fără acțiune următoare"} · {formatDate(opportunityNextAction?.dueDate ?? opportunity.deadline)}</p></div>
@@ -163,6 +156,15 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           </DataCard>
           </div>
         </div>
+
+        <AssistedPreparation
+          context={operationalOpportunity ? `Sugestie pentru „${operationalOpportunity.title}”, derivată exclusiv din datele operaționale vizibile.` : "Compania nu are încă o oportunitate activă din care ReveNew să poată pregăti următorul pas."}
+          suggestion={recommendation?.action ?? "Creează prima oportunitate comercială"}
+          reason={recommendation?.reason ?? "O oportunitate leagă valoarea, responsabilul, termenul și decizia de contextul companiei."}
+          missingInformation={recommendation?.missingInformation ?? ["context comercial", "valoare estimată", "responsabil"]}
+          href={operationalOpportunity ? `/opportunities/${operationalOpportunity.id}#workflow-actions` : undefined}
+          actionLabel="Revizuiește și programează"
+        />
 
         <DataCard title="Activitate și decizii" description="Ultimele evenimente, acțiuni și documente existente, ordonate pentru auditabilitate.">
           {activities.length > 0 ? (
