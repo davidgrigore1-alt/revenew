@@ -41,6 +41,66 @@ async function verifyTenantIsolation(admin, local) {
   }
 }
 
+async function verifySourceIntakeAuthorization(admin, local) {
+  const suffix = randomBytes(8).toString("hex");
+  const email = `intake-${suffix}@revenew-demo.test`;
+  const password = randomBytes(24).toString("base64url");
+  const profileId = randomUUID();
+  const businessId = randomUUID();
+  let userId;
+  try {
+    const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+    if (created.error || !created.data.user) throw new Error(created.error?.message ?? "utilizator temporar invalid");
+    userId = created.data.user.id;
+    runLocalSql(`begin;
+      insert into public.profiles(id,user_id,full_name,email,role) values ('${profileId}','${userId}','Source Intake Test','${email}',null);
+      insert into public.businesses(id,owner_profile_id,name) values ('${businessId}','${profileId}','[TEST] Source Intake');
+      insert into public.business_members(business_id,profile_id,role,status) values ('${businessId}','${profileId}','owner','active');
+      commit;`);
+    const userClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+    const login = await userClient.auth.signInWithPassword({ email, password });
+    if (login.error) throw new Error(`Autentificarea Source Intake a eșuat: ${login.error.message}`);
+    const fingerprint = randomBytes(32).toString("hex");
+    const row = {
+      row_number: 2, row_fingerprint: fingerprint, source_label: "Email copiat", source_type: "email",
+      title: "[TEST] Semnal importat controlat", company: "[TEST] Companie", contact: "Contact Test",
+      email: "", phone: "", estimated_value: "12500", currency: "RON", last_interaction_at: "",
+      requested_date: "2026-07-31T00:00:00.000Z", context: "Text simplu pentru revizuire umană.",
+      status_label: "", owner_label: "", owner_profile_id: profileId, source_reference: `INTAKE-${suffix}`,
+      probable_signal_match: false, probable_company_match: false, probable_contact_match: false, probable_opportunity_match: false
+    };
+    const imported = await userClient.rpc("import_commercial_signal_batch", {
+      target_business_id: businessId,
+      source_file_name: `intake-bulk-${suffix}.csv`,
+      batch_fingerprint: randomBytes(32).toString("hex"),
+      accepted_rows: [row],
+      rejected_rows: []
+    });
+    assert(!imported.error && Number(imported.data?.created) === 1, `Importul autorizat a eșuat: ${imported.error?.message ?? "răspuns invalid"}`);
+    const state = runLocalSql(`select json_build_object(
+      'pending_count', (select count(*) from public.commercial_signals where business_id='${businessId}' and ingestion_fingerprint='${fingerprint}' and source='email' and status='new' and review_status='new' and analysis_status='not_started' and requested_date='2026-07-31T00:00:00.000Z'::timestamptz and converted_opportunity_id is null),
+      'audit_count', (select count(*) from public.commercial_signal_events e join public.commercial_signals s on s.id=e.signal_id where s.business_id='${businessId}' and s.ingestion_fingerprint='${fingerprint}' and e.event_type='signal_imported'),
+      'automatic_event_count', (select count(*) from public.commercial_signal_events e join public.commercial_signals s on s.id=e.signal_id where s.business_id='${businessId}' and s.ingestion_fingerprint='${fingerprint}' and e.event_type in ('analysis_completed','signal_approved','signal_converted'))
+    );`, { json: true });
+    assert(Number(state.pending_count) === 1 && Number(state.audit_count) === 1, "Importul nu a păstrat starea pending, sursa, termenul și auditul.");
+    assert(Number(state.automatic_event_count) === 0, "Importul a pornit automat analiza, aprobarea sau conversia.");
+    const demoBefore = runLocalSql(`select count(*) from public.commercial_signals where business_id='${DEMO.businessId}';`);
+    const crossTenant = await userClient.rpc("import_commercial_signal_batch", {
+      target_business_id: DEMO.businessId,
+      source_file_name: `intake-cross-${suffix}.csv`,
+      batch_fingerprint: randomBytes(32).toString("hex"),
+      accepted_rows: [{ ...row, row_fingerprint: randomBytes(32).toString("hex") }],
+      rejected_rows: []
+    });
+    assert(Boolean(crossTenant.error), "Source Intake a permis scrierea într-un alt workspace.");
+    const demoAfter = runLocalSql(`select count(*) from public.commercial_signals where business_id='${DEMO.businessId}';`);
+    assert(demoAfter === demoBefore, "Încercarea Source Intake cross-tenant a modificat workspace-ul demo.");
+  } finally {
+    runLocalSql(`delete from public.businesses where id='${businessId}'; delete from public.profiles where id='${profileId}';`);
+    if (userId) await admin.auth.admin.deleteUser(userId);
+  }
+}
+
 async function verifySignalConversionAuthorization(admin, local) {
   const suffix = randomBytes(8).toString("hex");
   const email = `conversion-${suffix}@revenew-demo.test`;
@@ -219,6 +279,8 @@ async function main() {
       ,'recommendation_feedback_edited_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}' and event_type = 'analysis_review_edited')
       ,'recommendation_feedback_rejected_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and analysis_status = 'completed' and review_status in ('dismissed','duplicate') and nullif(btrim(dismissal_reason), '') is not null)
       ,'recommendation_feedback_external_action_count', (select count(*) from public.commercial_signal_events where business_id = '${DEMO.businessId}' and event_type in ('recommendation_feedback_recorded','analysis_review_edited') and coalesce((metadata->>'external_action')::boolean, false) = true)
+      ,'source_intake_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and ingestion_origin = 'csv_import' and source_label = 'Import controlat · text în bloc' and status = 'new' and review_status = 'new' and analysis_status = 'not_started' and converted_opportunity_id is null)
+      ,'source_intake_automatic_decision_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and ingestion_origin = 'csv_import' and (analysis_status <> 'not_started' or review_status not in ('new','ready_for_review','postponed') or converted_opportunity_id is not null))
     );
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
@@ -250,7 +312,10 @@ async function main() {
   assert(Number(stats.recommendation_feedback_edited_count) > 0, "Feedback-ul demo nu acoperă o recomandare editată înainte de aprobare.");
   assert(Number(stats.recommendation_feedback_rejected_count) > 0, "Feedback-ul demo nu păstrează motivul unei respingeri.");
   assert(Number(stats.recommendation_feedback_external_action_count) === 0, "Feedback-ul demo nu poate reprezenta o acțiune externă automată.");
+  assert(Number(stats.source_intake_pending_count) > 0, "Demo-ul local nu acoperă un semnal importat controlat și rămas în așteptarea revizuirii.");
+  assert(Number(stats.source_intake_automatic_decision_count) === 0, "Source Intake nu poate porni automat analiza, aprobarea sau conversia.");
   await verifyTenantIsolation(admin, local);
+  await verifySourceIntakeAuthorization(admin, local);
   await verifySignalConversionAuthorization(admin, local);
   console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");
 }

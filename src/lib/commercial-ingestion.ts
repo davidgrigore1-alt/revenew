@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   batchFingerprint,
   normalizeCommercialValue,
+  selectConfirmedCommercialRows,
   validateCommercialImportRows,
   type CommercialImportRowIssue,
   type CommercialMappedRow,
@@ -36,6 +37,7 @@ export type CommercialImportResult = {
   duplicates: number;
   failed: number;
   duplicateBatch: boolean;
+  notSelected: number;
   error?: string;
 };
 
@@ -71,7 +73,7 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   const { accepted: initiallyAccepted, rejected } = validateCommercialImportRows(rawRows);
   const { business, supabase } = await ingestionContext();
   const [signalsResult, organizationsResult, contactsResult, opportunitiesResult, ownersResult] = await Promise.all([
-    supabase.from("commercial_signals").select("id,ingestion_fingerprint,contact_email,contact_company,title").eq("business_id", business.id).limit(2000),
+    supabase.from("commercial_signals").select("id,ingestion_fingerprint,contact_email,contact_company,title,source,source_reference,raw_message").eq("business_id", business.id).limit(2000),
     supabase.from("crm_organizations").select("normalized_name").eq("business_id", business.id).eq("is_archived", false).limit(2000),
     supabase.from("crm_contacts").select("normalized_email").eq("business_id", business.id).eq("is_active", true).limit(2000),
     supabase.from("opportunities").select("title,contact_email").eq("business_id", business.id).limit(2000),
@@ -85,6 +87,9 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   const exactFingerprints = new Set((signalsResult.data ?? []).map((item) => item.ingestion_fingerprint).filter(Boolean));
   const signalEmails = new Set((signalsResult.data ?? []).map((item) => normalizeCommercialValue(item.contact_email ?? "")).filter(Boolean));
   const signalCompanyTitles = new Set((signalsResult.data ?? []).map((item) => `${normalizeCommercialValue(item.contact_company ?? "")}|${normalizeCommercialValue(item.title ?? "")}`));
+  const signalSourceTitles = new Set((signalsResult.data ?? []).map((item) => `${normalizeCommercialValue(item.source ?? "")}|${normalizeCommercialValue(item.title ?? "")}`));
+  const signalSourceReferences = new Set((signalsResult.data ?? []).map((item) => normalizeCommercialValue(item.source_reference ?? "")).filter(Boolean));
+  const signalTextSignatures = new Set((signalsResult.data ?? []).map((item) => normalizeCommercialValue(item.raw_message ?? "").slice(0, 180)).filter((value) => value.length >= 48));
   const organizationNames = new Set((organizationsResult.data ?? []).map((item) => item.normalized_name));
   const contactEmails = new Set((contactsResult.data ?? []).map((item) => item.normalized_email).filter(Boolean));
   const opportunityTitles = new Set((opportunitiesResult.data ?? []).map((item) => normalizeCommercialValue(item.title ?? "")));
@@ -101,10 +106,18 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
     const email = normalizeCommercialValue(row.email);
     const company = normalizeCommercialValue(row.company);
     const title = normalizeCommercialValue(row.title);
+    const sourceReference = normalizeCommercialValue(row.source_reference);
+    const textSignature = normalizeCommercialValue(row.context).slice(0, 180);
     accepted.push({
       ...row,
       owner_profile_id: ownerId ?? "",
-      probable_signal_match: Boolean((email && signalEmails.has(email)) || (company && signalCompanyTitles.has(`${company}|${title}`))),
+      probable_signal_match: Boolean(
+        (email && signalEmails.has(email))
+        || (sourceReference && signalSourceReferences.has(sourceReference))
+        || (company && signalCompanyTitles.has(`${company}|${title}`))
+        || signalSourceTitles.has(`${row.source_type}|${title}`)
+        || (textSignature.length >= 48 && signalTextSignatures.has(textSignature))
+      ),
       probable_company_match: Boolean(company && organizationNames.has(company)),
       probable_contact_match: Boolean(email && contactEmails.has(email)),
       probable_opportunity_match: Boolean(opportunityTitles.has(title) || (email && opportunityEmails.has(email))),
@@ -115,20 +128,32 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   return { ok: true, fileName, batchFingerprint: batchFingerprint(fileName, fingerprintRows), accepted, rejected };
 }
 
-export async function confirmCommercialSignalImport(fileName: string, rawRows: CommercialMappedRow[]): Promise<CommercialImportResult> {
+export async function confirmCommercialSignalImport(fileName: string, rawRows: CommercialMappedRow[], selectedFingerprints?: string[]): Promise<CommercialImportResult> {
   const preview = await previewCommercialSignalImport(fileName, rawRows);
-  if (!preview.ok) return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: 0, duplicateBatch: false, error: preview.error };
+  if (!preview.ok) return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: 0, duplicateBatch: false, notSelected: 0, error: preview.error };
+  if (selectedFingerprints && (selectedFingerprints.length > 1000 || selectedFingerprints.some((value) => !/^[a-f0-9]{64}$/.test(value)))) {
+    return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: 0, duplicateBatch: false, notSelected: 0, error: "Selecția pentru import nu este validă." };
+  }
+  const selection = selectedFingerprints ?? preview.accepted.filter((row) => !row.exact_duplicate).map((row) => row.row_fingerprint);
+  const { selectedRows, exactDuplicates, notSelected, confirmedRows } = selectConfirmedCommercialRows(preview.accepted, selection);
+  if (!selectedRows.length) {
+    return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: exactDuplicates.length, failed: 0, duplicateBatch: false, notSelected, error: "Selectează cel puțin un semnal valid pentru import." };
+  }
+  const confirmedFingerprint = batchFingerprint(preview.fileName, [
+    ...confirmedRows,
+    ...preview.rejected.filter((row): row is CommercialImportRowIssue & { row_fingerprint: string } => Boolean(row.row_fingerprint))
+  ]);
   const { business, supabase } = await ingestionContext();
   const { data, error } = await supabase.rpc("import_commercial_signal_batch", {
     target_business_id: business.id,
     source_file_name: preview.fileName,
-    batch_fingerprint: preview.batchFingerprint,
-    accepted_rows: preview.accepted.map(({ exact_duplicate: _exactDuplicate, ...row }) => row),
+    batch_fingerprint: confirmedFingerprint,
+    accepted_rows: confirmedRows.map(({ exact_duplicate: _exactDuplicate, ...row }) => row),
     rejected_rows: preview.rejected
   });
   if (error) {
     console.warn("commercial_signal_import_failed", { code: error.code, rowCount: rawRows.length });
-    return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: rawRows.length, duplicateBatch: false, error: "Importul nu a putut fi finalizat. Nicio oportunitate nu a fost creată automat." };
+    return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: confirmedRows.length, duplicateBatch: false, notSelected, error: "Importul nu a putut fi finalizat. Nicio oportunitate nu a fost creată automat." };
   }
   const result = data as Record<string, unknown>;
   revalidatePath("/inbox"); revalidatePath("/inbox/import"); revalidatePath("/dashboard"); revalidatePath("/reports");
@@ -139,7 +164,8 @@ export async function confirmCommercialSignalImport(fileName: string, rawRows: C
     rejected: Number(result.rejected ?? 0),
     duplicates: Number(result.duplicates ?? 0),
     failed: Number(result.failed ?? 0),
-    duplicateBatch: Boolean(result.duplicate_batch)
+    duplicateBatch: Boolean(result.duplicate_batch),
+    notSelected
   };
 }
 
@@ -165,7 +191,7 @@ export async function detectStaleCommercialSignals(): Promise<CommercialImportRe
       "missing_next_action", "stale_activity", "unassigned_owner", "missing_primary_contact", "proposal_without_follow_up"
     ].includes(reason.code));
   }).slice(0, 200);
-  if (!candidates.length) return { ok: true, created: 0, rejected: 0, duplicates: 0, failed: 0, duplicateBatch: false };
+  if (!candidates.length) return { ok: true, created: 0, rejected: 0, duplicates: 0, failed: 0, duplicateBatch: false, notSelected: 0 };
   const ids = candidates.map((item) => item.id).sort();
   const fingerprint = createHash("sha256").update(JSON.stringify(ids)).digest("hex");
   const { data, error } = await supabase.rpc("detect_stale_commercial_signals", {
@@ -175,13 +201,13 @@ export async function detectStaleCommercialSignals(): Promise<CommercialImportRe
   });
   if (error) {
     console.warn("stale_opportunity_detection_failed", { code: error.code, candidateCount: ids.length });
-    return { ok: false, created: 0, rejected: 0, duplicates: 0, failed: ids.length, duplicateBatch: false, error: "Detectarea nu a putut fi finalizată." };
+    return { ok: false, created: 0, rejected: 0, duplicates: 0, failed: ids.length, duplicateBatch: false, notSelected: 0, error: "Detectarea nu a putut fi finalizată." };
   }
   const result = data as Record<string, unknown>;
   revalidatePath("/inbox"); revalidatePath("/inbox/import"); revalidatePath("/dashboard"); revalidatePath("/reports");
   return {
     ok: true, batchId: String(result.batch_id ?? ""), created: Number(result.created ?? 0), rejected: 0,
-    duplicates: Number(result.duplicates ?? 0), failed: 0, duplicateBatch: Boolean(result.duplicate_batch)
+    duplicates: Number(result.duplicates ?? 0), failed: 0, duplicateBatch: Boolean(result.duplicate_batch), notSelected: 0
   };
 }
 

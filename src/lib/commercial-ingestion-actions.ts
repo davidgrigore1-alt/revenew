@@ -13,9 +13,9 @@ export async function previewCommercialSignalImport(fileName: string, rows: Comm
   return previewImport(fileName, rows);
 }
 
-export async function confirmCommercialSignalImport(fileName: string, rows: CommercialMappedRow[]) {
+export async function confirmCommercialSignalImport(fileName: string, rows: CommercialMappedRow[], selectedFingerprints?: string[]) {
   await requirePermission("signals.create");
-  return confirmImport(fileName, rows);
+  return confirmImport(fileName, rows, selectedFingerprints);
 }
 
 export async function detectStaleCommercialSignals() {

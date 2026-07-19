@@ -20,7 +20,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
       eyebrow="Inbox Comercial"
       title="Inbox Comercial"
       description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide."
-      actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button>{inbox.signals.length > 0 ? <InboxIngestionActions /> : null}</>}
+      actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button><InboxIngestionActions showDetection={inbox.signals.length > 0} /></>}
     >
       <CommercialInboxClient
         initialSignals={inbox.signals}
@@ -29,7 +29,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
         contacts={crm.contacts.map((contact) => ({ id: contact.id, fullName: contact.fullName, organizationId: contact.organizationId, email: contact.email }))}
         opportunities={opportunities.map((opportunity) => ({ id: opportunity.id, title: opportunity.title, organizationId: opportunity.organizationId, lifecycleStatus: opportunity.lifecycleStatus }))}
         assignableProfiles={assignableProfiles}
-        initialSource={searchParams?.source === "csv_import" ? "csv_import" as CommercialSignalSource : "all"}
+        initialSource={!searchParams?.batch && searchParams?.source === "csv_import" ? "csv_import" as CommercialSignalSource : "all"}
         initialBatchId={searchParams?.batch}
         initialSignalId={searchParams?.signal}
       />

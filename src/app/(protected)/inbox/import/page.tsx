@@ -6,6 +6,6 @@ export const dynamic = "force-dynamic";
 
 export default async function CommercialSignalImportPage() {
   const history = await getCommercialImportHistory();
-  return <PageShell eyebrow="Inbox Comercial" title="Importă semnale comerciale" description="Validează, mapează și confirmă datele înainte de a crea semnale pentru revizuire umană."><CommercialSignalImportWizard history={history} /></PageShell>;
+  return <PageShell eyebrow="Source Intake" title="Importă semnale" description="Transformă informația comercială externă în semnale controlate, cu previzualizare, deduplicare și confirmare umană înainte de scriere."><CommercialSignalImportWizard history={history} /></PageShell>;
 }
 

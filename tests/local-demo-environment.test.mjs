@@ -23,11 +23,12 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.equal(fixtures.opportunities.length, 11);
   assert.equal(fixtures.actions.length, 12);
   assert.equal(fixtures.signals.length, 10);
-  assert.equal(fixtures.signalEvents.length, 10);
+  assert.equal(fixtures.signalEvents.length, 12);
   assert.ok(fixtures.signals.some((signal) => signal.review_status === "ready_for_review"));
   assert.ok(fixtures.signals.some((signal) => signal.status === "converted" && signal.converted_opportunity_id));
   assert.ok(fixtures.signals.some((signal) => signal.matched_organization_id));
   assert.ok(fixtures.signals.some((signal) => signal.detected_from_opportunity_id));
+  assert.ok(fixtures.signals.some((signal) => signal.source_label === "Import controlat · text în bloc" && signal.ingestion_origin === "csv_import" && signal.status === "new" && signal.analysis_status === "not_started"));
   assert.ok(fixtures.signals.every((signal) => !["ai_receptionist", "instagram", "website_form", "missed_call"].includes(signal.source)));
   assert.ok(fixtures.contacts.every((contact) => contact.email.endsWith(".test")));
   assert.ok(fixtures.opportunities.every((opportunity) => opportunity.currency === "RON"));
