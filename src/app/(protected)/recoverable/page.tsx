@@ -32,7 +32,7 @@ export default async function RecoverablePage() {
       eyebrow="Execuție comercială"
       title="Coada de recuperare venituri"
       description="Oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune. Ordinea este deterministă și explicabilă."
-      actions={<Button href="/opportunities/analyze">Adaugă oportunitate</Button>}
+      actions={<><Button href="/inbox" variant="secondary">Vezi Inbox comercial</Button><Button href="/opportunities/analyze">Adaugă oportunitate</Button></>}
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Recuperare venituri" }]}
     >
       <div className="grid gap-6">

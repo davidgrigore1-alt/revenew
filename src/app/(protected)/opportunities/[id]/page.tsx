@@ -8,7 +8,7 @@ import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
 import { CommercialResponsePanel } from "@/components/opportunities/CommercialResponsePanel";
 import { AssistedPreparation } from "@/components/recovery/AssistedPreparation";
-import { getCommercialSignalForOpportunity } from "@/lib/commercial-inbox";
+import { getCommercialSignalsForOpportunity } from "@/lib/commercial-inbox";
 import { OpportunityWorkflow } from "@/components/opportunities/OpportunityWorkflow";
 import { getCurrentBusinessOrDemo, getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness, recommendNextBestAction } from "@/lib/revenue-workspace";
@@ -23,7 +23,8 @@ export function generateStaticParams() {
 export default async function OpportunityDetailPage({ params }: { params: { id: string } }) {
   const opportunity = await getOpportunityForCurrentBusiness(params.id);
   const demoBusiness = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const sourceSignal = await getCommercialSignalForOpportunity(params.id);
+  const linkedSignals = await getCommercialSignalsForOpportunity(params.id);
+  const sourceSignal = linkedSignals[0] ?? null;
   const [crm, assignableProfiles] = await Promise.all([
     getCrmWorkspaceForCurrentBusiness(),
     getAssignableProfilesForCurrentBusiness()
@@ -59,24 +60,11 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         {sourceSignal ? (
           <DataCard
-            title="Creata din Inbox Comercial"
-            description="Aceasta oportunitate a pornit dintr-un semnal comercial revizuit."
-            action={<Button href="/inbox" variant="secondary">Inapoi la inbox</Button>}
+            title="Semnale asociate"
+            description="Context comercial legat explicit de această oportunitate. Următoarea acțiune rămâne prioritară."
+            action={<Button href={`/inbox?signal=${sourceSignal.id}`} variant="secondary">Deschide în Inbox</Button>}
           >
-            <div className="grid gap-4 text-sm leading-6 text-zinc-300 md:grid-cols-3">
-              <p>
-                <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Sursa</span>
-                {sourceSignal.sourceLabel ?? sourceSignal.source}
-              </p>
-              <p>
-                <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Contact</span>
-                {[sourceSignal.contactName, sourceSignal.contactCompany].filter(Boolean).join(" | ") || "Contact neconfirmat"}
-              </p>
-              <p>
-                <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Sumar initial</span>
-                {sourceSignal.extractedSummary || sourceSignal.detectedNeed || "Fara sumar initial."}
-              </p>
-            </div>
+            <div className="divide-y divide-[rgb(var(--border))]">{linkedSignals.slice(0, 5).map((signal) => <div key={signal.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto]"><div><p className="text-sm font-semibold">{signal.title}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {[signal.contactName, signal.contactCompany].filter(Boolean).join(" · ") || "Contact neconfirmat"}</p></div><p className="max-w-md text-sm text-[rgb(var(--text-secondary))]">{signal.recommendedAction || signal.extractedSummary || "Necesită verificare."}</p></div>)}</div>
           </DataCard>
         ) : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />

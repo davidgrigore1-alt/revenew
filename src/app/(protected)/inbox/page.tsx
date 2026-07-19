@@ -4,12 +4,14 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
 import type { CommercialSignalSource } from "@/lib/types";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
+import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 
-export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string } }) {
-  const [inbox, crm, assignableProfiles] = await Promise.all([
+export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string } }) {
+  const [inbox, crm, assignableProfiles, opportunities] = await Promise.all([
     getCommercialSignalsForCurrentBusiness(),
     getCrmWorkspaceForCurrentBusiness(),
-    getAssignableProfilesForCurrentBusiness()
+    getAssignableProfilesForCurrentBusiness(),
+    getOpportunitiesForCurrentBusiness()
   ]);
 
   return (
@@ -24,9 +26,11 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
         tableReady={inbox.tableReady && crm.ready}
         organizations={crm.organizations.map((organization) => ({ id: organization.id, name: organization.name }))}
         contacts={crm.contacts.map((contact) => ({ id: contact.id, fullName: contact.fullName, organizationId: contact.organizationId, email: contact.email }))}
+        opportunities={opportunities.map((opportunity) => ({ id: opportunity.id, title: opportunity.title, organizationId: opportunity.organizationId, lifecycleStatus: opportunity.lifecycleStatus }))}
         assignableProfiles={assignableProfiles}
         initialSource={searchParams?.source === "csv_import" ? "csv_import" as CommercialSignalSource : "all"}
         initialBatchId={searchParams?.batch}
+        initialSignalId={searchParams?.signal}
       />
     </PageShell>
   );

@@ -23,9 +23,9 @@ export async function createCommercialSignal(input: CommercialSignalInput) {
 }
 
 export async function analyzeCommercialSignal(signalId: string) {
-  const access = await requireActivePaidAccess();
+  await requireActivePaidAccess();
   await requirePermission("opportunities.analyze");
-  return analyzeCommercialSignalData(signalId, access.previewPlan?.id ?? access.subscription?.plan);
+  return analyzeCommercialSignalData(signalId);
 }
 
 export async function approveCommercialSignal(signalId: string, input: SignalApprovalInput) {
@@ -57,10 +57,10 @@ export async function ignoreCommercialSignal(id: string) {
   return ignoreCommercialSignalData(id);
 }
 
-export async function archiveCommercialSignal(id: string) {
+export async function archiveCommercialSignal(id: string, reason?: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.archive");
-  return archiveCommercialSignalData(id);
+  return archiveCommercialSignalData(id, reason);
 }
 
 export async function convertSignalToOpportunity(signalId: string) {

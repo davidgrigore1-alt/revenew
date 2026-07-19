@@ -3,7 +3,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
-import { runRecoverabilityAnalysis } from "@/lib/recoverability-analysis";
+import { buildDeterministicRecoverabilityAnalysis } from "@/lib/recoverability-analysis-core";
+import { validateCommercialSignalCapture } from "@/lib/commercial-signal-capture";
 import { formatRecoveryDraft, packRecoverabilityInsights, parseRecoveryDraft, unpackRecoverabilityInsights } from "@/lib/recoverability-review";
 import type {
   CommercialSignal,
@@ -46,6 +47,7 @@ export type CommercialSignalInput = Partial<{
   notes: string;
   matchedOrganizationId: string;
   matchedContactId: string;
+  linkedOpportunityId: string;
   assignedToProfileId: string;
   suggestedDueDate: string;
   reviewDueAt: string;
@@ -64,6 +66,7 @@ export type SignalApprovalInput = {
   dueAt?: string;
   recommendedAction?: string;
   reviewedDraft?: string;
+  opportunityId?: string;
 };
 
 export type CommercialInboxResult = {
@@ -260,6 +263,7 @@ function signalToRow(input: CommercialSignalInput, businessId: string, profileId
     notes: toNullString(input.notes),
     matched_organization_id: safeUuid(input.matchedOrganizationId),
     matched_contact_id: safeUuid(input.matchedContactId),
+    detected_from_opportunity_id: safeUuid(input.linkedOpportunityId),
     assigned_to_profile_id: safeUuid(input.assignedToProfileId),
     suggested_due_date: toNullString(input.suggestedDueDate),
     review_due_at: toNullString(input.reviewDueAt),
@@ -300,6 +304,7 @@ function signalUpdateToRow(input: CommercialSignalInput) {
   if (input.notes !== undefined) row.notes = toNullString(input.notes);
   if (input.matchedOrganizationId !== undefined) row.matched_organization_id = safeUuid(input.matchedOrganizationId);
   if (input.matchedContactId !== undefined) row.matched_contact_id = safeUuid(input.matchedContactId);
+  if (input.linkedOpportunityId !== undefined) row.detected_from_opportunity_id = safeUuid(input.linkedOpportunityId);
   if (input.assignedToProfileId !== undefined) row.assigned_to_profile_id = safeUuid(input.assignedToProfileId);
   if (input.suggestedDueDate !== undefined) row.suggested_due_date = toNullString(input.suggestedDueDate);
   if (input.reviewDueAt !== undefined) row.review_due_at = toNullString(input.reviewDueAt);
@@ -406,6 +411,26 @@ async function getCurrentInboxContext() {
     throw new Error("Nu am gasit businessul curent.");
   }
   return { supabase, business: current.business, profileId: current.profileId };
+}
+
+async function validateWorkspaceLinks(input: CommercialSignalInput) {
+  const { supabase, business } = await getCurrentInboxContext();
+  const organizationId = safeUuid(input.matchedOrganizationId);
+  const contactId = safeUuid(input.matchedContactId);
+  const opportunityId = safeUuid(input.linkedOpportunityId);
+  const ownerId = safeUuid(input.assignedToProfileId);
+  const [organization, contact, opportunity, assignable] = await Promise.all([
+    organizationId ? supabase.from("crm_organizations").select("id").eq("id", organizationId).eq("business_id", business.id).eq("is_archived", false).maybeSingle() : null,
+    contactId ? supabase.from("crm_contacts").select("id,organization_id").eq("id", contactId).eq("business_id", business.id).eq("is_active", true).maybeSingle() : null,
+    opportunityId ? supabase.from("opportunities").select("id").eq("id", opportunityId).eq("business_id", business.id).maybeSingle() : null,
+    ownerId ? supabase.rpc("business_assignable_profiles", { target_business_id: business.id }) : null
+  ]);
+  if (organizationId && (!organization || organization.error || !organization.data)) return "Compania selectată nu este disponibilă în workspace-ul curent.";
+  if (contactId && (!contact || contact.error || !contact.data)) return "Contactul selectat nu este disponibil în workspace-ul curent.";
+  if (organizationId && contact?.data?.organization_id && contact.data.organization_id !== organizationId) return "Contactul selectat aparține altei companii.";
+  if (opportunityId && (!opportunity || opportunity.error || !opportunity.data)) return "Oportunitatea selectată nu este disponibilă în workspace-ul curent.";
+  if (ownerId && (!assignable || assignable.error || !(assignable.data ?? []).some((row: { profile_id: string }) => row.profile_id === ownerId))) return "Responsabilul selectat nu este disponibil în workspace-ul curent.";
+  return null;
 }
 
 export async function getCommercialSignalsForCurrentBusiness(): Promise<CommercialInboxResult> {
@@ -517,7 +542,23 @@ export async function getCommercialSignalForOpportunity(opportunityId: string): 
   return data ? mapSignal(data as CommercialSignalRow) : null;
 }
 
+export async function getCommercialSignalsForOpportunity(opportunityId: string): Promise<CommercialSignal[]> {
+  const result = await getCommercialSignalsForCurrentBusiness();
+  return result.signals.filter((signal) =>
+    signal.convertedOpportunityId === opportunityId || signal.detectedFromOpportunityId === opportunityId
+  );
+}
+
+export async function getCommercialSignalsForOrganization(organizationId: string): Promise<CommercialSignal[]> {
+  const result = await getCommercialSignalsForCurrentBusiness();
+  return result.signals
+    .filter((signal) => signal.matchedOrganizationId === organizationId)
+    .slice(0, 6);
+}
+
 export async function createCommercialSignal(input: CommercialSignalInput) {
+  const validationMessage = validateCommercialSignalCapture(input) ?? await validateWorkspaceLinks(input);
+  if (validationMessage) return { ok: false, tableReady: true, message: validationMessage };
   const { supabase, business, profileId } = await getCurrentInboxContext();
   const { data, error } = await supabase
     .from("commercial_signals")
@@ -541,6 +582,8 @@ export async function createCommercialSignal(input: CommercialSignalInput) {
 }
 
 export async function updateCommercialSignal(id: string, input: CommercialSignalInput) {
+  const linkValidationMessage = await validateWorkspaceLinks(input);
+  if (linkValidationMessage) return { ok: false, tableReady: true, message: linkValidationMessage };
   const { supabase, business } = await getCurrentInboxContext();
   const { data, error } = await supabase
     .from("commercial_signals")
@@ -582,8 +625,23 @@ export async function ignoreCommercialSignal(id: string) {
   return updateCommercialSignal(id, { status: "ignored" });
 }
 
-export async function archiveCommercialSignal(id: string) {
-  return updateCommercialSignal(id, { status: "archived" });
+export async function archiveCommercialSignal(id: string, reason = "") {
+  const cleanReason = reason.trim().slice(0, 500);
+  if (!cleanReason) return { ok: false, tableReady: true, message: "Motivul arhivării este obligatoriu." };
+  const { supabase, business } = await getCurrentInboxContext();
+  const { data, error } = await supabase.from("commercial_signals").update({
+    status: "archived",
+    review_status: "dismissed",
+    dismissal_reason: cleanReason,
+    reviewed_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }).eq("id", id).eq("business_id", business.id).select("*,recoverability_score").single();
+  if (error) return { ok: false, tableReady: !isMissingRecoverabilitySchema(error), message: "Semnalul nu a putut fi arhivat." };
+  const eventResult = await addCommercialSignalEvent(id, "signal_archived", "Semnal arhivat în urma unei decizii umane.", { reason: cleanReason });
+  const signal = mapSignal(data as CommercialSignalRow);
+  if (eventResult.ok && eventResult.event) signal.events = [eventResult.event];
+  revalidatePath("/inbox");
+  return { ok: true, tableReady: true, signal };
 }
 
 export async function addCommercialSignalEvent(signalId: string, eventType: string, description: string, metadata: Record<string, unknown> = {}) {
@@ -629,7 +687,7 @@ function normalizedMatch(value?: string | null) {
   return value?.trim().toLocaleLowerCase("ro-RO") ?? "";
 }
 
-export async function analyzeCommercialSignal(signalId: string, planId?: string | null) {
+export async function analyzeCommercialSignal(signalId: string, _planId?: string | null) {
   const { supabase, business, profileId } = await getCurrentInboxContext();
   const { data: signalRow, error: signalError } = await supabase
     .from("commercial_signals")
@@ -677,7 +735,7 @@ export async function analyzeCommercialSignal(signalId: string, planId?: string 
     matchedOrganizationId = matchedOrganizationId ?? data?.organization_id ?? null;
   }
 
-  const analysis = await runRecoverabilityAnalysis({ signal, business, profileId, planId, duplicateRisk: Boolean(duplicate) });
+  const analysis = buildDeterministicRecoverabilityAnalysis(signal, Boolean(duplicate));
   const { data: updatedRow, error: updateError } = await supabase
     .from("commercial_signals")
     .update({
@@ -769,9 +827,17 @@ export async function setCommercialSignalReviewDecision(
 
 export async function approveCommercialSignal(signalId: string, input: SignalApprovalInput) {
   const { supabase, business } = await getCurrentInboxContext();
+  const linkValidationMessage = await validateWorkspaceLinks({ linkedOpportunityId: input.opportunityId });
+  if (linkValidationMessage) return { ok: false, tableReady: true, message: linkValidationMessage };
   const email = toNullString(input.newContactEmail, 320);
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: false, tableReady: true, message: "Emailul contactului nu este valid." };
+  }
+  if (input.opportunityId !== undefined) {
+    const { error: linkError } = await supabase.from("commercial_signals")
+      .update({ detected_from_opportunity_id: safeUuid(input.opportunityId), updated_at: new Date().toISOString() })
+      .eq("id", signalId).eq("business_id", business.id);
+    if (linkError) return { ok: false, tableReady: true, message: "Legătura cu oportunitatea nu a putut fi salvată." };
   }
   const { data: signalLink, error: signalLinkError } = await supabase.from("commercial_signals")
     .select("detected_from_opportunity_id").eq("id", signalId).eq("business_id", business.id).single();

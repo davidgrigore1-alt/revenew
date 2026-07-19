@@ -93,6 +93,7 @@ export function buildDeterministicRecoverabilityAnalysis(
   const uncertaintyNotes = ["Analiză bazată pe reguli transparente; toate concluziile necesită verificare umană."];
   const text = [signal.title, signal.rawMessage, signal.extractedSummary, signal.detectedNeed, signal.notes].filter(Boolean).join(" ").toLocaleLowerCase("ro-RO");
   const hasContact = Boolean(signal.contactEmail || signal.contactPhone || signal.contactName);
+  const hasCompany = Boolean(signal.contactCompany || signal.matchedOrganizationId);
   const value = knownValue(signal);
   const interactionDate = signal.lastInteractionAt || signal.requestedDate || signal.occurredAt || signal.createdAt;
   const ageDays = interactionDate ? Math.max(0, Math.floor((now.getTime() - new Date(interactionDate).getTime()) / 86_400_000)) : null;
@@ -108,6 +109,10 @@ export function buildDeterministicRecoverabilityAnalysis(
   } else {
     missing.push("Date de contact confirmate");
     riskNotes.push("Contactul nu este suficient pentru inițierea în siguranță a unui follow-up.");
+  }
+  if (!hasCompany) {
+    missing.push("Companie confirmată");
+    riskNotes.push("Semnalul nu este legat de o companie confirmată din workspace.");
   }
   if (value > 0) {
     score += 20;

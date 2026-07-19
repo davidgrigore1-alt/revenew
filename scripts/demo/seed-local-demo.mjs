@@ -67,6 +67,8 @@ async function main() {
       public.onboarding_drafts,public.saved_views,public.product_events,
       public.business_governance_policies,public.business_invitations,public.business_approval_requests,public.business_audit_events
       to authenticated;
+    grant insert, update on public.commercial_signals to authenticated;
+    grant insert on public.commercial_signal_events to authenticated;
     delete from public.businesses where id = '${DEMO.businessId}';
     insert into public.profiles (id,user_id,full_name,email,role)
     values ('${profileId}','${user.id}','David Pohoata','${DEMO.email}','business_owner')
@@ -110,10 +112,37 @@ async function main() {
     insert into public.opportunity_documents (id,business_id,opportunity_id,document_type,title,body,status,generation_mode)
     select id,business_id,opportunity_id,document_type,title,body,status,generation_mode
     from jsonb_to_recordset(${json(fixtures.documents)}) as x(id uuid,business_id uuid,opportunity_id uuid,document_type text,title text,body text,status text,generation_mode text);
+
+    insert into public.commercial_signals (
+      id,business_id,title,source,source_label,status,review_status,priority,analysis_status,analysis_mode,
+      contact_company,contact_name,contact_email,raw_message,extracted_summary,currency,urgency_score,fit_score,confidence_score,
+      recommended_action,created_by_profile_id,assigned_to_profile_id,occurred_at,created_at,matched_organization_id,matched_contact_id,
+      detected_from_opportunity_id,converted_opportunity_id,estimated_value_min,estimated_value_max,estimated_recoverable_value,
+      recoverability_score,confidence_level,urgency_level,primary_recovery_reason,analysis_explanation,missing_information,
+      uncertainty_notes,suggested_due_date,analyzed_at,reviewed_at,dismissal_reason,ingestion_origin,review_due_at
+    )
+    select id,business_id,title,source,source_label,status,review_status,priority,analysis_status,analysis_mode,
+      contact_company,contact_name,contact_email,raw_message,extracted_summary,currency,urgency_score,fit_score,confidence_score,
+      recommended_action,created_by_profile_id,assigned_to_profile_id,occurred_at,created_at,matched_organization_id,matched_contact_id,
+      detected_from_opportunity_id,converted_opportunity_id,estimated_value_min,estimated_value_max,estimated_recoverable_value,
+      recoverability_score,confidence_level,urgency_level,primary_recovery_reason,analysis_explanation,missing_information,
+      uncertainty_notes,suggested_due_date,analyzed_at,reviewed_at,dismissal_reason,ingestion_origin,review_due_at
+    from jsonb_to_recordset(${json(fixtures.signals)}) as x(
+      id uuid,business_id uuid,title text,source text,source_label text,status text,review_status text,priority text,analysis_status text,analysis_mode text,
+      contact_company text,contact_name text,contact_email text,raw_message text,extracted_summary text,currency text,urgency_score int,fit_score int,confidence_score int,
+      recommended_action text,created_by_profile_id uuid,assigned_to_profile_id uuid,occurred_at timestamptz,created_at timestamptz,matched_organization_id uuid,matched_contact_id uuid,
+      detected_from_opportunity_id uuid,converted_opportunity_id uuid,estimated_value_min numeric,estimated_value_max numeric,estimated_recoverable_value numeric,
+      recoverability_score int,confidence_level text,urgency_level text,primary_recovery_reason text,analysis_explanation text,missing_information jsonb,
+      uncertainty_notes jsonb,suggested_due_date date,analyzed_at timestamptz,reviewed_at timestamptz,dismissal_reason text,ingestion_origin text,review_due_at timestamptz
+    );
+
+    insert into public.commercial_signal_events (id,business_id,signal_id,event_type,description,metadata,created_by_profile_id,created_at)
+    select id,business_id,signal_id,event_type,description,metadata,created_by_profile_id,created_at
+    from jsonb_to_recordset(${json(fixtures.signalEvents)}) as x(id uuid,business_id uuid,signal_id uuid,event_type text,description text,metadata jsonb,created_by_profile_id uuid,created_at timestamptz);
     commit;
   `);
 
-  console.log("Demo local ReveNew pregătit: 1 workspace, 8 companii, 8 contacte, 11 oportunități, 12 acțiuni.");
+  console.log("Demo local ReveNew pregătit: 1 workspace, 8 companii, 8 contacte, 11 oportunități, 12 acțiuni și 10 semnale comerciale.");
   console.log("Nicio acțiune externă, trimitere de email sau apel AI nu a fost executată.");
 }
 

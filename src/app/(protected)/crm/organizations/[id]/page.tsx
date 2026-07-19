@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { safeCompanyWebsiteHref } from "@/lib/crm/website";
+import { getCommercialSignalsForOrganization } from "@/lib/commercial-inbox";
 import { isOpenOpportunity, selectPrimaryNextAction } from "@/lib/opportunity-domain";
 import { buildRevenueRecoveryQueue } from "@/lib/revenue-recovery-queue";
 import { getCrmOrganizationDetail, recommendNextBestAction } from "@/lib/revenue-workspace";
@@ -27,7 +28,10 @@ const relationshipLabels: Record<string, string> = {
 };
 
 export default async function CrmOrganizationDetailPage({ params }: { params: { id: string } }) {
-  const detail = await getCrmOrganizationDetail(params.id);
+  const [detail, recentSignals] = await Promise.all([
+    getCrmOrganizationDetail(params.id),
+    getCommercialSignalsForOrganization(params.id)
+  ]);
   if (!detail.ready) {
     return (
       <PageShell eyebrow="CRM" title="Datele companiei nu sunt disponibile" description={detail.error ?? "Compania nu poate fi încărcată."}>
@@ -165,6 +169,19 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           href={operationalOpportunity ? `/opportunities/${operationalOpportunity.id}#workflow-actions` : undefined}
           actionLabel="Revizuiește și programează"
         />
+
+        <DataCard title="Semnale recente" description="Informații comerciale legate explicit de această companie, înainte sau după conversie.">
+          {recentSignals.length > 0 ? (
+            <div className="divide-y divide-[rgb(var(--border))]">
+              {recentSignals.map((signal) => (
+                <Link key={signal.id} href={`/inbox?signal=${signal.id}`} className="focus-ring group grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate text-sm font-semibold group-hover:text-[rgb(var(--primary))]">{signal.title}</h3><StatusPill tone={signal.status === "converted" ? "success" : signal.status === "archived" ? "neutral" : "warning"}>{signal.status === "converted" ? "Convertit" : signal.status === "archived" ? "Arhivat" : "De verificat"}</StatusPill></div><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {formatDate(signal.createdAt ?? signal.occurredAt ?? undefined)}</p></div>
+                  <span className="text-xs font-semibold text-[rgb(var(--primary))]">Deschide în Inbox</span>
+                </Link>
+              ))}
+            </div>
+          ) : <p className="text-sm text-[rgb(var(--text-muted))]">Nu există semnale legate de această companie.</p>}
+        </DataCard>
 
         <DataCard title="Activitate și decizii" description="Ultimele evenimente, acțiuni și documente existente, ordonate pentru auditabilitate.">
           {activities.length > 0 ? (
