@@ -582,6 +582,7 @@ export async function createCommercialSignal(input: CommercialSignalInput) {
   const signal = mapSignal(data as CommercialSignalRow);
   await addCommercialSignalEvent(signal.id, "signal_created", "Semnal comercial creat manual.");
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   return { ok: true, tableReady: true, signal };
@@ -622,6 +623,7 @@ export async function updateCommercialSignal(id: string, input: CommercialSignal
   );
   if (eventResult.ok && eventResult.event) signal.events = [eventResult.event, ...(signal.events ?? [])];
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   return { ok: true, tableReady: true, signal };
@@ -647,6 +649,7 @@ export async function archiveCommercialSignal(id: string, reason = "") {
   const signal = mapSignal(data as CommercialSignalRow);
   if (eventResult.ok && eventResult.event) signal.events = [eventResult.event];
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   return { ok: true, tableReady: true, signal };
 }
 
@@ -821,6 +824,7 @@ export async function analyzeCommercialSignal(signalId: string, _planId?: string
     await addCommercialSignalEvent(signal.id, "fallback_used", "Analiza a fost generată pe baza regulilor disponibile și necesită verificarea echipei.");
   }
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   return { ok: true, tableReady: true, signal: mapSignal(updatedRow as CommercialSignalRow), fallbackUsed: analysis.mode === "deterministic_fallback" };
@@ -850,6 +854,7 @@ export async function setCommercialSignalReviewDecision(
   if (error) return { ok: false, tableReady: !isMissingRecoverabilitySchema(error), message: isMissingRecoverabilitySchema(error) ? commercialInboxSetupMessage : "Decizia nu a putut fi salvată." };
   await addCommercialSignalEvent(signalId, decision === "duplicate" ? "duplicate_marked" : decision === "dismissed" ? "signal_dismissed" : "review_postponed", cleanReason || "Revizuire amânată.");
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   return { ok: true, tableReady: true, signal: mapSignal(data as CommercialSignalRow) };
@@ -896,6 +901,7 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
   const result = data as { opportunity_id?: string; already_converted?: boolean } | null;
   const { data: updatedRow } = await supabase.from("commercial_signals").select("*,recoverability_score").eq("id", signalId).eq("business_id", business.id).single();
   revalidatePath("/inbox");
+  revalidatePath("/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   revalidatePath("/opportunities");

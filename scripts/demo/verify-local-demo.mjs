@@ -208,6 +208,9 @@ async function main() {
       ,'signal_deadline_clue_count', (select count(*) from public.commercial_signals s cross join lateral jsonb_array_elements_text(coalesce(s.uncertainty_notes, '[]'::jsonb)) note where s.business_id = '${DEMO.businessId}' and note like 'DEADLINE_CLUE: %')
       ,'signal_value_clue_count', (select count(*) from public.commercial_signals s cross join lateral jsonb_array_elements_text(coalesce(s.uncertainty_notes, '[]'::jsonb)) note where s.business_id = '${DEMO.businessId}' and note like 'VALUE_CLUE: %')
       ,'signal_gap_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and jsonb_array_length(coalesce(missing_information, '[]'::jsonb)) > 0)
+      ,'approval_pending_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and review_status in ('ready_for_review','postponed'))
+      ,'approval_applied_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and (review_status = 'converted' or status = 'converted'))
+      ,'approval_rejected_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and (review_status in ('dismissed','duplicate') or status in ('dismissed','duplicate','ignored','archived')))
     );
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
@@ -228,6 +231,9 @@ async function main() {
   assert(Number(stats.signal_intent_type_count) >= 4, "Demo-ul nu acoperă suficiente tipuri de semnale determinate prin reguli.");
   assert(Number(stats.signal_deadline_clue_count) > 0 && Number(stats.signal_value_clue_count) > 0, "Demo-ul nu acoperă indicii verificabile de termen și valoare.");
   assert(Number(stats.signal_gap_count) > 0, "Demo-ul nu acoperă informații comerciale lipsă.");
+  assert(Number(stats.approval_pending_count) > 0, "Approval Center nu are recomandări demo în așteptare.");
+  assert(Number(stats.approval_applied_count) > 0, "Approval Center nu are o decizie demo aplicată.");
+  assert(Number(stats.approval_rejected_count) > 0, "Approval Center nu are o decizie demo respinsă.");
   await verifyTenantIsolation(admin, local);
   await verifySignalConversionAuthorization(admin, local);
   console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");

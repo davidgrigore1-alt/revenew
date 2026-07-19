@@ -642,6 +642,9 @@ export function CommercialInboxClient({
               <div className="flex flex-wrap gap-3">
                 <Button onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Pregătirea asistată este gata pentru revizuire.")} disabled={isPending || selectedSignal.status === "converted"}>{selectedSignal.analysisStatus === "completed" ? "Recalculează trierea" : "Pregătește trierea"}</Button>
                 <Button variant="secondary" onClick={saveReviewFields} disabled={isPending}>Salvează legăturile și contextul</Button>
+                {["ready_for_review", "postponed"].includes(selectedSignal.reviewStatus) && selectedSignal.status !== "converted"
+                  ? <Button href={`/approvals?signal=${selectedSignal.id}`} variant="secondary">Revizuiește în Aprobări</Button>
+                  : null}
                 <Button onClick={approve} disabled={isPending || selectedSignal.analysisStatus !== "completed" || selectedSignal.status === "converted"}>{reviewForm.opportunityId ? "Aprobă și creează acțiunea" : "Aprobă și creează oportunitatea"}</Button>
                 {selectedSignal.convertedOpportunityId ? <Button href={`/opportunities/${selectedSignal.convertedOpportunityId}`} variant="secondary">Deschide oportunitatea</Button> : null}
               </div>

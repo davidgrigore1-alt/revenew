@@ -53,6 +53,7 @@ test("every protected app route has an explicit route policy", () => {
   const policyPrefixes = new Set(routePolicies.map((policy) => policy.prefix));
   const expected = [
     "/admin",
+    "/approvals",
     "/dashboard",
     "/demo",
     "/help",

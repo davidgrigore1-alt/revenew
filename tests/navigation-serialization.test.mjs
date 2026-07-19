@@ -58,18 +58,24 @@ test("admin navigation remains permission-gated by centralized permission", () =
   assert.equal(admin.icon, "shield-check");
 });
 
-test("commercial inbox is a unique primary route directly after home", () => {
+test("commercial inbox and approval center are unique adjacent primary routes", () => {
   const inboxItems = dashboardNavigation.filter((item) => item.href === "/inbox");
+  const approvalItems = dashboardNavigation.filter((item) => item.href === "/approvals");
 
   assert.equal(primaryNavigation[0].href, "/dashboard");
   assert.equal(primaryNavigation[1].href, "/inbox");
-  assert.equal(primaryNavigation[2].href, "/today");
+  assert.equal(primaryNavigation[2].href, "/approvals");
+  assert.equal(primaryNavigation[3].href, "/today");
   assert.equal(inboxItems.length, 1);
   assert.equal(inboxItems[0].name, "Inbox Comercial");
   assert.equal(inboxItems[0].icon, "inbox-stack");
   assert.equal(inboxItems[0].permission, "signals.read");
   assert.equal(isNavItemActive("/inbox", "/inbox"), true);
   assert.equal(isNavItemActive("/inbox/review", "/inbox"), true);
+  assert.equal(approvalItems.length, 1);
+  assert.equal(approvalItems[0].name, "Aprobări");
+  assert.equal(approvalItems[0].permission, "signals.read");
+  assert.equal(isNavItemActive("/approvals", "/approvals"), true);
 });
 
 test("nested operational routes map to one stable parent navigation section", () => {

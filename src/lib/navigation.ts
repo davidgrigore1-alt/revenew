@@ -36,6 +36,7 @@ export type NavigationGroup = {
 export const primaryNavigation = [
   { name: "Control Center", shortName: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
   { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
+  { name: "Aprobări", shortName: "Aprobări", href: "/approvals", icon: "clipboard-check", description: "Confirmă schimbările interne înainte ca acestea să fie aplicate.", permission: "signals.read" },
   { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
   { name: "Recuperare venituri", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
@@ -65,7 +66,7 @@ export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, 
 
 const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
   { id: "control", label: "Control", hrefs: ["/dashboard", "/today"] },
-  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/opportunities", "/recoverable", "/pipeline"] },
+  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/approvals", "/opportunities", "/recoverable", "/pipeline"] },
   { id: "relationships", label: "Relații", hrefs: ["/companies", "/contacts"] },
   { id: "execution", label: "Execuție", hrefs: ["/outreach"] },
   { id: "management", label: "Management", hrefs: ["/reports"] },
@@ -91,6 +92,7 @@ const sectionRouteMappings: Array<{ href: string; routePrefixes: string[] }> = [
   { href: "/companies", routePrefixes: ["/companies", "/crm/organizations"] },
   { href: "/contacts", routePrefixes: ["/contacts", "/crm/contacts"] },
   { href: "/opportunities", routePrefixes: ["/opportunities"] },
+  { href: "/approvals", routePrefixes: ["/approvals"] },
   { href: "/recoverable", routePrefixes: ["/recoverable"] }
 ];
 

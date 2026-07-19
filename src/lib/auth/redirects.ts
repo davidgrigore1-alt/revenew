@@ -6,6 +6,7 @@ const authIntentSet = new Set<string>(authIntents);
 
 const safeRedirectPaths = [
   "/access",
+  "/approvals",
   "/auth/bootstrap",
   "/auth/logout",
   "/auth/recover-session",

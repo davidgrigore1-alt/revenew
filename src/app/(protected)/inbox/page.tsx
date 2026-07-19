@@ -1,6 +1,7 @@
 import { CommercialInboxClient } from "@/components/inbox/CommercialInboxClient";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { Button } from "@/components/ui/Button";
 import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
 import type { CommercialSignalSource } from "@/lib/types";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
@@ -19,7 +20,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
       eyebrow="Inbox Comercial"
       title="Inbox Comercial"
       description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide."
-      actions={inbox.signals.length > 0 ? <InboxIngestionActions /> : undefined}
+      actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button>{inbox.signals.length > 0 ? <InboxIngestionActions /> : null}</>}
     >
       <CommercialInboxClient
         initialSignals={inbox.signals}
