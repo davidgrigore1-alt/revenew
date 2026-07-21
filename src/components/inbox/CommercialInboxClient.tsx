@@ -45,6 +45,7 @@ type CommercialInboxClientProps = {
   initialSource?: CommercialSignalSource | "all";
   initialBatchId?: string;
   initialSignalId?: string;
+  initialCreateOpen?: boolean;
 };
 
 type CreateForm = {
@@ -210,14 +211,15 @@ export function CommercialInboxClient({
   assignableProfiles,
   initialSource = "all",
   initialBatchId,
-  initialSignalId
+  initialSignalId,
+  initialCreateOpen = false
 }: CommercialInboxClientProps) {
   const initiallySelectedSignal = initialSignals.find((signal) => signal.id === initialSignalId)
     ?? initialSignals.find((signal) => !initialBatchId || signal.importBatchId === initialBatchId)
     ?? initialSignals[0];
   const [signals, setSignals] = useState(initialSignals);
   const [selectedId, setSelectedId] = useState(initiallySelectedSignal?.id ?? "");
-  const [createOpen, setCreateOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(initialCreateOpen);
   const [createForm, setCreateForm] = useState<CreateForm>(emptyCreate);
   const [reviewForm, setReviewForm] = useState<ReviewForm>(initiallySelectedSignal ? reviewFormFor(initiallySelectedSignal) : reviewFormFor({ title: "" } as CommercialSignal));
   const [reviewStatus, setReviewStatus] = useState<CommercialSignalReviewStatus | "all">("all");
@@ -367,7 +369,7 @@ export function CommercialInboxClient({
         setCreateOpen(false);
       }
       return result;
-    }, "Semnalul a fost salvat în coada de triere. Echipa decide următorul pas.");
+    }, "Semnalul a fost salvat. Revizuiește elementul selectat și generează analiza înainte de orice decizie.");
   }
 
   function saveReviewFields() {
@@ -563,7 +565,7 @@ export function CommercialInboxClient({
               <SignalPreparationPanel
                 signal={selectedSignal}
                 action={<Button
-                  onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Pregătirea AI este gata pentru revizuire și aprobare umană.")}
+                  onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza și acțiunea recomandată sunt pregătite. Verifică faptele, riscurile și termenul, apoi salvează revizuirea.")}
                   disabled={isPending || selectedSignal.status === "converted"}
                   loading={isPending}
                   size="small"

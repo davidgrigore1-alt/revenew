@@ -85,6 +85,7 @@ export function ApprovalCenterClient({
     organizationId: "", contactId: "", ownerProfileId: "", dueAt: "", recommendedAction: "", rejectionReason: ""
   });
   const [notice, setNotice] = useState("");
+  const [noticeHref, setNoticeHref] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -97,6 +98,7 @@ export function ApprovalCenterClient({
     setSelectedId(signal.id);
     setForm(formFor(signal));
     setNotice("");
+    setNoticeHref("");
     setError("");
   }
 
@@ -127,6 +129,7 @@ export function ApprovalCenterClient({
         return;
       }
       updateSignal(result.signal);
+      setNoticeHref(result.opportunityId ? `/opportunities/${result.opportunityId}` : selectedSignal.detectedFromOpportunityId ? `/opportunities/${selectedSignal.detectedFromOpportunityId}` : "/opportunities");
       setNotice(selectedSignal.detectedFromOpportunityId
         ? "Aprobarea a fost aplicată, iar acțiunea internă a fost creată în oportunitatea existentă."
         : "Aprobarea a fost aplicată, iar oportunitatea și prima acțiune internă au fost create.");
@@ -142,6 +145,7 @@ export function ApprovalCenterClient({
       return;
     }
     setNotice("");
+    setNoticeHref("");
     setError("");
     startTransition(async () => {
       const result = await setCommercialSignalReviewDecision(selectedSignal.id, "dismissed", reason);
@@ -175,7 +179,7 @@ export function ApprovalCenterClient({
       </Card>
 
       {error ? <AlertBanner tone="danger" title="Acțiunea nu a fost aplicată">{error}</AlertBanner> : null}
-      {notice ? <AlertBanner tone="success" title="Decizie înregistrată">{notice}</AlertBanner> : null}
+      {notice ? <AlertBanner tone="success" title="Decizie înregistrată"><span>{notice}</span>{noticeHref ? <Link href={noticeHref} className="focus-ring ml-2 inline-flex rounded font-semibold underline underline-offset-4">Revizuiește oportunitatea</Link> : null}</AlertBanner> : null}
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(19rem,0.78fr)_minmax(0,1.45fr)]">
         <Card as="section" padding="none" className="min-w-0 overflow-hidden" aria-labelledby="approval-list-title">
@@ -206,7 +210,15 @@ export function ApprovalCenterClient({
                 </button>
               ))}
             </div>
-          ) : <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu există aprobări pentru filtrul selectat.</p>}
+          ) : (
+            <div className="grid gap-4 p-5">
+              <div>
+                <h3 className="font-semibold">Nicio decizie în această vedere</h3>
+                <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Aici ajung recomandările pregătite din Inbox Comercial pentru o decizie umană auditabilă. Analizează și revizuiește un semnal înainte de aprobare.</p>
+              </div>
+              <div><Button href="/inbox" variant="secondary" size="small">Revizuiește semnalele</Button></div>
+            </div>
+          )}
         </Card>
 
         <Card as="section" padding="none" className="min-w-0 overflow-hidden" aria-labelledby="approval-detail-title">
@@ -247,7 +259,7 @@ export function ApprovalCenterClient({
                 <div id="approval-audit-trail" className="scroll-mt-24 border-t border-[rgb(var(--border))] pt-5"><h3 className="text-sm font-semibold">Istoric de audit</h3>{(selectedSignal.events ?? []).length > 0 ? <ol className="mt-3 grid gap-3">{(selectedSignal.events ?? []).slice(0, 8).map((event) => <li key={event.id} className="border-l-2 border-[rgb(var(--border-strong))] pl-3"><p className="text-sm font-medium">{event.description}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.createdAt)}</p></li>)}</ol> : <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Nu există evenimente disponibile pentru această decizie.</p>}</div>
               </div>
             </>
-          ) : <div className="p-5"><h2 id="approval-detail-title" className="font-semibold">Selectează o aprobare</h2><p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Detaliile, efectele și auditul vor apărea aici.</p></div>}
+          ) : <div className="p-5"><h2 id="approval-detail-title" className="font-semibold">Revizuirea începe din Inbox Comercial</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">După pregătirea și verificarea unui semnal, aici vei vedea faptele, recomandarea, înregistrările afectate și efectul exact al aprobării.</p><Button href="/inbox" variant="secondary" size="small" className="mt-4">Pregătește o acțiune</Button></div>}
         </Card>
       </div>
     </div>

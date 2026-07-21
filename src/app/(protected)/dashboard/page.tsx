@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { getCommercialResponseSummary } from "@/lib/commercial-response-summary";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
+import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 import type { OpportunityAttentionAssessment } from "@/lib/opportunity-attention";
 import type { RecoveryAction } from "@/lib/recovery";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
@@ -101,7 +102,7 @@ export default async function DashboardPage() {
     const reviewSignals = summary.signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
     const signalValueRon = activeSignals.filter((signal) => signal.currency === "RON").reduce((sum, signal) => sum + Number(signal.estimatedRecoverableValue ?? 0), 0);
     const totalEstimatedValueRon = summary.metrics.activePipelineValue + signalValueRon;
-    const hasUsefulData = totalEstimatedValueRon > 0 || summary.opportunities.length > 0 || activeSignals.length > 0 || summary.actions.length > 0;
+    const firstValueJourney = deriveFirstValueJourney(summary.signals);
     const urgentActionCount = summary.workQueue.overdue.length + summary.workQueue.dueToday.length;
     const attentionCount = summary.warnings.attention.length;
     const highRiskCount = summary.warnings.highValueAtRisk.length;
@@ -214,13 +215,13 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
-              <Button href="/opportunities/analyze">Adaugă oportunitate</Button>
+              <Button href={firstValueJourney.complete ? "/inbox" : firstValueJourney.nextHref}>{firstValueJourney.complete ? "Deschide Inbox Comercial" : firstValueJourney.nextAction}</Button>
               <Button href="/companies" variant="secondary">Vezi companiile</Button>
             </div>
           </div>
         </PremiumPanel>
 
-        {!hasUsefulData ? <FirstTimeGuide /> : null}
+        {!firstValueJourney.complete ? <FirstTimeGuide journey={firstValueJourney} /> : null}
 
         <section aria-label="Indicatori operaționali principali" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard label="Potențial urmărit · RON" value={formatCurrency(totalEstimatedValueRon, "RON")} detail={`${summary.activeOpportunities.length + activeSignals.length} înregistrări active cu valoare urmărită.`} methodology="Oportunități deschise plus semnale active în RON. Estimare activă; nu este venit confirmat." tone="brand" icon={<BanknotesIcon className="h-5 w-5" aria-hidden="true" />} />
@@ -233,7 +234,9 @@ export default async function DashboardPage() {
           <DashboardTable
             rows={attentionRows}
             columns={urgentColumns}
-            empty={compactEmpty("Nu există intervenții urgente", "Nu ai acțiuni scadente și nicio oportunitate activă nu este marcată pentru intervenție.", "/pipeline", "Verifică pipeline-ul")}
+            empty={summary.opportunities.length === 0
+              ? compactEmpty("Control Center așteaptă primul semnal", "Adaugă sau importă context comercial real. După analiză și aprobarea umană, oportunitatea și următoarea acțiune vor deveni vizibile aici.", "/inbox?create=1", "Adaugă primul semnal")
+              : compactEmpty("Nu există intervenții urgente", "Nu ai acțiuni scadente și nicio oportunitate activă nu este marcată pentru intervenție.", "/pipeline", "Verifică pipeline-ul")}
             mobileRender={(row) => (
               <PremiumPanel className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -281,7 +284,9 @@ export default async function DashboardPage() {
                     </li>
                   ))}
                 </ul>
-              ) : compactEmpty("Pipeline fără excepții active", "Nu există oportunități marcate pentru intervenție în datele accesibile.", "/opportunities", "Vezi oportunitățile")}
+              ) : summary.opportunities.length === 0
+                ? compactEmpty("Nicio oportunitate aprobată încă", "Oportunitățile apar după ce un semnal este analizat, revizuit și aprobat de un utilizator.", "/inbox", "Revizuiește semnalele")
+                : compactEmpty("Pipeline fără excepții active", "Nu există oportunități marcate pentru intervenție în datele accesibile.", "/opportunities", "Vezi oportunitățile")}
             </div>
           </DashboardSection>
 

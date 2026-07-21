@@ -7,7 +7,7 @@ import type { CommercialSignalSource } from "@/lib/types";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 
-export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string } }) {
+export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string; create?: string } }) {
   const [inbox, crm, assignableProfiles, opportunities] = await Promise.all([
     getCommercialSignalsForCurrentBusiness(),
     getCrmWorkspaceForCurrentBusiness(),
@@ -32,6 +32,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
         initialSource={!searchParams?.batch && searchParams?.source === "csv_import" ? "csv_import" as CommercialSignalSource : "all"}
         initialBatchId={searchParams?.batch}
         initialSignalId={searchParams?.signal}
+        initialCreateOpen={searchParams?.create === "1"}
       />
     </PageShell>
   );

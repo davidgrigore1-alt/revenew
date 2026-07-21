@@ -148,7 +148,9 @@ test("recovery queue is deterministic and overdue work precedes a lower-risk gap
 test("recovery queue empty state contains no fake metrics and populated rows expose operational fields", () => {
   const route = read("src/app/(protected)/recoverable/page.tsx");
   const loader = read("src/lib/revenue-workspace.ts");
-  assert.match(route, /Nu există oportunități de urmărit/);
+  assert.match(route, /Coada se construiește din semnale aprobate/);
+  assert.match(route, /href="\/inbox\?create=1"/);
+  assert.match(route, /href="\/inbox\/import"/);
   assert.match(route, /buildRevenueRecoveryQueue\(summary\.activeOpportunities\)/);
   assert.match(route, /Responsabil/);
   assert.match(route, /Următoarea acțiune/);

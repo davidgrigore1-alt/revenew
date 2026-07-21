@@ -1,54 +1,58 @@
-import Link from "next/link";
-import { ArrowRightIcon, CheckCircleIcon, ExclamationCircleIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { FirstTimeGuide } from "@/components/dashboard/FirstTimeGuide";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { DataCard } from "@/components/dashboard/DataCard";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
-import { getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
-import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
+import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
+import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 
 export const dynamic = "force-dynamic";
 
 export default async function ActivationPage({ searchParams }: { searchParams: { mode?: string } }) {
-  const [current, crm, opportunities] = await Promise.all([getCurrentBusinessForUser({ redirectIfMissing: true }), getCrmWorkspaceForCurrentBusiness(), getOpportunitiesForCurrentBusiness()]);
-  const organizations = crm.ready ? crm.organizations : [];
-  const contacts = crm.ready ? crm.contacts : [];
-  const hasOwnerState = opportunities.some((item) => Boolean(item.ownerProfileId));
-  const hasActionState = opportunities.some((item) => item.actions.some((action) => action.status === "pending"));
-  const reviewed = opportunities.some((item) => item.status !== "new");
-  const steps = [
-    { label: "Workspace configurat", complete: Boolean(current?.business.name), href: "/settings", action: "Verifică profilul" },
-    { label: "Context client verificat", complete: organizations.length > 0 || contacts.length > 0, href: "/companies", action: "Adaugă companie" },
-    { label: "Prima oportunitate", complete: opportunities.length > 0, href: "/opportunities/analyze", action: "Creează oportunitate" },
-    { label: "Owner și next action stabilite", complete: hasOwnerState && hasActionState, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/opportunities", action: hasOwnerState ? "Programează acțiunea" : "Stabilește responsabilul" },
-    { label: "Oportunitate revizuită", complete: reviewed, href: opportunities[0] ? `/opportunities/${opportunities[0].id}` : "/dashboard", action: "Revizuiește rezultatul" }
-  ];
-  const completed = steps.filter((step) => step.complete).length;
-  const nextStep = steps.find((step) => !step.complete) ?? { label: "Fluxul de lucru este activ", complete: true, href: "/dashboard", action: "Deschide Control Center" };
-  const firstOpportunity = opportunities[0];
+  const [current, inbox] = await Promise.all([
+    getCurrentBusinessForUser({ redirectIfMissing: true }),
+    getCommercialSignalsForCurrentBusiness()
+  ]);
+  const journey = deriveFirstValueJourney(inbox.signals);
 
-  return <PageShell eyebrow="Activare" title="Transformă primele date într-o acțiune comercială clară" description="Adaugă sau importă contextul unei oportunități. ReveNew îl organizează pentru revizuire — fără mesaje trimise automat.">
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.65fr)]">
-      <div className="grid content-start gap-6">
-        <section className="overflow-hidden rounded-panel border border-[rgb(var(--primary)/0.32)] bg-[linear-gradient(135deg,rgb(var(--surface-elevated)),rgb(var(--primary)/0.08))] p-6 shadow-card sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Următorul pas recomandat</p>
-          <h2 className="mt-3 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{nextStep.label}</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">Completează acest reper pentru ca următoarea oportunitate să aibă context, responsabilitate și un pas următor verificabil.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={nextStep.href} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-button bg-[rgb(var(--primary))] px-5 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition hover:bg-[rgb(var(--primary-hover))]">{nextStep.action}<ArrowRightIcon className="size-4" aria-hidden="true" /></Link>
-            {searchParams.mode !== "import" ? <Link href="/opportunities/import" className="focus-ring inline-flex min-h-11 items-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-5 text-sm font-semibold hover:border-[rgb(var(--border-strong))]">Importă un CSV</Link> : null}
-          </div>
-        </section>
+  return (
+    <PageShell
+      eyebrow="Activare"
+      title={journey.complete ? "Primul flux comercial este pregătit" : `Transformă primul semnal într-o decizie pentru ${current?.business.name ?? "workspace"}`}
+      description="Începe cu o cerere, un follow-up ratat sau un lead rămas fără răspuns. ReveNew explică riscul și pregătește următorul pas, iar echipa păstrează controlul."
+      actions={<Button href="/dashboard" variant="secondary">Deschide Control Center</Button>}
+    >
+      <div className="grid gap-6">
+        <FirstTimeGuide journey={journey} />
 
-        {searchParams.mode === "import" ? <section className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5"><h2 className="font-semibold">Importul controlat este pregătit</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Încarcă datele, verifică maparea și previzualizarea, apoi confirmă explicit importul.</p><Link href="/opportunities/import" className="focus-ring mt-4 inline-flex min-h-10 items-center rounded-button bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))]">Deschide importul CSV</Link></section> : null}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
+          <Card as="section" padding="default" aria-labelledby="activation-input-title">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Date de pornire</p>
+            <h2 id="activation-input-title" className="mt-2 text-section-title font-semibold">Alege sursa reală pe care o ai acum</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">
+              Poți introduce un singur semnal manual sau importa mai multe înregistrări. Ambele variante ajung în același Inbox Comercial și necesită revizuire.
+            </p>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Button href="/inbox?create=1">Adaugă primul semnal <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+              <Button href="/inbox/import" variant="secondary">Importă semnale comerciale</Button>
+            </div>
+            {searchParams.mode === "import" ? <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Ai ales importul la configurare. Vei verifica maparea și previzualizarea înainte ca datele să fie scrise.</p> : null}
+          </Card>
 
-        {firstOpportunity ? <DataCard title="Prima oportunitate este vizibilă" description="Un exemplu real din spațiul tău de lucru, gata pentru continuare."><div className="flex flex-col gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{firstOpportunity.title}</p><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Verifică responsabilul, următoarea acțiune și termenul.</p></div><Link href={`/opportunities/${firstOpportunity.id}`} className="focus-ring inline-flex min-h-10 shrink-0 items-center text-sm font-semibold text-[rgb(var(--primary))]">Continuă oportunitatea <ArrowRightIcon className="ml-2 size-4" /></Link></div></DataCard> : <DataCard title="Ce vei obține" description="După primul import sau prima creare manuală."><div className="grid gap-3 sm:grid-cols-3">{["Prioritate explicată", "Responsabil vizibil", "Următor pas cu termen"].map((item) => <div key={item} className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 text-sm font-medium">{item}</div>)}</div></DataCard>}
+          <Card as="aside" variant="subtle" padding="default" aria-labelledby="activation-control-title">
+            <div className="flex items-center gap-2">
+              <ShieldCheckIcon className="h-5 w-5 text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]" aria-hidden="true" />
+              <h2 id="activation-control-title" className="font-semibold">Control uman, de la început</h2>
+            </div>
+            <ul className="mt-4 grid gap-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
+              <li>• Faptele și recomandările sunt prezentate separat.</li>
+              <li>• Valorile rămân estimări până la confirmarea unui rezultat.</li>
+              <li>• Nicio comunicare externă nu este trimisă automat.</li>
+            </ul>
+          </Card>
+        </div>
       </div>
-
-      <aside className="grid content-start gap-4 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Progres de activare</p><p className="mt-2 text-2xl font-semibold">{completed}/{steps.length}</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]" aria-label={`${completed} din ${steps.length} repere completate`}><div className="h-full bg-[rgb(var(--primary))]" style={{ width: `${Math.round((completed / steps.length) * 100)}%` }} /></div></div>
-        <ol className="grid gap-1">{steps.map((step) => <li key={step.label}><Link href={step.href} className="focus-ring flex min-h-11 items-center gap-3 rounded-control px-2 text-sm transition hover:bg-[rgb(var(--surface-subtle))]"><span className="shrink-0">{step.complete ? <CheckCircleIcon className="size-5 text-[rgb(var(--success-text))]" aria-label="Completat" /> : <ExclamationCircleIcon className="size-5 text-[rgb(var(--warning-text))]" aria-label="Necesită atenție" />}</span><span className={step.complete ? "text-[rgb(var(--text-muted))]" : "font-medium"}>{step.label}</span></Link></li>)}</ol>
-        <div className="border-t border-[rgb(var(--border))] pt-4"><div className="flex items-center gap-2 font-semibold"><ShieldCheckIcon className="size-5 text-[rgb(var(--primary))]" />Controlul rămâne la echipă</div><p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">ReveNew recomandă și organizează. Nicio acțiune externă nu este trimisă fără o decizie umană.</p></div>
-      </aside>
-    </div>
-  </PageShell>;
+    </PageShell>
+  );
 }

@@ -71,9 +71,9 @@ export default async function RecoverablePage() {
           {queue.length === 0 ? (
             <div className="p-5">
               <EmptyState
-                title="Nu există oportunități de urmărit"
-                description="Adaugă o companie și prima oportunitate pentru ca ReveNew să îți arate ce riscă să se piardă. Nu sunt afișate valori sau riscuri inventate."
-                actions={<><Button href="/opportunities/analyze">Adaugă oportunitate</Button><Button href="/companies" variant="secondary">Adaugă companie</Button></>}
+                title="Coada se construiește din semnale aprobate"
+                description="Aici apar oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune. Adaugă un semnal în Inbox Comercial, verifică analiza și aprobă conversia; ReveNew nu inventează riscuri sau valori pentru un workspace gol."
+                actions={<><Button href="/inbox?create=1">Adaugă primul semnal</Button><Button href="/inbox/import" variant="secondary">Importă semnale comerciale</Button></>}
               />
             </div>
           ) : (
