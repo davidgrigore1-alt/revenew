@@ -10,7 +10,6 @@ import {
 import { ActivityFeed, type ActivityFeedItem } from "@/components/dashboard/ActivityFeed";
 import { AttentionSummary } from "@/components/dashboard/AttentionSummary";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
-import { DashboardTable, type DashboardTableColumn } from "@/components/dashboard/DashboardTable";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { FirstTimeGuide } from "@/components/dashboard/FirstTimeGuide";
@@ -18,29 +17,19 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PremiumPanel } from "@/components/dashboard/PremiumPanel";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { Badge } from "@/components/ui/Badge";
+import { WorkspaceDecisionQueue } from "@/components/dashboard/WorkspaceDecisionQueue";
 import { Button } from "@/components/ui/Button";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { getCommercialResponseSummary } from "@/lib/commercial-response-summary";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import { deriveFirstValueJourney } from "@/lib/first-value-journey";
-import type { OpportunityAttentionAssessment } from "@/lib/opportunity-attention";
-import type { RecoveryAction } from "@/lib/recovery";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
 
 export const dynamic = "force-dynamic";
-
-type AttentionRow = {
-  id: string;
-  opportunity: Opportunity;
-  reason: string;
-  reasonTone: "warning" | "danger";
-  nextAction: string;
-  dueLabel: string;
-};
 
 function operatingDate(value: string) {
   return new Intl.DateTimeFormat("ro-RO", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${value}T12:00:00`));
@@ -53,30 +42,6 @@ function activityDate(value?: string) {
 
 function companyForOpportunity(opportunity: Opportunity) {
   return opportunity.contact?.company ?? opportunity.contacts?.[0]?.contact.organization?.name ?? "Companie neconfirmată";
-}
-
-function rowFromAction(action: RecoveryAction, opportunity: Opportunity | undefined, overdue: boolean): AttentionRow | null {
-  if (!opportunity) return null;
-  return {
-    id: `action-${action.id}`,
-    opportunity,
-    reason: overdue ? "Acțiune restantă" : "Scadentă astăzi",
-    reasonTone: overdue ? "danger" : "warning",
-    nextAction: action.title,
-    dueLabel: formatDate(action.dueAt)
-  };
-}
-
-function rowFromAssessment(opportunity: Opportunity, assessment: OpportunityAttentionAssessment): AttentionRow {
-  const primaryReason = assessment.reasons[0];
-  return {
-    id: `attention-${opportunity.id}`,
-    opportunity,
-    reason: primaryReason?.label ?? "Necesită verificare",
-    reasonTone: assessment.state === "at_risk" || assessment.state === "blocked" || primaryReason?.severity === "high" ? "danger" : "warning",
-    nextAction: assessment.primaryNextAction?.title ?? "Setează următoarea acțiune",
-    dueLabel: assessment.primaryNextAction?.dueDate ? formatDate(assessment.primaryNextAction.dueDate) : primaryReason?.label ?? "Fără termen"
-  };
 }
 
 function compactEmpty(title: string, description: string, href?: string, actionLabel?: string) {
@@ -107,66 +72,11 @@ export default async function DashboardPage() {
     const attentionCount = summary.warnings.attention.length;
     const highRiskCount = summary.warnings.highValueAtRisk.length;
     const opportunityById = new Map(summary.opportunities.map((opportunity) => [opportunity.id, opportunity]));
-
-    const actionRows = [
-      ...summary.workQueue.overdue.map((action) => rowFromAction(action, action.opportunityId ? opportunityById.get(action.opportunityId) : undefined, true)),
-      ...summary.workQueue.dueToday.map((action) => rowFromAction(action, action.opportunityId ? opportunityById.get(action.opportunityId) : undefined, false))
-    ].filter((row): row is AttentionRow => Boolean(row));
-    const actionOpportunityIds = new Set(actionRows.map((row) => row.opportunity.id));
-    const attentionRows = [
-      ...actionRows,
-      ...summary.warnings.attention
-        .filter(({ opportunity }) => !actionOpportunityIds.has(opportunity.id))
-        .map(({ opportunity, assessment }) => rowFromAssessment(opportunity, assessment))
-    ].slice(0, 8);
+    const decisionQueue = buildWorkspaceDecisionQueue({ opportunities: summary.opportunities, signals: summary.signals });
 
     const brief = urgentActionCount > 0 || attentionCount > 0
       ? `Ai ${urgentActionCount} ${urgentActionCount === 1 ? "acțiune scadentă" : "acțiuni scadente"} și ${attentionCount} ${attentionCount === 1 ? "oportunitate care necesită intervenție" : "oportunități care necesită intervenție"}. Clarifică responsabilitatea și următorul pas înainte de a extinde pipeline-ul.`
       : "Nu există intervenții urgente în datele disponibile. Folosește această fereastră pentru a confirma responsabilii și următoarele acțiuni din pipeline.";
-
-    const urgentColumns: DashboardTableColumn<AttentionRow>[] = [
-      {
-        key: "opportunity",
-        label: "Oportunitate",
-        className: "w-[25%]",
-        render: (row) => (
-          <div className="min-w-0">
-            <Link href={`/opportunities/${row.opportunity.id}`} className="focus-ring rounded font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{row.opportunity.title}</Link>
-            <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{companyForOpportunity(row.opportunity)}</p>
-          </div>
-        )
-      },
-      {
-        key: "value",
-        label: "Valoare",
-        className: "w-[13%]",
-        render: (row) => <span className="whitespace-nowrap font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(row.opportunity.estimatedValueHigh, row.opportunity.currency ?? "RON")}</span>
-      },
-      {
-        key: "attention",
-        label: "Atenție",
-        className: "w-[16%]",
-        render: (row) => <Badge tone={row.reasonTone}>{row.reason}</Badge>
-      },
-      {
-        key: "owner",
-        label: "Responsabil",
-        className: "w-[13%]",
-        render: (row) => <span className="text-[rgb(var(--text-secondary))]">{row.opportunity.ownerName ?? "Neatribuit"}</span>
-      },
-      {
-        key: "next",
-        label: "Următorul pas",
-        className: "w-[21%]",
-        render: (row) => <div><p className="line-clamp-2 text-[rgb(var(--text-secondary))]">{row.nextAction}</p><p className="mt-1 text-xs text-[rgb(var(--text-faint))]">{row.dueLabel}</p></div>
-      },
-      {
-        key: "open",
-        label: "",
-        className: "w-[12%] text-right",
-        render: (row) => <Link href={`/opportunities/${row.opportunity.id}`} className="focus-ring inline-flex min-h-10 items-center gap-1 rounded-button px-2 text-sm font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--surface-muted))]">Deschide <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
-      }
-    ];
 
     const activityItems: ActivityFeedItem[] = summary.events.slice(0, 7).map((event) => ({
       id: event.id,
@@ -217,9 +127,12 @@ export default async function DashboardPage() {
             <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
               <Button href={firstValueJourney.complete ? "/inbox" : firstValueJourney.nextHref}>{firstValueJourney.complete ? "Deschide Inbox Comercial" : firstValueJourney.nextAction}</Button>
               <Button href="/companies" variant="secondary">Vezi companiile</Button>
+              <Button href="/recoverable" variant="secondary">Vezi coada de recuperare</Button>
             </div>
           </div>
         </PremiumPanel>
+
+        <WorkspaceDecisionQueue queue={decisionQueue} />
 
         {!firstValueJourney.complete ? <FirstTimeGuide journey={firstValueJourney} /> : null}
 
@@ -229,33 +142,6 @@ export default async function DashboardPage() {
           <KpiCard label="Scadente azi / restante" value={`${summary.workQueue.dueToday.length} / ${summary.workQueue.overdue.length}`} detail="Acțiuni atribuite utilizatorului curent, separate după termen." tone={summary.workQueue.overdue.length > 0 ? "danger" : urgentActionCount > 0 ? "warning" : "neutral"} icon={<CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />} />
           <KpiCard label="Risc operațional" value={String(attentionCount)} detail={`${highRiskCount} oportunități sunt evaluate cu risc ridicat.`} tone={highRiskCount > 0 ? "danger" : attentionCount > 0 ? "warning" : "neutral"} icon={<ExclamationTriangleIcon className="h-5 w-5" aria-hidden="true" />} />
         </section>
-
-        <DashboardSection eyebrow="Prioritatea zilei" title="Ce necesită atenție acum" description="Acțiunile scadente au prioritate, urmate de oportunitățile fără responsabil, contact sau următor pas." action={<Button href="/recoverable" variant="ghost" size="small">Vezi coada de recuperare <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
-          <DashboardTable
-            rows={attentionRows}
-            columns={urgentColumns}
-            empty={summary.opportunities.length === 0
-              ? compactEmpty("Control Center așteaptă primul semnal", "Adaugă sau importă context comercial real. După analiză și aprobarea umană, oportunitatea și următoarea acțiune vor deveni vizibile aici.", "/inbox?create=1", "Adaugă primul semnal")
-              : compactEmpty("Nu există intervenții urgente", "Nu ai acțiuni scadente și nicio oportunitate activă nu este marcată pentru intervenție.", "/pipeline", "Verifică pipeline-ul")}
-            mobileRender={(row) => (
-              <PremiumPanel className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Link href={`/opportunities/${row.opportunity.id}`} className="focus-ring rounded font-semibold text-[rgb(var(--foreground))]">{row.opportunity.title}</Link>
-                    <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{companyForOpportunity(row.opportunity)}</p>
-                  </div>
-                  <Badge tone={row.reasonTone}>{row.reason}</Badge>
-                </div>
-                <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                  <div><dt className="text-[rgb(var(--text-faint))]">Valoare</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatCurrency(row.opportunity.estimatedValueHigh, row.opportunity.currency ?? "RON")}</dd></div>
-                  <div><dt className="text-[rgb(var(--text-faint))]">Responsabil</dt><dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{row.opportunity.ownerName ?? "Neatribuit"}</dd></div>
-                  <div className="col-span-2"><dt className="text-[rgb(var(--text-faint))]">Următorul pas</dt><dd className="mt-1 text-sm text-[rgb(var(--text-secondary))]">{row.nextAction} · {row.dueLabel}</dd></div>
-                </dl>
-                <Button href={`/opportunities/${row.opportunity.id}`} variant="secondary" size="small" className="mt-4 w-full">Continuă workflow-ul</Button>
-              </PremiumPanel>
-            )}
-          />
-        </DashboardSection>
 
         <div className="grid gap-8 xl:grid-cols-12">
           <DashboardSection className="xl:col-span-8" title="Oportunități urgente și stale" description="Listă ordonată determinist după severitate, valoare și ultima schimbare." action={<Button href="/opportunities" variant="ghost" size="small">Toate oportunitățile <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
