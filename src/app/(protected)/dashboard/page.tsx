@@ -8,6 +8,7 @@ import {
   UserCircleIcon
 } from "@heroicons/react/24/outline";
 import { ActivityFeed, type ActivityFeedItem } from "@/components/dashboard/ActivityFeed";
+import { AiBusinessAnalyst } from "@/components/dashboard/AiBusinessAnalyst";
 import { AttentionSummary } from "@/components/dashboard/AttentionSummary";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
@@ -105,6 +106,8 @@ export default async function DashboardPage() {
         <ExecutiveMorningBrief brief={morningBrief} />
 
         <WorkspaceDecisionQueue queue={decisionQueue} />
+
+        <AiBusinessAnalyst />
 
         {!firstValueJourney.complete ? <FirstTimeGuide journey={firstValueJourney} /> : null}
 
