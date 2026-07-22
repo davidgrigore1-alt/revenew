@@ -4,6 +4,14 @@ import { approvalCenterSignals } from "@/lib/approval-center";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { getCommercialSignalsForOrganization } from "@/lib/commercial-inbox";
 import { isOpenOpportunity, selectPrimaryNextAction } from "@/lib/opportunity-domain";
+import {
+  buildExecutiveDecisionSnapshot,
+  discoverCompanyOpportunities,
+  whyItMattersForIssue,
+  type DiscoveryIssueCode,
+  type ExecutiveDecisionSnapshot,
+  type OpportunityDiscoveryCandidate
+} from "@/lib/opportunity-discovery";
 import { recommendationFeedbackForSignal, type RecommendationFeedback } from "@/lib/recommendation-feedback";
 import { buildRevenueRecoveryQueue } from "@/lib/revenue-recovery-queue";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,14 +52,7 @@ export type CompanyAttentionSeverity = "critical" | "high" | "medium" | "low";
 
 export type CompanyAttentionItem = {
   id: string;
-  code:
-    | "overdue_next_action"
-    | "missing_owner"
-    | "missing_next_action"
-    | "high_priority_signal"
-    | "pending_approval"
-    | "inactive_company"
-    | "missing_primary_contact";
+  code: DiscoveryIssueCode;
   severity: CompanyAttentionSeverity;
   title: string;
   description: string;
@@ -66,6 +67,7 @@ export type CompanyMemoryItem = {
   type: "open_loop" | "safe_action" | "meaningful_activity";
   title: string;
   description: string;
+  whyItMatters?: string;
   actionLabel: string;
   href?: string;
   occurredAt: string | null;
@@ -162,6 +164,8 @@ export type CompanyIntelligenceSnapshot = {
   signals: CommercialSignal[];
   approvalItems: Array<{ signalId: string; title: string; href: string; evidence: CompanyEvidence }>;
   recommendationFeedback: Array<{ signalId: string; title: string; feedback: RecommendationFeedback; evidence: CompanyEvidence }>;
+  executiveDecision: ExecutiveDecisionSnapshot;
+  discoveryCandidates: OpportunityDiscoveryCandidate[];
   memory: CompanyBusinessMemory;
   attention: CompanyAttentionItem[];
   knowledgeGaps: CompanyKnowledgeGap[];
@@ -385,6 +389,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     type: "open_loop",
     title: item.title,
     description: item.description,
+    whyItMatters: whyItMattersForIssue(item.code),
     actionLabel: item.actionLabel,
     href: item.href,
     occurredAt: item.occurredAt,
@@ -417,11 +422,12 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     }
   }
 
-  const openLoops: CompanyMemoryItem[] = deduplicatedAttention.slice(promotedAttention.length, promotedAttention.length + 4).map((item) => ({
+  const openLoops: CompanyMemoryItem[] = deduplicatedAttention.slice(promotedAttention.length, promotedAttention.length + 3).map((item) => ({
     id: `memory:loop:${item.id}`,
     type: "open_loop",
     title: item.title,
     description: item.description,
+    whyItMatters: whyItMattersForIssue(item.code),
     actionLabel: item.actionLabel,
     href: item.href,
     occurredAt: item.occurredAt,
@@ -429,8 +435,14 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     evidence: item.evidence
   }));
   const allVisibleEvidence = new Set([...mustRemember, ...openLoops].map((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}`));
-  const recentEvidence = timeline.filter((item) => !allVisibleEvidence.has(`${item.evidence.sourceType}:${item.evidence.sourceId}`)).slice(0, 4);
+  const recentEvidence = timeline.filter((item) => !allVisibleEvidence.has(`${item.evidence.sourceType}:${item.evidence.sourceId}`)).slice(0, 3);
   const criticalGaps = knowledgeGaps.filter((gap) => gap.code !== "missing_domain").slice(0, 4);
+  const discoveryCandidates = discoverCompanyOpportunities({
+    organizationId: input.organization.id,
+    attention: deduplicatedAttention,
+    opportunities: input.opportunities
+  }, { limit: 5 });
+  const executiveDecision = buildExecutiveDecisionSnapshot({ candidates: discoveryCandidates, organizationHref, organizationEvidence });
 
   const contactRelationships = input.contacts.map((contact) => {
     const associations = input.opportunities.flatMap((opportunity) => (opportunity.contacts ?? []).filter((association) => association.contactId === contact.id));
@@ -447,6 +459,8 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     signals: input.signals,
     approvalItems: pendingApprovals.map(({ signal }) => ({ signalId: signal.id, title: signal.title, href: `/approvals?signal=${signal.id}`, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, `/approvals?signal=${signal.id}`) })),
     recommendationFeedback: input.signals.map((signal) => ({ signalId: signal.id, title: signal.title, feedback: recommendationFeedbackForSignal(signal), evidence: evidence("recommendation_feedback", signal.id, recommendationFeedbackForSignal(signal).decidedAt ?? signal.updatedAt ?? signal.createdAt, `Feedback pentru recomandarea „${signal.title}”`, `/inbox?signal=${signal.id}`) })).filter((item) => item.feedback.state !== "pending_review").sort((left, right) => String(right.evidence.sourceTimestamp ?? "").localeCompare(String(left.evidence.sourceTimestamp ?? ""))),
+    executiveDecision,
+    discoveryCandidates,
     memory: { mustRemember, openLoops, recentEvidence, criticalGaps },
     attention: deduplicatedAttention,
     knowledgeGaps,
@@ -464,7 +478,7 @@ function mapAction(row: Row): OpportunityAction {
 }
 
 function mapDocument(row: Row): OpportunityDocument {
-  return { id: String(row.id), type: row.document_type as OpportunityDocument["type"], title: String(row.title ?? "Document comercial"), status: (row.status ?? "draft") as OpportunityDocument["status"], createdAt: stringValue(row, "created_at") ?? undefined, editedAt: stringValue(row, "edited_at") ?? undefined, readyAt: stringValue(row, "ready_at") ?? undefined, sentAt: stringValue(row, "sent_at") ?? undefined };
+  return { id: String(row.id), type: row.document_type as OpportunityDocument["type"], title: String(row.title ?? "Document comercial"), status: (row.status ?? "draft") as OpportunityDocument["status"], sendStatus: (stringValue(row, "send_status") ?? "not_sent") as OpportunityDocument["sendStatus"], createdAt: stringValue(row, "created_at") ?? undefined, editedAt: stringValue(row, "edited_at") ?? undefined, readyAt: stringValue(row, "ready_at") ?? undefined, sentAt: stringValue(row, "sent_at") ?? undefined };
 }
 
 function mapEvent(row: Row): OpportunityEvent {
@@ -525,7 +539,7 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
 
   const [actionsResult, documentsResult, eventsResult, associationsResult, ownersResult] = await Promise.all([
     supabase.from("opportunity_actions").select("id,business_id,opportunity_id,type,title,description,status,due_at,priority,assigned_to_profile_id,created_at,updated_at,completed_at,cancelled_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("due_at", { ascending: true, nullsFirst: false }).limit(500),
-    supabase.from("opportunity_documents").select("id,business_id,opportunity_id,document_type,title,status,created_at,edited_at,ready_at,sent_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("created_at", { ascending: false }).limit(300),
+    supabase.from("opportunity_documents").select("id,business_id,opportunity_id,document_type,title,status,send_status,created_at,edited_at,ready_at,sent_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("created_at", { ascending: false }).limit(300),
     supabase.from("opportunity_events").select("id,business_id,opportunity_id,event_type,label,description,occurred_at,created_at,actor_profile_id,metadata").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("occurred_at", { ascending: false }).limit(500),
     supabase.from("opportunity_contacts").select("id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,notes,created_at,updated_at)").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("is_primary", { ascending: false }).limit(300),
     supabase.rpc("business_assignable_profiles", { target_business_id: businessId })

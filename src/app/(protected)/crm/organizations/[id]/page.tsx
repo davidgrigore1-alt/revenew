@@ -82,7 +82,7 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           </div>
         </Card>
 
-        <CompanyBusinessMemory memory={snapshot.memory} />
+        <CompanyBusinessMemory memory={snapshot.memory} executiveDecision={snapshot.executiveDecision} discoveryCandidates={snapshot.discoveryCandidates} />
 
         <Card as="section" variant="subtle" padding="default">
           <SectionHeader
