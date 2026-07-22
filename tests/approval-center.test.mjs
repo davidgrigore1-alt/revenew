@@ -90,7 +90,7 @@ test("approval center introduces no external-send or privileged browser path", (
 
 test("required contextual surfaces link pending work into the approval center", () => {
   const inbox = read("src/app/(protected)/inbox/page.tsx");
-  const company = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const company = read("src/app/(protected)/crm/organizations/[id]/page.tsx") + read("src/components/company/CompanyBusinessMemory.tsx") + read("src/lib/company-intelligence.ts");
   const opportunity = read("src/app/(protected)/opportunities/[id]/page.tsx");
   const recovery = read("src/app/(protected)/recoverable/page.tsx");
   for (const source of [inbox, company, opportunity, recovery]) assert.match(source, /\/approvals/);

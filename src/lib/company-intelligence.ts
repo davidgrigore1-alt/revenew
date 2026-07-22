@@ -55,9 +55,29 @@ export type CompanyAttentionItem = {
   severity: CompanyAttentionSeverity;
   title: string;
   description: string;
+  actionLabel: string;
   href: string;
   occurredAt: string | null;
   evidence: CompanyEvidence;
+};
+
+export type CompanyMemoryItem = {
+  id: string;
+  type: "open_loop" | "safe_action" | "meaningful_activity";
+  title: string;
+  description: string;
+  actionLabel: string;
+  href?: string;
+  occurredAt: string | null;
+  severity?: CompanyAttentionSeverity;
+  evidence: CompanyEvidence;
+};
+
+export type CompanyBusinessMemory = {
+  mustRemember: CompanyMemoryItem[];
+  openLoops: CompanyMemoryItem[];
+  recentEvidence: CompanyTimelineItem[];
+  criticalGaps: CompanyKnowledgeGap[];
 };
 
 export type CompanyTimelineItem = {
@@ -142,6 +162,7 @@ export type CompanyIntelligenceSnapshot = {
   signals: CommercialSignal[];
   approvalItems: Array<{ signalId: string; title: string; href: string; evidence: CompanyEvidence }>;
   recommendationFeedback: Array<{ signalId: string; title: string; feedback: RecommendationFeedback; evidence: CompanyEvidence }>;
+  memory: CompanyBusinessMemory;
   attention: CompanyAttentionItem[];
   knowledgeGaps: CompanyKnowledgeGap[];
   timeline: CompanyTimelineItem[];
@@ -150,6 +171,15 @@ export type CompanyIntelligenceSnapshot = {
 const DAY_MS = 86_400_000;
 const INACTIVITY_DAYS = 30;
 const severityRank: Record<CompanyAttentionSeverity, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+const attentionBusinessRank: Record<CompanyAttentionItem["code"], number> = {
+  overdue_next_action: 7,
+  pending_approval: 6,
+  high_priority_signal: 5,
+  missing_owner: 4,
+  missing_next_action: 4,
+  missing_primary_contact: 3,
+  inactive_company: 2
+};
 const unresolvedSignalStatuses = new Set(["new", "analyzing", "ready_for_review", "approved", "postponed", "reviewed", "failed"]);
 
 function evidence(sourceType: CompanyEvidenceSource, sourceId: string, sourceTimestamp: string | null | undefined, label: string, href?: string): CompanyEvidence {
@@ -295,32 +325,33 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     const href = `/opportunities/${opportunity.id}`;
     const nextAction = selectPrimaryNextAction(opportunity.actions);
     if (nextAction?.status === "pending" && nextAction.dueDate && nextAction.dueDate < now.toISOString()) {
-      attention.push({ id: `overdue:${nextAction.id}`, code: "overdue_next_action", severity: "critical", title: "Acțiune următoare restantă", description: `${nextAction.title} este scadentă din ${nextAction.dueDate.slice(0, 10)}.`, href: `${href}#workflow-actions`, occurredAt: nextAction.dueDate, evidence: evidence("opportunity_action", nextAction.id, nextAction.dueDate, `Acțiunea restantă „${nextAction.title}”`, `${href}#workflow-actions`) });
+      attention.push({ id: `overdue:${nextAction.id}`, code: "overdue_next_action", severity: "critical", title: "Follow-up întârziat", description: `${nextAction.title} este scadentă din ${nextAction.dueDate.slice(0, 10)}.`, actionLabel: "Revizuiește oportunitatea", href: `${href}#workflow-actions`, occurredAt: nextAction.dueDate, evidence: evidence("opportunity_action", nextAction.id, nextAction.dueDate, `Acțiunea restantă „${nextAction.title}”`, `${href}#workflow-actions`) });
     }
     if (!opportunity.ownerProfileId) {
-      attention.push({ id: `owner:${opportunity.id}`, code: "missing_owner", severity: "high", title: "Oportunitate fără responsabil", description: `„${opportunity.title}” nu are un responsabil confirmat.`, href, occurredAt: opportunity.updatedAt ?? opportunity.createdAt ?? null, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, href) });
+      attention.push({ id: `owner:${opportunity.id}`, code: "missing_owner", severity: "high", title: "Oportunitate fără responsabil", description: `„${opportunity.title}” nu are un responsabil confirmat.`, actionLabel: "Atribuie responsabil", href, occurredAt: opportunity.updatedAt ?? opportunity.createdAt ?? null, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, href) });
     }
     if (!nextAction) {
-      attention.push({ id: `next-action:${opportunity.id}`, code: "missing_next_action", severity: "high", title: "Lipsește acțiunea următoare", description: `„${opportunity.title}” nu are un pas următor programat.`, href: `${href}#workflow-actions`, occurredAt: opportunity.updatedAt ?? opportunity.createdAt ?? null, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, `${href}#workflow-actions`) });
+      attention.push({ id: `next-action:${opportunity.id}`, code: "missing_next_action", severity: "high", title: "Oportunitate fără acțiune următoare", description: `„${opportunity.title}” nu are un pas următor programat.`, actionLabel: "Completează următoarea acțiune", href: `${href}#workflow-actions`, occurredAt: opportunity.updatedAt ?? opportunity.createdAt ?? null, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, `${href}#workflow-actions`) });
     }
   }
   for (const signal of unresolvedSignals.filter((item) => item.priority === "urgent" || item.priority === "high" || item.urgencyLevel === "critical" || item.urgencyLevel === "high")) {
     const href = `/inbox?signal=${signal.id}`;
-    attention.push({ id: `signal:${signal.id}`, code: "high_priority_signal", severity: signal.priority === "urgent" || signal.urgencyLevel === "critical" ? "critical" : "high", title: "Semnal comercial prioritar nerezolvat", description: signal.primaryRecoveryReason || signal.title, href, occurredAt: signal.updatedAt ?? signal.createdAt ?? signal.occurredAt ?? null, evidence: evidence("commercial_signal", signal.id, signal.updatedAt ?? signal.createdAt ?? signal.occurredAt, `Semnalul „${signal.title}”`, href) });
+    attention.push({ id: `signal:${signal.id}`, code: "high_priority_signal", severity: signal.priority === "urgent" || signal.urgencyLevel === "critical" ? "critical" : "high", title: "Semnal comercial nerezolvat", description: signal.primaryRecoveryReason || signal.title, actionLabel: "Deschide semnalul", href, occurredAt: signal.updatedAt ?? signal.createdAt ?? signal.occurredAt ?? null, evidence: evidence("commercial_signal", signal.id, signal.updatedAt ?? signal.createdAt ?? signal.occurredAt, `Semnalul „${signal.title}”`, href) });
   }
   for (const { signal } of pendingApprovals) {
     const href = `/approvals?signal=${signal.id}`;
-    attention.push({ id: `approval:${signal.id}`, code: "pending_approval", severity: "high", title: "Decizie umană în așteptare", description: `„${signal.title}” este pregătit pentru revizuire și aprobare.`, href, occurredAt: signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt ?? null, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, href) });
+    attention.push({ id: `approval:${signal.id}`, code: "pending_approval", severity: "high", title: "Aprobare în așteptare", description: `„${signal.title}” este pregătit pentru revizuire și aprobare.`, actionLabel: "Verifică aprobarea", href, occurredAt: signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt ?? null, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, href) });
   }
   if (!primaryContact) {
-    attention.push({ id: `primary-contact:${input.organization.id}`, code: "missing_primary_contact", severity: "medium", title: "Contact principal neconfirmat", description: "Compania nu are o persoană principală confirmată pentru continuitatea relației.", href: "/contacts", occurredAt: input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
+    attention.push({ id: `primary-contact:${input.organization.id}`, code: "missing_primary_contact", severity: "medium", title: "Nu există contact principal", description: "Compania nu are o persoană principală confirmată pentru continuitatea relației.", actionLabel: "Adaugă contact principal", href: "/contacts", occurredAt: input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
   }
   if (inactivityDays === null || inactivityDays > INACTIVITY_DAYS) {
-    attention.push({ id: `inactive:${input.organization.id}`, code: "inactive_company", severity: "medium", title: "Activitate comercială insuficient de recentă", description: inactivityDays === null ? "Nu există activitate comercială datată pentru această companie." : `Ultima activitate comercială este de acum ${inactivityDays} zile.`, href: organizationHref, occurredAt: latestActivity?.occurredAt ?? input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: latestActivity?.evidence ?? evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
+    attention.push({ id: `inactive:${input.organization.id}`, code: "inactive_company", severity: "medium", title: "Activitate comercială întârziată", description: inactivityDays === null ? "Nu există activitate comercială datată pentru această companie." : `Ultima activitate comercială este de acum ${inactivityDays} zile.`, actionLabel: "Revizuiește compania", href: organizationHref, occurredAt: latestActivity?.occurredAt ?? input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: latestActivity?.evidence ?? evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
   }
 
   const deduplicatedAttention: CompanyAttentionItem[] = Array.from(new Map<string, CompanyAttentionItem>(attention.map((item) => [`${item.code}:${item.evidence.sourceId}`, item])).values())
-    .sort((left, right) => severityRank[right.severity] - severityRank[left.severity]
+    .sort((left, right) => attentionBusinessRank[right.code] - attentionBusinessRank[left.code]
+      || severityRank[right.severity] - severityRank[left.severity]
       || String(right.occurredAt ?? "").localeCompare(String(left.occurredAt ?? ""))
       || left.id.localeCompare(right.id));
 
@@ -342,11 +373,64 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
   const knowledgeGaps: CompanyKnowledgeGap[] = [];
   const opportunityWithoutOwner = activeOpportunities.find((item) => !item.ownerProfileId);
   const opportunityWithoutNextAction = activeOpportunities.find((item) => !selectPrimaryNextAction(item.actions));
-  if (!primaryContact) knowledgeGaps.push({ code: "missing_primary_contact", label: "Nu există un contact principal confirmat", actionLabel: "Gestionează contactele", href: "/contacts", evidence: organizationEvidence });
+  if (!primaryContact) knowledgeGaps.push({ code: "missing_primary_contact", label: "Nu există un contact principal confirmat", actionLabel: "Adaugă contact principal", href: "/contacts", evidence: organizationEvidence });
   if (opportunityWithoutOwner) knowledgeGaps.push({ code: "missing_owner", label: "Cel puțin o oportunitate nu are responsabil", actionLabel: "Atribuie responsabil", href: `/opportunities/${opportunityWithoutOwner.id}`, evidence: evidence("opportunity", opportunityWithoutOwner.id, opportunityWithoutOwner.updatedAt ?? opportunityWithoutOwner.createdAt, `Oportunitatea „${opportunityWithoutOwner.title}”`, `/opportunities/${opportunityWithoutOwner.id}`) });
-  if (opportunityWithoutNextAction) knowledgeGaps.push({ code: "missing_next_action", label: "Cel puțin o oportunitate nu are acțiune următoare", actionLabel: "Definește pasul următor", href: `/opportunities/${opportunityWithoutNextAction.id}#workflow-actions`, evidence: evidence("opportunity", opportunityWithoutNextAction.id, opportunityWithoutNextAction.updatedAt ?? opportunityWithoutNextAction.createdAt, `Oportunitatea „${opportunityWithoutNextAction.title}”`, `/opportunities/${opportunityWithoutNextAction.id}#workflow-actions`) });
+  if (opportunityWithoutNextAction) knowledgeGaps.push({ code: "missing_next_action", label: "Cel puțin o oportunitate nu are acțiune următoare", actionLabel: "Completează următoarea acțiune", href: `/opportunities/${opportunityWithoutNextAction.id}#workflow-actions`, evidence: evidence("opportunity", opportunityWithoutNextAction.id, opportunityWithoutNextAction.updatedAt ?? opportunityWithoutNextAction.createdAt, `Oportunitatea „${opportunityWithoutNextAction.title}”`, `/opportunities/${opportunityWithoutNextAction.id}#workflow-actions`) });
   if (inactivityDays === null || inactivityDays > INACTIVITY_DAYS) knowledgeGaps.push({ code: "missing_recent_activity", label: "Nu există activitate comercială recentă", actionLabel: "Revizuiește compania", href: organizationHref, evidence: latestActivity?.evidence ?? organizationEvidence });
   if (!input.organization.website) knowledgeGaps.push({ code: "missing_domain", label: "Domeniul companiei nu este cunoscut", actionLabel: "Completează compania", href: "/companies", evidence: organizationEvidence });
+
+  const promotedAttention = deduplicatedAttention.slice(0, 3);
+  const mustRemember: CompanyMemoryItem[] = promotedAttention.map((item) => ({
+    id: `memory:${item.id}`,
+    type: "open_loop",
+    title: item.title,
+    description: item.description,
+    actionLabel: item.actionLabel,
+    href: item.href,
+    occurredAt: item.occurredAt,
+    severity: item.severity,
+    evidence: item.evidence
+  }));
+  const representedEvidence = new Set(mustRemember.map((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}`));
+  if (latestActivity) {
+    const key = `${latestActivity.evidence.sourceType}:${latestActivity.evidence.sourceId}`;
+    if (!representedEvidence.has(key) && mustRemember.length < 5) {
+      mustRemember.push({ id: `memory:latest:${key}`, type: "meaningful_activity", title: `Ultima activitate importantă: ${latestActivity.label.toLocaleLowerCase("ro-RO")}`, description: latestActivity.description, actionLabel: "Deschide dovada", href: latestActivity.href, occurredAt: latestActivity.occurredAt, evidence: latestActivity.evidence });
+      representedEvidence.add(key);
+    }
+  }
+  if (canonicalNextAction) {
+    const key = `${canonicalNextAction.evidence.sourceType}:${canonicalNextAction.evidence.sourceId}`;
+    const actionLabel = canonicalNextAction.evidence.sourceType === "approval"
+      ? "Verifică aprobarea"
+      : canonicalNextAction.evidence.sourceType === "commercial_signal"
+        ? "Deschide semnalul"
+        : "Revizuiește oportunitatea";
+    const existingItem = mustRemember.find((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}` === key);
+    if (existingItem) {
+      existingItem.description = `${existingItem.description} · Acțiune sigură: ${canonicalNextAction.title}`;
+      existingItem.actionLabel = actionLabel;
+      existingItem.href = canonicalNextAction.href;
+    } else if (mustRemember.length < 5) {
+      mustRemember.push({ id: `memory:next:${key}`, type: "safe_action", title: "Următoarea acțiune sigură", description: canonicalNextAction.title, actionLabel, href: canonicalNextAction.href, occurredAt: canonicalNextAction.dueAt, evidence: canonicalNextAction.evidence });
+      representedEvidence.add(key);
+    }
+  }
+
+  const openLoops: CompanyMemoryItem[] = deduplicatedAttention.slice(promotedAttention.length, promotedAttention.length + 4).map((item) => ({
+    id: `memory:loop:${item.id}`,
+    type: "open_loop",
+    title: item.title,
+    description: item.description,
+    actionLabel: item.actionLabel,
+    href: item.href,
+    occurredAt: item.occurredAt,
+    severity: item.severity,
+    evidence: item.evidence
+  }));
+  const allVisibleEvidence = new Set([...mustRemember, ...openLoops].map((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}`));
+  const recentEvidence = timeline.filter((item) => !allVisibleEvidence.has(`${item.evidence.sourceType}:${item.evidence.sourceId}`)).slice(0, 4);
+  const criticalGaps = knowledgeGaps.filter((gap) => gap.code !== "missing_domain").slice(0, 4);
 
   const contactRelationships = input.contacts.map((contact) => {
     const associations = input.opportunities.flatMap((opportunity) => (opportunity.contacts ?? []).filter((association) => association.contactId === contact.id));
@@ -363,6 +447,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     signals: input.signals,
     approvalItems: pendingApprovals.map(({ signal }) => ({ signalId: signal.id, title: signal.title, href: `/approvals?signal=${signal.id}`, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, `/approvals?signal=${signal.id}`) })),
     recommendationFeedback: input.signals.map((signal) => ({ signalId: signal.id, title: signal.title, feedback: recommendationFeedbackForSignal(signal), evidence: evidence("recommendation_feedback", signal.id, recommendationFeedbackForSignal(signal).decidedAt ?? signal.updatedAt ?? signal.createdAt, `Feedback pentru recomandarea „${signal.title}”`, `/inbox?signal=${signal.id}`) })).filter((item) => item.feedback.state !== "pending_review").sort((left, right) => String(right.evidence.sourceTimestamp ?? "").localeCompare(String(left.evidence.sourceTimestamp ?? ""))),
+    memory: { mustRemember, openLoops, recentEvidence, criticalGaps },
     attention: deduplicatedAttention,
     knowledgeGaps,
     timeline: timeline.slice(0, options.timelineLimit ?? 12)

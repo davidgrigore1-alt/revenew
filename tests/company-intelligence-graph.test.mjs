@@ -154,8 +154,8 @@ test("attention is deterministic, deduplicated and ordered by severity then rece
   const overdue = opportunity({ actions: [{ id: "action-overdue", title: "Follow-up restant", description: "", status: "pending", dueDate: "2026-07-10T09:00:00.000Z" }] });
   const urgentSignal = signal({ priority: "urgent", urgencyLevel: "critical", title: "Clientul cere răspuns" });
   const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [contact()], opportunities: [overdue], signals: [urgentSignal] }, { now: new Date("2026-07-22T12:00:00.000Z") });
-  assert.equal(snapshot.attention[0].code, "high_priority_signal");
-  assert.equal(snapshot.attention[1].code, "overdue_next_action");
+  assert.equal(snapshot.attention[0].code, "overdue_next_action");
+  assert.equal(snapshot.attention[1].code, "high_priority_signal");
   assert.equal(new Set(snapshot.attention.map((item) => item.id)).size, snapshot.attention.length);
   assert.ok(snapshot.attention.every((item) => item.evidence.sourceId && item.evidence.label));
 });
@@ -195,4 +195,32 @@ test("pending approval remains an explicit human decision and never becomes exec
   const page = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   assert.match(page, /Nicio acțiune externă automată/);
   assert.doesNotMatch(page, /sendEmail|sendSms|webhook|fetch\s*\(/i);
+});
+
+test("business memory promotes only the highest-signal items and keeps evidence secondary", () => {
+  const overdue = opportunity({ actions: [{ id: "action-overdue", title: "Revino cu oferta", description: "", status: "pending", dueDate: "2026-07-10T09:00:00.000Z" }] });
+  const pending = signal({ status: "ready_for_review", reviewStatus: "ready_for_review", priority: "high", recommendedAction: "Pregătește follow-up" });
+  const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [], opportunities: [overdue], signals: [pending] }, { now: new Date("2026-07-22T12:00:00.000Z") });
+  assert.ok(snapshot.memory.mustRemember.length <= 5);
+  assert.equal(snapshot.memory.mustRemember[0].title, "Follow-up întârziat");
+  assert.ok(snapshot.memory.mustRemember.some((item) => item.title === "Aprobare în așteptare" && item.actionLabel === "Verifică aprobarea"));
+  assert.ok(snapshot.memory.recentEvidence.length <= 4);
+  const visibleEvidence = [...snapshot.memory.mustRemember, ...snapshot.memory.openLoops].map((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}`);
+  assert.ok(snapshot.memory.recentEvidence.every((item) => !visibleEvidence.includes(`${item.evidence.sourceType}:${item.evidence.sourceId}`)));
+});
+
+test("business memory excludes non-critical profile gaps from the primary Company 360 section", () => {
+  const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization({ website: null }), contacts: [], opportunities: [], signals: [] }, { now: new Date("2026-07-22T12:00:00.000Z") });
+  assert.ok(snapshot.knowledgeGaps.some((gap) => gap.code === "missing_domain"));
+  assert.ok(snapshot.memory.criticalGaps.every((gap) => gap.code !== "missing_domain"));
+  assert.ok(snapshot.memory.criticalGaps.some((gap) => gap.code === "missing_primary_contact"));
+});
+
+test("Company 360 exposes four operational memory sections instead of raw feeds", () => {
+  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const memory = read("src/components/company/CompanyBusinessMemory.tsx");
+  assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\}/);
+  for (const label of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memory, new RegExp(label));
+  assert.match(memory, /Bazat pe:/);
+  assert.doesNotMatch(route, /snapshot\.timeline\.map|snapshot\.signals\.slice/);
 });
