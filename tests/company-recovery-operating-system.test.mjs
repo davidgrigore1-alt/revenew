@@ -94,18 +94,18 @@ test("Add Company uses Romanian inline website validation instead of native URL 
 
 test("Company 360 remains protected and presents empty and populated operating contexts", () => {
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
-  const loader = read("src/lib/revenue-workspace.ts");
+  const loader = read("src/lib/company-intelligence.ts");
   const policy = read("src/lib/authz/route-policies.ts");
   assert.match(policy, /prefix: "\/crm"[\s\S]*permission: "workspace\.read"/);
-  assert.match(loader, /getCrmWorkspaceForCurrentBusiness\(\)/);
-  assert.match(loader, /crm\.organizations\.find\(\(item\) => item\.id === organizationId\)/);
-  assert.match(loader, /getOpportunitiesForCurrentBusiness\(\)/);
+  assert.match(loader, /getCurrentBusinessForUser\(\{ redirectIfMissing: true \}\)/);
+  assert.match(loader, /\.eq\("id", organizationId\)\.eq\("business_id", businessId\)/);
+  assert.match(loader, /buildCompanyIntelligenceSnapshot/);
   assert.match(route, /Company 360/);
-  assert.match(route, /Situație operațională/);
+  assert.match(route, /Inteligență companie/);
   assert.match(route, /Nicio persoană asociată/);
   assert.match(route, /Nicio oportunitate asociată/);
-  assert.match(route, /Activitate și decizii/);
-  assert.match(route, /Următoarea acțiune/);
+  assert.match(route, /Activitate susținută de dovezi/);
+  assert.match(route, /Acțiunea canonică următoare/);
   assert.match(route, /CreateOpportunityPanel/);
 });
 
@@ -128,9 +128,14 @@ test("dashboard provides direct entries to companies and the recovery queue", ()
   assert.match(dashboard, /href="\/recoverable"[\s\S]{0,180}Vezi coada de recuperare/);
 });
 
-test("Company 360 connects blocked company context to the recovery queue", () => {
+test("Company 360 connects each attention item to its evidence-backed source route", () => {
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
-  assert.match(route, /attentionItem \? <Button href="\/recoverable"[\s\S]{0,180}Vezi în Recuperare venituri/);
+  const intelligence = read("src/lib/company-intelligence.ts");
+  assert.match(route, /href=\{item\.href\}/);
+  assert.match(route, /Sursă: \{item\.evidence\.label\}/);
+  assert.match(intelligence, /href: `\/opportunities\/\$\{opportunity\.id\}/);
+  assert.match(intelligence, /href: `\/approvals\?signal=\$\{signal\.id\}`/);
+  assert.match(intelligence, /href = `\/inbox\?signal=\$\{signal\.id\}`/);
 });
 
 test("recovery queue is deterministic and overdue work precedes a lower-risk gap", () => {

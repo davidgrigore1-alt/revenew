@@ -66,11 +66,13 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
 
 test("signals are visible in Company 360 and opportunity context with inbox wayfinding", async () => {
   const company = await read("../src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const intelligence = await read("../src/lib/company-intelligence.ts");
   const opportunity = await read("../src/app/(protected)/opportunities/[id]/page.tsx");
   const navigation = await read("../src/lib/navigation.ts");
-  assert.match(company, /Semnale recente/);
-  assert.match(company, /getCommercialSignalsForOrganization/);
-  assert.match(company, /Următor pas propus:/);
+  assert.match(company, /Semnale și decizii/);
+  assert.match(company, /getCompanyIntelligenceSnapshot/);
+  assert.match(intelligence, /getCommercialSignalsForOrganization/);
+  assert.match(company, /Acțiune recomandată:/);
   assert.match(opportunity, /Semnale asociate/);
   assert.match(opportunity, /getCommercialSignalsForOpportunity/);
   assert.match(opportunity, /Context pentru execuție:/);

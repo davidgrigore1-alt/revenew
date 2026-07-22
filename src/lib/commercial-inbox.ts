@@ -555,11 +555,63 @@ export async function getCommercialSignalsForOpportunity(opportunityId: string):
   );
 }
 
-export async function getCommercialSignalsForOrganization(organizationId: string): Promise<CommercialSignal[]> {
-  const result = await getCommercialSignalsForCurrentBusiness();
-  return result.signals
-    .filter((signal) => signal.matchedOrganizationId === organizationId)
-    .slice(0, 6);
+export async function getCommercialSignalsForOrganization(
+  organizationId: string,
+  relations: { opportunityIds?: string[]; contactIds?: string[] } = {}
+): Promise<CommercialSignal[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const organizationUuid = safeUuid(organizationId);
+  if (!organizationUuid) return [];
+  const opportunityIds = (relations.opportunityIds ?? []).map((id) => safeUuid(id)).filter((id): id is string => Boolean(id)).slice(0, 100);
+  const contactIds = (relations.contactIds ?? []).map((id) => safeUuid(id)).filter((id): id is string => Boolean(id)).slice(0, 100);
+  const relationFilters = [`matched_organization_id.eq.${organizationUuid}`];
+  if (contactIds.length > 0) relationFilters.push(`matched_contact_id.in.(${contactIds.join(",")})`);
+  if (opportunityIds.length > 0) {
+    relationFilters.push(`converted_opportunity_id.in.(${opportunityIds.join(",")})`);
+    relationFilters.push(`detected_from_opportunity_id.in.(${opportunityIds.join(",")})`);
+  }
+
+  const { supabase, business } = await getCurrentInboxContext();
+  const { data, error } = await supabase
+    .from("commercial_signals")
+    .select("*,recoverability_score")
+    .eq("business_id", business.id)
+    .or(relationFilters.join(","))
+    .order("occurred_at", { ascending: false })
+    .limit(40);
+
+  if (error) {
+    if (isMissingCommercialInboxTable(error) || isMissingRecoverabilitySchema(error)) return [];
+    throw new Error(`Organization commercial signals load error: ${error.message}`);
+  }
+
+  const rows = (data ?? []) as CommercialSignalRow[];
+  const signalIds = rows.map((signal) => signal.id);
+  if (signalIds.length === 0) return [];
+
+  const { data: eventRows, error: eventError } = await supabase
+    .from("commercial_signal_events")
+    .select("id,business_id,signal_id,event_type,description,metadata,created_by_profile_id,created_at")
+    .eq("business_id", business.id)
+    .in("signal_id", signalIds)
+    .order("created_at", { ascending: false })
+    .limit(240);
+
+  if (eventError) {
+    if (isMissingCommercialInboxTable(eventError)) return [];
+    throw new Error(`Organization commercial signal events load error: ${eventError.message}`);
+  }
+
+  const eventsBySignal = (eventRows ?? []).reduce((map, row) => {
+    const event = mapEvent(row as CommercialSignalEventRow);
+    const events = map.get(event.signalId) ?? [];
+    events.push(event);
+    map.set(event.signalId, events);
+    return map;
+  }, new Map<string, CommercialSignalEvent[]>());
+
+  return rows.map((row) => mapSignal(row, eventsBySignal.get(row.id) ?? []));
 }
 
 export async function createCommercialSignal(input: CommercialSignalInput) {
