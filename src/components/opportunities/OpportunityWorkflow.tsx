@@ -501,7 +501,7 @@ export function OpportunityWorkflow({
         </div>
       ) : null}
       <nav className="flex gap-2 overflow-x-auto rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-2" aria-label="Secțiuni oportunitate">
-        {[['#workflow-actions', 'Execuție'], ['#opportunity-contacts', 'Contacte'], ['#opportunity-timeline', 'Istoric'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+        {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Istoric'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
       </nav>
 
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
@@ -515,8 +515,8 @@ export function OpportunityWorkflow({
         <span className="ml-auto text-xs text-[rgb(var(--text-muted))]">Scorurile susțin prioritizarea; nu confirmă venit.</span>
       </div>
 
-      <div id="workflow-actions" className="scroll-mt-24">
-        <DataCard title="Proces comercial" description={workflowDescription}>
+      <div id="workflow-actions" className="hidden scroll-mt-24 target:block">
+        <DataCard title="Pregătește un document" description={workflowDescription} action={<a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a>}>
           <p className="mb-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Alege un rezultat concret, pregătește documentul și revizuiește-l înainte de orice utilizare externă.</p>
           <div className="grid gap-4">
             <div>
@@ -589,7 +589,7 @@ export function OpportunityWorkflow({
         </DataCard>
       </div>
 
-      <div id="opportunity-contacts" className="scroll-mt-24"><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div>
+      <div id="action-contacts" className="hidden scroll-mt-24 target:block has-[:target]:block"><span id="opportunity-contacts" className="scroll-mt-24" /><div className="mb-3 flex justify-end"><a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a></div><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <DataCard title="Rezumat de lucru">
@@ -713,6 +713,7 @@ export function OpportunityWorkflow({
       </div>
 
       <div id="opportunity-documents" ref={documentsSectionRef} className="scroll-mt-24">
+      <span id="documents" className="scroll-mt-24" />
       <DataCard
         title="Documente generate"
         description={
