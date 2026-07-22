@@ -12,6 +12,7 @@ import { AttentionSummary } from "@/components/dashboard/AttentionSummary";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { ErrorState } from "@/components/dashboard/ErrorState";
+import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
 import { FirstTimeGuide } from "@/components/dashboard/FirstTimeGuide";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -23,6 +24,7 @@ import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { getCommercialResponseSummary } from "@/lib/commercial-response-summary";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import { deriveFirstValueJourney } from "@/lib/first-value-journey";
+import { buildExecutiveMorningBrief } from "@/lib/executive-morning-brief";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
@@ -30,10 +32,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
 
 export const dynamic = "force-dynamic";
-
-function operatingDate(value: string) {
-  return new Intl.DateTimeFormat("ro-RO", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${value}T12:00:00`));
-}
 
 function activityDate(value?: string) {
   if (!value) return "Dată indisponibilă";
@@ -73,10 +71,7 @@ export default async function DashboardPage() {
     const highRiskCount = summary.warnings.highValueAtRisk.length;
     const opportunityById = new Map(summary.opportunities.map((opportunity) => [opportunity.id, opportunity]));
     const decisionQueue = buildWorkspaceDecisionQueue({ opportunities: summary.opportunities, signals: summary.signals });
-
-    const brief = urgentActionCount > 0 || attentionCount > 0
-      ? `Ai ${urgentActionCount} ${urgentActionCount === 1 ? "acțiune scadentă" : "acțiuni scadente"} și ${attentionCount} ${attentionCount === 1 ? "oportunitate care necesită intervenție" : "oportunități care necesită intervenție"}. Clarifică responsabilitatea și următorul pas înainte de a extinde pipeline-ul.`
-      : "Nu există intervenții urgente în datele disponibile. Folosește această fereastră pentru a confirma responsabilii și următoarele acțiuni din pipeline.";
+    const morningBrief = buildExecutiveMorningBrief(decisionQueue);
 
     const activityItems: ActivityFeedItem[] = summary.events.slice(0, 7).map((event) => ({
       id: event.id,
@@ -107,30 +102,7 @@ export default async function DashboardPage() {
       <main className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-6 pb-24 sm:px-6 sm:py-7 lg:px-8 lg:pb-10">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
 
-        <PremiumPanel tone="emphasis" className="relative overflow-hidden p-5 sm:p-6 lg:p-7">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[rgb(var(--brand-500)/0.09)] blur-3xl" />
-          <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-            <div className="max-w-4xl">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--brand-300))]">
-                <span>Brief operațional</span>
-                <span aria-hidden="true" className="h-1 w-1 rounded-full bg-current" />
-                <time dateTime={summary.today}>{operatingDate(summary.today)}</time>
-              </div>
-              <h1 className="mt-4 text-2xl font-semibold tracking-[-0.025em] text-[rgb(var(--foreground))] sm:text-3xl">Control Center</h1>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-lg">{brief}</p>
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-[rgb(var(--text-muted))]">
-                <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.72)] px-3 py-1.5">{summary.activeOpportunities.length} oportunități active</span>
-                <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.72)] px-3 py-1.5">{activeSignals.length} semnale active</span>
-                <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.72)] px-3 py-1.5">Control uman obligatoriu</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
-              <Button href={firstValueJourney.complete ? "/inbox" : firstValueJourney.nextHref}>{firstValueJourney.complete ? "Deschide Inbox Comercial" : firstValueJourney.nextAction}</Button>
-              <Button href="/companies" variant="secondary">Vezi companiile</Button>
-              <Button href="/recoverable" variant="secondary">Vezi coada de recuperare</Button>
-            </div>
-          </div>
-        </PremiumPanel>
+        <ExecutiveMorningBrief brief={morningBrief} />
 
         <WorkspaceDecisionQueue queue={decisionQueue} />
 

@@ -54,6 +54,8 @@ export type WorkspaceDecisionQueue = {
   totalCandidates: number;
   criticalCount: number;
   attentionCount: number;
+  countsByType: Record<WorkspaceDecisionType, number>;
+  estimatedExposedValueByCurrency: Record<string, number>;
   sourceState: "empty_workspace" | "signals_only" | "opportunities_available";
 };
 
@@ -333,12 +335,32 @@ export function buildWorkspaceDecisionQueue(
   const valid = candidates
     .filter((item) => item.evidence.length > 0 && item.evidence.every((source) => source.sourceId && source.label && source.href))
     .sort(compareItems);
+  const countsByType = Object.keys(typeRank).reduce<Record<WorkspaceDecisionType, number>>((counts, type) => {
+    counts[type as WorkspaceDecisionType] = valid.filter((item) => item.type === type).length;
+    return counts;
+  }, {} as Record<WorkspaceDecisionType, number>);
+  const exposureKeys = new Set<string>();
+  const estimatedExposedValueByCurrency: Record<string, number> = {};
+  for (const item of valid) {
+    if (item.estimatedValue === undefined || !item.currency) continue;
+    const primaryEvidence = item.evidence[0];
+    const exposureKey = item.relatedOpportunityId
+      ? `opportunity:${item.relatedOpportunityId}`
+      : primaryEvidence && ["approval", "commercial_signal"].includes(primaryEvidence.sourceType)
+        ? `signal:${primaryEvidence.sourceId}`
+        : `decision:${item.id}`;
+    if (exposureKeys.has(exposureKey)) continue;
+    exposureKeys.add(exposureKey);
+    estimatedExposedValueByCurrency[item.currency] = (estimatedExposedValueByCurrency[item.currency] ?? 0) + item.estimatedValue;
+  }
   const limit = Math.max(1, Math.min(options.limit ?? 5, 20));
   return {
     items: valid.slice(0, limit),
     totalCandidates: valid.length,
     criticalCount: valid.filter((item) => item.severity === "critical").length,
     attentionCount: valid.filter((item) => item.severity === "attention").length,
+    countsByType,
+    estimatedExposedValueByCurrency,
     sourceState: input.opportunities.length > 0 ? "opportunities_available" : input.signals.length > 0 ? "signals_only" : "empty_workspace"
   };
 }

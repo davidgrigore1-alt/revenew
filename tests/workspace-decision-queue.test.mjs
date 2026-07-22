@@ -163,7 +163,17 @@ test("estimates remain item-level, exclude confirmed revenue and never aggregate
   assert.ok(queue.items.some((item) => item.currency === "RON" && item.estimatedValue === 10000));
   assert.ok(queue.items.some((item) => item.currency === "EUR" && item.estimatedValue === 20000));
   assert.ok(queue.items.every((item) => item.estimatedValue !== 999999 && item.estimatedValue !== 888888));
+  assert.equal(queue.estimatedExposedValueByCurrency.RON, 10000);
+  assert.equal(queue.estimatedExposedValueByCurrency.EUR, 20000);
   assert.equal("estimatedTotal" in queue, false);
+});
+
+test("issue counts cover all valid candidates even when the primary queue is capped", () => {
+  const signals = Array.from({ length: 8 }, (_, index) => signal({ id: `counted-signal-${index}`, title: `Semnal ${index}` }));
+  const queue = buildWorkspaceDecisionQueue({ opportunities: [], signals }, { now, limit: 3 });
+  assert.equal(queue.items.length, 3);
+  assert.equal(queue.countsByType.pending_approval, 8);
+  assert.equal(queue.totalCandidates, 8);
 });
 
 test("empty and partial workspaces are explicit and low-value healthy records stay out", () => {
