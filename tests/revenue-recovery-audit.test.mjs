@@ -118,6 +118,27 @@ test("audit caps priorities, keeps currencies separate and retains evidence-back
   assert.equal("confirmedRevenue" in audit, false);
 });
 
+test("audit totals deduplicate repeated opportunity blockers and ignore a stale brief total", () => {
+  const repeatedRon = [
+    item(1, { relatedOpportunityId: "opportunity-shared", estimatedValue: 10000, currency: "RON" }),
+    item(2, { type: "opportunity_without_owner", relatedOpportunityId: "opportunity-shared", estimatedValue: 10000, currency: "RON" }),
+    item(3, { type: "prepared_work_not_advanced", relatedOpportunityId: "opportunity-shared", estimatedValue: 10000, currency: "RON" })
+  ];
+  const repeatedEur = [
+    item(4, { relatedOpportunityId: "opportunity-eur", estimatedValue: 4000, currency: "EUR" }),
+    item(5, { type: "opportunity_without_next_action", relatedOpportunityId: "opportunity-eur", estimatedValue: 4000, currency: "EUR" })
+  ];
+  const audit = buildRevenueRecoveryAudit({
+    generatedAt: "2026-07-23T08:00:00.000Z",
+    workspaceName: "Acme",
+    activeOpportunityCount: 2,
+    queue: queue({ items: [...repeatedRon, ...repeatedEur], estimatedExposedValueByCurrency: { RON: 10000, EUR: 4000 } }),
+    brief: brief({ estimatedExposedValueByCurrency: [{ currency: "RON", value: 30000 }, { currency: "EUR", value: 8000 }] })
+  });
+  assert.equal(audit.priorities.length, 5);
+  assert.deepEqual(Array.from(audit.estimatedExposedValueByCurrency, (entry) => [entry.currency, entry.value]), [["EUR", 4000], ["RON", 10000]]);
+});
+
 test("company risks require explicit relationships and operational gaps produce a deterministic plan", () => {
   const items = [
     item(1, { relatedCompanyId: undefined, relatedCompanyName: "Nume doar din text" }),
@@ -148,7 +169,11 @@ test("empty workspaces remain honest and route generation is server-only and pri
   assert.match(model, /getRevenueWorkspaceSummary\(\)/);
   assert.doesNotMatch(model, /openai|anthropic|embedding|service[_-]?role|\.from\(|fetch\s*\(/i);
   assert.match(policies, /prefix: "\/reports", permission: "reports\.read"/);
-  assert.match(route, /Estimările rămân separate pe monedă și nu reprezintă venit confirmat/);
+  assert.match(route, /Valorile estimate sunt deduplicate pe oportunitate și rămân separate de venitul confirmat/);
+  assert.match(route, /Audit de recuperare venituri/);
+  assert.match(route, /Raport executiv bazat pe datele disponibile în spațiul de lucru/);
+  assert.doesNotMatch(route, /tenant-scoped/i);
+  assert.doesNotMatch(route, />Workspace:/i);
   assert.match(route, /Aprobarea umană rămâne obligatorie/);
   assert.match(route, /Un document pregătit sau aprobat nu este considerat trimis fără dovadă/);
   assert.match(route, /Nu reprezintă o garanție financiară, predicție de venit sau confirmare contabilă/);

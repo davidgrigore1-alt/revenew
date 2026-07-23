@@ -327,7 +327,7 @@ export default async function ReportsPage() {
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
-      actions={<Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide Revenue Recovery Audit</Button>}
+      actions={<Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul de recuperare</Button>}
     >
       <div className="grid gap-6 print:block print:space-y-5">
         {!isSupabaseConfigured ? <DemoNotice /> : null}

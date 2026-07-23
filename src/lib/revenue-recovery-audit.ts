@@ -106,7 +106,7 @@ const gapDefinitions: Array<{
   {
     type: "opportunity_without_owner",
     label: "Oportunități fără responsabil",
-    impact: "Execuția nu are ownership confirmat.",
+    impact: "Execuția nu are un responsabil confirmat.",
     fallbackActionLabel: "Atribuie responsabili",
     fallbackActionHref: "/pipeline"
   },
@@ -196,7 +196,7 @@ function buildSevenDayPlan(
       period: "Zilele 2–3",
       action: `${middle.actionLabel} pentru cele ${middle.count} ${middle.label.toLocaleLowerCase("ro-RO")}.`,
       owner: "Manager comercial și responsabilii oportunităților",
-      desiredOutcome: "Fiecare caz eligibil are decizie umană, ownership și pas următor clar.",
+      desiredOutcome: "Fiecare caz eligibil are decizie umană, responsabil și pas următor clar.",
       actionLabel: middle.actionLabel,
       actionHref: middle.actionHref
     });
@@ -220,6 +220,10 @@ function buildSevenDayPlan(
 export function buildRevenueRecoveryAudit(input: BuildRevenueRecoveryAuditInput): RevenueRecoveryAudit {
   const priorities = input.queue.items.slice(0, 5);
   const operationalGaps = buildOperationalGaps(input.queue);
+  const estimatedExposedValueByCurrency = Object.entries(input.queue.estimatedExposedValueByCurrency)
+    .filter(([, value]) => Number.isFinite(value) && value > 0)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([currency, value]) => ({ currency, value }));
   return {
     generatedAt: input.generatedAt,
     workspaceName: input.workspaceName,
@@ -229,7 +233,7 @@ export function buildRevenueRecoveryAudit(input: BuildRevenueRecoveryAuditInput)
     summary: input.brief.summary,
     firstSafeActionLabel: input.brief.firstSafeActionLabel,
     firstSafeActionHref: input.brief.firstSafeActionHref,
-    estimatedExposedValueByCurrency: input.brief.estimatedExposedValueByCurrency,
+    estimatedExposedValueByCurrency,
     counts: {
       ...input.brief.counts,
       preparedWorkNotAdvanced: input.queue.countsByType.prepared_work_not_advanced ?? 0,
@@ -257,7 +261,7 @@ export async function getRevenueRecoveryAudit(options: { now?: Date } = {}) {
   const brief = buildExecutiveMorningBrief(queue, { now });
   return buildRevenueRecoveryAudit({
     generatedAt: now.toISOString(),
-    workspaceName: business?.name ?? "Workspace curent",
+    workspaceName: business?.name ?? "Spațiu de lucru curent",
     activeOpportunityCount: summary.activeOpportunities.length,
     queue,
     brief
