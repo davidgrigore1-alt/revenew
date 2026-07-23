@@ -14,7 +14,8 @@ test("local demo guard accepts only loopback Supabase targets", () => {
 
 test("fixtures are deterministic, fictional and decision-useful", () => {
   const fixtures = buildFixtures("de900000-0000-4000-8000-000000000001", new Date("2026-07-19T09:00:00.000Z"));
-  assert.equal(DEMO.businessName, "[DEMO] Auto Management Revenue Lab");
+  assert.equal(DEMO.businessName, "[DEMO] Meridian Commercial Operations");
+  assert.equal(DEMO.email, "operator@demo.invalid");
   assert.equal(fixtures.organizations.length, 8);
   assert.ok(fixtures.organizations.every((organization) => organization.name.startsWith("[DEMO]") && organization.notes.includes(DEMO.marker)));
   assert.equal(fixtures.contacts.length, 8);
@@ -30,7 +31,7 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.ok(fixtures.signals.some((signal) => signal.detected_from_opportunity_id));
   assert.ok(fixtures.signals.some((signal) => signal.source_label === "Import controlat · text în bloc" && signal.ingestion_origin === "csv_import" && signal.status === "new" && signal.analysis_status === "not_started"));
   assert.ok(fixtures.signals.every((signal) => !["ai_receptionist", "instagram", "website_form", "missed_call"].includes(signal.source)));
-  assert.ok(fixtures.contacts.every((contact) => contact.email.endsWith(".test")));
+  assert.ok(fixtures.contacts.every((contact) => contact.email.endsWith(".invalid")));
   assert.ok(fixtures.opportunities.every((opportunity) => opportunity.currency === "RON"));
   assert.equal(fixtures.opportunities.filter((opportunity) => opportunity.lifecycle_status === "won").length, 1);
   assert.equal(fixtures.opportunities.filter((opportunity) => opportunity.lifecycle_status === "lost").length, 1);
@@ -60,4 +61,6 @@ test("demo tooling keeps local guard and disabled external integrations explicit
   assert.match(resetTool, /DEMO\.businessId/);
   assert.doesNotMatch(seedTool + resetTool, /https:\/\/(?!127\.0\.0\.1|localhost)/);
   assert.doesNotMatch(seedTool, /openai|resend|webhook|whatsapp/i);
+  assert.doesNotMatch(`${DEMO.email}\n${seedTool}`, /gmail\.com|David Pohoata|david\.grigore/i);
+  assert.match(seedTool, /Operator Demo ReveNew/);
 });

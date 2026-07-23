@@ -1,8 +1,8 @@
 import { CheckCircleIcon, ClockIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
 const coverage = [
-  { label: "Cu owner", value: 83, icon: UserGroupIcon, color: "bg-[rgb(var(--brand-600))]" },
-  { label: "Cu next action", value: 67, icon: CheckCircleIcon, color: "bg-[rgb(var(--brand-400))]" },
+  { label: "Cu responsabil", value: 83, icon: UserGroupIcon, color: "bg-[rgb(var(--brand-600))]" },
+  { label: "Cu acțiune următoare", value: 67, icon: CheckCircleIcon, color: "bg-[rgb(var(--brand-400))]" },
   { label: "În termen", value: 75, icon: ClockIcon, color: "bg-[rgb(var(--info-text))]" }
 ] as const;
 
@@ -28,7 +28,7 @@ export function MarketingMetrics() {
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
               ["Follow-up restant", "18.400 RON", "bg-[rgb(var(--danger-text))]"],
-              ["Fără next action", "12.800 RON", "bg-[rgb(var(--warning-text))]"],
+              ["Fără acțiune următoare", "12.800 RON", "bg-[rgb(var(--warning-text))]"],
               ["În revizuire", "8.900 RON", "bg-[rgb(var(--brand-500))]"]
             ].map(([label, value, dot]) => (
               <div key={label} className="rounded-card border border-white/10 bg-white/[0.045] p-4">

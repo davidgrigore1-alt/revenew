@@ -94,7 +94,7 @@ export default async function LoginPage({ searchParams }: { searchParams?: { int
     <AuthCardShell
       eyebrow="AUTENTIFICARE"
       title="Intră în ReveNew"
-      description="Continuă lucrul în spațiul firmei: priorități, ownership și următoarele acțiuni comerciale."
+      description="Continuă lucrul în spațiul firmei: priorități, responsabilitate și următoarele acțiuni comerciale."
       trustLine="Acces protejat. Datele fiecărei firme rămân izolate în propriul spațiu de lucru."
       footerPrompt="Nu ai cont?"
       footerHref={authPath("/signup", "create_account")}

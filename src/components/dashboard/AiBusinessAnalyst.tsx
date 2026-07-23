@@ -65,7 +65,7 @@ export function AiBusinessAnalyst() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--primary))]">Analist business</p>
             <h2 id="ai-business-analyst-title" className="mt-1 text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">Analiză executivă</h2>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Explică brief-ul și deciziile prioritare folosind numai dovezile existente în workspace. Analiza este generată doar la cerere și nu execută acțiuni.</p>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Explică brief-ul și deciziile prioritare folosind numai dovezile existente în spațiul de lucru. Analiza este generată doar la cerere și nu execută acțiuni.</p>
           </div>
         </div>
         <Button onClick={() => generateAnalysis()} disabled={loading} variant={result ? "secondary" : "primary"} className="w-full shrink-0 sm:w-auto">
@@ -109,7 +109,7 @@ export function AiBusinessAnalyst() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={status.tone}>{status.label}</Badge>
               <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">{result.mode === "ai" ? "Analiză asistată" : "Analiză deterministă"}</span>
-              <span className="text-xs text-[rgb(var(--text-faint))] sm:ml-auto">Bazată pe datele existente din workspace</span>
+              <span className="text-xs text-[rgb(var(--text-faint))] sm:ml-auto">Bazată pe datele existente din spațiul de lucru</span>
             </div>
             <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]">{fallbackMessage(result)}</p>
             <p className="mt-3 text-sm font-semibold text-[rgb(var(--foreground))]">{result.questionLabel}</p>

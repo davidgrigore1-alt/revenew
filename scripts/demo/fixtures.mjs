@@ -1,7 +1,7 @@
 export const DEMO = Object.freeze({
-  email: "david.grigore07@gmail.com",
+  email: "operator@demo.invalid",
   businessId: "de000000-0000-4000-8000-000000000001",
-  businessName: "[DEMO] Auto Management Revenue Lab",
+  businessName: "[DEMO] Meridian Commercial Operations",
   marker: "revenew-local-demo-v1"
 });
 
@@ -27,14 +27,14 @@ export function buildFixtures(profileId, now = new Date()) {
   const signalEventIds = ids("90", 12);
 
   const organizations = [
-    ["[DEMO] Nord Leasing Fleet", "Servicii financiare", "București", "client"],
-    ["[DEMO] Atlas Construct Management", "Management proiecte", "Cluj-Napoca", "prospect"],
-    ["[DEMO] MedPrime Clinics Group", "Servicii medicale", "București", "client"],
-    ["[DEMO] Terra Logistics Park", "Logistică", "Brașov", "prospect"],
-    ["[DEMO] Blue Retail Network", "Retail", "Timișoara", "client"],
-    ["[DEMO] Urban Mobility Services", "Mobilitate", "Iași", "former_client"],
-    ["[DEMO] Delta Facility Services", "Facility management", "Ploiești", "prospect"],
-    ["[DEMO] HORECA Supply Hub", "Ospitalitate", "Constanța", "partner"]
+    ["[DEMO] Meridian Logistics SRL", "Logistică", "București", "client"],
+    ["[DEMO] Delta Construct Solutions SRL", "Construcții", "Cluj-Napoca", "prospect"],
+    ["[DEMO] Nova Medical Systems SRL", "Servicii medicale", "București", "client"],
+    ["[DEMO] Atlas Fleet Services SRL", "Servicii pentru flote", "Brașov", "prospect"],
+    ["[DEMO] Carpathia Retail Network SRL", "Retail", "Timișoara", "client"],
+    ["[DEMO] Urban Facilities Group SRL", "Facility management", "Iași", "former_client"],
+    ["[DEMO] Vector Industrial Services SRL", "Servicii industriale", "Ploiești", "prospect"],
+    ["[DEMO] Orizont Hospitality Supply SRL", "Ospitalitate", "Constanța", "partner"]
   ].map(([name, industry, city, relationship_status], index) => ({
     id: organizationIds[index], business_id: DEMO.businessId, name, normalized_name: name.toLocaleLowerCase("ro-RO"),
     industry, city, country: "România", relationship_status, notes: `${DEMO.marker}: companie fictivă pentru verificare locală.`
@@ -53,7 +53,7 @@ export function buildFixtures(profileId, now = new Date()) {
   const contacts = contactSpecs.map(([organizationIndex, full_name, job_title, decision_role], index) => ({
     id: contactIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     full_name, normalized_name: full_name.toLocaleLowerCase("ro-RO"), job_title, decision_role,
-    email: `contact${index + 1}@revenew-demo.test`, normalized_email: `contact${index + 1}@revenew-demo.test`,
+    email: `contact${index + 1}@demo.invalid`, normalized_email: `contact${index + 1}@demo.invalid`,
     is_active: true, is_primary_for_organization: index < 7, notes: `${DEMO.marker}: contact fictiv.`
   }));
 
@@ -68,23 +68,23 @@ export function buildFixtures(profileId, now = new Date()) {
     ...overrides
   });
   const opportunities = [
-    baseOpportunity(0, 0, "Reactivare flotă corporate · Nord Leasing", "contacted", 42000, { commercial_type: "reactivation", deadline: date(5), urgency_score: 82 }),
-    baseOpportunity(1, 1, "Extindere administrare flotă · Atlas", "reviewed", 28000, { commercial_type: "expansion", owner_profile_id: null, recommended_action: "Atribuie un responsabil și confirmă decidentul." }),
-    baseOpportunity(2, 2, "Follow-up ofertă rețea clinică · MedPrime", "follow_up_needed", 36000, { deadline: date(2), urgency_score: 92, risks: ["follow-up restant"] }),
-    baseOpportunity(3, 4, "Reînnoire servicii logistice · BluePeak", "action_generated", 24000, { commercial_type: "renewal", deadline: date(7) }),
-    baseOpportunity(4, 5, "Reluare contract locații regionale · Urban Retail", "new", 19000, { commercial_type: "stalled_pipeline", created_at: iso(-45), updated_at: iso(-38), deadline: date(10) }),
-    baseOpportunity(5, 6, "Recuperare proiect mentenanță · Delta", "follow_up_needed", 85000, { owner_profile_id: null, deadline: date(-4), urgency_score: 96, risks: ["fără owner", "termen depășit"] }),
-    baseOpportunity(6, 0, "Extindere portofoliu IMM · Nord Leasing", "reviewed", 31000, { commercial_type: "expansion", deadline: date(21) }),
-    baseOpportunity(7, 2, "Program servicii corporate · MedPrime", "contacted", 15500, { commercial_type: "new_business", deadline: date(12) }),
-    baseOpportunity(8, 4, "Optimizare rutare regională · BluePeak", "won", 22500, {
+    baseOpportunity(0, 0, "Reactivare contract logistic · Meridian", "contacted", 42000, { commercial_type: "reactivation", deadline: date(5), urgency_score: 82 }),
+    baseOpportunity(1, 1, "Extindere servicii operaționale · Delta Construct", "reviewed", 28000, { commercial_type: "expansion", owner_profile_id: null, recommended_action: "Atribuie un responsabil și confirmă decidentul." }),
+    baseOpportunity(2, 2, "Follow-up ofertă rețea medicală · Nova Medical", "follow_up_needed", 36000, { deadline: date(2), urgency_score: 92, risks: ["follow-up restant"] }),
+    baseOpportunity(3, 4, "Reînnoire servicii regionale · Carpathia Retail", "action_generated", 24000, { commercial_type: "renewal", deadline: date(7) }),
+    baseOpportunity(4, 5, "Reluare contract locații · Urban Facilities", "new", 19000, { commercial_type: "stalled_pipeline", created_at: iso(-45), updated_at: iso(-38), deadline: date(10) }),
+    baseOpportunity(5, 6, "Recuperare proiect mentenanță · Vector Industrial", "follow_up_needed", 85000, { owner_profile_id: null, deadline: date(-4), urgency_score: 96, risks: ["fără owner", "termen depășit"] }),
+    baseOpportunity(6, 0, "Extindere servicii regionale · Meridian", "reviewed", 31000, { commercial_type: "expansion", deadline: date(21) }),
+    baseOpportunity(7, 2, "Program servicii corporate · Nova Medical", "contacted", 15500, { commercial_type: "new_business", deadline: date(12) }),
+    baseOpportunity(8, 4, "Optimizare operațională regională · Carpathia", "won", 22500, {
       lifecycle_status: "won", commercial_type: "expansion", actual_outcome_amount: 18500, outcome_date: date(-3), outcome_reason: "expanded",
       outcome_note: "Valoare confirmată în cadrul scenariului demo local.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-3), deadline: date(-3)
     }),
-    baseOpportunity(9, 5, "Contract pilot retail · Urban Network", "lost", 12000, {
+    baseOpportunity(9, 5, "Contract pilot locații · Urban Facilities", "lost", 12000, {
       lifecycle_status: "lost", commercial_type: "new_business", actual_outcome_amount: null, outcome_date: date(-12), outcome_reason: "timing",
       outcome_note: "Decizie amânată de client; rezultat fictiv marcat explicit.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-12), deadline: date(-12)
     }),
-    baseOpportunity(10, 1, "Audit cost total flotă · Atlas", "new", 9800, { commercial_type: "new_business", created_at: iso(-34), updated_at: iso(-34), deadline: null })
+    baseOpportunity(10, 3, "Audit operațional flotă · Atlas Fleet", "new", 9800, { commercial_type: "new_business", created_at: iso(-34), updated_at: iso(-34), deadline: null })
   ];
 
   const actionSpecs = [
@@ -157,7 +157,7 @@ export function buildFixtures(profileId, now = new Date()) {
     ingestion_origin: "manual", ...overrides
   });
   const signals = [
-    baseSignal(0, "Cerere nouă de ofertă pentru flotă", "email", "new", "new", { contact_company: organizations[1].name, contact_name: contacts[1].full_name, contact_email: "achizitii@atlas-demo.test", raw_message: "Email copiat manual: solicitare de ofertă pentru flotă, cu buget de 20.000 EUR și clarificare în săptămâna viitoare.", currency: "EUR", estimated_value_min: 18000, estimated_value_max: 26000 }),
+    baseSignal(0, "Cerere nouă de ofertă pentru flotă", "email", "new", "new", { contact_company: organizations[3].name, contact_name: contacts[3].full_name, contact_email: "achizitii@demo.invalid", raw_message: "Email copiat manual: solicitare de ofertă pentru flotă, cu buget de 20.000 EUR și clarificare în săptămâna viitoare.", currency: "EUR", estimated_value_min: 18000, estimated_value_max: 26000 }),
     baseSignal(1, "Mesaj WhatsApp despre extinderea serviciilor", "whatsapp", "ready_for_review", "ready_for_review", { source_label: "Text WhatsApp copiat manual", contact_company: organizations[0].name, matched_organization_id: organizationIds[0], matched_contact_id: contactIds[0], raw_message: "Mesaj copiat manual: clientul cere o ofertă revizuită pentru încă două locații și dorește răspuns până vineri.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 76, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Cerere de extindere care necesită clarificare", analysis_explanation: "Regulile au detectat o cerere comercială și o companie deja cunoscută.", recommended_action: "Confirmă bugetul și programează o discuție de clarificare cu responsabil și termen.", missing_information: ["valoare și monedă confirmate"], uncertainty_notes: ["SIGNAL_TYPE: quote_request", "SIGNAL_TYPE_LABEL: Cerere de ofertă", "DEADLINE_CLUE: Termen menționat: până vineri", "VALUE_CLUE: Potențial valoric menționat, fără sumă confirmată", "CONTEXT_HINT: Companie existentă identificată în CRM.", "CONTEXT_HINT: Contact existent identificat în CRM.", "DETECTION_REASON: Textul indică o cerere de ofertă, preț sau buget.", "INCERTITUDINE: Conținutul trebuie confirmat de echipă."], estimated_value_min: 9000, estimated_value_max: 14000, estimated_recoverable_value: 14000, suggested_due_date: date(3), analyzed_at: iso(-1) }),
     baseSignal(2, "Follow-up email fără răspuns", "email", "ready_for_review", "ready_for_review", { contact_company: organizations[2].name, matched_organization_id: organizationIds[2], matched_contact_id: contactIds[2], raw_message: "Email copiat manual: oferta de 36.000 RON a fost trimisă, dar nu există răspuns; revenirea este necesară mâine.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 88, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Ofertă fără răspuns confirmat", analysis_explanation: "Semnalul indică follow-up restant și relație CRM existentă.", missing_information: ["următorul pas confirmat"], uncertainty_notes: ["SIGNAL_TYPE: follow_up", "SIGNAL_TYPE_LABEL: Follow-up comercial", "DEADLINE_CLUE: Termen menționat: mâine", "VALUE_CLUE: Valoare menționată: 36.000 RON", "CONTEXT_HINT: Companie existentă identificată în CRM.", "CONTEXT_HINT: Contact existent identificat în CRM.", "DETECTION_REASON: Textul indică o revenire comercială sau lipsa unui răspuns.", "INCERTITUDINE: Interesul actual nu este confirmat."], estimated_value_min: 24000, estimated_value_max: 36000, estimated_recoverable_value: 36000, suggested_due_date: date(1), analyzed_at: iso(-2) }),
     baseSignal(3, "Notă după apel privind reînnoirea", "phone", "postponed", "postponed", { source_label: "Notă după apel", contact_company: organizations[4].name, matched_organization_id: organizationIds[4], raw_message: "Notă după apel: reînnoirea contractului va fi reluată după aprobarea bugetului intern, spre finalul lunii.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 64, confidence_level: "medium", urgency_level: "medium", review_due_at: iso(5), missing_information: ["confirmare buget", "persoană de contact confirmată"], uncertainty_notes: ["SIGNAL_TYPE: renewal", "SIGNAL_TYPE_LABEL: Reînnoire", "DEADLINE_CLUE: Termen menționat: finalul lunii", "CONTEXT_HINT: Companie existentă identificată în CRM.", "DETECTION_REASON: Textul indică o reînnoire sau o prelungire contractuală.", "INCERTITUDINE: Data deciziei este orientativă."], estimated_value_min: 16000, estimated_value_max: 24000, estimated_recoverable_value: 24000, analyzed_at: iso(-3) }),

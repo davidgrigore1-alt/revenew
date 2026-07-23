@@ -23,7 +23,7 @@ export default async function PipelinePage() {
     <PageShell
       eyebrow="Flux comercial"
       title="Pipeline"
-      description="Controlează progresul comercial pe etape, cu ownership și următoarea acțiune vizibile înaintea schimbării de status."
+      description="Controlează progresul comercial pe etape, cu responsabilitatea și următoarea acțiune vizibile înaintea schimbării stării."
       actions={
         <div className="flex flex-wrap gap-2">
           <Button href="/opportunities" variant="secondary">Vezi oportunitățile</Button>
@@ -45,7 +45,7 @@ export default async function PipelinePage() {
               <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
                 <div><dt className="text-label text-[rgb(var(--text-faint))]">Active</dt><dd className="mt-1 text-xl font-semibold">{activeOpportunities.length}</dd></div>
                 <div><dt className="text-label text-[rgb(var(--text-faint))]">Cu responsabil</dt><dd className="mt-1 text-xl font-semibold">{withOwner}/{activeOpportunities.length}</dd></div>
-                <div><dt className="text-label text-[rgb(var(--text-faint))]">Cu next action</dt><dd className="mt-1 text-xl font-semibold">{withNextAction}/{activeOpportunities.length}</dd></div>
+                <div><dt className="text-label text-[rgb(var(--text-faint))]">Cu acțiune următoare</dt><dd className="mt-1 text-xl font-semibold">{withNextAction}/{activeOpportunities.length}</dd></div>
                 <div><dt className="text-label text-[rgb(var(--text-faint))]">Câștigat · RON</dt><dd className="mt-1 text-xl font-semibold text-[rgb(var(--success-text))]">{formatCurrency(wonValue, "RON")}</dd></div>
               </dl>
             </div>

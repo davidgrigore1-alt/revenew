@@ -95,7 +95,7 @@ export default async function EnterprisePilotPackPage() {
                   <p key={entry.currency} className="text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(entry.value, entry.currency)}</p>
                 )) : <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Fără estimare susținută de date</p>}
               </div>
-              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Oportunități și semnale cu blocaje, deduplicate pe obiect comercial și separate pe monedă. Valoare estimată, nu venit confirmat; pilotul nu garantează recuperarea ei.</p>
+              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Fiecare oportunitate este numărată o singură dată în total, chiar dacă are mai multe blocaje. Monedele rămân separate. Valoare estimată, nu venit confirmat; pilotul nu garantează recuperarea ei.</p>
             </div>
           </div>
         </Section>
@@ -166,13 +166,25 @@ export default async function EnterprisePilotPackPage() {
           </ul>
         </Section>
 
-        <Section id="dovezi" eyebrow="H · Dovezi și metodologie" title="Cum poate fi verificată propunerea" description="Propunerea reutilizează auditul operațional curent și păstrează legătura cu sursele autorizate.">
+        <Section id="dupa-pilot" eyebrow="H · După pilot" title="Decizia de continuare rămâne controlată" description="La finalul celor 14 zile, conducerea alege direcția pe baza criteriilor și dovezilor observate, nu pe baza unei promisiuni comerciale.">
+          <div className="grid gap-3 lg:grid-cols-3">
+            {pack.continuationDecisions.map((decision) => (
+              <div key={decision.title} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
+                <h3 className="font-semibold text-[rgb(var(--foreground))]">{decision.title}</h3>
+                <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Când:</strong> {decision.when}</p>
+                <p className="mt-3 border-t border-[rgb(var(--border))] pt-3 text-xs leading-5 text-[rgb(var(--text-secondary))]"><strong>Pas următor:</strong> {decision.nextStep}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section id="dovezi" eyebrow="I · Dovezi și metodologie" title="Cum poate fi verificată propunerea" description="Propunerea reutilizează auditul operațional curent și păstrează legătura cu sursele autorizate.">
           {pack.evidence.length > 0 ? <ul className="divide-y divide-[rgb(var(--border))] rounded-card border border-[rgb(var(--border))]">{pack.evidence.slice(0, 8).map((source) => <li key={`${source.sourceType}:${source.sourceId}:${source.href}`} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 gap-2"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><div><p className="text-sm font-semibold text-[rgb(var(--foreground))]">{source.label}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{source.sourceTimestamp ? formatDateTimeWithSeconds(source.sourceTimestamp) : "Dată indisponibilă"} · {evidenceTypeLabels[source.sourceType]}</p></div></div><Link href={source.href} className="focus-ring inline-flex items-center gap-1 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide dovada<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link></li>)}</ul> : <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">Nu există încă dovezi suficiente pentru priorități comerciale verificabile.</p>}
           <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-3">{pack.safetyNotes.map((note) => <p key={note} className="flex gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{note}</p>)}</div>
           <Link href={pack.auditHref} className="focus-ring mt-5 inline-flex items-center gap-1 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Consultă auditul de recuperare venituri<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
         </Section>
 
-        <Section id="nota" eyebrow="I · Notă de utilizare" title="Interpretare prudentă">
+        <Section id="nota" eyebrow="J · Notă de utilizare" title="Interpretare prudentă">
           <p className="max-w-4xl text-sm leading-7 text-[rgb(var(--text-secondary))]">{pack.disclaimer}</p>
         </Section>
       </article>

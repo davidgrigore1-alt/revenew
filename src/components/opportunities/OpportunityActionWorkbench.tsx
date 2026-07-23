@@ -34,7 +34,7 @@ export function OpportunityActionWorkbench({
       href: "#action-responsibility",
       title: "Schimbă responsabilul",
       status: opportunity.ownerProfileId ? "Responsabil atribuit" : "Responsabil lipsă",
-      reason: opportunity.ownerProfileId ? "Actualizează ownership-ul numai dacă responsabilitatea s-a schimbat." : "Oportunitatea are nevoie de un responsabil explicit.",
+      reason: opportunity.ownerProfileId ? "Actualizează responsabilul numai dacă atribuirea s-a schimbat." : "Oportunitatea are nevoie de un responsabil explicit.",
       cta: opportunity.ownerProfileId ? "Actualizează responsabilul" : "Atribuie responsabil"
     },
     {

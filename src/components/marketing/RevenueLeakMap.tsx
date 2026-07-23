@@ -2,8 +2,8 @@ import { ArrowRightIcon, CheckIcon, ClockIcon, UserIcon } from "@heroicons/react
 
 const stages = [
   { label: "Semnal", meta: "Context comercial", state: "capturat" },
-  { label: "Owner", meta: "Responsabil explicit", state: "verificat" },
-  { label: "Next action", meta: "Pas și termen", state: "neclar" },
+  { label: "Responsabil", meta: "Atribuire explicită", state: "verificată" },
+  { label: "Acțiune următoare", meta: "Pas și termen", state: "neclară" },
   { label: "Rezultat", meta: "Urmărit până la închidere", state: "în atenție" }
 ] as const;
 

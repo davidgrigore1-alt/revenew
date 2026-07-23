@@ -30,6 +30,19 @@ test("recommended action and precise safe CTAs remain visible", async () => {
   assert.doesNotMatch(workbench, />Vezi detalii</);
 });
 
+test("the first opportunity screen exposes evidence without opening a raw feed", async () => {
+  const [controlCenter, workflow] = await Promise.all([
+    readFile(controlCenterUrl, "utf8"),
+    readFile(workflowUrl, "utf8")
+  ]);
+  assert.match(controlCenter, /Dovadă disponibilă/);
+  assert.match(controlCenter, /Verifică dovezile/);
+  assert.match(controlCenter, /Lipsește o dovadă verificabilă/);
+  assert.match(workflow, /Dovezi și istoric/);
+  assert.match(workflow, /Consultă textul sursă/);
+  assert.doesNotMatch(workflow, />Text sursă brut</);
+});
+
 test("estimated opportunity value stays separate from confirmed revenue", async () => {
   const controlCenter = await readFile(controlCenterUrl, "utf8");
   assert.match(controlCenter, /Valoare estimată, nu confirmată/);

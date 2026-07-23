@@ -24,7 +24,7 @@ async function main() {
     const probe = await credentialProbe.auth.signInWithPassword({ email: DEMO.email, password });
     if (probe.error) {
       const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-        password, email_confirm: true, user_metadata: { full_name: "David Pohoata", demo_marker: DEMO.marker }
+        password, email_confirm: true, user_metadata: { full_name: "Operator Demo ReveNew", demo_marker: DEMO.marker }
       });
       if (error) throw new Error(`Contul demo local nu a putut fi actualizat: ${error.message}`);
       user = data.user;
@@ -32,7 +32,7 @@ async function main() {
   } else {
     const { data, error } = await admin.auth.admin.createUser({
       email: DEMO.email, password, email_confirm: true,
-      user_metadata: { full_name: "David Pohoata", demo_marker: DEMO.marker }
+      user_metadata: { full_name: "Operator Demo ReveNew", demo_marker: DEMO.marker }
     });
     if (error || !data.user) throw new Error(`Contul demo local nu a putut fi creat: ${error?.message ?? "răspuns invalid"}`);
     user = data.user;
@@ -71,10 +71,10 @@ async function main() {
     grant insert on public.commercial_signal_events to authenticated;
     delete from public.businesses where id = '${DEMO.businessId}';
     insert into public.profiles (id,user_id,full_name,email,role)
-    values ('${profileId}','${user.id}','David Pohoata','${DEMO.email}','business_owner')
+    values ('${profileId}','${user.id}','Operator Demo ReveNew','${DEMO.email}','business_owner')
     on conflict (id) do update set user_id=excluded.user_id,full_name=excluded.full_name,email=excluded.email,role=excluded.role,updated_at=now();
     insert into public.businesses (id,owner_profile_id,name,legal_name,industry,city,county,country_code,notification_email,current_sales_process)
-    values ('${DEMO.businessId}','${profileId}','${DEMO.businessName}','Auto Management Revenue Lab SRL [FICTIV]','Servicii B2B și management operațional','București','București','RO','${DEMO.email}','${DEMO.marker}: demonstrație locală, control uman obligatoriu.');
+    values ('${DEMO.businessId}','${profileId}','${DEMO.businessName}','Meridian Commercial Operations SRL [FICTIV]','Servicii B2B și management operațional','București','București','RO','${DEMO.email}','${DEMO.marker}: demonstrație locală, control uman obligatoriu.');
     insert into public.business_members (business_id,profile_id,role,status) values ('${DEMO.businessId}','${profileId}','owner','active');
     insert into public.business_services (business_id,name,description) values
       ('${DEMO.businessId}','Revenue Recovery','Identificare și urmărire disciplinată a oportunităților subutilizate.'),

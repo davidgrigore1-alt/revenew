@@ -45,7 +45,7 @@ export function ProductPreview() {
                 <p className="text-[0.625rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Brief operațional · Astăzi</p>
                 <p className="mt-2 max-w-md text-sm font-semibold leading-5 sm:text-base">Două intervenții comerciale trebuie clarificate înainte de următoarea etapă.</p>
               </div>
-              <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.7)] px-3 py-1.5 text-[0.625rem] font-semibold text-[rgb(var(--text-secondary))]">Ownership verificat</span>
+              <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.7)] px-3 py-1.5 text-[0.625rem] font-semibold text-[rgb(var(--text-secondary))]">Responsabil confirmat</span>
             </div>
           </div>
 
@@ -68,7 +68,7 @@ export function ProductPreview() {
               <div className="flex items-center justify-between border-b border-[rgb(var(--border))] px-4 py-3">
                 <div>
                   <p id="preview-attention-title" className="text-xs font-bold text-[rgb(var(--foreground))]">Necesită atenție astăzi</p>
-                  <p className="mt-0.5 text-[0.625rem] text-[rgb(var(--text-muted))]">Prioritate, owner și valoare într-un singur loc</p>
+                  <p className="mt-0.5 text-[0.625rem] text-[rgb(var(--text-muted))]">Prioritate, responsabil și valoare într-un singur loc</p>
                 </div>
                 <ArrowUpRightIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />
               </div>
@@ -92,11 +92,11 @@ export function ProductPreview() {
               <p id="preview-control-title" className="text-xs font-bold text-[rgb(var(--foreground))]">Control și progres</p>
               <div className="mt-4 space-y-4">
                 <div>
-                  <div className="flex justify-between text-[0.625rem] font-semibold text-[rgb(var(--text-muted))]"><span>Cu owner</span><span>83%</span></div>
+                  <div className="flex justify-between text-[0.625rem] font-semibold text-[rgb(var(--text-muted))]"><span>Cu responsabil</span><span>83%</span></div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"><div className="marketing-progress-fill h-full w-[83%] rounded-full bg-[rgb(var(--primary))]" /></div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-[0.625rem] font-semibold text-[rgb(var(--text-muted))]"><span>Cu next action</span><span>67%</span></div>
+                  <div className="flex justify-between text-[0.625rem] font-semibold text-[rgb(var(--text-muted))]"><span>Cu acțiune următoare</span><span>67%</span></div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"><div className="marketing-progress-fill h-full w-[67%] rounded-full bg-[rgb(var(--brand-400))]" /></div>
                 </div>
               </div>

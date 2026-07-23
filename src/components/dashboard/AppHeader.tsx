@@ -29,7 +29,7 @@ export function AppHeader({
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerItems = [...primaryItems, ...utilityItems];
   const canViewSettings = utilityItems.some((item) => item.href === "/settings");
-  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Workspace activ";
+  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
 
   useEffect(() => {
     setOpen(false);

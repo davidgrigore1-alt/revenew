@@ -54,6 +54,15 @@ export function OpportunityControlCenter({
     const value = `${association.role ?? ""} ${association.contact.decisionRole ?? ""}`.toLowerCase();
     return /decision|decident|buyer|approver/.test(value);
   }) ?? null;
+  const latestTimelineEvidence = [...opportunity.timeline]
+    .sort((left, right) => (right.date ?? "").localeCompare(left.date ?? ""))[0];
+  const latestDocumentEvidence = [...opportunity.documents]
+    .sort((left, right) => (right.createdAt ?? "").localeCompare(left.createdAt ?? ""))[0];
+  const visibleEvidence = latestTimelineEvidence
+    ? { label: latestTimelineEvidence.label, date: latestTimelineEvidence.date, href: "#opportunity-timeline" }
+    : latestDocumentEvidence
+      ? { label: latestDocumentEvidence.title, date: latestDocumentEvidence.createdAt, href: "#opportunity-documents" }
+      : null;
 
   function handleResult(result: { ok: boolean; error?: string }, success: string) {
     if (result.ok) {
@@ -102,7 +111,7 @@ export function OpportunityControlCenter({
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{attention.primaryNextAction?.dueDate ? `Termen: ${formatDate(attention.primaryNextAction.dueDate)}. Verifică responsabilul și contextul înainte de execuție.` : "O oportunitate fără acțiune și termen nu poate fi urmărită operațional. Completează pasul următor înainte de follow-up."}</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button href={attention.primaryNextAction ? "#workflow-actions-list" : "#action-schedule"}>{attention.primaryNextAction ? "Revizuiește acțiunea" : "Programează acțiunea"}</Button>
-                <Button href="#opportunity-timeline" variant="secondary">Vezi istoricul</Button>
+                <Button href={visibleEvidence?.href ?? "#opportunity-timeline"} variant="secondary">Verifică dovezile</Button>
               </div>
               <p className="mt-4 text-xs text-[rgb(var(--text-muted))]">Aprobarea umană rămâne obligatorie pentru orice comunicare externă sau rezultat comercial.</p>
             </div>
@@ -120,6 +129,15 @@ export function OpportunityControlCenter({
               <div className="grid grid-cols-2 gap-4 border-y border-[rgb(var(--border))] py-5"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 text-sm font-semibold">{ownerName ?? "Neatribuit"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ciclu de viață</dt><dd className="mt-1 text-sm font-semibold">{lifecycleLabels[lifecycle]}</dd></div></div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 text-sm font-semibold">{primaryContact?.contact.fullName ?? "Lipsește"}</dd>{primaryContact?.contact.email ? <p className="mt-1 break-all text-xs text-[rgb(var(--text-muted))]">{primaryContact.contact.email}</p> : null}</div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Decident</dt><dd className="mt-1 text-sm font-semibold">{decisionMaker?.contact.fullName ?? "Neconfirmat"}</dd></div>
+              <div className="border-t border-[rgb(var(--border))] pt-5">
+                <dt className="text-xs text-[rgb(var(--text-muted))]">Dovadă disponibilă</dt>
+                {visibleEvidence ? (
+                  <>
+                    <dd className="mt-1 text-sm font-semibold"><a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{visibleEvidence.label}</a></dd>
+                    {visibleEvidence.date ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDate(visibleEvidence.date)}</p> : null}
+                  </>
+                ) : <dd className="mt-1 text-sm font-semibold text-[rgb(var(--warning-text))]">Lipsește o dovadă verificabilă</dd>}
+              </div>
               <div className={`grid gap-4 border-t border-[rgb(var(--border))] pt-5 ${opportunity.actualOutcomeAmount != null ? "grid-cols-2" : "grid-cols-1"}`}><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ultima activitate importantă</dt><dd className="mt-1 text-sm font-semibold">{attention.lastMeaningfulActivityAt ? formatDate(attention.lastMeaningfulActivityAt) : "Date insuficiente"}</dd></div>{opportunity.actualOutcomeAmount != null ? <div><dt className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat</dt><dd className="mt-1 text-sm font-semibold">{formatCurrency(opportunity.actualOutcomeAmount, opportunity.currency ?? "RON")}</dd></div> : null}</div>
             </dl>
           </aside>

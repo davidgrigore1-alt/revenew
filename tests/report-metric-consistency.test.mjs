@@ -15,6 +15,9 @@ test("Reports distinguishes active pipeline value from exposed audit value", () 
   assert.doesNotMatch(copy, /Pipelines estimat|Pipeline estimat|Valoare maximă estimată/i);
   assert.match(copy, /Valoare estimată în pipeline/);
   assert.match(copy, /Toate oportunitățile active/);
+  assert.match(reports, /Trei valori, trei decizii diferite/);
+  assert.match(reports, /Numai cazurile cu blocaje din audit/);
+  assert.match(reports, /Numai rezultate câștigate și confirmate explicit/);
   assert.match(copy, /nu (?:este|indică doar).*venit confirmat|nu este venit confirmat/i);
   assert.match(reports, /opportunities\.filter\(isOpenOpportunity\)/);
 });
@@ -27,9 +30,9 @@ test("audit and pilot label exposed estimates as distinct, deduplicated and unco
 
   assert.match(audit, /Valoare estimată expusă/);
   assert.match(pilot, /Valoare estimată expusă/);
-  assert.match(audit, /deduplicate pe obiect comercial/);
-  assert.match(pilot, /deduplicate pe obiect comercial/);
-  assert.match(copy, /separate pe monedă/);
+  assert.match(audit, /Fiecare oportunitate este numărată o singură dată în total/);
+  assert.match(pilot, /Fiecare oportunitate este numărată o singură dată în total/);
+  assert.match(copy, /Monedele rămân separate/);
   assert.match(copy, /nu venit confirmat|nu sunt venit confirmat|neconfirmate ca venit/);
   assert.doesNotMatch(copy, /ROI garantat|venit garantat|recuperare garantată|guaranteed revenue/i);
 });

@@ -34,6 +34,12 @@ export type EnterprisePilotClientInput = {
   purpose: string;
 };
 
+export type EnterprisePilotContinuationDecision = {
+  title: "Continuă controlat" | "Ajustează domeniul" | "Extinde numai pe baza dovezilor";
+  when: string;
+  nextStep: string;
+};
+
 export type EnterprisePilotPack = {
   generatedAt: string;
   workspaceName: string;
@@ -58,6 +64,7 @@ export type EnterprisePilotPack = {
   successCriteria: EnterprisePilotCriterion[];
   buyerCommitteeNotes: EnterprisePilotStakeholder[];
   requiredClientInputs: EnterprisePilotClientInput[];
+  continuationDecisions: EnterprisePilotContinuationDecision[];
   safetyNotes: string[];
   evidence: WorkspaceDecisionEvidence[];
   auditHref: "/reports/revenue-recovery-audit";
@@ -133,6 +140,24 @@ const safetyNotes = [
   "Pachetul nu trimite comunicări externe și nu execută acțiuni în numele utilizatorului.",
   "Un document pregătit sau aprobat nu este considerat trimis fără dovadă.",
   "Rezultatele comerciale sunt declarate și confirmate de utilizatori."
+];
+
+const continuationDecisions: EnterprisePilotContinuationDecision[] = [
+  {
+    title: "Continuă controlat",
+    when: "Criteriile operaționale sunt susținute de dovezi, iar echipa poate menține responsabilul, termenul și revizuirea umană.",
+    nextStep: "Stabilește un ciclu lunar de audit, decizii prioritare și verificare a buclelor rămase deschise."
+  },
+  {
+    title: "Ajustează domeniul",
+    when: "Datele, responsabilitatea sau procesul de aprobare sunt încă incomplete pentru o evaluare corectă.",
+    nextStep: "Restrânge pilotul la cazurile verificabile și repetă evaluarea după completarea informațiilor critice."
+  },
+  {
+    title: "Extinde numai pe baza dovezilor",
+    when: "Pilotul confirmă un mod de lucru repetabil, fără excepții de control sau afirmații comerciale nevalidate.",
+    nextStep: "Adaugă treptat alte echipe sau tipuri de cazuri, păstrând aceleași porți de aprobare și audit."
+  }
 ];
 
 const gapScope: Record<RevenueRecoveryAuditGap["type"], (count: number) => string> = {
@@ -367,6 +392,7 @@ export function buildEnterprisePilotPack(audit: RevenueRecoveryAudit): Enterpris
     successCriteria: successCriteria(audit),
     buyerCommitteeNotes: stakeholderNotes,
     requiredClientInputs,
+    continuationDecisions,
     safetyNotes,
     evidence: audit.evidence,
     auditHref: "/reports/revenue-recovery-audit",

@@ -44,6 +44,19 @@ const actionLabels: Array<[OpportunityAction["type"], string]> = [
   ["research_more", "Cercetează mai mult"]
 ];
 
+const actionPriorityLabels: Record<string, string> = {
+  low: "Prioritate redusă",
+  medium: "Prioritate normală",
+  high: "Prioritate ridicată"
+};
+
+const actionStatusLabels: Record<string, string> = {
+  pending: "În așteptare",
+  done: "Finalizată",
+  completed: "Finalizată",
+  cancelled: "Anulată"
+};
+
 const isDevelopmentMode = process.env.NODE_ENV === "development";
 
 const documentStatusLabels: Record<OpportunityDocument["status"], string> = {
@@ -501,7 +514,7 @@ export function OpportunityWorkflow({
         </div>
       ) : null}
       <nav className="flex gap-2 overflow-x-auto rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-2" aria-label="Secțiuni oportunitate">
-        {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Istoric'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+        {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Dovezi'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
       </nav>
 
       <div className="flex flex-wrap items-center gap-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
@@ -520,41 +533,41 @@ export function OpportunityWorkflow({
           <p className="mb-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Alege un rezultat concret, pregătește documentul și revizuiește-l înainte de orice utilizare externă.</p>
           <div className="grid gap-4">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Comunicare</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Comunicare</p>
             <div className="flex items-center gap-2">
               <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button bg-[rgb(var(--primary))] px-4 py-3 text-sm font-semibold text-[rgb(var(--primary-foreground))] hover:bg-[rgb(var(--primary-hover))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("outreach_email", "Email outreach", generateOutreachEmail(opportunity, business))}>
                 {loading === "outreach_email" ? "Se pregătește documentul..." : "Generează email outreach"}
               </button>
             </div>
               <div className="mt-2 flex items-center gap-2">
-              <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("call_script", "Script apel", generateCallScript(opportunity, business))}>
+              <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("call_script", "Script apel", generateCallScript(opportunity, business))}>
                 {loading === "call_script" ? "Se pregătește documentul..." : "Generează script apel"}
               </button>
             </div>
             </div>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Materiale comerciale</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Materiale comerciale</p>
             <div className="flex items-center gap-2">
-              <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("offer_draft", "Draft oferta", generateOfferDraft(opportunity, business))}>
+              <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("offer_draft", "Draft oferta", generateOfferDraft(opportunity, business))}>
                 {loading === "offer_draft" ? "Se pregătește documentul..." : "Generează draft ofertă"}
               </button>
             </div>
               <div className="mt-2 flex items-center gap-2">
-              <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("procurement_checklist", "Checklist actiune", generateChecklist(opportunity, business))}>
+              <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => generateDocument("procurement_checklist", "Checklist actiune", generateChecklist(opportunity, business))}>
                 {loading === "procurement_checklist" ? "Se pregătește documentul..." : "Generează checklist"}
               </button>
             </div>
             </div>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Follow-up</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Follow-up</p>
             <div className="flex items-center gap-2">
-              <button type="button" disabled={Boolean(loading)} className="min-h-11 flex-1 rounded-lg border border-gold-400/25 bg-gold-400/10 px-4 py-3 text-sm font-semibold text-gold-400 hover:bg-gold-400/15 disabled:cursor-not-allowed disabled:opacity-60" onClick={scheduleFollowUp}>
+              <button type="button" disabled={Boolean(loading)} className="focus-ring min-h-11 flex-1 rounded-button border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--primary-muted))] px-4 py-3 text-sm font-semibold text-[rgb(var(--primary))] hover:border-[rgb(var(--primary)/0.42)] disabled:cursor-not-allowed disabled:opacity-60" onClick={scheduleFollowUp}>
                 {loading === "follow_up" ? "Se salvează..." : "Programează follow-up"}
               </button>
             </div>
             </div>
           </div>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Rezultat</p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Rezultat</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {[
               ["contacted", "Marchează contactat"]
@@ -564,7 +577,7 @@ export function OpportunityWorkflow({
                   type="button"
                   disabled={Boolean(loading)}
                   onClick={() => updateStatus(nextStatus as OpportunityStatus)}
-                  className="rounded-lg border border-white/10 bg-ink-900/80 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white"
+                  className="focus-ring rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]"
                 >
                   {label}
                 </button>
@@ -593,17 +606,17 @@ export function OpportunityWorkflow({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <DataCard title="Rezumat de lucru">
-          <p className="text-sm leading-6 text-zinc-300">{opportunity.summary}</p>
+          <p className="text-sm leading-6 text-[rgb(var(--text-secondary))]">{opportunity.summary}</p>
         </DataCard>
         <DataCard title="De ce contează">
-          <ul className="space-y-3 text-sm leading-6 text-zinc-300">
+          <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
             {opportunity.relevance.map((item, index) => (
               <li key={`${index}-${item}`}>{item}</li>
             ))}
           </ul>
         </DataCard>
         <DataCard title="Riscuri">
-          <ul className="space-y-3 text-sm leading-6 text-zinc-300">
+          <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
             {opportunity.risks.map((item, index) => (
               <li key={`${index}-${item}`}>{item}</li>
             ))}
@@ -616,25 +629,25 @@ export function OpportunityWorkflow({
           <button
             type="button"
             onClick={() => setShowFollowUpForm((current) => !current)}
-            className="rounded-lg border border-gold-400/25 bg-gold-400/10 px-4 py-2 text-sm font-semibold text-gold-400 hover:bg-gold-400/15"
+            className="focus-ring rounded-button border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--primary-muted))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary))] hover:border-[rgb(var(--primary)/0.42)]"
           >
             {showFollowUpForm ? "Închide formular follow-up" : "Configurează follow-up"}
           </button>
         </div>
         {showFollowUpForm ? (
-          <div className="mb-5 grid gap-3 rounded-lg border border-white/10 bg-ink-900/70 p-4">
-            <input value={followUpTitle} onChange={(event) => setFollowUpTitle(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
+          <div className="mb-5 grid gap-3 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
+            <input aria-label="Titlu follow-up" value={followUpTitle} onChange={(event) => setFollowUpTitle(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]" />
             <div className="grid gap-3 sm:grid-cols-3">
-              <input type="date" value={followUpDate} onChange={(event) => setFollowUpDate(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-              <input type="time" value={followUpTime} onChange={(event) => setFollowUpTime(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-              <select value={followUpPriority} onChange={(event) => setFollowUpPriority(event.target.value as "low" | "medium" | "high")} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none">
-                <option value="low">low</option>
-                <option value="medium">medium</option>
-                <option value="high">high</option>
+              <input aria-label="Data follow-up" type="date" value={followUpDate} onChange={(event) => setFollowUpDate(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]" />
+              <input aria-label="Ora follow-up" type="time" value={followUpTime} onChange={(event) => setFollowUpTime(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]" />
+              <select aria-label="Prioritate follow-up" value={followUpPriority} onChange={(event) => setFollowUpPriority(event.target.value as "low" | "medium" | "high")} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]">
+                <option value="low">Prioritate redusă</option>
+                <option value="medium">Prioritate normală</option>
+                <option value="high">Prioritate ridicată</option>
               </select>
             </div>
-            <textarea value={followUpNote} onChange={(event) => setFollowUpNote(event.target.value)} rows={5} className="rounded-lg border border-white/10 bg-ink-950/80 px-4 py-3 text-white outline-none" />
-            <button type="button" onClick={scheduleFollowUp} disabled={Boolean(loading)} className="w-fit rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-60">
+            <textarea aria-label="Notă follow-up" value={followUpNote} onChange={(event) => setFollowUpNote(event.target.value)} rows={5} className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-[rgb(var(--foreground))]" />
+            <button type="button" onClick={scheduleFollowUp} disabled={Boolean(loading)} className="focus-ring w-fit rounded-button bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] disabled:opacity-60">
               {loading === "follow_up" ? "Se salvează..." : "Salvează follow-up"}
             </button>
           </div>
@@ -644,27 +657,27 @@ export function OpportunityWorkflow({
             {actions.map((existing) => {
               const typeLabel = actionLabels.find(([type]) => type === existing.type)?.[1];
               return (
-                <article key={existing.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
-                  <p className="text-sm font-semibold text-white">{existing.title}</p>
-                  {typeLabel && typeLabel !== existing.title ? <p className="mt-1 text-xs text-zinc-500">{typeLabel}</p> : null}
+                <article key={existing.id} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
+                  <p className="text-sm font-semibold text-[rgb(var(--foreground))]">{existing.title}</p>
+                  {typeLabel && typeLabel !== existing.title ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{typeLabel}</p> : null}
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">{existing.status}</span>
-                    <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">{existing.priority ?? "medium"}</span>
+                    <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 py-1 text-[rgb(var(--text-secondary))]">{actionStatusLabels[existing.status] ?? "Stare neconfirmată"}</span>
+                    <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 py-1 text-[rgb(var(--text-secondary))]">{actionPriorityLabels[existing.priority ?? "medium"]}</span>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">
                     {existing?.description ?? "Acțiune pregătită pentru acest tip de oportunitate."}
                   </p>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-mint-400">
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">
                     {existing ? formatDateTimeWithSeconds(existing.dueDate) : "Fără termen"}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => updateAction(existing.id, "done")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
+                    <button type="button" onClick={() => updateAction(existing.id, "done")} className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
                       Marchează finalizat
                     </button>
-                    <button type="button" onClick={() => updateAction(existing.id, "postpone")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
+                    <button type="button" onClick={() => updateAction(existing.id, "postpone")} className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
                       Amână 3 zile
                     </button>
-                    <button type="button" onClick={() => updateAction(existing.id, "cancel")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white">
+                    <button type="button" onClick={() => updateAction(existing.id, "cancel")} className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
                       Anulează
                     </button>
                   </div>
@@ -678,23 +691,29 @@ export function OpportunityWorkflow({
       </DataCard></div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <DataCard title="Text sursă brut">
-          <p className="rounded-lg border border-white/10 bg-ink-900/80 p-4 text-sm leading-6 text-zinc-300">
-            {opportunity.rawSourceText}
-          </p>
+        <DataCard title="Context inițial" description="Textul sursă este păstrat pentru verificare și nu înlocuiește analiza umană.">
+          <details className="group rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3">
+            <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-1 text-sm font-semibold text-[rgb(var(--foreground))] marker:hidden">
+              Consultă textul sursă
+              <span className="text-xs font-normal text-[rgb(var(--text-muted))] group-open:hidden">Secțiune pliată</span>
+            </summary>
+            <p className="mt-3 border-t border-[rgb(var(--border))] pt-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
+              {opportunity.rawSourceText || "Nu există text sursă disponibil pentru această oportunitate."}
+            </p>
+          </details>
         </DataCard>
-        <div id="opportunity-timeline" className="scroll-mt-24"><DataCard title="Istoric și acțiuni">
+        <div id="opportunity-timeline" className="scroll-mt-24"><DataCard title="Dovezi și istoric" description="Evenimente comerciale verificabile, ordonate în contextul oportunității.">
           <div className="space-y-4">
             {opportunity.timeline.length > 0 ? (
               opportunity.timeline.map((event) => (
-                <div key={event.id} className="rounded-lg border border-white/10 bg-ink-900/70 p-4">
+                <div key={event.id} className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex size-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-xs font-semibold text-mint-300">?</span>
-                    <p className="font-semibold text-white">{event.label}</p>
-                    <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2 py-1 text-xs font-semibold text-zinc-300">{event.type ?? "event"}</span>
+                    <span className="size-2 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" />
+                    <p className="font-semibold text-[rgb(var(--foreground))]">{event.label}</p>
+                    {isDevelopmentMode && event.type ? <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs font-semibold text-[rgb(var(--text-muted))]">{event.type}</span> : null}
                   </div>
-                  <p className="mt-1 text-sm text-zinc-400">{formatDateTimeWithSeconds(event.date)}</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-300">{event.description}</p>
+                  <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.date)}</p>
+                  {event.description ? <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{event.description}</p> : null}
                 </div>
               ))
             ) : (
@@ -717,7 +736,7 @@ export function OpportunityWorkflow({
       <DataCard
         title="Documente generate"
         description={
-          "Documentele sunt salvate în workspace. Revizuiește textul înainte de trimitere."
+          "Documentele sunt salvate în spațiul de lucru. Revizuiește textul înainte de trimitere."
         }
       >
         {selectedDocument ? (

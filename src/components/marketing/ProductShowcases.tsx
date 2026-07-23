@@ -38,13 +38,13 @@ export function OpportunityExecutionPreview() {
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               ["Valoare estimată", "214.000 RON"],
-              ["Owner", "Ioana Pavel"],
+              ["Responsabil", "Ioana Pavel"],
               ["Termen", "22 iulie"]
             ].map(([label, value], index) => <div key={label} className={`rounded-card border p-3.5 ${index === 0 ? "border-[rgb(var(--brand-500)/0.42)] bg-[rgb(var(--brand-50))] dark:bg-[rgb(var(--brand-950)/0.5)]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]"}`}><p className="text-[0.62rem] font-bold uppercase tracking-[0.1em] text-[rgb(var(--text-muted))]">{label}</p><p className="mt-2 text-sm font-semibold tabular-nums">{value}</p></div>)}
           </div>
 
           <div className="mt-4 rounded-card border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-4">
-            <div className="flex items-start gap-3"><ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--warning-text))]" aria-hidden="true" /><div><p className="text-xs font-bold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Următoarea acțiune</p><p className="mt-1.5 text-sm font-semibold">Validarea scopului tehnic cu echipa clientului</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Owner confirmat · termen stabilit · fără trimitere automată</p></div></div>
+            <div className="flex items-start gap-3"><ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--warning-text))]" aria-hidden="true" /><div><p className="text-xs font-bold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Următoarea acțiune</p><p className="mt-1.5 text-sm font-semibold">Validarea scopului tehnic cu echipa clientului</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Responsabil confirmat · termen stabilit · fără trimitere automată</p></div></div>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export function OpportunityExecutionPreview() {
 const portfolioRows = [
   ["Delta Construct Solutions SRL", "Contract flotă regională", "318.000 RON", "În execuție"],
   ["Nova Medical Systems SRL", "Parteneriat distribuție medicală", "132.000 RON", "Revizie astăzi"],
-  ["Meridian Logistic Systems SRL", "Revizuire ofertă logistică națională", "86.500 RON", "Next action clar"]
+  ["Meridian Logistic Systems SRL", "Revizuire ofertă logistică națională", "86.500 RON", "Acțiune următoare clară"]
 ] as const;
 
 export function PortfolioSummaryPreview() {
@@ -95,8 +95,8 @@ export function PortfolioSummaryPreview() {
             <div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold">Distribuție operațională</p><ArrowTrendingUpIcon className="h-5 w-5 text-[rgb(var(--primary))]" aria-hidden="true" /></div>
             <div className="mt-5 space-y-4">
               {[
-                ["Cu owner confirmat", "92%", "w-[92%]"],
-                ["Cu next action", "83%", "w-[83%]"],
+                ["Cu responsabil confirmat", "92%", "w-[92%]"],
+                ["Cu acțiune următoare", "83%", "w-[83%]"],
                 ["În termen", "76%", "w-[76%]"]
               ].map(([label, value, width]) => <div key={label}><div className="flex justify-between text-xs text-[rgb(var(--text-muted))]"><span>{label}</span><span className="font-semibold tabular-nums text-[rgb(var(--foreground))]">{value}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"><div className={`marketing-progress-fill h-full rounded-full bg-[rgb(var(--primary))] ${width}`} /></div></div>)}
             </div>

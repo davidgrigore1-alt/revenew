@@ -13,7 +13,7 @@ export function Sidebar({
   businessName?: string;
   isDemo?: boolean;
 }) {
-  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Workspace activ";
+  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
 
   return (
     <aside className="app-scrollbar fixed inset-y-0 left-0 z-40 hidden w-[260px] overflow-y-auto border-r border-[rgb(var(--border))] bg-[rgb(var(--sidebar))] lg:flex lg:flex-col" aria-label="Navigare ReveNew">
@@ -22,7 +22,7 @@ export function Sidebar({
       </div>
 
       <div className="mx-3 mt-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Workspace</p>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Spațiu de lucru</p>
         <p className="mt-1 truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={displayName}>{displayName}</p>
       </div>
 

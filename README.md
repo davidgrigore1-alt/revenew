@@ -112,16 +112,17 @@ Development diagnostics:
 - `/debug/supabase` shows env/session/profile/business/table select status.
 - `/debug/repair-profile` creates a missing profile for the logged-in auth user and returns the profile id.
 
-## Demo mode
+## Demo local pentru prezentare
 
-Dacă variabilele Supabase lipsesc, aplicația rămâne funcțională în demo mode:
+Pentru demonstrații client-safe folosește fluxul local izolat descris în [docs/local-demo.md](docs/local-demo.md). Acesta pornește cu autentificare locală reală, date strict fictive marcate `[DEMO]`, email extern și AI dezactivate și fără modificarea fișierului `.env.local`.
 
-- folosește Auto Management SRL ca business mock
-- folosește oportunități, lead-uri, outreach și rapoarte mock
-- login/signup redirecționează local fără Supabase
-- generarea documentelor rămâne locală și mock
+```powershell
+npm run demo:seed
+npm run demo:verify
+npm run demo:dev
+```
 
-Mesajul afișat: `Mod demo activ - date simulate, fara scriere in baza de date.`
+Ruta protejată `/demo` oferă un traseu de prezentare de cinci minute: Control Center → oportunitate și dovezi → audit de recuperare venituri → propunere pilot pe 14 zile. Fallback-ul fără Supabase rămâne util pentru dezvoltarea interfeței, dar nu înlocuiește mediul local izolat pentru o demonstrație comercială.
 
 ## Ce funcționează cu Supabase
 

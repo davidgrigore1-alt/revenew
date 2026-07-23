@@ -281,6 +281,8 @@ test("generation is explicit, tenant-scoped and never executes an external actio
   assert.doesNotMatch(ui, /<input|<textarea|useEffect|OPENAI_API_KEY|SUPABASE_SERVICE_ROLE_KEY|Chat with AI|Ask anything|agent autonom/i);
   assert.ok(ui.indexOf("fetch(\"/api/ai/business-analyst\"") > ui.indexOf("async function generateAnalysis"));
   assert.match(dashboard, /<AiBusinessAnalyst \/>/);
+  assert.match(dashboard, /<details[^>]*>[\s\S]*Analiză asistată, la cerere/);
+  assert.match(dashboard, /Opțional/);
   assert.match(route, /requireActivePaidAccess\(\)/);
   assert.match(route, /getAuthorizationContext\(\)/);
   assert.match(route, /hasPermission\(authorization, "opportunities\.analyze"\)/);

@@ -124,6 +124,10 @@ test("success criteria, buyer committee and client inputs remain operational and
   assert.ok(pack.buyerCommitteeNotes.every((entry) => entry.note.length < 180));
   assert.ok(pack.requiredClientInputs.some((entry) => entry.availability === "Necesar"));
   assert.ok(pack.requiredClientInputs.some((entry) => entry.availability === "Dacă este disponibil"));
+  assert.deepEqual(Array.from(pack.continuationDecisions, (entry) => entry.title), ["Continuă controlat", "Ajustează domeniul", "Extinde numai pe baza dovezilor"]);
+  assert.ok(pack.continuationDecisions.every((entry) => entry.when && entry.nextStep));
+  assert.match(pack.continuationDecisions[0].nextStep, /ciclu lunar de audit/);
+  assert.doesNotMatch(JSON.stringify(pack.continuationDecisions), /venit garantat|ROI|probabilitate de succes/i);
 });
 
 test("empty and partial workspaces stay honest without fabricated commercial conclusions", () => {

@@ -59,7 +59,7 @@ export function AttentionSummary({ items }: { items: AttentionSummaryItem[] }) {
           );
         })}
       </ul>
-      <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-faint))]">Distribuție operațională pe baza înregistrărilor accesibile în workspace. Stările se pot suprapune.</p>
+      <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-faint))]">Distribuție operațională pe baza înregistrărilor accesibile în spațiul de lucru. Stările se pot suprapune.</p>
     </div>
   );
 }

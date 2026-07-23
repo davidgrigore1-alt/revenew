@@ -29,7 +29,7 @@ export function FirstTimeGuide({ journey }: { journey: FirstValueJourney }) {
           <li key={step.id} className="border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:[&:nth-child(odd)]:border-r xl:border-b-0 xl:border-r xl:last:border-r-0 xl:[&:nth-child(odd)]:border-r">
             <div className="flex items-center gap-2">
               {step.state === "complete" ? (
-                <CheckCircleIcon className="h-5 w-5 shrink-0 text-[rgb(var(--success-text))]" aria-label="Confirmat din datele workspace-ului" />
+                <CheckCircleIcon className="h-5 w-5 shrink-0 text-[rgb(var(--success-text))]" aria-label="Confirmat din datele spațiului de lucru" />
               ) : (
                 <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold ${step.state === "current" ? "border-[rgb(var(--gold-500))] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]" : "border-[rgb(var(--border-strong))] text-[rgb(var(--text-faint))]"}`} aria-hidden="true">
                   {index + 1}

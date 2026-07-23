@@ -27,7 +27,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const { theme, setTheme } = useTheme();
-  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Workspace activ";
+  const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
   const identity = userName || userEmail || "Cont ReveNew";
   const initial = (businessName || userName || userEmail || "R").slice(0, 1).toUpperCase();
 
@@ -67,7 +67,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
         type="button"
         onClick={() => setOpen((current) => !current)}
         className="focus-ring flex h-10 w-10 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left shadow-sm transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))] md:w-[220px] md:justify-start md:gap-2.5 md:px-2.5"
-        aria-label={`Cont și workspace: ${displayName}`}
+        aria-label={`Cont și spațiu de lucru: ${displayName}`}
         aria-haspopup="dialog"
         aria-controls="workspace-account-menu"
         aria-expanded={open}
@@ -83,9 +83,9 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
       </button>
 
       {open ? (
-        <div id="workspace-account-menu" role="dialog" aria-label="Cont și preferințe workspace" className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1.5rem))] rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3 shadow-elevated">
+        <div id="workspace-account-menu" role="dialog" aria-label="Cont și preferințe pentru spațiul de lucru" className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1.5rem))] rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3 shadow-elevated">
           <div className="rounded-control bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Workspace activ</p>
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Spațiu de lucru activ</p>
             <p className="mt-1 truncate text-sm font-semibold text-[rgb(var(--foreground))]">{displayName}</p>
             <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{identity}</p>
             {userEmail && userName ? <p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{userEmail}</p> : null}
@@ -117,7 +117,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
           <div className="mt-3 grid gap-1 border-t border-[rgb(var(--border))] pt-3">
             {canViewSettings ? (
               <Link href="/settings" onClick={() => setOpen(false)} className="focus-ring rounded-control px-3 py-2.5 text-sm font-medium text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
-                Setări workspace
+                Setări spațiu de lucru
               </Link>
             ) : null}
             <button type="button" onClick={logout} className="focus-ring flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-sm font-medium text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">

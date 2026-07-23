@@ -12,7 +12,7 @@ type ScoreBadgeProps = {
 const scoreInfo: Record<string, string> = {
   Fit: "Cât de bine se potrivește oportunitatea cu serviciile, locația și publicul țintă al firmei.",
   Urgență: "Cât de repede trebuie acționat, în funcție de deadline și context.",
-  Bani: "Estimare a valorii comerciale posibile. Nu este venit garantat.",
+  Bani: "Estimare a valorii comerciale posibile. Nu este venit confirmat.",
   Încredere: "Cât de sigură este analiza în funcție de datele disponibile."
 };
 

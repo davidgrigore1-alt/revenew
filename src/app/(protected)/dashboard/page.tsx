@@ -77,7 +77,7 @@ export default async function DashboardPage() {
     const activityItems: ActivityFeedItem[] = summary.events.slice(0, 7).map((event) => ({
       id: event.id,
       title: event.label,
-      detail: event.opportunityId ? opportunityById.get(event.opportunityId)?.title ?? "Oportunitate din workspace" : "Activitate din workspace",
+      detail: event.opportunityId ? opportunityById.get(event.opportunityId)?.title ?? "Oportunitate din spațiul de lucru" : "Activitate din spațiul de lucru",
       timestamp: activityDate(event.date),
       href: event.opportunityId ? `/opportunities/${event.opportunityId}` : undefined
     }));
@@ -107,7 +107,18 @@ export default async function DashboardPage() {
 
         <WorkspaceDecisionQueue queue={decisionQueue} />
 
-        <AiBusinessAnalyst />
+        <details className="group rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
+          <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-1 marker:hidden">
+            <span>
+              <span className="block text-sm font-semibold text-[rgb(var(--foreground))]">Analiză asistată, la cerere</span>
+              <span className="mt-1 block text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">Folosește numai dovezile existente și nu execută acțiuni.</span>
+            </span>
+            <span className="shrink-0 rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-muted))] group-open:hidden">Opțional</span>
+          </summary>
+          <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
+            <AiBusinessAnalyst />
+          </div>
+        </details>
 
         {!firstValueJourney.complete ? <FirstTimeGuide journey={firstValueJourney} /> : null}
 
@@ -137,7 +148,7 @@ export default async function DashboardPage() {
                         <div className="flex items-center justify-between gap-4 sm:justify-end">
                           <div className="text-left sm:text-right">
                             <p className="font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p>
-                            <p className="mt-1 text-xs text-[rgb(var(--text-faint))]">{assessment.primaryNextAction?.dueDate ? formatDate(assessment.primaryNextAction.dueDate) : assessment.primaryNextAction?.title ?? "Necesită next action"}</p>
+                            <p className="mt-1 text-xs text-[rgb(var(--text-faint))]">{assessment.primaryNextAction?.dueDate ? formatDate(assessment.primaryNextAction.dueDate) : assessment.primaryNextAction?.title ?? "Necesită acțiune următoare"}</p>
                           </div>
                           <ArrowRightIcon className="h-4 w-4 shrink-0 text-[rgb(var(--text-faint))] transition-transform duration-fast group-hover:translate-x-0.5 group-hover:text-[rgb(var(--primary))]" aria-hidden="true" />
                         </div>
@@ -156,14 +167,14 @@ export default async function DashboardPage() {
               <PremiumPanel className="p-5">
                 <AttentionSummary items={[
                   { label: "În atenție", value: attentionCount, tone: "danger", href: "/opportunities" },
-                  { label: "Fără next action", value: summary.warnings.withoutNextAction.length, tone: "warning", href: "/pipeline" },
+                  { label: "Fără acțiune următoare", value: summary.warnings.withoutNextAction.length, tone: "warning", href: "/pipeline" },
                   { label: "Fără contact principal", value: summary.warnings.withoutPrimaryContact.length, tone: "neutral", href: "/companies" },
                   { label: "Fără owner", value: summary.viewer.isManager ? summary.warnings.unassigned.length : 0, tone: "brand", href: summary.viewer.isManager ? "/pipeline" : undefined }
                 ]} />
               </PremiumPanel>
             </DashboardSection>
 
-            <DashboardSection title="Activitate relevantă" description="Evenimente comerciale recente din workspace.">
+            <DashboardSection title="Activitate relevantă" description="Evenimente comerciale recente din spațiul de lucru.">
               <PremiumPanel className="px-4 py-1">
                 <ActivityFeed items={activityItems} empty={compactEmpty("Fără activitate recentă", "Evenimentele comerciale vor apărea aici după actualizarea workflow-urilor.")} />
               </PremiumPanel>

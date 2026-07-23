@@ -56,24 +56,50 @@ const eventTypeLabels: Record<string, string> = {
   document_generated: "Document generat",
   document_edited: "Document editat",
   document_copied: "Document copiat",
-  document_ready_to_send: "Document pregatit de trimis",
+  document_ready_to_send: "Document pregătit de trimis",
   document_marked_sent: "Document marcat ca trimis",
   follow_up_scheduled: "Follow-up programat",
-  action_completed: "Actiune finalizata",
-  action_postponed: "Actiune amanata",
-  action_cancelled: "Actiune anulata",
-  marked_contacted: "Oportunitate contactata",
+  action_completed: "Acțiune finalizată",
+  action_postponed: "Acțiune amânată",
+  action_cancelled: "Acțiune anulată",
+  marked_contacted: "Oportunitate contactată",
   marked_won: "Oportunitate câștigată",
   marked_lost: "Oportunitate pierdută",
-  ignored: "Oportunitate ignorata",
-  ai_analysis_saved: "Analiza salvata",
-  local_analysis_saved: "Analiza salvata"
+  ignored: "Oportunitate ignorată",
+  ai_analysis_saved: "Analiză salvată",
+  local_analysis_saved: "Analiză salvată"
 };
 
 const priorityLabels: Record<string, string> = {
-  low: "Scazuta",
+  low: "Scăzută",
   medium: "Medie",
-  high: "Ridicata"
+  high: "Ridicată"
+};
+
+const actionStatusLabels: Record<string, string> = {
+  pending: "În așteptare",
+  done: "Finalizată",
+  cancelled: "Anulată"
+};
+
+const signalStatusLabels: Record<string, string> = {
+  new: "Nou",
+  analyzed: "Analizat",
+  ready_for_review: "Pregătit pentru revizuire",
+  postponed: "Amânat",
+  converted: "Convertit",
+  dismissed: "Respins",
+  duplicate: "Duplicat",
+  ignored: "Ignorat",
+  archived: "Arhivat"
+};
+
+const signalPriorityLabels: Record<string, string> = {
+  low: "Prioritate redusă",
+  medium: "Prioritate normală",
+  high: "Prioritate ridicată",
+  urgent: "Urgent",
+  critical: "Critic"
 };
 
 function addDays(days: number) {
@@ -260,14 +286,14 @@ export default async function ReportsPage() {
   const highValueWithoutAction = activeOpportunities.filter((opportunity) => !workflow.actions.some((action) => action.opportunityId === opportunity.id) && opportunity.estimatedValueHigh >= 10000);
   const closeDeadlines = deadlinesThisWeek.filter((opportunity) => opportunity.status !== "contacted" && opportunity.status !== "won");
   const riskWarnings = [
-    highValueWithoutAction.length > 0 ? `Oportunități valoroase fara actiune recenta: ${highValueWithoutAction.length}.` : "",
+    highValueWithoutAction.length > 0 ? `Oportunități valoroase fără acțiune recentă: ${highValueWithoutAction.length}.` : "",
     overdueActions.length > 0 ? `Follow-up-uri sau acțiuni întârziate: ${overdueActions.length}.` : "",
-    closeDeadlines.length > 0 ? `Deadline-uri apropiate care necesita atentie: ${closeDeadlines.length}.` : ""
+    closeDeadlines.length > 0 ? `Termene apropiate care necesită atenție: ${closeDeadlines.length}.` : ""
   ].filter(Boolean);
 
   const executiveSummary = opportunities.length
-    ? `Prioritatea săptămânii este urmărirea oportunităților active cu fit ridicat si finalizarea follow-up-urilor scadente. Există ${activeOpportunities.length} oportunități active în pipeline, cu o valoare estimată în RON de ${formatCurrency(pipelineValue, "RON")} si ${urgentActions.length} acțiuni urgente de verificat.${inboxSummary.tableReady ? ` Inbox-ul comercial are ${inboxSummary.newCount} semnale noi și ${inboxSummary.urgentCount} urgente.` : ""}`
-    : "Nu exista încă suficiente date pentru un raport comercial relevant.";
+    ? `Prioritatea săptămânii este revizuirea oportunităților active cu potrivire ridicată și finalizarea follow-up-urilor scadente. Există ${activeOpportunities.length} oportunități active în pipeline, cu o valoare estimată în RON de ${formatCurrency(pipelineValue, "RON")}, și ${urgentActions.length} acțiuni urgente de verificat.${inboxSummary.tableReady ? ` Inbox-ul comercial are ${inboxSummary.newCount} semnale noi și ${inboxSummary.urgentCount} urgente.` : ""}`
+    : "Nu există încă suficiente date pentru un raport comercial relevant.";
 
   const recentActivity = workflow.events.slice(0, 8);
   const reportDistribution = [
@@ -291,7 +317,7 @@ export default async function ReportsPage() {
   ];
   const reportText = [
     "ReveNew - Raport comercial",
-    `Business: ${business?.name ?? "Workspace"}`,
+    `Spațiu de lucru: ${business?.name ?? "Nedenumit"}`,
     `Raport generat la: ${formatDateTimeWithSeconds(reportGeneratedAt)}`,
     "",
     "Rezumat executiv",
@@ -300,27 +326,27 @@ export default async function ReportsPage() {
     "Indicatori cheie",
     `Valoare estimată în pipeline (RON): ${formatCurrency(pipelineValue, "RON")}`,
     `Oportunități active: ${activeOpportunities.length}`,
-    `Actiuni urgente: ${urgentActions.length}`,
-    `Documente pregatite: ${readyDocuments.length}`,
+    `Acțiuni urgente: ${urgentActions.length}`,
+    `Documente pregătite: ${readyDocuments.length}`,
     `Conversie: ${conversionRate}%`,
     ...(inboxSummary.tableReady ? [
       `Semnale comerciale noi: ${inboxSummary.newCount}`,
       `Semnale comerciale urgente: ${inboxSummary.urgentCount}`,
       `Semnale convertite: ${inboxSummary.convertedCount}`,
-      `Potential inbox neconvertit: ${formatCurrency(inboxSummary.estimatedPotential)}`
+      `Potențial estimat neconvertit: ${formatCurrency(inboxSummary.estimatedPotential)}`
     ] : []),
     "",
     "Top oportunități",
     ...(topOpportunities.length ? topOpportunities.map((opportunity, index) => `${index + 1}. ${opportunity.title} | ${formatCurrency(opportunity.estimatedValueLow, opportunity.currency ?? "RON")} - ${formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")} | Fit ${opportunity.fitScore} | ${opportunity.recommendedAction}`) : ["Nu există oportunități în raport."]),
     "",
-    "Actiuni urgente",
-    ...(urgentActions.length ? urgentActions.slice(0, 8).map((action) => `${action.title} | ${opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"} | Termen: ${formatDateTimeWithSeconds(action.dueAt)} | Prioritate: ${priorityLabels[action.priority ?? "medium"]}`) : ["Nu exista acțiuni urgente."]),
+    "Acțiuni urgente",
+    ...(urgentActions.length ? urgentActions.slice(0, 8).map((action) => `${action.title} | ${opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"} | Termen: ${formatDateTimeWithSeconds(action.dueAt)} | Prioritate: ${priorityLabels[action.priority ?? "medium"]}`) : ["Nu există acțiuni urgente."]),
     "",
-    "Activitate recenta",
-    ...(recentActivity.length ? recentActivity.map((event) => `${event.label} | ${formatDateTimeWithSeconds(event.date)} | ${opportunityById.get(event.opportunityId ?? "")?.title ?? "Oportunitate"}`) : ["Nu exista activitate recenta."]),
+    "Activitate recentă",
+    ...(recentActivity.length ? recentActivity.map((event) => `${event.label} | ${formatDateTimeWithSeconds(event.date)} | ${opportunityById.get(event.opportunityId ?? "")?.title ?? "Oportunitate"}`) : ["Nu există activitate recentă."]),
     "",
-    "Avertizari",
-    ...(riskWarnings.length ? riskWarnings : ["Nu exista avertizari majore in acest moment. Mentine follow-up-urile la zi."])
+    "Avertizări",
+    ...(riskWarnings.length ? riskWarnings : ["Nu există avertizări majore în acest moment. Menține follow-up-urile la zi."])
   ].join("\n");
 
   return (
@@ -330,8 +356,8 @@ export default async function ReportsPage() {
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button href="/reports/enterprise-pilot-pack">Vezi propunerea pilot</Button>
-          <Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul de recuperare</Button>
+          <Button href="/reports/revenue-recovery-audit">Deschide auditul de recuperare</Button>
+          <Button href="/reports/enterprise-pilot-pack" variant="secondary">Pregătește propunerea pilot</Button>
         </div>
       }
     >
@@ -341,6 +367,30 @@ export default async function ReportsPage() {
         {isSupabaseConfigured && opportunities.length === 0 ? (
           <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." />
         ) : null}
+
+        <section aria-labelledby="metric-meaning-title" className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-label text-[rgb(var(--primary))]">Interpretarea valorilor</p>
+              <h2 id="metric-meaning-title" className="mt-1 text-lg font-semibold tracking-tight text-[rgb(var(--foreground))]">Trei valori, trei decizii diferite</h2>
+            </div>
+            <Link href="/reports/revenue-recovery-audit" className="focus-ring rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Verifică valoarea expusă în audit →</Link>
+          </div>
+          <dl className="mt-4 grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] md:grid-cols-3">
+            <div className="bg-[rgb(var(--surface-subtle))] p-4">
+              <dt className="text-sm font-semibold text-[rgb(var(--foreground))]">Valoare estimată în pipeline</dt>
+              <dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Toate oportunitățile active. Raportul principal afișează RON și nu cumulează monede diferite.</dd>
+            </div>
+            <div className="bg-[rgb(var(--surface-subtle))] p-4">
+              <dt className="text-sm font-semibold text-[rgb(var(--foreground))]">Valoare estimată expusă</dt>
+              <dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai cazurile cu blocaje din audit; fiecare oportunitate este numărată o singură dată în total.</dd>
+            </div>
+            <div className="bg-[rgb(var(--surface-subtle))] p-4">
+              <dt className="text-sm font-semibold text-[rgb(var(--foreground))]">Venit confirmat</dt>
+              <dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate câștigate și confirmate explicit de utilizator; rămâne separat de estimări.</dd>
+            </div>
+          </dl>
+        </section>
 
         <ExecutiveSummaryVisual
           pipelineValue={formatCurrency(pipelineValue, "RON")}
@@ -361,12 +411,12 @@ export default async function ReportsPage() {
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Valoare estimată în pipeline · RON" value={formatCurrency(pipelineValue, "RON")} detail="Toate oportunitățile active în RON; nu indică doar cazurile expuse și nu este venit confirmat." tone="mint" />
           <MetricCard label="Oportunități active" value={`${activeOpportunities.length}`} detail="Oportunități deschise care nu sunt marcate câștigate, pierdute sau ignorate." />
-          <MetricCard label="Actiuni urgente" value={`${urgentActions.length}`} detail="Actiuni scadente sau apropiate, deduplicate pe oportunitate si termen." tone="gold" />
+          <MetricCard label="Acțiuni urgente" value={`${urgentActions.length}`} detail="Acțiuni scadente sau apropiate, deduplicate pe oportunitate și termen." tone="gold" />
           <MetricCard label="Conversie confirmată" value={opportunities.length ? `${conversionRate}%` : "Date insuficiente"} detail="Ponderea oportunităților marcate câștigate din total." />
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregatite in workflow." />
+          <MetricCard label="Documente generate" value={`${generatedDocuments}`} detail="Documente comerciale pregătite în fluxul de lucru." />
           <MetricCard label="Drafturi de revizuit" value={String(followUpSummary.awaitingReview)} detail="Drafturi care necesită revizuire și decizie umană." tone="gold" />
           <MetricCard label="Aprobate · Netrimise" value={String(followUpSummary.approvedNotSent)} detail="Aprobate sau pregătite, fără confirmare de trimitere externă." tone="mint" />
           <MetricCard label="Încercări în mod test" value={String(followUpSummary.testModeAttempts)} detail="Fluxuri interne fără livrare externă." />
@@ -382,7 +432,7 @@ export default async function ReportsPage() {
           <MetricCard label="Câștigate / Pierdute" value={`${responseLoop.won} / ${responseLoop.lost}`} detail="Rezultate confirmate explicit." />
           <MetricCard label="Venit recuperat confirmat" value={formatCurrency(responseLoop.confirmedRevenueRon, "RON")} detail="Valoare efectivă separată de estimări." tone="mint" />
           <MetricCard label="Rată de răspuns" value={responseLoop.responseRate === null ? "Date insuficiente" : `${responseLoop.responseRate}%`} detail="Oportunități cu răspuns din cele clasificate." />
-          <MetricCard label="Actiuni finalizate" value={`${completedActions.length}`} detail="Task-uri comerciale inchise in workflow." />
+          <MetricCard label="Acțiuni finalizate" value={`${completedActions.length}`} detail="Sarcini comerciale închise în fluxul de lucru." />
           <MetricCard label="Pierdut · Valoare estimată (RON)" value={formatCurrency(lostValue, "RON")} detail="Estimare în RON din oportunități marcate pierdute." tone="gold" />
           </div>
         </details>
@@ -415,8 +465,8 @@ export default async function ReportsPage() {
                   inboxSummary.topSignals.map((signal) => (
                     <Link key={signal.id} href={signal.convertedOpportunityId ? `/opportunities/${signal.convertedOpportunityId}` : "/inbox"} className="focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 transition-colors hover:border-[rgb(var(--border-strong))]">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="status-pill status-pill-neutral">{signal.status}</span>
-                        <span className="status-pill status-pill-warning">{signal.priority}</span>
+                        <span className="status-pill status-pill-neutral">{signalStatusLabels[signal.status] ?? "În revizuire"}</span>
+                        <span className="status-pill status-pill-warning">{signalPriorityLabels[signal.priority] ?? "Prioritate normală"}</span>
                       </div>
                       <h3 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{signal.contactCompany || signal.contactName || "Semnal comercial"}</h3>
                       <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{signal.extractedSummary || signal.detectedNeed || signal.rawMessage || "Fără sumar."}</p>
@@ -424,7 +474,7 @@ export default async function ReportsPage() {
                     </Link>
                   ))
                 ) : (
-                  <EmptyState title="Nu exista semnale noi" description="Semnalele comerciale urgente vor aparea aici dupa adaugare." />
+                  <EmptyState title="Nu există semnale noi" description="Semnalele comerciale urgente vor apărea aici după adăugare." />
                 )}
               </div>
             </DataCard>
@@ -439,7 +489,7 @@ export default async function ReportsPage() {
           </DataCard>
 
           <div className="grid gap-6">
-            <DataCard title="Actiuni urgente">
+            <DataCard title="Acțiuni urgente">
               <div className="space-y-3">
                 {urgentActions.length > 0 ? (
                   urgentActions.slice(0, 8).map((action) => (
@@ -447,7 +497,7 @@ export default async function ReportsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-semibold text-[rgb(var(--foreground))]">{action.title}</p>
                         <span className="status-pill status-pill-warning">{priorityLabels[action.priority ?? "medium"]}</span>
-                        <span className="status-pill status-pill-neutral">{action.status === "pending" ? "În așteptare" : action.status}</span>
+                        <span className="status-pill status-pill-neutral">{actionStatusLabels[action.status] ?? "În revizuire"}</span>
                       </div>
                       <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{opportunityById.get(action.opportunityId ?? "")?.title ?? "Oportunitate"}</p>
                       <p className="text-label mt-2 text-[rgb(var(--warning-text))]">Termen: {formatDateTimeWithSeconds(action.dueAt)}</p>
@@ -455,7 +505,7 @@ export default async function ReportsPage() {
                     </Link>
                   ))
                 ) : (
-                  <EmptyState title="Nicio actiune urgenta" description="Follow-up-urile si task-urile scadente vor aparea aici." />
+                  <EmptyState title="Nicio acțiune urgentă" description="Follow-up-urile și sarcinile scadente vor apărea aici." />
                 )}
               </div>
             </DataCard>
@@ -475,7 +525,7 @@ export default async function ReportsPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <DataCard title="Deadline-uri in urmatoarele 7 zile">
+          <DataCard title="Termene în următoarele 7 zile">
             <div className="space-y-3">
               {deadlinesThisWeek.length > 0 ? (
                 deadlinesThisWeek.map((opportunity) => (
@@ -485,12 +535,12 @@ export default async function ReportsPage() {
                   </Link>
                 ))
               ) : (
-                <EmptyState title="Fara deadline-uri apropiate" description="Oportunitățile cu termen in urmatoarele 7 zile vor aparea aici." />
+                <EmptyState title="Fără termene apropiate" description="Oportunitățile cu termen în următoarele 7 zile vor apărea aici." />
               )}
             </div>
           </DataCard>
 
-          <DataCard title="Activitate recenta">
+          <DataCard title="Activitate recentă">
             <div className="space-y-3">
               {recentActivity.length > 0 ? (
                 recentActivity.map((event) => (
@@ -504,7 +554,7 @@ export default async function ReportsPage() {
                   </div>
                 ))
               ) : (
-                <EmptyState title="Fara activitate recenta" description="Evenimentele apar dupa documente, statusuri si follow-up-uri." />
+                <EmptyState title="Fără activitate recentă" description="Evenimentele apar după documente, stări și follow-up-uri." />
               )}
             </div>
           </DataCard>

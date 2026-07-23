@@ -3,7 +3,7 @@ import { ArrowRightIcon, CheckCircleIcon, MinusCircleIcon } from "@heroicons/rea
 const comparisonRows = [
   ["Stochează contacte și note", "Urmărește execuția comercială până la rezultat"],
   ["Înregistrează activitatea", "Prioritizează ce cere intervenție acum"],
-  ["Păstrează pipeline-ul", "Clarifică owner, next action și termen"],
+  ["Păstrează pipeline-ul", "Clarifică responsabilul, acțiunea următoare și termenul"],
   ["Raportează statusuri", "Arată unde se rupe firul execuției"],
   ["Centralizează informația", "Transformă semnalul într-o acțiune urmărită"],
   ["Afișează progresul", "Păstrează auditul și controlul uman"]

@@ -79,7 +79,7 @@ export function GlobalSearch() {
         type="button"
         onClick={() => setOpen(true)}
         className="focus-ring inline-flex h-10 w-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-sm font-medium text-[rgb(var(--text-muted))] shadow-sm transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))] xl:w-auto xl:px-3"
-        aria-label="Caută în workspace"
+        aria-label="Caută în spațiul de lucru"
         aria-controls="workspace-search-dialog"
         aria-expanded={open}
       >
@@ -92,7 +92,7 @@ export function GlobalSearch() {
         <div id="workspace-search-dialog" className="fixed inset-0 z-[70] flex items-start justify-center bg-black/45 px-3 pt-[max(1rem,8vh)] backdrop-blur-[1px]" role="dialog" aria-modal="true" aria-labelledby="workspace-search-title">
           <button type="button" className="absolute inset-0" onClick={close} aria-label="Închide căutarea" />
           <section className="relative z-10 flex max-h-[min(42rem,84dvh)] w-full max-w-2xl flex-col overflow-hidden rounded-overlay border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-modal">
-            <h2 id="workspace-search-title" className="sr-only">Căutare în workspace</h2>
+            <h2 id="workspace-search-title" className="sr-only">Căutare în spațiul de lucru</h2>
             <div className="flex items-center gap-3 border-b border-[rgb(var(--border))] px-4 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[rgb(var(--focus-ring))]">
               <MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-[rgb(var(--text-faint))]" aria-hidden="true" />
               <Input
@@ -117,7 +117,7 @@ export function GlobalSearch() {
             <div id="workspace-search-results" className="app-scrollbar min-h-52 overflow-y-auto p-3" aria-live="polite">
               {loading ? <SearchSkeleton /> : null}
               {!loading && error ? <p role="alert" className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
-              {!loading && !error && query.trim().length < 2 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Introdu cel puțin două caractere. Rezultatele sunt limitate la workspace-ul curent.</p> : null}
+              {!loading && !error && query.trim().length < 2 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Introdu cel puțin două caractere. Rezultatele sunt limitate la spațiul de lucru curent.</p> : null}
               {!loading && !error && query.trim().length >= 2 && results.length === 0 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu am găsit rezultate accesibile. Verifică termenul sau încearcă o denumire mai scurtă.</p> : null}
               {!loading && !error ? Object.entries(grouped).map(([group, items]) => (
                 <div key={group} className="mb-4 last:mb-0">

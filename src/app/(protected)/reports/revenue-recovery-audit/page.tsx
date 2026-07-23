@@ -86,6 +86,7 @@ export default async function RevenueRecoveryAuditPage() {
               <span className={statusTone[audit.status]}>{audit.statusLabel}</span>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">{audit.summary}</p>
               <p className="mt-3 text-sm font-semibold text-[rgb(var(--foreground))]">Acțiune sigură: <Link className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={audit.firstSafeActionHref}>{audit.firstSafeActionLabel}</Link></p>
+              <p className="mt-2 text-xs text-[rgb(var(--text-muted))]"><Link className="focus-ring rounded-sm font-semibold text-[rgb(var(--primary))] hover:underline" href="#dovezi">{audit.evidence.length} {audit.evidence.length === 1 ? "dovadă disponibilă" : "dovezi disponibile"}</Link> pentru verificarea concluziilor.</p>
             </div>
             <div className="min-w-[220px] rounded-card border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--primary-muted))] p-4">
               <p className="text-label text-[rgb(var(--primary))]">Valoare estimată expusă</p>
@@ -94,7 +95,7 @@ export default async function RevenueRecoveryAuditPage() {
                   <p key={entry.currency} className="text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(entry.value, entry.currency)}</p>
                 )) : <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Fără estimare susținută de date</p>}
               </div>
-              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Oportunități și semnale cu blocaje, deduplicate pe obiect comercial și separate pe monedă. Valoare estimată, nu venit confirmat.</p>
+              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Fiecare oportunitate este numărată o singură dată în total, chiar dacă are mai multe blocaje. Monedele rămân separate. Valoare estimată, nu venit confirmat.</p>
             </div>
           </div>
         </Section>
@@ -103,7 +104,7 @@ export default async function RevenueRecoveryAuditPage() {
           <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
             <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Valoare estimată expusă:</p>
             {audit.estimatedExposedValueByCurrency.length > 0 ? audit.estimatedExposedValueByCurrency.map((entry) => <p key={entry.currency} className="text-sm font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(entry.value, entry.currency)}</p>) : <p className="text-sm text-[rgb(var(--text-muted))]">Date insuficiente</p>}
-            <p className="text-xs text-[rgb(var(--text-muted))]">Oportunități și semnale cu blocaje, deduplicate pe obiect comercial și separate pe monedă. Valoare estimată, nu venit confirmat.</p>
+            <p className="text-xs text-[rgb(var(--text-muted))]">Fiecare oportunitate este numărată o singură dată în total, chiar dacă are mai multe blocaje. Monedele rămân separate. Valoare estimată, nu venit confirmat.</p>
           </div>
           <dl className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-2 xl:grid-cols-5">
             {countRows.map(([label, value]) => (
@@ -166,6 +167,15 @@ export default async function RevenueRecoveryAuditPage() {
         <Section id="nota" eyebrow="G · Notă de utilizare" title="Interpretare prudentă">
           <p className="max-w-4xl text-sm leading-7 text-[rgb(var(--text-secondary))]">Acest audit este un instrument operațional. Nu reprezintă o garanție financiară, predicție de venit sau confirmare contabilă. Valorile sunt estimări comerciale bazate pe datele existente în spațiul de lucru. Acțiunile comerciale, aprobările și comunicările externe rămân sub control uman.</p>
         </Section>
+
+        <div className="flex flex-col gap-4 rounded-panel border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--primary-muted))] p-5 print:hidden sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-label text-[rgb(var(--primary))]">Pasul următor</p>
+            <h2 className="mt-1 text-lg font-semibold text-[rgb(var(--foreground))]">Transformă auditul într-o validare controlată pe 14 zile</h2>
+            <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Propunerea pilot reutilizează aceleași priorități și dovezi, fără a promite venit recuperat.</p>
+          </div>
+          <Button href="/reports/enterprise-pilot-pack">Deschide propunerea pilot<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+        </div>
       </article>
     </PageShell>
   );

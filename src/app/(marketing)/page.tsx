@@ -32,7 +32,7 @@ import { canonicalUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "ReveNew | Control pentru oportunitățile comerciale rămase în urmă",
-  description: "ReveNew aduce ownership, următoarea acțiune și vizibilitate executivă în procesele comerciale unde valoarea rămâne blocată.",
+  description: "ReveNew aduce responsabilitate, următoarea acțiune și vizibilitate executivă în procesele comerciale unde valoarea rămâne blocată.",
   alternates: { canonical: canonicalUrl("/") },
   openGraph: {
     title: "ReveNew | Revenue recovery sub control uman",
@@ -44,13 +44,13 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "ReveNew | Revenue recovery sub control uman",
-    description: "Un sistem operațional pentru ownership, follow-up și oportunități comerciale recuperabile."
+    description: "Un sistem operațional pentru responsabilitate, follow-up și oportunități comerciale recuperabile."
   }
 };
 
 const painPoints = [
   ["Follow-up întârziat", "O conversație relevantă rămâne fără revenire și fără un termen clar.", ClockIcon],
-  ["Ownership neclar", "Echipa vede oportunitatea, dar nimeni nu răspunde explicit de următorul pas.", UserGroupIcon],
+  ["Responsabilitate neclară", "Echipa vede oportunitatea, dar nimeni nu răspunde explicit de următorul pas.", UserGroupIcon],
   ["Prioritate difuză", "Valoarea, riscul și vechimea nu sunt comparate într-un singur sistem.", FlagIcon],
   ["Vizibilitate incompletă", "Managementul află târziu unde s-a blocat execuția comercială.", EyeIcon]
 ] as const;
@@ -58,20 +58,20 @@ const painPoints = [
 const steps = [
   ["01", "Detectezi", "Aduni semnalele comerciale care există deja."],
   ["02", "Prioritizezi", "Compari valoarea, riscul și informațiile lipsă."],
-  ["03", "Atribui", "Stabilești owner, termen și următoarea acțiune."],
+  ["03", "Atribui", "Stabilești responsabilul, termenul și următoarea acțiune."],
   ["04", "Urmărești", "Păstrezi deciziile și rezultatul auditabile."]
 ] as const;
 
 const audiences = [
   ["Companii B2B", "Cicluri comerciale cu valoare relevantă per client și follow-up repetat.", BuildingOffice2Icon],
   ["Echipe comerciale", "Mai multe surse, contacte și propuneri care trebuie ordonate operațional.", UserGroupIcon],
-  ["Owneri și management", "Vizibilitate asupra valorii în risc, responsabililor și blocajelor curente.", EyeIcon],
+  ["Responsabili și management", "Vizibilitate asupra valorii în risc, responsabililor și blocajelor curente.", EyeIcon],
   ["Consultanță și servicii", "Brief-uri, oferte și relații recurente care nu pot fi lăsate fără urmărire.", DocumentCheckIcon]
 ] as const;
 
 const deliverables = [
   ["Control Center operațional", "Vezi într-un singur loc ce necesită intervenție astăzi și de ce."],
-  ["Ownership și next action", "Fiecare oportunitate are responsabil, termen și pas următor explicit."],
+  ["Responsabil și acțiune următoare", "Fiecare oportunitate are responsabil, termen și pas următor explicit."],
   ["Prioritizare comercială", "Valoarea estimată, riscul și vechimea susțin ordinea de lucru."],
   ["Timeline și audit", "Schimbările, documentele, aprobările și rezultatele păstrează context."],
   ["Follow-up pregătit", "Echipa poate revizui și ajusta drafturile înainte de orice utilizare."],
@@ -96,7 +96,7 @@ const faqCategories: FaqCategory[] = [
   {
     title: "Acces și prețuri",
     items: [
-      { question: "Ce se întâmplă după confirmarea planului?", answer: "Accesul este verificat, workspace-ul este configurat, iar sursele și responsabilitățile sunt stabilite înainte de operare." },
+      { question: "Ce se întâmplă după confirmarea planului?", answer: "Accesul este verificat, spațiul de lucru este configurat, iar sursele și responsabilitățile sunt stabilite înainte de operare." },
       { question: "Pot solicita o implementare personalizată?", answer: "Da. Fluxurile speciale, migrarea datelor, instruirea și integrările aprobate sunt evaluate și ofertate separat." }
     ]
   }
@@ -133,7 +133,7 @@ export default function LandingPage() {
               Venitul nu se pierde doar în pipeline. <span className="text-[rgb(var(--primary))]">Se pierde între acțiuni.</span>
             </h1>
             <p className="mt-6 max-w-[620px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-lg sm:leading-8">
-              ReveNew identifică oportunitățile comerciale rămase în urmă, clarifică ownership-ul și transformă follow-up-ul într-un proces urmărit până la rezultat.
+              ReveNew identifică oportunitățile comerciale rămase în urmă, clarifică responsabilitatea și transformă follow-up-ul într-un proces urmărit până la rezultat.
             </p>
             <p className="mt-4 max-w-[650px] text-sm font-semibold leading-6 text-[rgb(var(--foreground))]">ReveNew recomandă, iar echipa ta decide. Nu este recuperare de creanțe: urmărește oportunități comerciale, nu datorii.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -141,7 +141,7 @@ export default function LandingPage() {
               <Button href="#cum-functioneaza" variant="secondary" size="large">Vezi cum funcționează</Button>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-[rgb(var(--text-muted))]">
-              {["Fără promisiuni de venit", "Fără outreach autonom", "Date izolate pe workspace"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" aria-hidden="true" />{item}</span>)}
+              {["Fără promisiuni de venit", "Fără outreach autonom", "Date izolate pe spațiu de lucru"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" aria-hidden="true" />{item}</span>)}
             </div>
           </Reveal>
           <Reveal delay={120} className="pb-7 lg:col-span-6 lg:pb-0"><ProductPreview /></Reveal>
@@ -150,13 +150,13 @@ export default function LandingPage() {
 
       <section className="border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
         <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-center gap-x-9 gap-y-4 px-4 py-5 text-xs font-bold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))] sm:px-6 lg:px-8">
-          {["Pentru echipe B2B", "Ownership clar", "Follow-up disciplinat", "Auditabilitate", "Vizibilitate executivă"].map((item) => <span key={item} className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--brand-500))]" />{item}</span>)}
+          {["Pentru echipe B2B", "Responsabilitate clară", "Follow-up disciplinat", "Auditabilitate", "Vizibilitate executivă"].map((item) => <span key={item} className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--brand-500))]" />{item}</span>)}
         </div>
       </section>
 
       <section className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
         <div className="grid items-end gap-8 lg:grid-cols-[0.72fr_1.28fr]">
-          <Reveal><SectionHeading eyebrow="Problema comercială" title="Oportunitățile se sting între două acțiuni.">Cererile, ofertele și reînnoirile rămân fără owner, termen sau pas următor.</SectionHeading></Reveal>
+          <Reveal><SectionHeading eyebrow="Problema comercială" title="Oportunitățile se sting între două acțiuni.">Cererile, ofertele și reînnoirile rămân fără responsabil, termen sau pas următor.</SectionHeading></Reveal>
           <Reveal delay={60}><RevenueLeakMap /></Reveal>
         </div>
         <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -192,11 +192,11 @@ export default function LandingPage() {
       <section id="produs-in-actiune" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
         <div className="mx-auto grid max-w-[1280px] items-center gap-9 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.68fr_1.32fr] lg:px-8">
           <Reveal>
-            <SectionHeading eyebrow="Execuție în context" title="O oportunitate clară la fiecare decizie.">Valoarea, owner-ul, termenul și documentele rămân în același fir de lucru.</SectionHeading>
+            <SectionHeading eyebrow="Execuție în context" title="O oportunitate clară la fiecare decizie.">Valoarea, responsabilul, termenul și documentele rămân în același fir de lucru.</SectionHeading>
             <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold text-[rgb(var(--text-muted))]">
               {[
-                "Owner vizibil",
-                "Next action explicit",
+                "Responsabil vizibil",
+                "Acțiune următoare explicită",
                 "Draft sub aprobare"
               ].map((item) => <span key={item} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1.5">{item}</span>)}
             </div>
@@ -207,7 +207,7 @@ export default function LandingPage() {
 
       <section id="ce-urmareste" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal><SectionHeading eyebrow="Ce urmărește ReveNew" title="Valoare, ownership și disciplină de execuție.">Un singur tablou pentru ce contează și ce blochează progresul.</SectionHeading></Reveal>
+          <Reveal><SectionHeading eyebrow="Ce urmărește ReveNew" title="Valoare, responsabilitate și disciplină de execuție.">Un singur tablou pentru ce contează și ce blochează progresul.</SectionHeading></Reveal>
           <Reveal delay={90} className="mt-9"><MarketingMetrics /></Reveal>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default function LandingPage() {
       </section>
 
       <section id="pentru-cine" className="scroll-mt-28 mx-auto grid max-w-[1280px] items-start gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:px-8">
-        <Reveal><SectionHeading eyebrow="Pentru cine" title="Pentru oportunități care merită urmărite, nu doar înregistrate.">Procese B2B unde valoarea per relație cere ownership și follow-up consecvent.</SectionHeading></Reveal>
+        <Reveal><SectionHeading eyebrow="Pentru cine" title="Pentru oportunități care merită urmărite, nu doar înregistrate.">Procese B2B unde valoarea per relație cere responsabilitate și follow-up consecvent.</SectionHeading></Reveal>
         <div className="grid gap-3 sm:grid-cols-2">
           {audiences.map(([title, description, Icon], index) => (
             <Reveal key={title} delay={index * 60}>
@@ -278,7 +278,7 @@ export default function LandingPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               [ShieldCheckIcon, "Control uman", "Niciun mesaj comercial critic nu pleacă fără aprobarea permisă de flux."],
-              [LockClosedIcon, "Izolare pe workspace", "Datele și accesul urmează limitele existente de business și rol."],
+              [LockClosedIcon, "Izolare pe spațiu de lucru", "Datele și accesul urmează limitele existente ale companiei și rolului."],
               [DocumentCheckIcon, "Auditabilitate", "Schimbările și aprobările păstrează actorul, starea și momentul."],
               [MagnifyingGlassIcon, "Context verificabil", "Sursa, estimarea și motivul recomandării rămân vizibile."]
             ].map(([Icon, title, description], index) => {
@@ -331,7 +331,7 @@ export default function LandingPage() {
           <div className="relative">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[rgb(var(--primary))]">Înainte să iasă din atenție</p>
             <h2 className="mx-auto mt-4 max-w-4xl text-[clamp(2.1rem,4.6vw,3.8rem)] font-semibold leading-[1.04] tracking-[-0.045em]">Vezi unde se blochează venitul. Clarifică următoarea acțiune.</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[rgb(var(--text-secondary))]">Începe cu oportunitățile existente și construiește un proces verificabil de ownership, follow-up și decizie.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[rgb(var(--text-secondary))]">Începe cu oportunitățile existente și construiește un proces verificabil de responsabilitate, follow-up și decizie.</p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Button href="#preturi" size="large">Solicită auditul</Button><Button href={authPath("/login", "login")} variant="secondary" size="large">Intră în cont</Button></div>
           </div>
         </Reveal>
@@ -339,7 +339,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-12 text-sm text-[rgb(var(--muted-foreground))] sm:px-6 md:grid-cols-[1.25fr_0.75fr_0.75fr] lg:px-8">
-          <div><p className="text-2xl font-semibold tracking-[-0.03em] text-[rgb(var(--foreground))]">ReveNew</p><p className="mt-3 max-w-md leading-6">Control operațional pentru oportunitățile comerciale care rămân între procese, ownership și follow-up.</p><p className="mt-6 text-xs">© {new Date().getFullYear()} ReveNew.</p></div>
+          <div><p className="text-2xl font-semibold tracking-[-0.03em] text-[rgb(var(--foreground))]">ReveNew</p><p className="mt-3 max-w-md leading-6">Control operațional pentru oportunitățile comerciale care rămân între procese, responsabilitate și follow-up.</p><p className="mt-6 text-xs">© {new Date().getFullYear()} ReveNew.</p></div>
           <nav className="grid content-start gap-3" aria-label="Navigare footer"><p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--foreground))]">Produs</p>{marketingSections.map((item) => <a key={item.id} href={item.href} className="focus-ring w-fit rounded hover:text-[rgb(var(--foreground))]">{item.label}</a>)}</nav>
           <nav className="grid content-start gap-3" aria-label="Linkuri utile"><p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--foreground))]">Acces și legal</p><Link href={authPath("/login", "login")} className="hover:text-[rgb(var(--foreground))]">Intră în cont</Link><Link href="/ghid" className="hover:text-[rgb(var(--foreground))]">Ghid</Link><Link href="/privacy" className="hover:text-[rgb(var(--foreground))]">Confidențialitate</Link><Link href="/terms" className="hover:text-[rgb(var(--foreground))]">Termeni</Link></nav>
         </div>
