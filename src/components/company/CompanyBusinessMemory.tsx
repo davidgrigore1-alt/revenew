@@ -71,7 +71,7 @@ export function CompanyBusinessMemory({
     <Card as="section" variant="default" padding="default" aria-labelledby="business-memory-title">
       <SectionHeader eyebrow="Decizie executivă" title="Ce necesită atenție acum" description="Un rezumat dovedit, urmat de maximum patru priorități suplimentare." />
 
-      <section aria-labelledby="business-memory-title" className="mt-5 rounded-card border border-[rgb(var(--gold-500)/0.42)] bg-[rgb(var(--gold-50)/0.34)] p-4 dark:bg-[rgb(var(--surface-muted))] sm:p-5">
+      <section aria-labelledby="business-memory-title" className="mt-5 rounded-card border border-[rgb(var(--gold-500)/0.42)] bg-[rgb(var(--gold-50)/0.34)] p-4 dark:bg-[rgb(var(--brand-950)/0.34)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
           <div className="lg:self-start">
             <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClasses}`}>{executiveDecision.statusLabel}</span>

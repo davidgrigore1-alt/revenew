@@ -21,25 +21,27 @@
   --text-faint: 151 142 128;
   --sidebar-foreground: 29 28 25;
 
-  /* Brand and accent palette */
-  --brand-950: 46 37 23;
-  --brand-900: 68 52 30;
-  --brand-800: 94 70 37;
-  --brand-700: 122 91 47;
-  --brand-600: 156 119 64;
-  --brand-500: 188 151 91;
-  --brand-400: 211 181 126;
-  --brand-300: 231 210 169;
-  --brand-100: 247 238 218;
-  --brand-50: 252 248 239;
-  --gold-700: 122 91 47;
-  --gold-500: 188 151 91;
-  --gold-300: 231 210 169;
-  --gold-100: 247 238 218;
+  /* ReveNew yellow accent: vivid at the center, restrained at the edges. */
+  --brand-950: 40 35 4;
+  --brand-900: 62 53 5;
+  --brand-800: 91 77 4;
+  --brand-700: 126 106 3;
+  --brand-600: 177 150 6;
+  --brand-500: 241 210 23;
+  --brand-400: 230 200 74;
+  --brand-300: 236 217 120;
+  --brand-100: 254 248 209;
+  --brand-50: 255 253 239;
+  --gold-700: 126 106 3;
+  --gold-500: 241 210 23;
+  --gold-300: 236 217 120;
+  --gold-100: 254 248 209;
+  --gold-50: 255 253 239;
   --primary: var(--brand-700);
   --primary-hover: var(--brand-800);
   --primary-active: var(--brand-900);
   --primary-foreground: 255 251 241;
+  --primary-muted: var(--brand-100);
 
   /* Semantic feedback palette */
   --success-background: 234 248 240;
@@ -49,6 +51,7 @@
   --info-text: 29 95 159;
   --info-border: 199 221 248;
   --warning-background: 255 244 219;
+  --warning-bg: var(--warning-background);
   --warning-text: 143 81 8;
   --warning-border: 235 194 112;
   --danger-background: 255 240 240;
@@ -129,8 +132,9 @@
   --sidebar-foreground: 243 239 230;
   --primary: var(--brand-400);
   --primary-hover: var(--brand-300);
-  --primary-active: var(--brand-500);
+  --primary-active: var(--brand-600);
   --primary-foreground: var(--brand-950);
+  --primary-muted: var(--brand-950);
   --success-background: 12 46 29;
   --success-text: 119 222 168;
   --success-border: 29 96 62;
@@ -138,6 +142,7 @@
   --info-text: 164 205 246;
   --info-border: 34 78 118;
   --warning-background: 57 35 7;
+  --warning-bg: var(--warning-background);
   --warning-text: 246 196 105;
   --warning-border: 124 76 15;
   --danger-background: 58 20 20;
@@ -145,7 +150,7 @@
   --danger-border: 126 45 45;
   --danger-solid: 185 45 45;
   --danger-solid-hover: 153 34 34;
-  --focus-ring: var(--brand-400);
+  --focus-ring: var(--brand-500);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22), 0 12px 32px rgba(0, 0, 0, 0.13);
   --shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.27);
   --shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.35);
@@ -169,6 +174,7 @@
   --primary-hover: var(--brand-800);
   --primary-active: var(--brand-900);
   --primary-foreground: 255 251 241;
+  --primary-muted: var(--brand-100);
   --muted: var(--surface-muted);
   --muted-foreground: var(--text-muted);
   --focus-ring: var(--brand-700);
