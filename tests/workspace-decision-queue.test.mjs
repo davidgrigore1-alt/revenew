@@ -168,6 +168,20 @@ test("estimates remain item-level, exclude confirmed revenue and never aggregate
   assert.equal("estimatedTotal" in queue, false);
 });
 
+test("exposed value counts one opportunity once even when it has multiple blockers", () => {
+  const blocked = opportunity({
+    id: "multi-blocked",
+    ownerProfileId: null,
+    contacts: [],
+    actions: [],
+    estimatedValueHigh: 185300,
+    documents: [{ id: "prepared", title: "Ofertă", status: "approved", sendStatus: "not_sent", readyAt: "2026-07-22T10:00:00.000Z" }]
+  });
+  const queue = buildWorkspaceDecisionQueue({ opportunities: [blocked], signals: [] }, { now, limit: 20 });
+  assert.ok(queue.items.filter((item) => item.relatedOpportunityId === "multi-blocked").length > 1);
+  assert.equal(queue.estimatedExposedValueByCurrency.RON, 185300);
+});
+
 test("issue counts cover all valid candidates even when the primary queue is capped", () => {
   const signals = Array.from({ length: 8 }, (_, index) => signal({ id: `counted-signal-${index}`, title: `Semnal ${index}` }));
   const queue = buildWorkspaceDecisionQueue({ opportunities: [], signals }, { now, limit: 3 });

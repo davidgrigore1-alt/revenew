@@ -357,7 +357,8 @@ body {
     box-shadow: none !important;
   }
 
-  .revenue-recovery-audit {
+  .revenue-recovery-audit,
+  .enterprise-pilot-pack {
     --background: 255 255 255;
     --surface: 255 255 255;
     --surface-subtle: 249 249 247;
@@ -373,7 +374,8 @@ body {
     color: rgb(var(--foreground));
   }
 
-  .revenue-recovery-audit .audit-section {
+  .revenue-recovery-audit .audit-section,
+  .enterprise-pilot-pack .pilot-section {
     break-inside: avoid;
   }
 }

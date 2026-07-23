@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { weeklyReport } from "@/lib/mock-data";
+import { isOpenOpportunity } from "@/lib/opportunity-domain";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
@@ -242,7 +243,7 @@ export default async function ReportsPage() {
   const opportunityById = new Map(opportunities.map((opportunity) => [opportunity.id, opportunity]));
 
   const ronOpportunities = opportunities.filter((item) => (item.currency ?? "RON") === "RON");
-  const activeOpportunities = opportunities.filter((item) => !["won", "lost", "ignored"].includes(item.status));
+  const activeOpportunities = opportunities.filter(isOpenOpportunity);
   const pipelineValue = activeOpportunities.filter((item) => (item.currency ?? "RON") === "RON").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const wonValue = ronOpportunities.filter((item) => item.status === "won").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const lostValue = ronOpportunities.filter((item) => item.status === "lost").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
@@ -297,7 +298,7 @@ export default async function ReportsPage() {
     executiveSummary,
     "",
     "Indicatori cheie",
-    `Pipeline estimat RON: ${formatCurrency(pipelineValue, "RON")}`,
+    `Valoare estimată în pipeline (RON): ${formatCurrency(pipelineValue, "RON")}`,
     `Oportunități active: ${activeOpportunities.length}`,
     `Actiuni urgente: ${urgentActions.length}`,
     `Documente pregatite: ${readyDocuments.length}`,
@@ -327,7 +328,12 @@ export default async function ReportsPage() {
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
-      actions={<Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul de recuperare</Button>}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button href="/reports/enterprise-pilot-pack">Vezi propunerea pilot</Button>
+          <Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul de recuperare</Button>
+        </div>
+      }
     >
       <div className="grid gap-6 print:block print:space-y-5">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
@@ -353,7 +359,7 @@ export default async function ReportsPage() {
         <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 print:block">
           <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-2 font-semibold marker:hidden"><span>Indicatori detaliați de execuție</span><span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs text-[rgb(var(--text-muted))]">22 indicatori</span></summary>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Pipeline activ · Estimat (RON)" value={formatCurrency(pipelineValue, "RON")} detail="Valoarea maximă estimată doar pentru oportunitățile în RON." tone="mint" />
+          <MetricCard label="Valoare estimată în pipeline · RON" value={formatCurrency(pipelineValue, "RON")} detail="Toate oportunitățile active în RON; nu indică doar cazurile expuse și nu este venit confirmat." tone="mint" />
           <MetricCard label="Oportunități active" value={`${activeOpportunities.length}`} detail="Oportunități deschise care nu sunt marcate câștigate, pierdute sau ignorate." />
           <MetricCard label="Actiuni urgente" value={`${urgentActions.length}`} detail="Actiuni scadente sau apropiate, deduplicate pe oportunitate si termen." tone="gold" />
           <MetricCard label="Conversie confirmată" value={opportunities.length ? `${conversionRate}%` : "Date insuficiente"} detail="Ponderea oportunităților marcate câștigate din total." />

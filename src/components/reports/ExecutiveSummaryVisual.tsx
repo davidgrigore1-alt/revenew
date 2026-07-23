@@ -36,7 +36,7 @@ export function ExecutiveSummaryVisual(props: ExecutiveSummaryVisualProps) {
           <p className="mt-4 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">{props.summary}</p>
 
           <div className="mt-7 grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-3">
-            <div className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--text-faint))]">Pipeline estimat · RON</p><p className="mt-2 text-xl font-semibold">{props.pipelineValue}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Valoare maximă estimată</p></div>
+            <div className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--text-faint))]">Valoare estimată în pipeline · RON</p><p className="mt-2 text-xl font-semibold">{props.pipelineValue}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Toate oportunitățile active · nu este venit confirmat</p></div>
             <div className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--text-faint))]">Oportunități active</p><p className="mt-2 text-xl font-semibold">{props.activeCount}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">În execuție comercială</p></div>
             <div className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--text-faint))]">Acțiuni urgente</p><p className={`mt-2 text-xl font-semibold ${props.urgentCount ? "text-[rgb(var(--warning-text))]" : "text-[rgb(var(--success-text))]"}`}>{props.urgentCount}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Necesită verificare</p></div>
           </div>

@@ -67,7 +67,7 @@ export default async function RevenueRecoveryAuditPage() {
       title="Audit de recuperare venituri"
       description="Raport executiv bazat pe datele disponibile în spațiul de lucru, cu riscuri comerciale, dovezi și acțiuni sigure."
       breadcrumbs={[{ label: "Rapoarte", href: "/reports" }, { label: "Audit de recuperare venituri" }]}
-      actions={<div className="flex flex-wrap gap-2 print:hidden"><Button href={audit.firstSafeActionHref} size="small">{audit.firstSafeActionLabel}</Button><PrintAuditButton /></div>}
+      actions={<div className="flex flex-wrap gap-2 print:hidden"><Button href={audit.firstSafeActionHref} size="small">{audit.firstSafeActionLabel}</Button><Button href="/reports/enterprise-pilot-pack" variant="secondary" size="small">Vezi propunerea pilot</Button><PrintAuditButton /></div>}
     >
       <article className="revenue-recovery-audit space-y-5">
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">
@@ -94,7 +94,7 @@ export default async function RevenueRecoveryAuditPage() {
                   <p key={entry.currency} className="text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(entry.value, entry.currency)}</p>
                 )) : <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Fără estimare susținută de date</p>}
               </div>
-              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Valorile estimate sunt deduplicate pe oportunitate și rămân separate de venitul confirmat.</p>
+              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Oportunități și semnale cu blocaje, deduplicate pe obiect comercial și separate pe monedă. Valoare estimată, nu venit confirmat.</p>
             </div>
           </div>
         </Section>
@@ -103,7 +103,7 @@ export default async function RevenueRecoveryAuditPage() {
           <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
             <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Valoare estimată expusă:</p>
             {audit.estimatedExposedValueByCurrency.length > 0 ? audit.estimatedExposedValueByCurrency.map((entry) => <p key={entry.currency} className="text-sm font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(entry.value, entry.currency)}</p>) : <p className="text-sm text-[rgb(var(--text-muted))]">Date insuficiente</p>}
-            <p className="text-xs text-[rgb(var(--text-muted))]">Valori deduplicate pe oportunitate, separate pe monedă și neconfirmate ca venit.</p>
+            <p className="text-xs text-[rgb(var(--text-muted))]">Oportunități și semnale cu blocaje, deduplicate pe obiect comercial și separate pe monedă. Valoare estimată, nu venit confirmat.</p>
           </div>
           <dl className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-2 xl:grid-cols-5">
             {countRows.map(([label, value]) => (

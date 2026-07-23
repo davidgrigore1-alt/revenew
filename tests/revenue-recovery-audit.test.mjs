@@ -169,7 +169,7 @@ test("empty workspaces remain honest and route generation is server-only and pri
   assert.match(model, /getRevenueWorkspaceSummary\(\)/);
   assert.doesNotMatch(model, /openai|anthropic|embedding|service[_-]?role|\.from\(|fetch\s*\(/i);
   assert.match(policies, /prefix: "\/reports", permission: "reports\.read"/);
-  assert.match(route, /Valorile estimate sunt deduplicate pe oportunitate și rămân separate de venitul confirmat/);
+  assert.match(route, /deduplicate pe obiect comercial și separate pe monedă\. Valoare estimată, nu venit confirmat/);
   assert.match(route, /Audit de recuperare venituri/);
   assert.match(route, /Raport executiv bazat pe datele disponibile în spațiul de lucru/);
   assert.doesNotMatch(route, /tenant-scoped/i);
