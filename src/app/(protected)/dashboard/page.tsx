@@ -191,7 +191,10 @@ export default async function DashboardPage() {
               <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Estimările, acțiunile pregătite și răspunsurile rămân separate de venitul confirmat. Nicio livrare externă nu este presupusă dintr-un draft sau dintr-o aprobare.</p>
             </div>
           </div>
-          <Button href="/reports" variant="secondary" size="small">Vezi metodologia</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button href="/reports/revenue-recovery-audit" variant="secondary" size="small">Generează auditul</Button>
+            <Button href="/reports" variant="ghost" size="small">Vezi metodologia</Button>
+          </div>
         </PremiumPanel>
       </main>
     );

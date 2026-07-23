@@ -356,4 +356,24 @@ body {
   div {
     box-shadow: none !important;
   }
+
+  .revenue-recovery-audit {
+    --background: 255 255 255;
+    --surface: 255 255 255;
+    --surface-subtle: 249 249 247;
+    --surface-muted: 241 241 237;
+    --foreground: 20 20 18;
+    --text-secondary: 48 48 44;
+    --text-muted: 82 82 74;
+    --text-faint: 105 105 96;
+    --border: 214 214 207;
+    --border-strong: 186 186 176;
+    --primary: 122 101 20;
+    --primary-muted: 250 246 224;
+    color: rgb(var(--foreground));
+  }
+
+  .revenue-recovery-audit .audit-section {
+    break-inside: avoid;
+  }
 }

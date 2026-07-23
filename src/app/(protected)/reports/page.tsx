@@ -9,6 +9,7 @@ import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { ReportActions } from "@/components/reports/ReportActions";
 import { ExecutiveSummaryVisual } from "@/components/reports/ExecutiveSummaryVisual";
+import { Button } from "@/components/ui/Button";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { weeklyReport } from "@/lib/mock-data";
@@ -326,6 +327,7 @@ export default async function ReportsPage() {
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
+      actions={<Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide Revenue Recovery Audit</Button>}
     >
       <div className="grid gap-6 print:block print:space-y-5">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
