@@ -116,7 +116,7 @@ export default async function DemoPage() {
     {
       time: "0:00–0:40",
       title: "Pornește din Control Center",
-      description: "Executive Morning Brief arată problema principală și prima acțiune sigură. coada deciziilor prioritare explică imediat de ce cazul este prioritar.",
+      description: "Brief-ul executiv de dimineață arată problema principală și prima acțiune sigură. Coada deciziilor prioritare explică imediat de ce cazul este prioritar.",
       href: "/dashboard",
       action: "Deschide Control Center"
     },

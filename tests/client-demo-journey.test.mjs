@@ -12,6 +12,8 @@ const audit = read("src/app/(protected)/reports/revenue-recovery-audit/page.tsx"
 const pilot = read("src/app/(protected)/reports/enterprise-pilot-pack/page.tsx");
 const pilotModel = read("src/lib/enterprise-pilot-pack.ts");
 const opportunity = read("src/components/opportunities/OpportunityWorkflow.tsx");
+const dashboard = read("src/app/(protected)/dashboard/page.tsx");
+const decisionQueue = read("src/lib/workspace-decision-queue.ts");
 const auditPrint = read("src/components/reports/PrintAuditButton.tsx");
 const pilotPrint = read("src/components/reports/PrintPilotPackButton.tsx");
 
@@ -100,4 +102,15 @@ test("demo opportunity keeps safe actions, Romanian priority labels and financia
   assert.match(pilot, /Valoare estimată, nu venit confirmat; pilotul nu garantează recuperarea ei/);
   assert.match(pilot, /Decizia de continuare rămâne controlată/);
   assert.match(pilotModel, /Stabilește un ciclu lunar de audit/);
+});
+
+test("main buyer journey uses operational Romanian instead of internal ownership and workflow terms", () => {
+  assert.doesNotMatch(dashboard, /Fără owner|actualizarea workflow-urilor/i);
+  assert.doesNotMatch(decisionQueue, /ownership confirmat/i);
+  assert.doesNotMatch(demo, /Executive Morning Brief/i);
+  assert.doesNotMatch(demo, /\. coada deciziilor/);
+  assert.doesNotMatch(opportunity, /Explorează workflow-ul|începe workflow-ul/i);
+  assert.doesNotMatch(reports, /fără proprietar|prin workflow-ul existent/i);
+  assert.match(reports, /Spațiu de lucru: \{business\?\.name/);
+  assert.match(demo, /Brief-ul executiv de dimineață/);
 });

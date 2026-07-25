@@ -141,7 +141,7 @@ export function OpportunityWorkflow({
       : openAIConfigured
       ? "Documentele sunt generate pe baza datelor oportunității și pot fi editate înainte de trimitere."
       : "Documentele sunt pregătite pe baza datelor oportunității și pot fi editate înainte de trimitere."
-    : "Explorează workflow-ul comercial cu date demonstrative.";
+    : "Explorează fluxul comercial cu date demonstrative.";
 
   function restoreScrollPosition(top: number, left = 0) {
     requestAnimationFrame(() => {
@@ -717,7 +717,7 @@ export function OpportunityWorkflow({
                 </div>
               ))
             ) : (
-              <EmptyState title="Nu există evenimente încă" description="Generează un document sau programează un follow-up pentru a începe workflow-ul." />
+              <EmptyState title="Nu există evenimente încă" description="Generează un document sau programează un follow-up pentru a începe fluxul de lucru." />
             )}
             {status !== opportunity.status ? (
               <div className="rounded-lg border border-mint-400/20 bg-mint-400/10 p-4">

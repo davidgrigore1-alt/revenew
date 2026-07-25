@@ -236,7 +236,7 @@ export function buildWorkspaceDecisionQueue(
         id: `decision:owner:${opportunity.id}`,
         type: "opportunity_without_owner",
         title: "Oportunitate fără responsabil",
-        reason: `„${opportunity.title}” nu are ownership confirmat.`,
+        reason: `„${opportunity.title}” nu are un responsabil confirmat.`,
         whyItMatters: "Fără responsabil atribuit, următorul pas poate rămâne neexecutat chiar dacă oportunitatea este validă.",
         severity: "attention",
         ...common,

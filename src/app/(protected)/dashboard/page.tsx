@@ -142,7 +142,7 @@ export default async function DashboardPage() {
                             <p className="truncate font-semibold text-[rgb(var(--foreground))] group-hover:text-[rgb(var(--primary))]">{opportunity.title}</p>
                             <StatusBadge status={opportunity.status} />
                           </div>
-                          <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{companyForOpportunity(opportunity)} · {opportunity.ownerName ?? "Fără owner"}</p>
+                          <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{companyForOpportunity(opportunity)} · {opportunity.ownerName ?? "Fără responsabil"}</p>
                           <p className="mt-1 line-clamp-1 text-xs text-[rgb(var(--warning-text))]">{assessment.reasons.slice(0, 3).map((reason) => reason.label).join(" · ")}</p>
                         </div>
                         <div className="flex items-center justify-between gap-4 sm:justify-end">
@@ -169,14 +169,14 @@ export default async function DashboardPage() {
                   { label: "În atenție", value: attentionCount, tone: "danger", href: "/opportunities" },
                   { label: "Fără acțiune următoare", value: summary.warnings.withoutNextAction.length, tone: "warning", href: "/pipeline" },
                   { label: "Fără contact principal", value: summary.warnings.withoutPrimaryContact.length, tone: "neutral", href: "/companies" },
-                  { label: "Fără owner", value: summary.viewer.isManager ? summary.warnings.unassigned.length : 0, tone: "brand", href: summary.viewer.isManager ? "/pipeline" : undefined }
+                  { label: "Fără responsabil", value: summary.viewer.isManager ? summary.warnings.unassigned.length : 0, tone: "brand", href: summary.viewer.isManager ? "/pipeline" : undefined }
                 ]} />
               </PremiumPanel>
             </DashboardSection>
 
             <DashboardSection title="Activitate relevantă" description="Evenimente comerciale recente din spațiul de lucru.">
               <PremiumPanel className="px-4 py-1">
-                <ActivityFeed items={activityItems} empty={compactEmpty("Fără activitate recentă", "Evenimentele comerciale vor apărea aici după actualizarea workflow-urilor.")} />
+                <ActivityFeed items={activityItems} empty={compactEmpty("Fără activitate recentă", "Evenimentele comerciale vor apărea aici după actualizarea fluxurilor de lucru.")} />
               </PremiumPanel>
             </DashboardSection>
           </div>
