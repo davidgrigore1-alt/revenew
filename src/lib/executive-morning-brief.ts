@@ -30,7 +30,7 @@ export type ExecutiveMorningBrief = {
     overdueFollowUps: number;
   };
   estimatedExposedValueByCurrency: Array<{ currency: string; value: number }>;
-  bullets: Array<{ id: string; title: string; detail: string }>;
+  bullets: Array<{ id: string; title: string; context?: string; detail: string }>;
   topDecisionItemId: string | null;
 };
 
@@ -124,7 +124,12 @@ export function buildExecutiveMorningBrief(
       .filter(([, value]) => Number.isFinite(value) && value > 0)
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([currency, value]) => ({ currency, value })),
-    bullets: queue.items.slice(0, 3).map((item) => ({ id: item.id, title: item.title, detail: item.whyItMatters })),
+    bullets: queue.items.slice(0, 3).map((item) => ({
+      id: item.id,
+      title: item.title,
+      context: [item.relatedCompanyName, item.relatedOpportunityTitle].filter(Boolean).join(" · ") || undefined,
+      detail: item.whyItMatters
+    })),
     topDecisionItemId: primary?.id ?? null
   };
 }

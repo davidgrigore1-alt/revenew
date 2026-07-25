@@ -50,11 +50,14 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     risks: Array.from(new Set([...(sourceSignal.riskNotes ?? []), ...sourceSignal.uncertaintyNotes]))
   } : opportunity;
   const assistedPreparation = recommendNextBestAction(opportunity);
+  const evidenceBackedDescription = sourceSignal?.primaryRecoveryReason
+    || sourceSignal?.extractedSummary
+    || opportunity.summary;
   return (
     <PageShell
       eyebrow={getOpportunityTypeLabel(opportunity.type)}
       title={opportunity.title}
-      description={opportunity.summary}
+      description={evidenceBackedDescription}
       breadcrumbs={[{ label: "Oportunități", href: "/opportunities" }, { label: opportunity.title }]}
     >
       <div className="grid gap-6">

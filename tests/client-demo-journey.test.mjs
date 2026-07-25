@@ -68,13 +68,13 @@ test("demo language is executive, cautious and free of outdated recovery hype", 
 });
 
 test("demo identity is neutral, fictional and contains no personal mailbox or founder identity", () => {
-  assert.match(fixtures, /operator@demo\.invalid/);
-  assert.match(fixtures, /\[DEMO\] Meridian Commercial Operations/);
+  assert.match(fixtures, /irina\.petrescu@revenew-demo\.invalid/);
+  assert.match(fixtures, /Meridian Commercial Operations/);
   assert.match(fixtures, /Meridian Logistics SRL/);
   assert.match(fixtures, /Delta Construct Solutions SRL/);
   assert.match(fixtures, /Nova Medical Systems SRL/);
-  assert.match(seed, /Operator Demo ReveNew/);
-  assert.doesNotMatch(`${fixtures}\n${seed}`, /gmail\.com|David Pohoata|david\.grigore|Auto Management Revenue Lab/i);
+  assert.match(seed, /DEMO\.operatorName/);
+  assert.doesNotMatch(`${fixtures}\n${seed}`, /gmail\.com|Grigore|David|testdavid|davidtest|TEST DATA|E2E|Auto Management Revenue Lab/i);
 });
 
 test("reports, audit and pilot preserve two-way demo wayfinding and print controls", () => {

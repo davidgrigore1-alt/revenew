@@ -43,11 +43,12 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefM
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))] sm:text-base">{brief.summary}</p>
 
             {brief.bullets.length > 0 ? (
-              <ol className="mt-5 grid gap-2.5 sm:grid-cols-3" aria-label="Primele decizii ale zilei">
+              <ol className="mt-5 hidden gap-2.5 sm:grid sm:grid-cols-3" aria-label="Primele decizii ale zilei">
                 {brief.bullets.map((item, index) => (
                   <li key={item.id} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.74)] p-3.5">
                     <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Prioritatea {index + 1}</p>
                     <p className="mt-1.5 text-sm font-semibold text-[rgb(var(--foreground))]">{item.title}</p>
+                    {item.context ? <p className="mt-1 truncate text-xs font-semibold text-[rgb(var(--text-secondary))]">{item.context}</p> : null}
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.detail}</p>
                   </li>
                 ))}
@@ -69,6 +70,8 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefM
             <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">{brief.primaryRisk}</h2>
             <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{brief.whyItMatters}</p>
 
+            <Button href={brief.firstSafeActionHref} className="mt-4 w-full">{brief.firstSafeActionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+
             {brief.evidence ? (
               <div className="mt-4 rounded-card bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]">
                 <p><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {brief.evidence.label}</p>
@@ -77,7 +80,6 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefM
               </div>
             ) : null}
 
-            <Button href={brief.firstSafeActionHref} className="mt-4 w-full">{brief.firstSafeActionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
             <div className="mt-4 flex gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]">
               <ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
               <p>Aprobarea umană rămâne obligatorie. Nicio comunicare externă nu este trimisă fără acțiune și aprobare umană.</p>

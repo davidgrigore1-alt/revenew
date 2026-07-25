@@ -164,6 +164,7 @@ test("empty workspaces remain honest and route generation is server-only and pri
   const model = read("src/lib/revenue-recovery-audit.ts");
   const route = read("src/app/(protected)/reports/revenue-recovery-audit/page.tsx");
   const printButton = read("src/components/reports/PrintAuditButton.tsx");
+  const styles = read("src/app/globals.css");
   const policies = read("src/lib/authz/route-policies.ts");
   assert.match(model, /import "server-only"/);
   assert.match(model, /getRevenueWorkspaceSummary\(\)/);
@@ -172,6 +173,7 @@ test("empty workspaces remain honest and route generation is server-only and pri
   assert.match(route, /Fiecare oportunitate este numărată o singură dată în total, chiar dacă are mai multe blocaje/);
   assert.match(route, /Monedele rămân separate\. Valoare estimată, nu venit confirmat/);
   assert.match(route, /dovezi disponibile/);
+  assert.match(route, /lg:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(300px,0\.85fr\)\]/);
   assert.match(route, /Audit de recuperare venituri/);
   assert.match(route, /Raport executiv bazat pe datele disponibile în spațiul de lucru/);
   assert.doesNotMatch(route, /tenant-scoped/i);
@@ -182,6 +184,8 @@ test("empty workspaces remain honest and route generation is server-only and pri
   assert.match(route, /Acțiunile comerciale, aprobările și comunicările externe rămân sub control uman/);
   assert.match(printButton, /window\.print\(\)/);
   assert.match(printButton, /Printează auditul/);
+  assert.match(styles, /\.revenue-recovery-audit #prioritati,\s*\.revenue-recovery-audit #dovezi \{\s*break-inside: auto/);
+  assert.match(styles, /\.revenue-recovery-audit #prioritati li,\s*\.revenue-recovery-audit #dovezi li \{\s*break-inside: avoid/);
   assert.doesNotMatch(route, /"use client"/);
   assert.doesNotMatch(`${model}\n${route}`, /guaranteed revenue|revenue guarantee|ROI garantat|recuperare automată/i);
 });

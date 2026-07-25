@@ -378,4 +378,18 @@ body {
   .enterprise-pilot-pack .pilot-section {
     break-inside: avoid;
   }
+
+  .revenue-recovery-audit #prioritati,
+  .revenue-recovery-audit #dovezi {
+    break-inside: auto;
+  }
+
+  .revenue-recovery-audit #prioritati > p,
+  .revenue-recovery-audit #prioritati > h2,
+  .revenue-recovery-audit #dovezi > p,
+  .revenue-recovery-audit #dovezi > h2,
+  .revenue-recovery-audit #prioritati li,
+  .revenue-recovery-audit #dovezi li {
+    break-inside: avoid;
+  }
 }

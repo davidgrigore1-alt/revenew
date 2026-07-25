@@ -24,7 +24,7 @@ async function main() {
     const probe = await credentialProbe.auth.signInWithPassword({ email: DEMO.email, password });
     if (probe.error) {
       const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-        password, email_confirm: true, user_metadata: { full_name: "Operator Demo ReveNew", demo_marker: DEMO.marker }
+        password, email_confirm: true, user_metadata: { full_name: DEMO.operatorName, demo_marker: DEMO.marker }
       });
       if (error) throw new Error(`Contul demo local nu a putut fi actualizat: ${error.message}`);
       user = data.user;
@@ -32,7 +32,7 @@ async function main() {
   } else {
     const { data, error } = await admin.auth.admin.createUser({
       email: DEMO.email, password, email_confirm: true,
-      user_metadata: { full_name: "Operator Demo ReveNew", demo_marker: DEMO.marker }
+      user_metadata: { full_name: DEMO.operatorName, demo_marker: DEMO.marker }
     });
     if (error || !data.user) throw new Error(`Contul demo local nu a putut fi creat: ${error?.message ?? "răspuns invalid"}`);
     user = data.user;
@@ -71,14 +71,18 @@ async function main() {
     grant insert on public.commercial_signal_events to authenticated;
     delete from public.businesses where id = '${DEMO.businessId}';
     insert into public.profiles (id,user_id,full_name,email,role)
-    values ('${profileId}','${user.id}','Operator Demo ReveNew','${DEMO.email}','business_owner')
+    values ('${profileId}','${user.id}','${DEMO.operatorName}','${DEMO.email}','business_owner')
     on conflict (id) do update set user_id=excluded.user_id,full_name=excluded.full_name,email=excluded.email,role=excluded.role,updated_at=now();
+    insert into public.platform_user_roles (profile_id,role,is_active,granted_by_profile_id,expires_at,revoked_at)
+    values ('${profileId}','platform_operator',true,'${profileId}',null,null)
+    on conflict (profile_id,role) do update
+      set is_active=true,granted_by_profile_id=excluded.granted_by_profile_id,expires_at=null,revoked_at=null,updated_at=now();
     insert into public.businesses (id,owner_profile_id,name,legal_name,industry,city,county,country_code,notification_email,current_sales_process)
-    values ('${DEMO.businessId}','${profileId}','${DEMO.businessName}','Meridian Commercial Operations SRL [FICTIV]','Servicii B2B și management operațional','București','București','RO','${DEMO.email}','${DEMO.marker}: demonstrație locală, control uman obligatoriu.');
+    values ('${DEMO.businessId}','${profileId}','${DEMO.businessName}','Meridian Commercial Operations SRL','Servicii B2B și management operațional','București','București','RO','${DEMO.email}','Revizuire săptămânală a riscurilor, responsabililor, dovezilor și acțiunilor următoare.');
     insert into public.business_members (business_id,profile_id,role,status) values ('${DEMO.businessId}','${profileId}','owner','active');
     insert into public.business_services (business_id,name,description) values
       ('${DEMO.businessId}','Revenue Recovery','Identificare și urmărire disciplinată a oportunităților subutilizate.'),
-      ('${DEMO.businessId}','Control comercial','Ownership, next action și auditabilitate pentru echipe B2B.');
+      ('${DEMO.businessId}','Control comercial','Responsabil, acțiune următoare și auditabilitate pentru echipe B2B.');
     insert into public.business_targets (business_id,target_type,value) values
       ('${DEMO.businessId}','industry','Servicii B2B'),('${DEMO.businessId}','city','București'),('${DEMO.businessId}','customer','Companii cu procese comerciale recurente');
     insert into public.business_governance_policies (business_id,live_email_approval_policy,outcome_approval_policy,assignment_policy,updated_by_profile_id)
@@ -143,6 +147,7 @@ async function main() {
   `);
 
   console.log("Demo local ReveNew pregătit: 1 workspace, 8 companii, 8 contacte, 11 oportunități, 12 acțiuni și 10 semnale comerciale.");
+  console.log(`Workspace: ${DEMO.businessName}. Oportunitate principală: /opportunities/${DEMO.featuredOpportunityId}`);
   console.log("Nicio acțiune externă, trimitere de email sau apel AI nu a fost executată.");
 }
 

@@ -267,12 +267,14 @@ async function main() {
       'business_count', (select count(*) from public.businesses where id = '${DEMO.businessId}' and name = '${DEMO.businessName.replaceAll("'", "''")}'),
       'identity_count', (select count(*) from public.profiles p join auth.users u on u.id=p.user_id where p.email='${DEMO.email}' and u.email='${DEMO.email}'),
       'organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}'),
-      'marked_organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}' and name like '[DEMO]%'),
+      'marked_organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}' and notes like '%${DEMO.marker}%'),
       'contact_count', (select count(*) from public.crm_contacts where business_id = '${DEMO.businessId}'),
-      'test_contact_count', (select count(*) from public.crm_contacts where business_id = '${DEMO.businessId}' and email like '%.test'),
+      'reserved_domain_contact_count', (select count(*) from public.crm_contacts where business_id = '${DEMO.businessId}' and email ~* '@([a-z0-9-]+\\.)*(demo|example|revenew-demo)\\.invalid$'),
       'multi_contact_organization_count', (select count(*) from (select organization_id from public.crm_contacts where business_id='${DEMO.businessId}' group by organization_id having count(*) > 1) grouped),
       'opportunity_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}'),
       'ron_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and currency = 'RON'),
+      'eur_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and currency = 'EUR'),
+      'unsupported_currency_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and currency not in ('RON','EUR')),
       'won_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and lifecycle_status = 'won' and actual_outcome_amount > 0),
       'lost_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and lifecycle_status = 'lost' and actual_outcome_amount is null),
       'action_count', (select count(*) from public.opportunity_actions where business_id = '${DEMO.businessId}'),
@@ -281,7 +283,22 @@ async function main() {
       'unassigned_count', (select count(*) from public.opportunities where business_id='${DEMO.businessId}' and lifecycle_status='open' and owner_profile_id is null),
       'event_count', (select count(*) from public.opportunity_events where business_id = '${DEMO.businessId}' and actor_profile_id is not null),
       'document_count', (select count(*) from public.opportunity_documents where business_id = '${DEMO.businessId}' and generation_mode = 'local_fallback'),
+      'unsent_document_count', (select count(*) from public.opportunity_documents where business_id = '${DEMO.businessId}' and status <> 'sent'),
       'owner_count', (select count(*) from public.business_members where business_id = '${DEMO.businessId}' and role = 'owner' and status = 'active')
+      ,'internal_demo_access_count', (select count(*) from public.platform_user_roles where profile_id = (select id from public.profiles where email = '${DEMO.email}' limit 1) and role = 'platform_operator' and is_active = true and revoked_at is null and expires_at is null)
+      ,'featured_opportunity_count', (select count(*) from public.opportunities where id = '${DEMO.featuredOpportunityId}' and business_id = '${DEMO.businessId}' and estimated_value_high > 0 and actual_outcome_amount is null)
+      ,'evidence_backed_opportunity_count', (select count(distinct o.id) from public.opportunities o join public.commercial_signals s on s.detected_from_opportunity_id = o.id and s.business_id = o.business_id where o.business_id = '${DEMO.businessId}' and nullif(btrim(s.raw_message), '') is not null and nullif(btrim(s.primary_recovery_reason), '') is not null)
+      ,'safe_next_action_count', (select count(*) from public.opportunities where business_id = '${DEMO.businessId}' and nullif(btrim(recommended_action), '') is not null)
+      ,'unsafe_visible_label_count', (
+        select count(*) from (
+          select name as value from public.businesses where id = '${DEMO.businessId}'
+          union all select full_name from public.profiles where email = '${DEMO.email}'
+          union all select name from public.crm_organizations where business_id = '${DEMO.businessId}'
+          union all select full_name from public.crm_contacts where business_id = '${DEMO.businessId}'
+          union all select title from public.opportunities where business_id = '${DEMO.businessId}'
+          union all select title from public.commercial_signals where business_id = '${DEMO.businessId}'
+        ) visible where value ~* '(test[[:space:]_-]*data|e2e|testdavid|davidtest|grigore|gmail\\.com)'
+      )
       ,'signal_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}')
       ,'signal_review_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and review_status in ('new','ready_for_review','postponed'))
       ,'signal_linked_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and (matched_organization_id is not null or detected_from_opportunity_id is not null))
@@ -309,15 +326,20 @@ async function main() {
   `, { json: true });
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
   assert(Number(stats.identity_count) === 1, "Lanțul Auth → profil demo este invalid.");
-  assert(Number(stats.organization_count) === 8 && Number(stats.marked_organization_count) === 8, "Sunt necesare exact 8 companii marcate demo.");
-  assert(Number(stats.contact_count) === 8 && Number(stats.test_contact_count) === 8 && Number(stats.multi_contact_organization_count) === 1, "Contactele demo nu respectă contractul local.");
-  assert(Number(stats.opportunity_count) === 11 && Number(stats.ron_count) === 11, "Oportunitățile sau moneda demo sunt invalide.");
+  assert(Number(stats.organization_count) === 8 && Number(stats.marked_organization_count) === 8, "Sunt necesare exact 8 companii fictive marcate intern.");
+  assert(Number(stats.contact_count) === 8 && Number(stats.reserved_domain_contact_count) === 8 && Number(stats.multi_contact_organization_count) === 1, "Contactele demo nu respectă domeniile rezervate și relațiile locale.");
+  assert(Number(stats.opportunity_count) === 11 && Number(stats.ron_count) === 10 && Number(stats.eur_count) === 1 && Number(stats.unsupported_currency_count) === 0, "Oportunitățile sau monedele demo sunt invalide.");
   assert(Number(stats.won_count) === 1 && Number(stats.lost_count) === 1, "Rezultatele terminale demo sunt invalide.");
   assert(Number(stats.action_count) === 12 && Number(stats.overdue_count) > 0, "Coada de lucru nu conține acțiuni restante.");
   assert(Number(stats.missing_next_action_count) > 0 && Number(stats.unassigned_count) > 0, "Lipsesc scenariile Recovery Queue obligatorii.");
   assert(Number(stats.event_count) >= 10, "Evenimentele nu sunt complet auditabile.");
-  assert(Number(stats.document_count) === 4, "Documentele demo nu sunt exclusiv locale.");
+  assert(Number(stats.document_count) === 4 && Number(stats.unsent_document_count) === 4, "Documentele demo trebuie să fie locale și netrimise.");
   assert(Number(stats.owner_count) === 1, "Ownership-ul demo este invalid.");
+  assert(Number(stats.internal_demo_access_count) === 1, "Contul local nu poate accesa traseul intern /demo.");
+  assert(Number(stats.featured_opportunity_count) === 1, "Oportunitatea principală a traseului demo lipsește.");
+  assert(Number(stats.evidence_backed_opportunity_count) > 0, "Demo-ul nu conține o oportunitate susținută de o dovadă verificabilă.");
+  assert(Number(stats.safe_next_action_count) > 0, "Demo-ul nu conține o acțiune următoare sigură.");
+  assert(Number(stats.unsafe_visible_label_count) === 0, "Fixturele vizibile conțin identitate personală sau etichete TEST/E2E.");
   assert(Number(stats.signal_count) === 10, "Demo-ul trebuie să conțină exact 10 semnale comerciale.");
   assert(Number(stats.signal_review_count) > 0 && Number(stats.signal_linked_count) > 0, "Semnalele demo nu acoperă revizuirea și legarea.");
   assert(Number(stats.signal_converted_count) > 0 && Number(stats.signal_event_count) >= 10, "Conversia și auditul semnalelor demo sunt incomplete.");

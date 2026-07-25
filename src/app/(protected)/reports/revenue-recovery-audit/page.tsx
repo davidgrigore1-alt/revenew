@@ -81,7 +81,7 @@ export default async function RevenueRecoveryAuditPage() {
         </div>
 
         <Section id="rezumat-executiv" eyebrow="A · Rezumat executiv" title={audit.headline}>
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] lg:items-start">
             <div>
               <span className={statusTone[audit.status]}>{audit.statusLabel}</span>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">{audit.summary}</p>

@@ -114,11 +114,10 @@ Development diagnostics:
 
 ## Demo local pentru prezentare
 
-Pentru demonstrații client-safe folosește fluxul local izolat descris în [docs/local-demo.md](docs/local-demo.md). Acesta pornește cu autentificare locală reală, date strict fictive marcate `[DEMO]`, email extern și AI dezactivate și fără modificarea fișierului `.env.local`.
+Pentru demonstrații client-safe folosește fluxul local izolat descris în [docs/local-demo.md](docs/local-demo.md). Acesta pornește cu autentificare locală reală, workspace-ul fictiv `Meridian Commercial Operations`, email extern și AI dezactivate și fără modificarea fișierului `.env.local`.
 
 ```powershell
-npm run demo:seed
-npm run demo:verify
+npm run demo:buyer-ready
 npm run demo:dev
 ```
 

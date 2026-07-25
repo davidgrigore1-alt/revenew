@@ -1,40 +1,51 @@
 # Demo local ReveNew
 
-Acest flux pregătește un workspace local, repetabil și strict fictiv pentru verificarea produsului. Nu modifică `.env.local`, nu contactează servicii externe și refuză să ruleze dacă API-ul sau baza Supabase nu indică exclusiv loopback (`localhost`, `127.0.0.1` sau `::1`).
+Acest flux pregătește un mediu local, repetabil și strict fictiv pentru o demonstrație comercială. Nu modifică `.env.local`, nu folosește date găzduite și refuză orice API sau bază Supabase care nu indică exclusiv loopback (`localhost`, `127.0.0.1` sau `::1`).
 
 ## Pregătire
 
-1. Pornește Docker și stiva locală cu `npx supabase start`.
-2. Configurează parola contului demo doar în sesiunea terminalului, prin variabila `REVENEW_DEMO_PASSWORD`. Nu o salva în repository.
-3. Rulează `npm run demo:seed`.
-4. Rulează `npm run demo:verify`.
-5. Pornește aplicația cu `npm run demo:dev` sau, pentru alt port, `npm run demo:dev -- --port 3001`.
+1. Pornește Docker și stiva locală: `npx supabase start`.
+2. Setează numai în terminal o parolă pentru `REVENEW_DEMO_PASSWORD`; nu o salva în repository.
+3. Rulează `npm run demo:buyer-ready`.
+4. Pornește aplicația: `npm run demo:dev` sau `npm run demo:dev -- --port 3001`.
+5. Autentifică-te cu `irina.petrescu@revenew-demo.invalid` și parola aleasă.
+6. Dacă apare pagina Access, selectează explicit un plan Preview. Nu este creată o subscripție fictivă.
 
-Launcher-ul injectează în proces doar valorile returnate de stiva locală Supabase, folosește modul local `preview` deja implementat de produs și dezactivează explicit emailul extern și AI-ul. Planul se alege explicit în pagina Access; nu este creată o subscripție activă fictivă. Fișierul `.env.local` rămâne neatins.
+Poți rula separat `npm run demo:seed` și `npm run demo:verify`. Launcher-ul folosește numai valorile stivei locale, dezactivează emailul extern și AI-ul și nu modifică billing-ul. Seed-ul verifică RLS înainte de granturile locale read-only; politicile și migrațiile de producție rămân neschimbate.
 
-Deoarece configurația locală folosește `auto_expose_new_tables=false`, seed-ul acordă local rolului `authenticated` numai privilegiul `SELECT` pe tabelele necesare verificării UI. Înainte de grant verifică faptul că fiecare tabel are RLS activ. Rolurile `anon` și `service_role` nu primesc privilegii suplimentare, politicile RLS nu sunt modificate, iar granturile nu sunt persistate în migrațiile de producție. Operațiile de scriere din UI rămân intenționat în afara acestui demo read-only.
+Contul local primește rolul minim existent `platform_operator` numai pentru a accesa traseul intern `/demo`. Rolul este creat exclusiv în baza locală; nu este modificată logica de autorizare și nu se acordă acces de administrator platformă.
 
-## Conținut
+## Scenariul
 
-- un workspace marcat `[DEMO]`;
-- opt companii fictive și opt contacte pe domeniul rezervat `.test`, inclusiv o companie cu două contacte;
-- unsprezece oportunități în RON, inclusiv stări active, risc, rezultat câștigat și rezultat pierdut;
-- acțiuni restante, scadente astăzi și viitoare;
-- evenimente auditabile și documente locale care necesită control uman;
-- activare locală prin fluxul Preview existent, fără a modifica billing-ul sau tabelul de subscripții.
+Workspace: **Meridian Commercial Operations**. Identitatea operatorului și toate companiile, contactele, adresele și evenimentele sunt fictive.
 
-Datele nu declanșează emailuri, webhook-uri, apeluri AI sau acțiuni comerciale externe.
+Povestea principală urmărește proiectul de mentenanță al Vector Industrial: valoare estimată de 76.000 RON, termen depășit, responsabil neatribuit și aprobare umană necesară. Alte cazuri arată follow-up restant, date de contact incomplete, document pregătit dar netrimis și o oportunitate de 12.000 EUR păstrată separat de valorile RON. Valorile estimate nu sunt venit confirmat.
 
-## Resetare
+## Traseu de prezentare
 
-- `npm run demo:reset` elimină numai workspace-ul demo și datele sale dependente. Contul Auth local este păstrat.
-- `npm run demo:reset -- --full` execută resetarea completă a bazei locale prin Supabase CLI. Această variantă este distructivă pentru toate datele locale.
+1. `/dashboard` — riscul principal, dovada și prima acțiune sigură.
+2. `/demo` — firul narativ de cinci minute.
+3. `/opportunities/de300006-0000-4000-8000-000000000006` — oportunitatea principală.
+4. `/reports` — pipeline estimat, expunere estimată și venit confirmat.
+5. `/reports/revenue-recovery-audit` — auditul verificabil.
+6. `/reports/enterprise-pilot-pack` — validarea controlată pe 14 zile.
 
-După oricare resetare, `npm run demo:seed` reconstruiește scenariul în mod determinist. Datele calendaristice sunt recalibrate relativ la ziua rulării pentru ca acțiunile restante și cele scadente să rămână relevante.
+În prezentare: explică riscul, deschide dovada, arată responsabilul lipsă și acțiunea sigură, apoi încheie cu auditul și pilotul. ReveNew pregătește decizia; oamenii autorizați verifică, aprobă și execută.
 
-## Siguranță și depanare
+Nu afirma venit garantat, recuperare automată, ROI promis sau trimitere automată. Nicio comunicare externă nu este trimisă automat.
 
-- Dacă stiva nu rulează sau indică o gazdă non-locală, comenzile se opresc înainte de orice scriere.
-- Scripturile nu afișează chei Supabase și nu persistă parola demo.
-- `npm run demo:verify` verifică structura fixture-urilor, rezultatele financiare, relațiile, coada de lucru și izolarea RLS cu un tenant temporar eliminat după test.
-- Pentru a inspecta emailuri exclusiv locale, folosește Mailpit-ul pornit de Supabase. Demo-ul nu trimite mesaje automat.
+## Buyer Demo Checklist
+
+- confirmă workspace-ul `Meridian Commercial Operations`;
+- confirmă că nu apar `testdavid`, `davidtest`, `TEST DATA`, `E2E` sau email personal;
+- deschide Dashboard, Demo, oportunitatea principală, Audit și Pilot Pack;
+- verifică primul CTA, dovada, aprobarea umană și separarea estimat/confirmat;
+- verifică butoanele de print și absența overflow-ului;
+- încheie cu propunerea de pilot, fără promisiune financiară.
+
+## Resetare și siguranță
+
+- `npm run demo:reset` elimină numai workspace-ul local cu identificatorul demo fix; contul Auth local este păstrat.
+- `npm run demo:reset -- --full` resetează toate datele locale și este intenționat distructiv numai pentru stiva locală.
+- Scripturile se opresc înainte de scriere dacă stiva nu este locală, nu afișează chei și nu persistă parola.
+- `npm run demo:verify` verifică identitatea, domeniile rezervate, monedele separate, dovezile, aprobarea, documentele netrimise și izolarea RLS.

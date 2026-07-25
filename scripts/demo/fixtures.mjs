@@ -1,7 +1,9 @@
 export const DEMO = Object.freeze({
-  email: "operator@demo.invalid",
+  email: "irina.petrescu@revenew-demo.invalid",
+  operatorName: "Irina Petrescu",
   businessId: "de000000-0000-4000-8000-000000000001",
-  businessName: "[DEMO] Meridian Commercial Operations",
+  businessName: "Meridian Commercial Operations",
+  featuredOpportunityId: "de300006-0000-4000-8000-000000000006",
   marker: "revenew-local-demo-v1"
 });
 
@@ -27,64 +29,73 @@ export function buildFixtures(profileId, now = new Date()) {
   const signalEventIds = ids("90", 12);
 
   const organizations = [
-    ["[DEMO] Meridian Logistics SRL", "Logistică", "București", "client"],
-    ["[DEMO] Delta Construct Solutions SRL", "Construcții", "Cluj-Napoca", "prospect"],
-    ["[DEMO] Nova Medical Systems SRL", "Servicii medicale", "București", "client"],
-    ["[DEMO] Atlas Fleet Services SRL", "Servicii pentru flote", "Brașov", "prospect"],
-    ["[DEMO] Carpathia Retail Network SRL", "Retail", "Timișoara", "client"],
-    ["[DEMO] Urban Facilities Group SRL", "Facility management", "Iași", "former_client"],
-    ["[DEMO] Vector Industrial Services SRL", "Servicii industriale", "Ploiești", "prospect"],
-    ["[DEMO] Orizont Hospitality Supply SRL", "Ospitalitate", "Constanța", "partner"]
+    ["Meridian Logistics SRL", "Logistică", "București", "client"],
+    ["Delta Construct Solutions SRL", "Construcții", "Cluj-Napoca", "prospect"],
+    ["Nova Medical Systems SRL", "Sisteme medicale", "București", "client"],
+    ["Atlas Fleet Services SRL", "Servicii pentru flote", "Brașov", "prospect"],
+    ["Carpathia Distribution Group SRL", "Distribuție", "Timișoara", "client"],
+    ["Urban Facility Partners SRL", "Administrare facilități", "Iași", "former_client"],
+    ["Vector Industrial Services SRL", "Servicii industriale", "Ploiești", "prospect"],
+    ["Orizont Hospitality Supply SRL", "Furnizare pentru ospitalitate", "Constanța", "partner"]
   ].map(([name, industry, city, relationship_status], index) => ({
     id: organizationIds[index], business_id: DEMO.businessId, name, normalized_name: name.toLocaleLowerCase("ro-RO"),
     industry, city, country: "România", relationship_status, notes: `${DEMO.marker}: companie fictivă pentru verificare locală.`
   }));
 
   const contactSpecs = [
-    [0, "Ana Ionescu", "Director Comercial", "decision_maker"],
-    [1, "Mihai Stan", "Fleet Operations Manager", "champion"],
-    [2, "Elena Pop", "Director Achiziții", "economic_buyer"],
-    [3, "Radu Marinescu", "Director General", "decision_maker"],
-    [4, "Ioana Pavel", "Head of Partnerships", "champion"],
-    [5, "Sorin Dobre", "Director Rețea", "decision_maker"],
-    [6, "Cristina Nistor", "Procurement Lead", "economic_buyer"],
-    [0, "Alexandra Munteanu", "Fleet Coordinator", "champion"]
+    [0, "Andrei Ionescu", "Director Comercial", "decision_maker", "andrei.ionescu@meridian-logistics.demo.invalid"],
+    [1, "Elena Popa", "CFO", "economic_buyer", "elena.popa@delta-construct.demo.invalid"],
+    [2, "Mihai Dumitrescu", "Director Operațiuni", "champion", "mihai.dumitrescu@nova-medical.demo.invalid"],
+    [3, "Radu Marinescu", "Coordonator Achiziții", "economic_buyer", "radu.marinescu@atlas-fleet.demo.invalid"],
+    [4, "Ioana Stan", "CEO", "decision_maker", "ioana.stan@carpathia-distribution.demo.invalid"],
+    [5, "Sorin Dobre", "Director Rețea", "decision_maker", "sorin.dobre@urban-facility.demo.invalid"],
+    [6, "Cristina Nistor", "Director Achiziții", "economic_buyer", "cristina.nistor@vector-industrial.demo.invalid"],
+    [0, "Alexandra Munteanu", "Coordonator Flotă", "champion", "alexandra.munteanu@meridian-logistics.demo.invalid"]
   ];
-  const contacts = contactSpecs.map(([organizationIndex, full_name, job_title, decision_role], index) => ({
+  const contacts = contactSpecs.map(([organizationIndex, full_name, job_title, decision_role, specifiedEmail], index) => {
+    const email = specifiedEmail ?? `contact${index + 1}@revenew-demo.invalid`;
+    return {
     id: contactIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     full_name, normalized_name: full_name.toLocaleLowerCase("ro-RO"), job_title, decision_role,
-    email: `contact${index + 1}@demo.invalid`, normalized_email: `contact${index + 1}@demo.invalid`,
+    email, normalized_email: email,
     is_active: true, is_primary_for_organization: index < 7, notes: `${DEMO.marker}: contact fictiv.`
-  }));
+    };
+  });
 
   const baseOpportunity = (index, organizationIndex, title, status, value, overrides = {}) => ({
     id: opportunityIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     title, type: "manual", status, lifecycle_status: "open", commercial_type: "commercial_recovery",
     owner_profile_id: profileId, currency: "RON", estimated_value_low: Math.round(value * 0.7), estimated_value_high: value,
     deadline: date(14 + index), fit_score: 78, urgency_score: 64, money_score: 72, confidence_score: 68,
-    summary: "Oportunitate comercială fictivă, structurată pentru demonstrarea controlului operațional ReveNew.",
+    summary: "Oportunitate comercială urmărită pentru clarificarea responsabilului, dovezilor și următorului pas.",
     relevance: ["relație comercială existentă", "următor pas verificabil"], risks: [],
-    recommended_action: "Confirmă ownership-ul și următoarea acțiune înainte de contact.", created_at: iso(-10 - index), updated_at: iso(-2),
+    recommended_action: "Confirmă persoana responsabilă și următoarea acțiune înainte de contact.", created_at: iso(-10 - index), updated_at: iso(-2),
     ...overrides
   });
   const opportunities = [
     baseOpportunity(0, 0, "Reactivare contract logistic · Meridian", "contacted", 42000, { commercial_type: "reactivation", deadline: date(5), urgency_score: 82 }),
     baseOpportunity(1, 1, "Extindere servicii operaționale · Delta Construct", "reviewed", 28000, { commercial_type: "expansion", owner_profile_id: null, recommended_action: "Atribuie un responsabil și confirmă decidentul." }),
     baseOpportunity(2, 2, "Follow-up ofertă rețea medicală · Nova Medical", "follow_up_needed", 36000, { deadline: date(2), urgency_score: 92, risks: ["follow-up restant"] }),
-    baseOpportunity(3, 4, "Reînnoire servicii regionale · Carpathia Retail", "action_generated", 24000, { commercial_type: "renewal", deadline: date(7) }),
-    baseOpportunity(4, 5, "Reluare contract locații · Urban Facilities", "new", 19000, { commercial_type: "stalled_pipeline", created_at: iso(-45), updated_at: iso(-38), deadline: date(10) }),
-    baseOpportunity(5, 6, "Recuperare proiect mentenanță · Vector Industrial", "follow_up_needed", 85000, { owner_profile_id: null, deadline: date(-4), urgency_score: 96, risks: ["fără owner", "termen depășit"] }),
+    baseOpportunity(3, 4, "Reînnoire servicii regionale · Carpathia Distribution", "action_generated", 24000, { commercial_type: "renewal", deadline: date(7) }),
+    baseOpportunity(4, 5, "Reluare contract locații · Urban Facility Partners", "new", 19000, { commercial_type: "stalled_pipeline", created_at: iso(-45), updated_at: iso(-38), deadline: date(10) }),
+    baseOpportunity(5, 6, "Recuperare proiect mentenanță · Vector Industrial", "follow_up_needed", 76000, {
+      owner_profile_id: null,
+      deadline: date(-4),
+      urgency_score: 96,
+      risks: ["responsabil neatribuit", "termen depășit"],
+      summary: "Proiect de mentenanță cu termen depășit și decizie internă blocată; responsabilul și următorul pas necesită confirmare."
+    }),
     baseOpportunity(6, 0, "Extindere servicii regionale · Meridian", "reviewed", 31000, { commercial_type: "expansion", deadline: date(21) }),
     baseOpportunity(7, 2, "Program servicii corporate · Nova Medical", "contacted", 15500, { commercial_type: "new_business", deadline: date(12) }),
-    baseOpportunity(8, 4, "Optimizare operațională regională · Carpathia", "won", 22500, {
+    baseOpportunity(8, 4, "Optimizare operațională regională · Carpathia Distribution", "won", 22500, {
       lifecycle_status: "won", commercial_type: "expansion", actual_outcome_amount: 18500, outcome_date: date(-3), outcome_reason: "expanded",
       outcome_note: "Valoare confirmată în cadrul scenariului demo local.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-3), deadline: date(-3)
     }),
-    baseOpportunity(9, 5, "Contract pilot locații · Urban Facilities", "lost", 12000, {
+    baseOpportunity(9, 5, "Contract pilot locații · Urban Facility Partners", "lost", 12000, {
       lifecycle_status: "lost", commercial_type: "new_business", actual_outcome_amount: null, outcome_date: date(-12), outcome_reason: "timing",
       outcome_note: "Decizie amânată de client; rezultat fictiv marcat explicit.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-12), deadline: date(-12)
     }),
-    baseOpportunity(10, 3, "Audit operațional flotă · Atlas Fleet", "new", 9800, { commercial_type: "new_business", created_at: iso(-34), updated_at: iso(-34), deadline: null })
+    baseOpportunity(10, 3, "Audit operațional flotă · Atlas Fleet", "new", 12000, { commercial_type: "new_business", currency: "EUR", created_at: iso(-34), updated_at: iso(-34), deadline: null })
   ];
 
   const actionSpecs = [

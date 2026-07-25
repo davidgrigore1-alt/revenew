@@ -31,10 +31,13 @@ test("recommended action and precise safe CTAs remain visible", async () => {
 });
 
 test("the first opportunity screen exposes evidence without opening a raw feed", async () => {
-  const [controlCenter, workflow] = await Promise.all([
+  const [page, controlCenter, workflow] = await Promise.all([
+    readFile(pageUrl, "utf8"),
     readFile(controlCenterUrl, "utf8"),
     readFile(workflowUrl, "utf8")
   ]);
+  assert.match(page, /const evidenceBackedDescription = sourceSignal\?\.primaryRecoveryReason/);
+  assert.match(page, /description=\{evidenceBackedDescription\}/);
   assert.match(controlCenter, /Dovadă disponibilă/);
   assert.match(controlCenter, /Verifică dovezile/);
   assert.match(controlCenter, /Lipsește o dovadă verificabilă/);

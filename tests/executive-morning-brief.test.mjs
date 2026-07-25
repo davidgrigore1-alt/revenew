@@ -125,10 +125,16 @@ test("counts and exposed estimates remain deterministic and currencies stay sepa
 });
 
 test("only the top three evidence-backed decisions become executive bullets", () => {
-  const items = Array.from({ length: 5 }, (_, index) => item({ id: `decision-${index}`, title: `Prioritatea ${index + 1}` }));
+  const items = Array.from({ length: 5 }, (_, index) => item({
+    id: `decision-${index}`,
+    title: `Prioritatea ${index + 1}`,
+    relatedCompanyName: `Compania ${index + 1}`,
+    relatedOpportunityTitle: `Oportunitatea ${index + 1}`
+  }));
   const brief = buildExecutiveMorningBrief(queue({ items, criticalCount: 5 }), { now });
   assert.equal(brief.bullets.length, 3);
   assert.equal(brief.bullets[0].id, "decision-0");
+  assert.equal(brief.bullets[0].context, "Compania 1 · Oportunitatea 1");
   assert.equal(brief.bullets[2].id, "decision-2");
 });
 
@@ -155,5 +161,7 @@ test("implementation stays server-only, deterministic and directly above the dec
   assert.match(ui, /nu este venit confirmat/);
   assert.match(ui, /Aprobarea umană rămâne obligatorie/);
   assert.match(ui, /Bazat pe:/);
+  assert.match(ui, /hidden gap-2\.5 sm:grid/);
+  assert.ok(ui.indexOf("<Button href={brief.firstSafeActionHref}") < ui.indexOf("{brief.evidence ?"));
   assert.doesNotMatch(ui, /Continuă|Află mai multe|Explorează/);
 });
