@@ -66,6 +66,20 @@ Fixture-ul nu conține emailuri, numere de telefon sau identități reale.
 
 Numărul de telefon nu este copiat în rezumat; motorul păstrează numai faptul că a fost furnizat. Persistența, auditul real și confirmarea rămân în afara acestui sandbox.
 
+## Recepționerul text demonstrativ
+
+`src/lib/text-receptionist-sandbox.ts` adaugă un flux determinist, fără LLM:
+
+1. afișează disclosure-ul de simulare locală;
+2. solicită serviciul, data și intervalul preferat;
+3. colectează opțional persoana, numele și o notă;
+4. folosește motorul local pentru 1–3 propuneri;
+5. explică serviciul, durata, bufferul, persoana și regula de disponibilitate;
+6. creează numai propunerea `pending_approval`;
+7. pregătește un rezumat pentru operator, inclusiv informațiile opționale lipsă.
+
+Pagina protejată `/demo/appointment-control` expune acest flux într-o interfață mică și progresivă. Etichetele precizează permanent că Google Calendar nu este conectat, că nu există o programare reală și că aprobarea este obligatorie.
+
 ## Neimplementat intenționat
 
 - Google Calendar și `free/busy`;
@@ -75,8 +89,9 @@ Numărul de telefon nu este copiat în rezumat; motorul păstrează numai faptul
 - telefonie sau voice;
 - persistență în baza de date;
 - confirmare automată;
-- UI pentru client.
+- UI public sau un widget pentru client;
+- recepționer telefonic real.
 
 ## Următorul pas
 
-Următoarea iterație recomandată este un mic flux demonstrativ text pentru recepționer: colectează serviciul și preferința, apelează motorul local, explică 1–3 intervale și creează o propunere în așteptare. Fluxul trebuie să rămână local, fără provider AI sau efecte externe.
+Următoarea iterație recomandată este un pachet local de evaluare a recepționerului: scenarii pentru informații ambigue, lipsă de disponibilitate, persoană incompatibilă, schimbarea preferinței și handoff obligatoriu. Evaluarea trebuie să măsoare completarea, refuzurile sigure și calitatea rezumatului fără provider AI, persistență sau efecte externe.

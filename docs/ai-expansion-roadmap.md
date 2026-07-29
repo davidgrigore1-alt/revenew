@@ -134,6 +134,12 @@ Prima versiune este text-mode:
 
 Nu există apel real, telefonie sau sinteză voice.
 
+#### Stare implementată — Text Receptionist Sandbox v1
+
+Motorul determinist `src/lib/text-receptionist-sandbox.ts` colectează prin alegeri structurate serviciul, data, intervalul, preferința de personal și detaliile opționale. El reutilizează motorul local de programări, explică propunerile, creează numai `pending_approval` și pregătește handoff-ul pentru operator.
+
+Pagina protejată `/demo/appointment-control` face fluxul demonstrabil și afișează permanent limitele: sandbox local, Google Calendar neconectat, nicio programare reală și aprobare obligatorie. Nu există LLM, telefonie, API extern, persistență sau confirmare trimisă.
+
 ### Etapa G — Recepționer AI real
 
 Necesită înainte de producție:
@@ -358,7 +364,7 @@ Oferta inițială trebuie să fie un pilot controlat de configurare și simulare
 
 ### Prompt 1 — următorul pas recomandat
 
-> Lucrează în `C:\Projects\ReveNew`. Construiește un flux text demonstrativ local-only pentru ReveNew Appointment Control Pilot, reutilizând `src/lib/appointment-sandbox.ts` și fixture-ul fictiv existent. Colectează serviciul, data, fereastra preferată și persoana opțională, explică 1–3 intervale propuse și creează numai un obiect `pending_approval`. Fără Google Calendar, OAuth, API-uri externe, telefonie, email, provider AI, migrații sau persistență. Păstrează logica conversației deterministă, cu întrebări fixe, informații lipsă explicite, disclosure că este o simulare și handoff uman. Adaugă teste înaintea unui UI; dacă motorul conversațional trece, poate fi expus într-o pagină demo mică, izolată și fără a sugera booking live.
+> Lucrează în `C:\Projects\ReveNew`. Construiește un pachet local de evaluare pentru Text Receptionist Sandbox, reutilizând motoarele și fixture-ul existente. Adaugă scenarii deterministe pentru informații lipsă sau ambigue, serviciu inactiv, persoană incompatibilă, lipsă de disponibilitate, schimbarea preferinței și handoff obligatoriu. Calculează numai metrici locale de completare, refuz sigur, propunere validă și calitate structurală a handoff-ului. Fără provider AI, Google Calendar, OAuth, API-uri externe, telefonie, email, migrații sau persistență. Nu adăuga scoring al angajaților și nu transforma evaluarea într-o afirmație despre venit ori booking garantat.
 
 ### Prompt 2 — evaluare și threat model OAuth
 

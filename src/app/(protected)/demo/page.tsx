@@ -170,6 +170,7 @@ export default async function DemoPage() {
         <div className="flex flex-wrap gap-2">
           <Button href="/dashboard">Deschide Control Center</Button>
           <Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul</Button>
+          <Button href="/demo/appointment-control" variant="secondary">Deschide sandbox-ul de programări</Button>
         </div>
       }
     >
