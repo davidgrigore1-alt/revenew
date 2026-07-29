@@ -12,6 +12,7 @@ import {
   buildReceptionistSlotProposal,
   createReceptionistPendingBooking,
   getNextReceptionistPrompt,
+  reopenReceptionistPreferences,
   startReceptionistSandbox
 } from "@/lib/text-receptionist-sandbox";
 
@@ -150,8 +151,19 @@ export function AppointmentControlSandbox() {
               </Button>
             ) : null}
 
+            {state.stage === "create_pending_booking" ? (
+              <Button variant="secondary" onClick={() => setState((current) => reopenReceptionistPreferences(current))}>
+                Schimbă data sau preferința
+              </Button>
+            ) : null}
+
             {state.stage === "no_slots_available" ? (
-              <Button variant="secondary" onClick={reset}>Reia simularea</Button>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button onClick={() => setState((current) => reopenReceptionistPreferences(current))}>
+                  Schimbă preferințele
+                </Button>
+                <Button variant="secondary" onClick={reset}>Reia simularea</Button>
+              </div>
             ) : null}
 
             {state.stage === "handoff" ? (

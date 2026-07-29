@@ -80,6 +80,54 @@ Numărul de telefon nu este copiat în rezumat; motorul păstrează numai faptul
 
 Pagina protejată `/demo/appointment-control` expune acest flux într-o interfață mică și progresivă. Etichetele precizează permanent că Google Calendar nu este conectat, că nu există o programare reală și că aprobarea este obligatorie.
 
+## Evaluare deterministă și hardening
+
+`src/lib/text-receptionist-evaluation.ts` rulează local zece scenarii reproductibile:
+
+1. cerere completă;
+2. informații obligatorii lipsă;
+3. serviciu inexistent;
+4. serviciu inactiv;
+5. persoană incompatibilă cu serviciul;
+6. persoană preferată indisponibilă, cu alternativă calificată;
+7. lipsă totală de intervale;
+8. schimbarea preferinței înainte de aprobare;
+9. creare exclusiv în starea `pending_approval`;
+10. handoff obligatoriu către operator.
+
+Fiecare rezultat raportează etapa finală, numărul de intervale, refuzul sigur, existența handoff-ului și invariantul fără efect extern. Evaluarea nu apelează un model, provider, API sau bază de date.
+
+Schimbarea preferinței redeschide data, intervalul și persoana înainte de handoff. Propunerile vechi sunt eliminate și disponibilitatea este calculată din nou. După predarea către operator, modificarea este refuzată și utilizatorul trebuie să pornească o simulare nouă.
+
+## Script scurt pentru prezentare
+
+1. Arată etichetele permanente: sandbox local, Calendar neconectat, nicio programare reală și aprobare obligatorie.
+2. Confirmă disclosure-ul și selectează serviciul, data și intervalul.
+3. Generează cele 1–3 propuneri locale și explică durata, bufferul și persoana calificată.
+4. Opțional, folosește „Schimbă data sau preferința” pentru a demonstra recalcularea fără rezervare.
+5. Selectează un interval și arată starea „În așteptarea aprobării”.
+6. Arată rezumatul pentru operator și eticheta „Nu a fost trimisă nicio confirmare”.
+7. Explică faptul că integrarea Calendar și vocea sunt posibile etape viitoare, nu capabilități curente.
+
+## Ce demonstrează evaluarea
+
+- regulile de program, durată și buffer sunt aplicate reproductibil;
+- informațiile obligatorii sunt solicitate înaintea propunerii;
+- serviciile și persoanele invalide sunt refuzate explicit;
+- fallback-ul folosește numai o persoană calificată;
+- lipsa disponibilității nu produce intervale inventate;
+- selecția rămâne o propunere pentru aprobare umană;
+- handoff-ul precizează informațiile disponibile și lipsurile.
+
+## Ce nu demonstrează
+
+- acuratețea unui model AI sau a înțelegerii limbajului liber;
+- disponibilitate dintr-un calendar real;
+- răspuns la apeluri, latență voice sau calitatea unei transcrieri;
+- creare, persistență ori confirmare reală a unei programări;
+- trimitere de email, SMS sau altă comunicare;
+- creștere de venit, ROI sau un număr garantat de programări.
+
 ## Neimplementat intenționat
 
 - Google Calendar și `free/busy`;
@@ -94,4 +142,4 @@ Pagina protejată `/demo/appointment-control` expune acest flux într-o interfa�
 
 ## Următorul pas
 
-Următoarea iterație recomandată este un pachet local de evaluare a recepționerului: scenarii pentru informații ambigue, lipsă de disponibilitate, persoană incompatibilă, schimbarea preferinței și handoff obligatoriu. Evaluarea trebuie să măsoare completarea, refuzurile sigure și calitatea rezumatului fără provider AI, persistență sau efecte externe.
+Următoarea iterație recomandată este un protocol local de pilot cu evaluatori umani: checklist de prezentare, fișe anonime de observație și criterii explicite de continuare, ajustare sau oprire. Acesta trebuie să reutilizeze rezultatele deterministe, fără integrare live, persistență de date personale sau afirmații despre venit garantat.

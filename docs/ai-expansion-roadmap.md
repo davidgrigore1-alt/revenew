@@ -140,6 +140,12 @@ Motorul determinist `src/lib/text-receptionist-sandbox.ts` colectează prin aleg
 
 Pagina protejată `/demo/appointment-control` face fluxul demonstrabil și afișează permanent limitele: sandbox local, Google Calendar neconectat, nicio programare reală și aprobare obligatorie. Nu există LLM, telefonie, API extern, persistență sau confirmare trimisă.
 
+#### Stare implementată — Evaluation & Demo Hardening v1
+
+Evaluatorul local `src/lib/text-receptionist-evaluation.ts` acoperă cererea completă, informațiile lipsă, servicii invalide sau inactive, incompatibilitatea persoanei, fallback-ul calificat, lipsa intervalelor, schimbarea preferinței, `pending_approval` și handoff-ul. Rezultatele sunt deterministe și verifică explicit că nu există efect extern sau confirmare trimisă.
+
+Interfața permite redeschiderea controlată a preferințelor înainte de handoff. Propunerile anterioare sunt eliminate și recalculate; o propunere deja predată operatorului nu este modificată implicit.
+
 ### Etapa G — Recepționer AI real
 
 Necesită înainte de producție:
@@ -323,18 +329,19 @@ Orice model nou trebuie să fie aditiv, tenant-scoped și protejat prin RLS. Pol
 
 1. Consolidează control plane-ul intern și testele invariantelor.
 2. Construiește **Calendar Assistant Sandbox pentru programări**, fără Google și fără efecte externe. **Finalizat în v1.**
-3. Validează verticala salon cu 3–5 operatori și scenarii text.
-4. Adaugă baseline, măsurători de acuratețe și rate de handoff.
-5. Proiectează modelul de integrare și threat model-ul OAuth.
-6. Introdu Google Calendar `free/busy` cu scope minim.
-7. Permite crearea evenimentului numai după aprobări și audit validate.
-8. Construiește Gmail sandbox din mesaje importate manual.
-9. Evaluează integrarea Gmail limitată la fire selectate și creare de draft.
-10. Abordează vocea reală numai după validarea text, Calendar și conformitate.
+3. Adaugă scenarii text deterministe și hardening pentru refuz, fallback și handoff. **Finalizat în v1.**
+4. Validează verticala salon cu 3–5 operatori și un protocol local de observație.
+5. Adaugă baseline, măsurători de completare și rate de handoff fără a le interpreta ca ROI.
+6. Proiectează modelul de integrare și threat model-ul OAuth.
+7. Introdu Google Calendar `free/busy` cu scope minim.
+8. Permite crearea evenimentului numai după aprobări și audit validate.
+9. Construiește Gmail sandbox din mesaje importate manual.
+10. Evaluează integrarea Gmail limitată la fire selectate și creare de draft.
+11. Abordează vocea reală numai după validarea text, Calendar și conformitate.
 
 ## Primul modul AI monetizabil recomandat
 
-**ReveNew Appointment Control Pilot pentru saloane** este următorul modul recomandat. Motorul determinist local este implementat; următoarea valoare demonstrabilă este un flux text mic, controlat, care colectează cererea și explică propunerile motorului.
+**ReveNew Appointment Control Pilot pentru saloane** este următorul modul recomandat. Motorul, fluxul text și evaluarea deterministă sunt implementate; următoarea valoare demonstrabilă este un protocol local, controlat, pentru validarea cu operatori umani.
 
 Motive:
 
@@ -364,7 +371,7 @@ Oferta inițială trebuie să fie un pilot controlat de configurare și simulare
 
 ### Prompt 1 — următorul pas recomandat
 
-> Lucrează în `C:\Projects\ReveNew`. Construiește un pachet local de evaluare pentru Text Receptionist Sandbox, reutilizând motoarele și fixture-ul existente. Adaugă scenarii deterministe pentru informații lipsă sau ambigue, serviciu inactiv, persoană incompatibilă, lipsă de disponibilitate, schimbarea preferinței și handoff obligatoriu. Calculează numai metrici locale de completare, refuz sigur, propunere validă și calitate structurală a handoff-ului. Fără provider AI, Google Calendar, OAuth, API-uri externe, telefonie, email, migrații sau persistență. Nu adăuga scoring al angajaților și nu transforma evaluarea într-o afirmație despre venit ori booking garantat.
+> Lucrează în `C:\Projects\ReveNew`. Construiește un protocol local de validare pentru Appointment Control Pilot, reutilizând evaluatorul determinist existent. Adaugă un checklist de prezentare, scenarii anonime pentru 3–5 evaluatori umani, criterii explicite de continuare, ajustare sau oprire și un rezumat local fără date personale. Măsoară numai completarea, refuzul sigur, corectitudinea propunerii și claritatea handoff-ului. Fără provider AI, Google Calendar, OAuth, API-uri externe, telefonie, email, migrații, persistență sau scoring al angajaților. Nu transforma observațiile în afirmații despre venit, ROI ori booking garantat.
 
 ### Prompt 2 — evaluare și threat model OAuth
 

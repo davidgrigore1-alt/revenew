@@ -373,6 +373,30 @@ export function buildReceptionistSlotProposal(
   });
 }
 
+export function reopenReceptionistPreferences(state: TextReceptionistState): TextReceptionistState {
+  if (state.stage !== "create_pending_booking" && state.stage !== "no_slots_available") {
+    return withState(state, {
+      lastError: state.stage === "handoff"
+        ? "Propunerea a fost deja predată operatorului. Pornește o simulare nouă pentru alte preferințe."
+        : "Preferințele pot fi schimbate după verificarea disponibilității."
+    });
+  }
+
+  return withState(state, {
+    stage: "collect_date",
+    collected: {
+      ...state.collected,
+      preferredDate: null,
+      preferredTimeWindow: null,
+      preferredStaffId: null
+    },
+    proposedSlots: [],
+    pendingBooking: null,
+    handoffSummary: null,
+    lastError: null
+  });
+}
+
 export function buildReceptionistHandoffSummary(
   profile: SalonSandboxProfile,
   state: TextReceptionistState,
