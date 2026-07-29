@@ -187,6 +187,15 @@ export default async function EnterprisePilotPackPage() {
         <Section id="nota" eyebrow="J · Notă de utilizare" title="Interpretare prudentă">
           <p className="max-w-4xl text-sm leading-7 text-[rgb(var(--text-secondary))]">{pack.disclaimer}</p>
         </Section>
+
+        <div className="flex flex-col gap-4 rounded-panel border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--primary-muted))] p-5 print:hidden sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-label text-[rgb(var(--primary))]">Concluzie după pilot</p>
+            <h2 className="mt-1 text-lg font-semibold text-[rgb(var(--foreground))]">Încheie pilotul cu o decizie susținută de dovezi</h2>
+            <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Verifică progresul înregistrat, blocajele rămase și justificarea unei cadențe operaționale lunare.</p>
+          </div>
+          <Button href="/reports/pilot-proof-of-value">Deschide dovada de valoare<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+        </div>
       </article>
     </PageShell>
   );

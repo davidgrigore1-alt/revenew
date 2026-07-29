@@ -25,6 +25,7 @@ start "" "http://localhost:3001/dashboard"
 4. `/reports`
 5. `/reports/revenue-recovery-audit`
 6. `/reports/enterprise-pilot-pack`
+7. `/reports/pilot-proof-of-value`
 
 Păstrează accentul pe patru ecrane: Dashboard, oportunitatea selectată, Audit și Pilot Pack. `/demo` este ghidul narativ, iar `/reports` explică diferența dintre pipeline estimat, valoare estimată expusă și venit confirmat.
 
@@ -63,6 +64,8 @@ Arată titlul, data, spațiul de lucru, expunerea estimată și prima prioritate
 Deschide `/reports/enterprise-pilot-pack`.
 
 > Dacă auditul confirmă problema, propunem un pilot controlat de 14 zile. Validăm claritatea responsabilității, disciplina de follow-up și traseul aprobărilor pe un domeniu limitat. Clientul stabilește participanții și criteriile. La final, decizia este continuăm, ajustăm sau oprim. Pilotul nu garantează venit recuperat.
+
+Pentru discuția de închidere a pilotului, deschide `/reports/pilot-proof-of-value`. Raportul arată numai progresul demonstrabil din datele existente și precizează dacă linia de bază este doar o stare curentă. Nu prezenta totalurile observate ca diferențe înainte/după în lipsa unui baseline persistent.
 
 ## Întrebarea de închidere
 

@@ -56,7 +56,7 @@ Intervalul superior este potrivit când există mai multe surse, participanți s
 - domeniu limitat, echipă și responsabil desemnat;
 - urmărirea responsabililor, acțiunilor, termenelor și aprobărilor;
 - cadență de revizuire convenită;
-- rezumat operațional înainte/după pe aceleași definiții;
+- rezumat al stării finale și comparație înainte/după numai dacă a fost salvat un baseline la început;
 - sesiune finală cu decizia: continuăm, ajustăm sau oprim.
 
 **Nu include:**
@@ -90,6 +90,12 @@ Prima acțiune și orice comunicare externă rămân sub control uman. Pilotul v
 - garanție de venit, ROI sau rezultat.
 
 Abonamentul este justificat numai dacă pilotul arată că revizuirea continuă reduce timpul de căutare, păstrează responsabilitatea și previne reapariția buclelor. Stabilește în ofertă numărul de utilizatori, volumul, suportul, durata, condițiile de încetare și orice cost suplimentar.
+
+## Închiderea pilotului prin dovadă
+
+Pilotul nu se încheie cu o promisiune. Folosește raportul `/reports/pilot-proof-of-value` pentru a prezenta progresul înregistrat, blocajele rămase, dovezile și separarea dintre valori estimate și rezultate declarate de utilizatori.
+
+Decizia este una dintre următoarele: continuăm cadența operațională lunară, ajustăm domeniul sau oprim din lipsă de dovezi. Abonamentul lunar este justificat numai dacă echipa vede valoare operațională recurentă în revizuirea responsabilității, follow-up-ului, aprobărilor și rezultatelor.
 
 ## Reguli comerciale
 

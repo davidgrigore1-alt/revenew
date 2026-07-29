@@ -393,6 +393,10 @@ export default async function ReportsPage() {
               <dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate câștigate și confirmate explicit de utilizator; rămâne separat de estimări.</dd>
             </div>
           </dl>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[rgb(var(--border))] pt-4">
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">După pilot, verifică progresul demonstrabil și decide continuarea fără a presupune un rezultat financiar.</p>
+            <Link href="/reports/pilot-proof-of-value" className="focus-ring rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide dovada de valoare pilot →</Link>
+          </div>
         </section>
 
         <ExecutiveSummaryVisual

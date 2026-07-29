@@ -358,7 +358,8 @@ body {
   }
 
   .revenue-recovery-audit,
-  .enterprise-pilot-pack {
+  .enterprise-pilot-pack,
+  .pilot-proof-of-value {
     --background: 255 255 255;
     --surface: 255 255 255;
     --surface-subtle: 249 249 247;
@@ -375,7 +376,8 @@ body {
   }
 
   .revenue-recovery-audit .audit-section,
-  .enterprise-pilot-pack .pilot-section {
+  .enterprise-pilot-pack .pilot-section,
+  .pilot-proof-of-value .proof-section {
     break-inside: avoid;
   }
 
@@ -390,6 +392,16 @@ body {
   .revenue-recovery-audit #dovezi > h2,
   .revenue-recovery-audit #prioritati li,
   .revenue-recovery-audit #dovezi li {
+    break-inside: avoid;
+  }
+
+  .pilot-proof-of-value #blocaje,
+  .pilot-proof-of-value #dovezi {
+    break-inside: auto;
+  }
+
+  .pilot-proof-of-value #blocaje li,
+  .pilot-proof-of-value #dovezi li {
     break-inside: avoid;
   }
 }
