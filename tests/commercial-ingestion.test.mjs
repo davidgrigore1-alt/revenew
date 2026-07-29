@@ -21,6 +21,33 @@ test("field mapping suggests unique Romanian and English aliases but leaves ambi
   assert.equal(mapping.company, 0); assert.equal(mapping.contact, 1); assert.equal(mapping.email, 2);
   assert.equal(mapping.estimated_value, 3); assert.equal(mapping.title, 4);
   assert.equal(fields.suggestedCommercialMapping(["Email", "E-mail", "Titlu"]).email, null);
+  const auditTemplate = fields.suggestedCommercialMapping([
+    "opportunity_title", "company_name", "contact_name", "contact_email", "request_source",
+    "request_summary", "current_status", "responsible_person", "last_action_date", "next_action_due_date"
+  ]);
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(auditTemplate).filter(([, index]) => index !== null)),
+    {
+      source: 4,
+      title: 0,
+      company: 1,
+      contact: 2,
+      email: 3,
+      due_date: 9,
+      last_interaction: 8,
+      context: 5,
+      status: 6,
+      owner: 7
+    }
+  );
+  const sampleHeader = (await readFile(new URL("../docs/samples/revenew-client-audit-template.csv", import.meta.url), "utf8"))
+    .split(/\r?\n/, 1)[0]
+    .split(",");
+  const sampleMapping = fields.suggestedCommercialMapping(sampleHeader);
+  assert.equal(sampleMapping.title, sampleHeader.indexOf("opportunity_title"));
+  assert.equal(sampleMapping.company, sampleHeader.indexOf("company_name"));
+  assert.equal(sampleMapping.context, sampleHeader.indexOf("request_summary"));
+  assert.equal(sampleMapping.due_date, sampleHeader.indexOf("next_action_due_date"));
 });
 
 test("row validation accepts good input, rejects invalid rows and detects same-file duplicates", async () => {

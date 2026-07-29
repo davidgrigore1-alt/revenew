@@ -7,6 +7,9 @@ const currentFile = fileURLToPath(import.meta.url);
 const scriptDirectory = path.dirname(currentFile);
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
 const ownPath = "scripts/validation/check-repository-safety.mjs";
+const allowedDocumentedCsvFiles = new Set([
+  "docs/samples/revenew-client-audit-template.csv"
+]);
 
 export function forbiddenFileReason(fileName) {
   const lower = fileName.replaceAll("\\", "/").toLowerCase();
@@ -15,7 +18,7 @@ export function forbiddenFileReason(fileName) {
   if (lower.startsWith(".next/") || lower.includes("/node_modules/") || lower.startsWith("node_modules/")) return "generated dependency/build directory";
   if (/\.codex.*(?:browser|profile)/.test(lower)) return "Codex browser profile";
   if (/(^|\/)(?:playwright-report|test-results|screenshots?|traces?|artifacts)(\/|$)/.test(lower)) return "browser/test artifact";
-  if (/\.(?:log|csv)$/.test(lower)) return "temporary log or CSV";
+  if (/\.log$/.test(lower) || (/\.csv$/.test(lower) && !allowedDocumentedCsvFiles.has(lower))) return "temporary log or CSV";
   if (["login-output.html", "login-headers.txt"].includes(base)) return "login diagnostic artifact";
   if (/(?:screenshot|browser-trace|trace\.zip)/.test(base)) return "browser diagnostic artifact";
   return null;

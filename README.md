@@ -123,6 +123,12 @@ npm run demo:dev
 
 Ruta protejată `/demo` oferă un traseu de prezentare de cinci minute: Control Center → oportunitate și dovezi → audit de recuperare venituri → propunere pilot pe 14 zile. Fallback-ul fără Supabase rămâne util pentru dezvoltarea interfeței, dar nu înlocuiește mediul local izolat pentru o demonstrație comercială.
 
+## Primul audit client
+
+Pentru trecerea de la demonstrație la un audit controlat, folosește [ghidul de intake](docs/client-audit-intake.md), [checklist-ul comercial](docs/client-audit-checklist.md) și [șablonul CSV](docs/samples/revenew-client-audit-template.csv).
+
+Fluxul recomandat este: eșantion anonimizabil de 20–50 de înregistrări → previzualizare și mapare în `/inbox/import` → revizuire umană în Inbox Comercial → audit executiv → propunere pilot controlat pe 14 zile. Importul creează semnale pentru revizuire și nu trimite comunicări externe.
+
 ## Ce funcționează cu Supabase
 
 - signup cu Supabase Auth

@@ -31,20 +31,20 @@ export type CommercialImportField = {
 };
 
 export const commercialImportFields: CommercialImportField[] = [
-  { key: "source", label: "Sursă originală", aliases: ["source", "sursa", "eticheta sursa", "source label"] },
+  { key: "source", label: "Sursă originală", aliases: ["source", "sursa", "eticheta sursa", "source label", "request_source"] },
   { key: "source_type", label: "Tip sursă", aliases: ["source type", "source_type", "tip sursa", "tip sursă"] },
-  { key: "title", label: "Titlu semnal", required: true, aliases: ["title", "titlu", "subject", "subiect", "opportunity", "oportunitate"] },
-  { key: "company", label: "Companie", aliases: ["companie", "firma", "firmă", "client", "company", "organization", "organizatie"] },
-  { key: "contact", label: "Persoană de contact", aliases: ["contact", "persoana", "persoană", "nume contact", "contact name", "full name"] },
-  { key: "email", label: "Email", aliases: ["email", "e-mail", "mail"] },
+  { key: "title", label: "Titlu semnal", required: true, aliases: ["title", "titlu", "subject", "subiect", "opportunity", "oportunitate", "opportunity_title"] },
+  { key: "company", label: "Companie", aliases: ["companie", "firma", "firmă", "client", "company", "organization", "organizatie", "company_name"] },
+  { key: "contact", label: "Persoană de contact", aliases: ["contact", "persoana", "persoană", "nume contact", "contact name", "full name", "contact_name"] },
+  { key: "email", label: "Email", aliases: ["email", "e-mail", "mail", "contact_email"] },
   { key: "phone", label: "Telefon", aliases: ["telefon", "phone", "mobile", "mobil"] },
   { key: "estimated_value", label: "Valoare estimată", aliases: ["valoare", "valoare estimata", "valoare estimată", "estimated value", "estimated_value", "amount", "value"] },
   { key: "currency", label: "Monedă", aliases: ["currency", "moneda", "monedă"] },
-  { key: "due_date", label: "Termen comercial", aliases: ["due date", "due_date", "deadline", "termen", "data termen", "scadenta", "scadență"] },
-  { key: "last_interaction", label: "Ultima interacțiune", aliases: ["ultima interactiune", "ultima interacțiune", "last interaction", "last contact", "last reply"] },
-  { key: "context", label: "Text sursă / context", aliases: ["context", "raw text", "raw_text", "message", "mesaj", "notes", "observatii", "observații", "descriere", "description"] },
-  { key: "status", label: "Status original", aliases: ["status", "stare", "stage", "etapa", "etapă"] },
-  { key: "owner", label: "Responsabil", aliases: ["owner", "responsabil", "assigned to", "sales rep"] },
+  { key: "due_date", label: "Termen comercial", aliases: ["due date", "due_date", "deadline", "termen", "data termen", "scadenta", "scadență", "next_action_due_date"] },
+  { key: "last_interaction", label: "Ultima interacțiune", aliases: ["ultima interactiune", "ultima interacțiune", "last interaction", "last contact", "last reply", "last_action_date"] },
+  { key: "context", label: "Text sursă / context", aliases: ["context", "raw text", "raw_text", "message", "mesaj", "notes", "observatii", "observații", "descriere", "description", "request_summary"] },
+  { key: "status", label: "Status original", aliases: ["status", "stare", "stage", "etapa", "etapă", "current_status"] },
+  { key: "owner", label: "Responsabil", aliases: ["owner", "responsabil", "assigned to", "sales rep", "responsible_person"] },
   { key: "source_reference", label: "Referință sursă", aliases: ["source reference", "source_reference", "referinta", "referință", "id extern", "external id"] }
 ];
 
