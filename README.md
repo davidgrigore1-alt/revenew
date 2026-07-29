@@ -129,6 +129,10 @@ Pentru trecerea de la demonstrație la un audit controlat, folosește [ghidul de
 
 Fluxul recomandat este: eșantion anonimizabil de 20–50 de înregistrări → previzualizare și mapare în `/inbox/import` → revizuire umană în Inbox Comercial → audit executiv → propunere pilot controlat pe 14 zile. Importul creează semnale pentru revizuire și nu trimite comunicări externe.
 
+## Outreach și discovery comercial
+
+Pentru primele conversații cu clienți folosește [playbook-ul de outreach](docs/sales/outreach-playbook.md), [scriptul apelului de discovery](docs/sales/discovery-call-script.md), [scriptul demonstrației](docs/sales/demo-script.md), [răspunsurile la obiecții](docs/sales/objection-handling.md), [ghidul primelor 50 de companii prospect](docs/sales/first-50-prospect-list-guide.md) și [draftul de ofertă și prețuri](docs/sales/offer-and-pricing-draft.md).
+
 ## Ce funcționează cu Supabase
 
 - signup cu Supabase Auth
