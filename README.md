@@ -133,6 +133,10 @@ Fluxul recomandat este: eșantion anonimizabil de 20–50 de înregistrări → 
 
 Pentru primele conversații cu clienți folosește [playbook-ul de outreach](docs/sales/outreach-playbook.md), [scriptul apelului de discovery](docs/sales/discovery-call-script.md), [scriptul demonstrației](docs/sales/demo-script.md), [răspunsurile la obiecții](docs/sales/objection-handling.md), [ghidul primelor 50 de companii prospect](docs/sales/first-50-prospect-list-guide.md) și [draftul de ofertă și prețuri](docs/sales/offer-and-pricing-draft.md).
 
+## Fundația pentru extinderea AI
+
+[Roadmap-ul AI și control plane-ul pentru acțiuni sigure](docs/ai-expansion-roadmap.md) separă capabilitățile interne disponibile, sandbox-urile și funcțiile blocate până la revizuirea de securitate. Registrul intern `src/lib/ai-capabilities.ts` descrie riscul, dovezile, aprobarea, auditul și cerințele OAuth pentru fiecare capabilitate, fără a activa Gmail, Google Calendar, telefonie sau alte efecte externe.
+
 ## Ce funcționează cu Supabase
 
 - signup cu Supabase Auth
