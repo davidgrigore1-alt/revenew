@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { getOpportunityTypeLabel } from "@/components/dashboard/OpportunityCard";
@@ -9,6 +9,7 @@ import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { OpportunityContactsPanel } from "@/components/opportunities/OpportunityContactsPanel";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { useToast } from "@/components/ui/ToastProvider";
 import {
   generateCallScript,
   generateChecklist,
@@ -21,6 +22,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { applicationDateKey } from "@/lib/opportunity-domain";
 import type { Business, Opportunity, OpportunityAction, OpportunityDocument, OpportunityStatus } from "@/lib/types";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
+import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 type GeneratedDocument = OpportunityDocument & { content: string };
 type ClientGeneratedDocument = {
@@ -93,6 +95,7 @@ export function OpportunityWorkflow({
   openAIConfigured: boolean;
   existingContacts?: Array<{ id: string; fullName: string; organizationName?: string | null; email?: string | null }>;
 }) {
+  const { showToast } = useToast();
   const [status, setStatus] = useState<OpportunityStatus>(opportunity.status);
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [documentOverrides, setDocumentOverrides] = useState<Record<string, Partial<OpportunityDocument>>>({});
@@ -142,6 +145,23 @@ export function OpportunityWorkflow({
       ? "Documentele sunt generate pe baza datelor oportunității și pot fi editate înainte de trimitere."
       : "Documentele sunt pregătite pe baza datelor oportunității și pot fi editate înainte de trimitere."
     : "Explorează fluxul comercial cu date demonstrative.";
+  const safeError = error ? toUserFacingActionError(error, error) : "";
+
+  useEffect(() => {
+    if (!success) return;
+    const actionRelated = /follow-up|acțiun|actiune/i.test(success);
+    showToast({
+      title: "Actualizare înregistrată",
+      description: success,
+      tone: "success",
+      action: actionRelated ? { label: "Deschide Activitatea mea", href: "/today" } : undefined
+    });
+  }, [showToast, success]);
+
+  useEffect(() => {
+    if (!safeError || pendingLocalDocument) return;
+    showToast({ title: "Acțiunea nu a fost aplicată", description: safeError, tone: "danger" });
+  }, [pendingLocalDocument, safeError, showToast]);
 
   function restoreScrollPosition(top: number, left = 0) {
     requestAnimationFrame(() => {
@@ -351,7 +371,7 @@ export function OpportunityWorkflow({
     ]);
     setStatus("follow_up_needed");
     setShowFollowUpForm(false);
-    setSuccess("Follow-up programat.");
+    setSuccess("Follow-up programat. Îl poți revizui în Activitatea mea.");
     setDocuments((current) => [
       { id: `follow-up-doc-${Date.now()}`, type: "follow_up_email", title: generated.title, content: generated.content, status: "draft", generationMode: generated.mode, createdAt: new Date().toISOString() },
       ...current.filter((item) => item.type !== "follow_up_email")
@@ -486,7 +506,7 @@ export function OpportunityWorkflow({
           : item
       )
     );
-    setSuccess(action === "postpone" ? "Actiunea a fost amanata." : action === "cancel" ? "Actiunea a fost anulata." : "Actiunea a fost finalizata.");
+    setSuccess(action === "postpone" ? "Acțiunea a fost amânată." : action === "cancel" ? "Acțiunea a fost anulată." : "Acțiunea a fost finalizată.");
     setLoading("");
     restoreScrollPosition(scroll.top, scroll.left);
   }
@@ -506,13 +526,6 @@ export function OpportunityWorkflow({
 
   return (
     <div className="grid gap-6">
-      {(success || (error && !pendingLocalDocument)) ? (
-        <div className="fixed bottom-5 right-5 z-50 max-w-sm print:hidden">
-          <StatusNotice tone={error && !pendingLocalDocument ? "warning" : "success"}>
-            {error && !pendingLocalDocument ? error : success}
-          </StatusNotice>
-        </div>
-      ) : null}
       <nav className="flex gap-2 overflow-x-auto rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-2" aria-label="Secțiuni oportunitate">
         {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Dovezi'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
       </nav>
@@ -596,7 +609,7 @@ export function OpportunityWorkflow({
                 ) : null
               }
             >
-              {error}
+              {safeError}
             </StatusNotice>
           ) : null}
         </DataCard>

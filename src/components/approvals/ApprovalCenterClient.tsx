@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 type ApprovalCenterClientProps = {
   initialSignals: CommercialSignal[];
@@ -73,6 +75,7 @@ export function ApprovalCenterClient({
   opportunities,
   assignableProfiles
 }: ApprovalCenterClientProps) {
+  const { showToast } = useToast();
   const router = useRouter();
   const [signals, setSignals] = useState(initialSignals);
   const initialItems = approvalCenterSignals(initialSignals);
@@ -125,14 +128,19 @@ export function ApprovalCenterClient({
         reviewedDraft: selectedSignal.reviewedDraft ?? undefined
       });
       if (!result.ok) {
-        setError(result.message ?? "Aprobarea nu a putut fi aplicată.");
+        const message = toUserFacingActionError(result.message, "Aprobarea nu a putut fi aplicată. Verifică datele și încearcă din nou.");
+        setError(message);
+        showToast({ title: "Aprobarea nu a fost aplicată", description: message, tone: "danger" });
         return;
       }
       updateSignal(result.signal);
-      setNoticeHref(result.opportunityId ? `/opportunities/${result.opportunityId}` : selectedSignal.detectedFromOpportunityId ? `/opportunities/${selectedSignal.detectedFromOpportunityId}` : "/opportunities");
-      setNotice(selectedSignal.detectedFromOpportunityId
+      const opportunityHref = result.opportunityId ? `/opportunities/${result.opportunityId}` : selectedSignal.detectedFromOpportunityId ? `/opportunities/${selectedSignal.detectedFromOpportunityId}` : "/opportunities";
+      const message = selectedSignal.detectedFromOpportunityId
         ? "Aprobarea a fost aplicată, iar acțiunea internă a fost creată în oportunitatea existentă."
-        : "Aprobarea a fost aplicată, iar oportunitatea și prima acțiune internă au fost create.");
+        : "Aprobarea a fost aplicată, iar oportunitatea și prima acțiune internă au fost create.";
+      setNoticeHref(opportunityHref);
+      setNotice(message);
+      showToast({ title: "Decizie internă înregistrată", description: message, tone: "success", action: { label: "Revizuiește oportunitatea", href: opportunityHref } });
       router.refresh();
     });
   }
@@ -150,11 +158,14 @@ export function ApprovalCenterClient({
     startTransition(async () => {
       const result = await setCommercialSignalReviewDecision(selectedSignal.id, "dismissed", reason);
       if (!result.ok) {
-        setError(result.message ?? "Respingerea nu a putut fi salvată.");
+        const message = toUserFacingActionError(result.message, "Respingerea nu a putut fi salvată. Încearcă din nou.");
+        setError(message);
+        showToast({ title: "Decizia nu a fost salvată", description: message, tone: "danger" });
         return;
       }
       updateSignal(result.signal);
       setNotice("Recomandarea a fost respinsă, iar motivul a fost înregistrat în audit.");
+      showToast({ title: "Decizie înregistrată", description: "Recomandarea a fost respinsă, iar motivul rămâne în istoricul de audit.", tone: "success" });
       router.refresh();
     });
   }

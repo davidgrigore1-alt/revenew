@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ui/ToastProvider";
 import {
   analyzeCommercialSignal,
   approveCommercialSignal,
@@ -28,6 +29,7 @@ import type {
 } from "@/lib/types";
 import { formatRecoveryDraft } from "@/lib/recoverability-review";
 import { formatCurrency, formatDateTimeWithSeconds } from "@/lib/utils";
+import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 type OrganizationOption = { id: string; name: string };
 type ContactOption = { id: string; fullName: string; organizationId?: string | null; email?: string | null };
@@ -214,6 +216,7 @@ export function CommercialInboxClient({
   initialSignalId,
   initialCreateOpen = false
 }: CommercialInboxClientProps) {
+  const { showToast } = useToast();
   const initiallySelectedSignal = initialSignals.find((signal) => signal.id === initialSignalId)
     ?? initialSignals.find((signal) => !initialBatchId || signal.importBatchId === initialBatchId)
     ?? initialSignals[0];
@@ -319,15 +322,24 @@ export function CommercialInboxClient({
     startTransition(async () => {
       const result = await action();
       if (!result.ok) {
-        setError(result.message ?? "Acțiunea nu a putut fi finalizată.");
+        const message = toUserFacingActionError(result.message, "Acțiunea nu a putut fi finalizată. Verifică datele și încearcă din nou.");
+        setError(message);
+        showToast({ title: "Acțiunea nu a fost aplicată", description: message, tone: "danger" });
         return;
       }
       if (result.signal) replaceSignal(result.signal);
-      setNotice(result.fallbackUsed
+      const message = result.fallbackUsed
         ? "Analiza a fost generată pe baza regulilor disponibile și necesită verificarea echipei."
         : result.alreadyConverted
           ? "Semnalul fusese deja convertit; nu au fost create duplicate."
-          : successMessage);
+          : successMessage;
+      setNotice(message);
+      showToast({
+        title: result.opportunityId ? "Decizie internă înregistrată" : "Actualizare salvată",
+        description: message,
+        tone: "success",
+        action: result.opportunityId ? { label: "Revizuiește oportunitatea", href: `/opportunities/${result.opportunityId}` } : undefined
+      });
     });
   }
 
@@ -441,7 +453,7 @@ export function CommercialInboxClient({
         <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Nimic nu este convertit sau trimis fără confirmarea echipei.</p>
       </div>
       <ol className="hidden overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
-        {[['01', 'Semnal primit', 'Date încă neaprobate'], ['02', 'Revizuire', 'Context și estimări verificate'], ['03', 'Decizie umană', 'Aprobă, amână sau ignoră'], ['04', 'Oportunitate', 'Ownership și acțiune următoare']].map(([number, title, copy], index) => <li key={number} className="relative border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><span className="text-xs font-semibold text-[rgb(var(--primary))]">{number}</span><strong className="mt-1 block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{copy}</span>{index < 3 ? <span className="absolute right-[-5px] top-1/2 z-10 hidden size-2.5 -translate-y-1/2 rotate-45 border-r border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:block" aria-hidden="true" /> : null}</li>)}
+        {[['01', 'Semnal primit', 'Date încă neaprobate'], ['02', 'Revizuire', 'Context și estimări verificate'], ['03', 'Decizie umană', 'Aprobă, amână sau ignoră'], ['04', 'Oportunitate', 'Responsabil și acțiune următoare']].map(([number, title, copy], index) => <li key={number} className="relative border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><span className="text-xs font-semibold text-[rgb(var(--primary))]">{number}</span><strong className="mt-1 block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{copy}</span>{index < 3 ? <span className="absolute right-[-5px] top-1/2 z-10 hidden size-2.5 -translate-y-1/2 rotate-45 border-r border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:block" aria-hidden="true" /> : null}</li>)}
       </ol>
 
       <DataSummaryStrip label="Rezumat Inbox Comercial" items={[

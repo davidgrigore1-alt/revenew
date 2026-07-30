@@ -117,6 +117,7 @@ export default async function DashboardPage() {
           </summary>
           <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
             <AiBusinessAnalyst />
+            <Link href="/ai" className="focus-ring mt-4 inline-flex rounded text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Vezi capabilitățile și limitele AI</Link>
           </div>
         </details>
 

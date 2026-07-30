@@ -19,8 +19,8 @@ type PricingCardProps = {
 
 export function PricingCard({ eyebrow, title, price, billing, description, audience, items, action, selected = false, featured = false, className }: PricingCardProps) {
   return (
-    <article className={cn("relative flex min-h-full flex-col rounded-panel border bg-[rgb(var(--surface))] p-5 text-[rgb(var(--foreground))] shadow-[0_18px_50px_rgba(15,23,42,0.07)] transition-[border-color,box-shadow,transform] duration-normal ease-standard hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(15,23,42,0.11)] sm:p-6", featured ? "border-[rgb(var(--brand-600))]" : "border-[rgb(var(--border))]", className)}>
-      {featured ? <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#12b981] to-transparent" /> : null}
+    <article className={cn("relative flex min-h-full flex-col rounded-panel border bg-[rgb(var(--surface))] p-5 text-[rgb(var(--foreground))] shadow-card transition-[border-color,box-shadow,transform] duration-normal ease-standard hover:-translate-y-1 hover:shadow-elevated sm:p-6", featured ? "border-[rgb(var(--brand-600))]" : "border-[rgb(var(--border))]", className)}>
+      {featured ? <span aria-hidden="true" className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--brand-500))] to-transparent" /> : null}
       <div className="flex min-h-6 items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">{eyebrow}</p>
         {selected ? <Badge tone="success">Selectat</Badge> : null}

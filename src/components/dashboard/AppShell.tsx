@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 export function AppShell({
@@ -22,6 +23,7 @@ export function AppShell({
   utilityItems?: NavigationItem[];
 }) {
   return (
+    <ToastProvider>
     <div className="min-h-dvh overflow-x-hidden bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
       <a href="#app-content" className="focus-ring fixed left-3 top-3 z-[100] -translate-y-20 rounded-button bg-[rgb(var(--surface))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] shadow-elevated transition-transform focus:translate-y-0">
         Sari la conținut
@@ -35,5 +37,6 @@ export function AppShell({
       </div>
       <MobileNav items={primaryItems} />
     </div>
+    </ToastProvider>
   );
 }

@@ -25,7 +25,7 @@ export type NavigationItem = {
   shortName?: string;
 };
 
-export type NavigationGroupId = "control" | "commercial-flow" | "relationships" | "execution" | "management" | "utility";
+export type NavigationGroupId = "control" | "commercial-flow" | "intelligence" | "relationships" | "execution" | "management" | "utility";
 
 export type NavigationGroup = {
   id: NavigationGroupId;
@@ -38,6 +38,7 @@ export const primaryNavigation = [
   { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
   { name: "Aprobări", shortName: "Aprobări", href: "/approvals", icon: "clipboard-check", description: "Confirmă schimbările interne înainte ca acestea să fie aplicate.", permission: "signals.read" },
   { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
+  { name: "Inteligență AI", shortName: "AI", href: "/ai", icon: "sparkles", description: "Vezi ce poate face sistemul, ce necesită aprobare și ce rămâne blocat.", permission: "dashboard.read" },
   { name: "Recuperare venituri", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
@@ -67,6 +68,7 @@ export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, 
 const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
   { id: "control", label: "Control", hrefs: ["/dashboard", "/today"] },
   { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/approvals", "/opportunities", "/recoverable", "/pipeline"] },
+  { id: "intelligence", label: "Inteligență", hrefs: ["/ai"] },
   { id: "relationships", label: "Relații", hrefs: ["/companies", "/contacts"] },
   { id: "execution", label: "Execuție", hrefs: ["/outreach"] },
   { id: "management", label: "Management", hrefs: ["/reports"] },

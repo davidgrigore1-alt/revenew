@@ -38,7 +38,7 @@ export function PreviewPlanSelector({ selectedPlanId = null, redirectTo = "/dash
             description={plan.description}
             audience={audit ? "echipe care vor o evaluare structurată înainte de implementare" : "companii care vor urmărire, prioritizare și raportare recurente"}
             items={audit
-              ? ["maparea oportunităților existente", "revizuirea follow-up-ului și ownership-ului", "priorități și pași următori documentați"]
+              ? ["maparea oportunităților existente", "revizuirea follow-up-ului și a responsabilității", "priorități și pași următori documentați"]
               : ["monitorizare operațională recurentă", "prioritizare și follow-up controlat", "raportare pentru management"]}
             selected={selected}
             featured={!audit}
