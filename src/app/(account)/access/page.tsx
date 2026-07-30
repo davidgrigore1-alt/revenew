@@ -41,7 +41,7 @@ const paidPlans = previewPlans.map((plan) => {
 function reasonMessage(reason?: string) {
   if (reason === "expired") return "Perioada planului s-a încheiat. Poți verifica statutul sau continua procesul comercial pentru reactivare.";
   if (reason === "payment_failed") return "Confirmarea plății nu este disponibilă încă. Verifică din nou statutul sau consultă zona de facturare.";
-  if (reason === "trial_not_enabled") return "Accesul operațional necesită un plan confirmat. Contul și workspace-ul rămân păstrate.";
+  if (reason === "trial_not_enabled") return "Accesul operațional necesită un plan confirmat. Contul și spațiul de lucru rămân păstrate.";
   if (reason === "cancelled") return "Planul nu mai este activ. Datele contului rămân păstrate conform politicilor existente.";
   return "Contul este creat, iar activarea funcțiilor comerciale necesită confirmarea unui plan sau a implementării.";
 }
@@ -111,7 +111,7 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
               {isPreviewMode
                 ? "Alegerea planului este o preferință locală de testare. Nu inițiază plăți și nu creează abonamente."
                 : context.hasAccess
-                  ? "Planul a fost confirmat server-side, iar accesul ReveNew este activ."
+                  ? "Planul a fost confirmat pe server, iar accesul ReveNew este activ."
                   : reasonMessage(searchParams?.reason ?? context.reason)}
             </p>
           </section>
@@ -218,8 +218,8 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
           </div>
           <div className="divide-y divide-[#dde3dd] border-y border-[#dde3dd]">
             {[
-              ["De ce este accesul controlat?", "ReveNew gestionează date și acțiuni comerciale sensibile. Confirmarea accesului păstrează separarea dintre cont, workspace și dreptul de utilizare al funcțiilor operaționale."],
-              ["Ce se întâmplă după confirmarea planului?", "Statutul este verificat server-side. După confirmare, utilizatorul poate continua în Control Center conform permisiunilor și contextului workspace-ului existent."],
+              ["De ce este accesul controlat?", "ReveNew gestionează date și acțiuni comerciale sensibile. Confirmarea accesului păstrează separarea dintre cont, spațiul de lucru și dreptul de utilizare al funcțiilor operaționale."],
+              ["Ce se întâmplă după confirmarea planului?", "Statutul este verificat pe server. După confirmare, utilizatorul poate continua în Control Center conform permisiunilor și contextului spațiului de lucru existent."],
               ["Pot solicita implementare personalizată?", "Da. Opțiunea este prezentată separat deoarece nu este un plan selectabil automat și necesită definirea procesului, datelor și cerințelor de integrare."],
               ["Ce date sunt necesare pentru configurare?", "Doar datele comerciale relevante pentru oportunități, responsabilitate, contacte, valori și următorii pași. Evităm colectarea informațiilor care nu sunt necesare procesului."]
             ].map(([question, answer]) => (

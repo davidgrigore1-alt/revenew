@@ -59,6 +59,7 @@ test("raw permission and database failures become operational messages", () => {
   assert.match(toUserFacingActionError({ code: "42501", message: "permission denied for table secrets" }), /Nu ai permisiunea necesară/);
   assert.match(toUserFacingActionError({ code: "23505", message: "duplicate key value" }), /există deja/);
   assert.doesNotMatch(toUserFacingActionError({ code: "42501", message: "permission denied for table secrets" }), /secrets|42501/);
+  assert.doesNotMatch(toUserFacingActionError("relation internal_events does not exist", "relation internal_events does not exist"), /internal_events|relation/);
 });
 
 test("input guidance distinguishes required context from optional execution data", () => {
@@ -79,7 +80,21 @@ test("access surface uses the warm palette and keeps activation safety explicit"
   const pricing = read("src/components/access/PricingCard.tsx");
 
   assert.doesNotMatch(access, /#12b981|#087354|Workspace|ownership/);
+  assert.doesNotMatch(access, /server-side/i);
   assert.doesNotMatch(pricing, /#12b981/);
   assert.match(access, /nu inițiază plăți și nu creează abonamente/i);
   assert.match(access, /Nicio opțiune nu promite rezultate garantate/);
+});
+
+test("acceptance copy removes technical English from the verified Romanian surfaces", () => {
+  const approvals = read("src/app/(protected)/approvals/page.tsx");
+  const appointmentPage = read("src/app/(protected)/demo/appointment-control/page.tsx");
+  const appointmentSandbox = read("src/components/demo/AppointmentControlSandbox.tsx");
+  const toast = read("src/components/ui/ToastProvider.tsx");
+
+  assert.doesNotMatch(approvals, /description="[^"]*workspace/i);
+  assert.doesNotMatch(appointmentPage, /fixture|Appointment Control/i);
+  assert.doesNotMatch(appointmentSandbox, />[^<{]*fixture|fixture[^>}]*</i);
+  assert.match(appointmentPage, /Controlul programărilor ReveNew/);
+  assert.match(toast, /success: "text-\[rgb\(var\(--success-text\)\)\]"/);
 });

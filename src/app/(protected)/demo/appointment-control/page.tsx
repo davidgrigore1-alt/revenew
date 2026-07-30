@@ -8,11 +8,11 @@ export default async function AppointmentControlSandboxPage() {
   return (
     <PageShell
       eyebrow="Sandbox local · fără efecte externe"
-      title="ReveNew Appointment Control — sandbox local"
-      description="O simulare deterministă care colectează intenția de programare, verifică fixture-ul Atelier Bellezza Demo și pregătește o propunere pentru aprobarea operatorului."
+      title="Controlul programărilor ReveNew — sandbox local"
+      description="O simulare deterministă care colectează intenția de programare, verifică datele demonstrative Atelier Bellezza și pregătește o propunere pentru aprobarea operatorului."
       breadcrumbs={[
         { label: "Demonstrație", href: "/demo" },
-        { label: "Appointment Control" }
+        { label: "Controlul programărilor" }
       ]}
     >
       <AppointmentControlSandbox />

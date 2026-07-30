@@ -19,7 +19,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams?: {
     <PageShell
       eyebrow="Control uman"
       title="Aprobări"
-      description="Revizuiește schimbările propuse înainte ca ReveNew să le aplice în workspace. Sistemul propune, omul aprobă, fiecare decizie rămâne auditabilă."
+      description="Revizuiește schimbările propuse înainte ca ReveNew să le aplice în spațiul de lucru. Sistemul propune, omul aprobă, fiecare decizie rămâne auditabilă."
       actions={<Button href="/inbox" variant="secondary">Deschide Inbox Comercial</Button>}
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Aprobări" }]}
     >

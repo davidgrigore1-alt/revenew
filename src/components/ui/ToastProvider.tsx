@@ -23,6 +23,13 @@ const toneClasses: Record<ToastTone, string> = {
   danger: "border-[rgb(var(--danger-border))]"
 };
 
+const iconClasses: Record<ToastTone, string> = {
+  success: "text-[rgb(var(--success-text))]",
+  info: "text-[rgb(var(--info-text))]",
+  warning: "text-[rgb(var(--warning-text))]",
+  danger: "text-[rgb(var(--danger-text))]"
+};
+
 const icons: Record<ToastTone, typeof CheckCircleIcon> = {
   success: CheckCircleIcon,
   info: InformationCircleIcon,
@@ -51,7 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <section key={toast.id} role={tone === "danger" ? "alert" : "status"} className={cn("pointer-events-auto w-full rounded-card border bg-[rgb(var(--surface-elevated))] p-4 text-[rgb(var(--foreground))] shadow-modal", toneClasses[tone])}>
               <div className="flex items-start gap-3">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
+                <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", iconClasses[tone])} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-sm font-semibold">{toast.title}</h2>
                   {toast.description ? <p className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">{toast.description}</p> : null}

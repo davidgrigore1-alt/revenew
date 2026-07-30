@@ -438,7 +438,7 @@ export function CommercialInboxClient({
 
   if (!tableReady) return (
     <StatusNotice tone="warning">
-      Inbox Comercial necesită finalizarea configurării workspace-ului. Datele existente sunt în siguranță; contactează administratorul pentru activarea importului și revizuirii.
+      Inbox Comercial necesită finalizarea configurării spațiului de lucru. Datele existente sunt în siguranță; contactează administratorul pentru activarea importului și revizuirii.
     </StatusNotice>
   );
 

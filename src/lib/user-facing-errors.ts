@@ -17,6 +17,16 @@ export function toUserFacingActionError(error: unknown, fallback = "Acțiunea nu
   if (code.startsWith("08") || code === "57014" || message.includes("failed to fetch") || message.includes("network")) {
     return "Conexiunea a fost întreruptă. Verifică rețeaua și încearcă din nou.";
   }
+  if (
+    message.includes("relation ") ||
+    message.includes("column ") ||
+    message.includes("constraint ") ||
+    message.includes("postgres") ||
+    message.includes("supabase") ||
+    message.includes("pgrst")
+  ) {
+    return "Acțiunea nu a putut fi finalizată. Încearcă din nou sau contactează administratorul dacă problema persistă.";
+  }
 
   return fallback;
 }

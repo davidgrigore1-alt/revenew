@@ -205,7 +205,7 @@ test("protected demo route is small, explicit and has no persistence or external
   const policies = read("src/lib/authz/route-policies.ts");
   assert.match(page, /requirePermission\("platform\.internal_tools\.access"\)/);
   assert.match(policies, /prefix: "\/demo", permission: "platform\.internal_tools\.access"/);
-  assert.match(page, /ReveNew Appointment Control — sandbox local/);
+  assert.match(page, /Controlul programărilor ReveNew — sandbox local/);
   assert.match(page, /fără efecte externe/);
   assert.match(client, /Google Calendar[\s\S]*Neconectat/);
   assert.match(client, /Programare reală[\s\S]*Nu este creată/);

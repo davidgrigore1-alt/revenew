@@ -97,7 +97,7 @@ export function AppointmentControlSandbox() {
                   Data demonstrativă
                   <Input type="date" value={preferredDate} onChange={(event) => setPreferredDate(event.target.value)} />
                 </label>
-                <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Fixture-ul local include disponibilitate pentru 4 august 2026.</p>
+                <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Scenariul local include disponibilitate demonstrativă pentru 4 august 2026.</p>
                 <Button disabled={!preferredDate} onClick={() => apply({ preferredDate })}>Confirmă data</Button>
               </>
             ) : null}
@@ -181,7 +181,7 @@ export function AppointmentControlSandbox() {
         <Card variant="subtle">
           <CardHeader>
             <CardTitle>Rezultat controlat</CardTitle>
-            <CardDescription>Propunerile provin exclusiv din fixture și reguli locale. Nicio selecție nu confirmă o programare.</CardDescription>
+            <CardDescription>Propunerile provin exclusiv din date și reguli locale demonstrative. Nicio selecție nu confirmă o programare.</CardDescription>
           </CardHeader>
           <CardContent>
             {state.stage === "create_pending_booking" ? (
