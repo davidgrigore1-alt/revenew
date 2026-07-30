@@ -16,7 +16,7 @@ export function TodayActionCard({ action, compact = false }: { action: RecoveryA
       </div>
       <p className="mt-3 line-clamp-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{action.reason}</p>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-        <p><span className="text-[rgb(var(--muted-foreground))]">Potențial:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(action.estimatedValue, action.currency)}</span></p>
+        <p><span className="text-[rgb(var(--muted-foreground))]">Valoare estimată, neconfirmată:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(action.estimatedValue, action.currency)}</span></p>
         <p><span className="text-[rgb(var(--muted-foreground))]">Termen:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatDate(action.dueAt)}</span></p>
       </div>
       {compact ? null : (

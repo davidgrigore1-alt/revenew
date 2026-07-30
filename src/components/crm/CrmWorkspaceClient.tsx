@@ -115,7 +115,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
 
       {view === "companies" ? (
         <DataSummaryStrip label="Acoperire relații comerciale" items={[
-          { label: "Companii", value: organizations.length, note: "În workspace-ul curent.", tone: "brand" },
+          { label: "Companii", value: organizations.length, note: "În spațiul de lucru curent.", tone: "brand" },
           { label: "Relații active", value: activeRelationships, note: "Prospect, client sau partener.", tone: "neutral" },
           { label: "Contact principal", value: `${companiesWithPrimaryContact}/${organizations.length}`, note: "Companii cu contact confirmat.", tone: companiesWithPrimaryContact === organizations.length ? "success" : "warning" },
           { label: "Oportunități active", value: activeOpportunities, note: "Legate de companii.", tone: "neutral" }
@@ -152,7 +152,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
         <section ref={panelRef} className="relative h-full w-full max-w-2xl overflow-y-auto border-l border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-2xl">
         <div>
           <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează compania" : "Adaugă companie"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din workspace-ul curent.</p>
+          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din spațiul de lucru curent.</p>
         </div>
         <form action={organizationSubmit} onSubmit={organizationFormSubmit} noValidate className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingOrganization?.id ?? ""} />

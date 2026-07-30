@@ -39,7 +39,7 @@ export function buildFixtures(profileId, now = new Date()) {
     ["Orizont Hospitality Supply SRL", "Furnizare pentru ospitalitate", "Constanța", "partner"]
   ].map(([name, industry, city, relationship_status], index) => ({
     id: organizationIds[index], business_id: DEMO.businessId, name, normalized_name: name.toLocaleLowerCase("ro-RO"),
-    industry, city, country: "România", relationship_status, notes: `${DEMO.marker}: companie fictivă pentru verificare locală.`
+    industry, city, country: "România", relationship_status, notes: "Companie fictivă pentru demonstrația controlată ReveNew."
   }));
 
   const contactSpecs = [
@@ -58,7 +58,7 @@ export function buildFixtures(profileId, now = new Date()) {
     id: contactIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     full_name, normalized_name: full_name.toLocaleLowerCase("ro-RO"), job_title, decision_role,
     email, normalized_email: email,
-    is_active: true, is_primary_for_organization: index < 7, notes: `${DEMO.marker}: contact fictiv.`
+    is_active: true, is_primary_for_organization: index < 7, notes: "Contact fictiv pentru demonstrația controlată ReveNew."
     };
   });
 
@@ -114,7 +114,7 @@ export function buildFixtures(profileId, now = new Date()) {
   ];
   const actions = actionSpecs.map(([opportunityIndex, title, type, offset, priority, status], index) => ({
     id: actionIds[index], business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex], title, type, priority, status,
-    description: `${DEMO.marker}: pas comercial fictiv, fără livrare externă.`, due_at: iso(offset), assigned_to_profile_id: profileId,
+    description: "Pas comercial intern demonstrativ, fără livrare externă.", due_at: iso(offset), assigned_to_profile_id: profileId,
     completed_at: status === "done" ? iso(offset) : null, cancelled_at: null, created_at: iso(offset - 3)
   }));
 
@@ -124,7 +124,7 @@ export function buildFixtures(profileId, now = new Date()) {
       id, business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex], actor_profile_id: profileId,
       event_type: index % 3 === 0 ? "follow_up_scheduled" : index % 3 === 1 ? "stage_changed" : "next_action_created",
       label: index % 3 === 0 ? "Follow-up planificat" : index % 3 === 1 ? "Etapă comercială actualizată" : "Acțiune următoare creată",
-      description: `${DEMO.marker}: activitate fictivă, auditabilă și fără efect extern.`, occurred_at: opportunityIndex === 10 ? iso(-40) : iso(-Math.min(index + 1, 14)),
+      description: "Activitate comercială demonstrativă, auditabilă și fără efect extern.", occurred_at: opportunityIndex === 10 ? iso(-40) : iso(-Math.min(index + 1, 14)),
       metadata: { demo: true, marker: DEMO.marker }
     };
   });
@@ -154,9 +154,9 @@ export function buildFixtures(profileId, now = new Date()) {
     "Leagă semnalul de oportunitatea existentă și confirmă intern următoarea acțiune, responsabilul și termenul."
   ];
   const baseSignal = (index, title, source, status, reviewStatus, overrides = {}) => ({
-    id: signalIds[index], business_id: DEMO.businessId, title, source, source_label: "Captură locală demonstrativă",
+    id: signalIds[index], business_id: DEMO.businessId, title, source, source_label: "Dovadă disponibilă",
     status, review_status: reviewStatus, priority: "medium", analysis_status: "not_started", analysis_mode: null,
-    contact_company: null, contact_name: null, contact_email: null, raw_message: `${DEMO.marker}: semnal fictiv, introdus local și fără integrare externă.`,
+    contact_company: null, contact_name: null, contact_email: null, raw_message: "Semnal comercial demonstrativ, introdus manual și fără integrare externă.",
     extracted_summary: title, currency: "RON", urgency_score: 50, fit_score: 50, confidence_score: 50,
     recommended_action: recommendedSignalActions[index] ?? "Revizuiește contextul și confirmă următorul pas.", created_by_profile_id: profileId,
     assigned_to_profile_id: profileId, occurred_at: iso(-index - 1), created_at: iso(-index - 1),
@@ -177,12 +177,12 @@ export function buildFixtures(profileId, now = new Date()) {
     baseSignal(6, "Recomandare de la partener", "referral", "new", "new", { contact_company: organizations[7].name, matched_organization_id: organizationIds[7], raw_message: "Recomandare introdusă manual: partenerul sugerează o discuție de calificare cu o companie din rețea." }),
     baseSignal(7, "Lead importat pentru calificare", "csv_import", "new", "new", { source_label: "Import controlat · text în bloc", contact_company: organizations[3].name, matched_organization_id: organizationIds[3], raw_message: "Semnal importat local dintr-un text în bloc: solicitare de informații, fără contact și fără valoare confirmată.", ingestion_origin: "csv_import" }),
     baseSignal(8, "Semnal asociat unui rezultat câștigat", "manual", "converted", "converted", { contact_company: organizations[4].name, matched_organization_id: organizationIds[4], converted_opportunity_id: opportunityIds[8], raw_message: "Notă internă: semnalul a fost convertit și rezultatul comercial este deja confirmat în oportunitate.", analysis_status: "completed", analysis_mode: "deterministic_fallback", confidence_level: "high", analysis_explanation: "Regulile locale au pregătit recomandarea aplicată după aprobarea echipei.", analyzed_at: iso(-4), reviewed_at: iso(-3) }),
-    baseSignal(9, "Oportunitate fără următoare acțiune", "manual", "ready_for_review", "ready_for_review", { contact_company: organizations[1].name, matched_organization_id: organizationIds[1], detected_from_opportunity_id: opportunityIds[1], raw_message: "Notă internă: oportunitatea există, dar nu are următoare acțiune și nici responsabil confirmat.", assigned_to_profile_id: null, analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 84, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Oportunitate fără următor pas", analysis_explanation: "Regulile au identificat o oportunitate existentă fără acțiune pending.", missing_information: ["responsabil comercial", "următoarea acțiune"], uncertainty_notes: [], estimated_value_min: 19600, estimated_value_max: 28000, estimated_recoverable_value: 28000, suggested_due_date: date(1), analyzed_at: iso(-1) })
+    baseSignal(9, "Oportunitate fără următoare acțiune", "manual", "ready_for_review", "ready_for_review", { contact_company: organizations[1].name, matched_organization_id: organizationIds[1], detected_from_opportunity_id: opportunityIds[1], raw_message: "Notă internă: oportunitatea există, dar nu are următoare acțiune și nici responsabil confirmat.", assigned_to_profile_id: null, analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 84, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Oportunitate fără următor pas", analysis_explanation: "Regulile au identificat o oportunitate existentă fără acțiune în așteptare.", missing_information: ["responsabil comercial", "următoarea acțiune"], uncertainty_notes: [], estimated_value_min: 19600, estimated_value_max: 28000, estimated_recoverable_value: 28000, suggested_due_date: date(1), analyzed_at: iso(-1) })
   ];
   const signalEvents = [...signals.map((signal, index) => ({
     id: signalEventIds[index], business_id: DEMO.businessId, signal_id: signal.id,
     event_type: signal.status === "converted" ? "signal_converted" : signal.status === "archived" ? "signal_archived" : signal.analysis_status === "completed" ? "analysis_completed" : "signal_created",
-    description: `${DEMO.marker}: eveniment fictiv și auditabil pentru semnal comercial.`,
+    description: "Eveniment demonstrativ și auditabil pentru semnalul comercial.",
     metadata: { demo: true, external_action: false }, created_by_profile_id: profileId, created_at: signal.created_at
   })), {
     id: signalEventIds[10], business_id: DEMO.businessId, signal_id: signalIds[1], event_type: "analysis_review_edited",

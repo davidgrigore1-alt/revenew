@@ -63,7 +63,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
           { label: "Accesibile", value: allOpportunities.length, note: "Oportunități aprobate în spațiul de lucru", tone: "brand" },
           { label: "Necesită atenție", value: attentionCount, note: "Cu risc, blocaj sau context incomplet", tone: attentionCount ? "warning" : "neutral" },
           { label: "Fără responsabil", value: missingOwnerCount, note: "Responsabilul trebuie clarificat", tone: missingOwnerCount ? "danger" : "neutral" },
-          { label: "Scadente / restante", value: dueCount, note: "Cu acțiune pending până astăzi", tone: dueCount ? "warning" : "neutral" }
+          { label: "Scadente / restante", value: dueCount, note: "Cu acțiune în așteptare, scadentă cel târziu astăzi", tone: dueCount ? "warning" : "neutral" }
         ]} />
         <OpportunityFilters filters={searchParams} />
         <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />

@@ -20,7 +20,7 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.equal(DEMO.email, "irina.petrescu@revenew-demo.invalid");
   assert.equal(DEMO.featuredOpportunityId, "de300006-0000-4000-8000-000000000006");
   assert.equal(fixtures.organizations.length, 8);
-  assert.ok(fixtures.organizations.every((organization) => !organization.name.startsWith("[DEMO]") && organization.notes.includes(DEMO.marker)));
+  assert.ok(fixtures.organizations.every((organization) => !organization.name.startsWith("[DEMO]") && /fictivă/i.test(organization.notes)));
   for (const company of ["Meridian Logistics SRL", "Delta Construct Solutions SRL", "Nova Medical Systems SRL", "Atlas Fleet Services SRL", "Carpathia Distribution Group SRL", "Urban Facility Partners SRL"]) {
     assert.ok(fixtures.organizations.some((organization) => organization.name === company), `${company} lipsește`);
   }
@@ -61,6 +61,18 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.ok(fixtures.signals.some((signal) => signal.review_status === "ready_for_review" && signal.analysis_status === "completed"));
   assert.ok(fixtures.opportunities.some((opportunity) => opportunity.recommended_action));
   assert.ok(fixtures.documents.some((document) => document.status === "ready_to_send" && !/trimis/i.test(document.status)));
+  const buyerVisibleFixtureText = JSON.stringify({
+    organizations: fixtures.organizations.map(({ name, notes }) => ({ name, notes })),
+    contacts: fixtures.contacts.map(({ full_name, notes }) => ({ full_name, notes })),
+    opportunities: fixtures.opportunities.map(({ title, summary, outcome_note }) => ({ title, summary, outcome_note })),
+    actions: fixtures.actions.map(({ title, description }) => ({ title, description })),
+    events: fixtures.events.map(({ label, description }) => ({ label, description })),
+    documents: fixtures.documents.map(({ title, body }) => ({ title, body })),
+    signals: fixtures.signals.map(({ title, source_label, raw_message, analysis_explanation }) => ({ title, source_label, raw_message, analysis_explanation })),
+    signalEvents: fixtures.signalEvents.map(({ description }) => ({ description }))
+  });
+  assert.doesNotMatch(buyerVisibleFixtureText, new RegExp(DEMO.marker, "i"));
+  assert.doesNotMatch(buyerVisibleFixtureText, /Captură locală demonstrativă|acțiune pending/i);
   assert.doesNotMatch(`${DEMO.businessName}\n${DEMO.operatorName}\n${DEMO.email}\n${visibleFixtureText}`, /gmail\.com|Grigore|David|testdavid|davidtest|TEST DATA|E2E/i);
 });
 

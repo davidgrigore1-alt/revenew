@@ -161,7 +161,7 @@ export const aiCapabilities = [
   {
     id: "calendar.readDemoAvailability",
     label: "Disponibilitate locală demonstrativă",
-    description: "Citește reguli locale fictive de program și indisponibilitate într-un sandbox.",
+    description: "Citește reguli locale fictive de program și indisponibilitate într-un mediu controlat.",
     status: "sandbox_only",
     category: "calendar",
     riskLevel: "low",
@@ -313,7 +313,7 @@ export const aiCapabilities = [
   {
     id: "voice.simulatedReceptionist",
     label: "Recepționer simulat în mod text",
-    description: "Simulează local o conversație de programare fără apel telefonic sau furnizor voice.",
+    description: "Simulează local o conversație de programare fără apel telefonic sau furnizor de voce.",
     status: "sandbox_only",
     category: "voice",
     riskLevel: "medium",
@@ -351,7 +351,7 @@ export const aiCapabilities = [
   {
     id: "voice.proposeBooking",
     label: "Propunerea unei programări",
-    description: "Corelează intenția cu disponibilitatea sandbox și propune o programare în așteptare.",
+    description: "Corelează intenția cu disponibilitatea controlată și propune o programare în așteptare.",
     status: "sandbox_only",
     category: "voice",
     riskLevel: "high",

@@ -20,7 +20,7 @@ type CapabilityGroup = {
 
 const statusCopy: Record<AiCapabilityStatus, { label: string; tone: BadgeTone; icon: typeof CheckCircleIcon }> = {
   available_internal: { label: "Activ intern", tone: "success", icon: CheckCircleIcon },
-  sandbox_only: { label: "Sandbox local", tone: "info", icon: ClockIcon },
+  sandbox_only: { label: "Mediu controlat", tone: "info", icon: ClockIcon },
   planned: { label: "Planificat", tone: "neutral", icon: ClockIcon },
   blocked_until_security_review: { label: "Blocat până la revizuirea de securitate", tone: "warning", icon: LockClosedIcon }
 };
@@ -40,7 +40,7 @@ const groups: CapabilityGroup[] = [
   },
   {
     id: "appointment",
-    title: "Programări în sandbox",
+    title: "Programări în mediu controlat",
     description: "Scenarii locale demonstrative, fără calendar, telefonie sau rezervări reale.",
     capabilityIds: ["calendar.readDemoAvailability", "calendar.proposeAppointment", "voice.simulatedReceptionist", "voice.extractAppointmentIntent", "voice.proposeBooking", "voice.handoffToHuman"]
   },
@@ -64,7 +64,7 @@ function routeFor(capability: AiCapabilityDefinition) {
   if (capability.id.startsWith("opportunity.")) return { href: "/opportunities", label: "Deschide oportunitățile" };
   if (capability.id === "audit.generateFromEvidence") return { href: "/reports/revenue-recovery-audit", label: "Deschide auditul" };
   if (capability.id === "pilot.proofOfValueExplain") return { href: "/reports/pilot-proof-of-value", label: "Deschide validarea" };
-  if (capability.category === "calendar" || capability.category === "voice") return { href: "/demo/appointment-control", label: "Deschide sandbox-ul" };
+  if (capability.category === "calendar" || capability.category === "voice") return { href: "/demo/appointment-control", label: "Deschide mediul controlat" };
   if (capability.category === "gmail") return { href: "/inbox", label: "Deschide Inbox Comercial" };
   return null;
 }
@@ -114,9 +114,9 @@ export default function AiControlCenterPage() {
   return (
     <PageShell
       eyebrow="Inteligență controlată"
-      title="Centrul de control AI"
+      title="Controlul inteligenței operaționale"
       description="Vezi exact ce poate face ReveNew, pe ce dovezi se bazează și unde aprobarea umană rămâne obligatorie."
-      breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență AI" }]}
+      breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
     >
       <section className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6 lg:p-8" aria-labelledby="ai-control-summary">
         <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.5fr)] lg:items-end">
@@ -127,7 +127,7 @@ export default function AiControlCenterPage() {
           </div>
           <dl className="grid grid-cols-3 overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.88)]">
             <div className="p-3 sm:p-4"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Active intern</dt><dd className="mt-1 text-xl font-semibold">{activeCount}</dd></div>
-            <div className="border-x border-[rgb(var(--border))] p-3 sm:p-4"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Sandbox</dt><dd className="mt-1 text-xl font-semibold">{sandboxCount}</dd></div>
+            <div className="border-x border-[rgb(var(--border))] p-3 sm:p-4"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Mediu controlat</dt><dd className="mt-1 text-xl font-semibold">{sandboxCount}</dd></div>
             <div className="p-3 sm:p-4"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Blocate</dt><dd className="mt-1 text-xl font-semibold">{blockedCount}</dd></div>
           </dl>
         </div>

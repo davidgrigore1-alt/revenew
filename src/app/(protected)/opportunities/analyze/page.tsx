@@ -12,7 +12,7 @@ export default async function AnalyzeOpportunityPage() {
     <PageShell
       eyebrow="Analiză manuală"
       title="Analizează o oportunitate nouă"
-      description="Introdu un semnal comercial, validează analiza și salvează oportunitatea în workspace."
+      description="Introdu un semnal comercial, validează analiza și salvează oportunitatea în spațiul de lucru."
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}

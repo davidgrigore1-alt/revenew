@@ -40,7 +40,7 @@ export default async function SettingsPage() {
     : null;
   let ownedBusinesses: Array<{ id: string; name: string; created_at: string | null }> = [];
 
-  if (isDevelopmentMode && isSupabaseConfigured && currentProfile.profile?.id) {
+  if (isDevelopmentMode && !isPreviewMode && isSupabaseConfigured && currentProfile.profile?.id) {
     const supabase = createSupabaseServerClient();
     if (supabase) {
       const { data, error } = await supabase
@@ -61,16 +61,16 @@ export default async function SettingsPage() {
     <PageShell
       eyebrow="Administrare"
       title="Setări"
-      description="Configurează workspace-ul, accesul, recomandările și capacitatea operațională dintr-un singur punct de control."
+      description="Configurează spațiul de lucru, accesul, recomandările și capacitatea operațională dintr-un singur punct de control."
     >
       <div className="grid gap-6">
         {canSeeGovernance ? <div className="grid gap-4 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div><p className="text-label text-[rgb(var(--primary))]">Control workspace</p><h2 className="mt-1 text-lg font-semibold">Echipă și guvernanță</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Rolurile, politicile, aprobările, cozile de lucru și auditul au o zonă dedicată, disponibilă numai conform permisiunilor existente.</p></div>
+          <div><p className="text-label text-[rgb(var(--primary))]">Controlul spațiului de lucru</p><h2 className="mt-1 text-lg font-semibold">Echipă și guvernanță</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Rolurile, politicile, aprobările, cozile de lucru și auditul au o zonă dedicată, disponibilă numai conform permisiunilor existente.</p></div>
           <Link href="/settings/governance" className="focus-ring inline-flex min-h-11 items-center justify-center rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))]">Deschide administrarea →</Link>
         </div> : null}
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <nav className="sticky top-[4.25rem] z-20 flex gap-1 overflow-x-auto rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.94)] p-1 shadow-card backdrop-blur" aria-label="Secțiuni setări">
-          {[["#companie", "Companie"], ["#workspace", "Workspace"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+          {[["#companie", "Companie"], ["#workspace", "Spațiu de lucru"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode && !isPreviewMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
         </nav>
 
         <section id="companie" className="scroll-mt-36 grid gap-4">
@@ -114,19 +114,19 @@ export default async function SettingsPage() {
 
           <div id="plan" className="scroll-mt-36"><DataCard
             title="Plan și acces"
-            description={isPreviewMode ? "Accesul este permis în modul de testare după selectarea unui plan demonstrativ." : "Accesul la dashboard este verificat pe server pe baza abonamentului curent."}
+            description={isPreviewMode ? "Accesul de evaluare este permis după selectarea unei opțiuni demonstrative." : "Accesul la Control Center este verificat pe server pe baza abonamentului curent."}
           >
             {isPreviewMode ? (
               <>
                 <DefinitionList
                   items={[
-                    ["Mod", "Mod de testare"],
+                    ["Mod", "Evaluare controlată"],
                     ["Plan selectat", paidAccess?.previewPlan?.title ?? "Niciun plan selectat"],
-                    ["Acces", "Acces gratuit pentru testarea produsului"]
+                    ["Acces", "Acces demonstrativ, fără plată"]
                   ]}
                 />
                 <p className="mt-5 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-                  Planul selectat este folosit doar pentru testarea produsului și nu reprezintă o plată sau un abonament activ.
+                  Opțiunea selectată este folosită numai pentru evaluarea produsului și nu reprezintă o plată sau un abonament activ.
                 </p>
                 <div className="mt-5">
                   <Link href="/access#planuri" className="focus-ring inline-flex min-h-10 items-center rounded-lg border border-[rgb(var(--border))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--muted))]">
@@ -155,7 +155,7 @@ export default async function SettingsPage() {
 
           <DataCard title="Date și confidențialitate" description="Claritate despre ce folosește aplicația în acest moment.">
             <ul className="grid gap-3 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-              <li>ReveNew folosește cererile comerciale, oportunitățile, acțiunile, documentele și evenimentele din workspace.</li>
+              <li>ReveNew folosește cererile comerciale, oportunitățile, acțiunile, documentele și evenimentele din spațiul de lucru.</li>
               <li>Nu afișăm ID-uri tehnice sau detalii de conexiune în interfața normală.</li>
               <li>Nu pretindem integrări live precum Gmail sau WhatsApp dacă nu sunt conectate efectiv.</li>
               <li>Datele sunt folosite pentru recomandări, mesaje pregătite și rapoarte comerciale.</li>
@@ -166,9 +166,9 @@ export default async function SettingsPage() {
         <section id="utilizare" className="scroll-mt-36 grid gap-4">
           <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Capacitate</p><h2 className="mt-1 text-lg font-semibold">Plan și utilizare</h2></div>
         <div className="grid gap-4 xl:grid-cols-2">
-          <DataCard title="Plan și utilizare" description="Contoare orientate pe operațiuni comerciale, fără expunerea costurilor interne de provider.">
+          <DataCard title="Plan și utilizare" description="Contoare orientate pe operațiuni comerciale, fără expunerea costurilor interne ale furnizorilor.">
             {usageSnapshot?.unavailable ? (
-              <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Utilizarea va fi afișată după aplicarea migrației de metering. Accesul curent rămâne controlat de modul activ.</p>
+              <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Utilizarea va fi afișată după activarea măsurării dedicate. Accesul curent rămâne controlat de modul activ.</p>
             ) : (
               <div className="grid gap-4">
                 {usageSnapshot?.features.slice(0, 6).map((feature) => {
@@ -203,7 +203,7 @@ export default async function SettingsPage() {
           </DataCard>
         </div></section>
 
-        {isDevelopmentMode ? (
+        {isDevelopmentMode && !isPreviewMode ? (
           <details id="date" className="scroll-mt-36 rounded-card border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
             <summary className="focus-ring cursor-pointer list-none rounded-button px-2 py-2 text-sm font-semibold marker:hidden">Date tehnice locale · dezvoltare</summary>
             <div className="mt-4"><DataCard title="Mod dezvoltare / Debug">

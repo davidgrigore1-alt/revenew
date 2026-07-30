@@ -40,7 +40,7 @@ export default async function PipelinePage() {
                 {formatCurrency(activeValue, "RON")}
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-[rgb(var(--text-muted))]">
-                Valoare maximă estimată pentru oportunitățile active în RON. Rezultatele câștigate sunt raportate separat și nu sunt incluse aici.
+                Valoare estimată în pipeline pentru oportunitățile active în RON. Nu este venit confirmat; rezultatele câștigate sunt raportate separat și nu sunt incluse aici.
               </p>
               <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
                 <div><dt className="text-label text-[rgb(var(--text-faint))]">Active</dt><dd className="mt-1 text-xl font-semibold">{activeOpportunities.length}</dd></div>

@@ -24,9 +24,9 @@ test("AI Control Center is protected by the existing app shell and derives claim
   const layout = read("src/app/(protected)/layout.tsx");
 
   assert.match(page, /aiCapabilities/);
-  assert.match(page, /Centrul de control AI/);
+  assert.match(page, /Controlul inteligenței operaționale/);
   assert.match(page, /Activ intern/);
-  assert.match(page, /Sandbox local/);
+  assert.match(page, /Mediu controlat/);
   assert.match(page, /Blocat până la revizuirea de securitate/);
   assert.match(page, /Niciunul/);
   assert.match(page, /Aprobare necesară/);
@@ -38,7 +38,7 @@ test("AI Control Center is protected by the existing app shell and derives claim
 test("sidebar exposes one permission-aware AI route and active-route mapping remains stable", () => {
   const navigation = read("src/lib/navigation.ts");
   assert.equal((navigation.match(/href: "\/ai"/g) ?? []).length, 1);
-  assert.match(navigation, /name: "Inteligență AI".+permission: "dashboard\.read"/);
+  assert.match(navigation, /name: "Inteligență operațională".+permission: "dashboard\.read"/);
   assert.match(navigation, /id: "intelligence", label: "Inteligență"/);
 });
 
@@ -80,6 +80,7 @@ test("access surface uses the warm palette and keeps activation safety explicit"
   const pricing = read("src/components/access/PricingCard.tsx");
 
   assert.doesNotMatch(access, /#12b981|#087354|Workspace|ownership/);
+  assert.doesNotMatch(access, /Mediu local de testare|Mod de testare activ|Acces local de testare/);
   assert.doesNotMatch(access, /server-side/i);
   assert.doesNotMatch(pricing, /#12b981/);
   assert.match(access, /nu inițiază plăți și nu creează abonamente/i);

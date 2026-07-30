@@ -38,7 +38,7 @@ export const primaryNavigation = [
   { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
   { name: "Aprobări", shortName: "Aprobări", href: "/approvals", icon: "clipboard-check", description: "Confirmă schimbările interne înainte ca acestea să fie aplicate.", permission: "signals.read" },
   { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
-  { name: "Inteligență AI", shortName: "AI", href: "/ai", icon: "sparkles", description: "Vezi ce poate face sistemul, ce necesită aprobare și ce rămâne blocat.", permission: "dashboard.read" },
+  { name: "Inteligență operațională", shortName: "Inteligență", href: "/ai", icon: "sparkles", description: "Vezi ce poate face sistemul, ce necesită aprobare și ce rămâne blocat.", permission: "dashboard.read" },
   { name: "Recuperare venituri", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
   { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },

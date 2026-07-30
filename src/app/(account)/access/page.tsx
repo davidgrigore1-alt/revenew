@@ -53,9 +53,9 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
 
   const isPreviewMode = context.accessMode === "preview";
   const periodEnd = context.subscription?.currentPeriodEnd ? formatDate(context.subscription.currentPeriodEnd) : "Nu este stabilită";
-  const statusLabel = isPreviewMode ? "Mod de testare activ" : getPaidAccessStatusLabel(context.accessStatus);
+  const statusLabel = isPreviewMode ? "Acces de evaluare" : getPaidAccessStatusLabel(context.accessStatus);
   const planLabel = isPreviewMode ? context.previewPlan?.title ?? "Niciun plan selectat" : context.subscription?.plan ?? "Fără plan activ";
-  const accessLabel = isPreviewMode ? "Acces local de testare" : context.hasAccess ? "Acces comercial activ" : "Confirmare comercială necesară";
+  const accessLabel = isPreviewMode ? "Acces demonstrativ controlat" : context.hasAccess ? "Acces comercial activ" : "Confirmare comercială necesară";
 
   return (
     <main className="account-light-theme min-h-screen overflow-hidden bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
@@ -75,7 +75,6 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
           <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="brand">Activare comercială controlată</Badge>
-              {isPreviewMode ? <Badge tone="info">Mediu local de testare</Badge> : null}
             </div>
             <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-[-0.04em] sm:text-5xl lg:text-[3.5rem]">
               Contul este pregătit. Activează modul de lucru potrivit.
@@ -109,7 +108,7 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
             </dl>
             <p className="mt-5 rounded-card border border-[#b9e7cc] bg-[#eaf8f0] p-4 text-sm leading-6 text-[#0f6b3e]">
               {isPreviewMode
-                ? "Alegerea planului este o preferință locală de testare. Nu inițiază plăți și nu creează abonamente."
+                ? "Opțiunea selectată este folosită numai pentru evaluare. Nu inițiază plăți și nu creează abonamente."
                 : context.hasAccess
                   ? "Planul a fost confirmat pe server, iar accesul ReveNew este activ."
                   : reasonMessage(searchParams?.reason ?? context.reason)}

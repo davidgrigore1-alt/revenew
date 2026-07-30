@@ -322,7 +322,7 @@ async function main() {
       'business_count', (select count(*) from public.businesses where id = '${DEMO.businessId}' and name = '${DEMO.businessName.replaceAll("'", "''")}'),
       'identity_count', (select count(*) from public.profiles p join auth.users u on u.id=p.user_id where p.email='${DEMO.email}' and u.email='${DEMO.email}'),
       'organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}'),
-      'marked_organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}' and notes like '%${DEMO.marker}%'),
+      'marked_organization_count', (select count(*) from public.crm_organizations where business_id = '${DEMO.businessId}' and id::text like 'de10%'),
       'contact_count', (select count(*) from public.crm_contacts where business_id = '${DEMO.businessId}'),
       'reserved_domain_contact_count', (select count(*) from public.crm_contacts where business_id = '${DEMO.businessId}' and email ~* '@([a-z0-9-]+\\.)*(demo|example|revenew-demo)\\.invalid$'),
       'multi_contact_organization_count', (select count(*) from (select organization_id from public.crm_contacts where business_id='${DEMO.businessId}' group by organization_id having count(*) > 1) grouped),

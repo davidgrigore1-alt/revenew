@@ -6,7 +6,7 @@ export default function OpportunityImportPage() {
     <PageShell
       eyebrow="Import controlat"
       title="Importă date comerciale"
-      description="Încarcă firme, contacte sau oportunități din CSV, verifică maparea și confirmă exact ce intră în workspace."
+      description="Încarcă firme, contacte sau oportunități din CSV, verifică maparea și confirmă exact ce intră în spațiul de lucru."
     >
       <CsvImportWizard />
     </PageShell>
