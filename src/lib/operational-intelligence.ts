@@ -1,11 +1,28 @@
 import "server-only";
 
 import type {
+  WorkspaceDecisionEvidence,
   WorkspaceDecisionItem,
   WorkspaceDecisionQueue,
   WorkspaceDecisionSeverity,
   WorkspaceDecisionType
 } from "@/lib/workspace-decision-queue";
+
+export type EvidenceToDecisionTrace = {
+  sourceTypeLabel: string;
+  sourceLabel: string;
+  evidenceSummary: string;
+  evidenceHref: string;
+  prioritizationReasons: string[];
+  knownFacts: string[];
+  missingInformation: string[];
+  humanDecision: string;
+  outcomeStatus: "not_confirmed";
+  outcomeLabel: string;
+  continueLabel: string;
+  continueHref: string;
+  dueAt?: string;
+};
 
 export type OperationalIntelligenceRecommendation = {
   id: string;
@@ -24,6 +41,7 @@ export type OperationalIntelligenceRecommendation = {
   currency?: string;
   companyName?: string;
   opportunityTitle?: string;
+  trace: EvidenceToDecisionTrace;
 };
 
 export type OperationalIntelligenceCenter = {
@@ -76,6 +94,95 @@ const typeLabels: Record<WorkspaceDecisionType, string> = {
   high_value_blocked_opportunity: "Valoare estimată expusă"
 };
 
+const prioritizationRules: Record<WorkspaceDecisionType, string> = {
+  overdue_follow_up: "Termenul acțiunii a fost depășit.",
+  pending_approval: "Fluxul nu poate continua fără o decizie umană înregistrată.",
+  prepared_work_not_advanced: "Există lucru pregătit fără confirmarea pasului următor.",
+  unresolved_signal: "Semnalul este prioritar și nu are încă o decizie de revizuire.",
+  opportunity_without_next_action: "Lipsește o acțiune următoare cu termen clar.",
+  opportunity_without_owner: "Lipsește persoana responsabilă de următorul pas.",
+  company_without_primary_contact: "Lipsește contactul principal necesar unui follow-up sigur.",
+  inactive_active_opportunity: "Ultima activitate importantă nu indică progres recent.",
+  high_value_blocked_opportunity: "Blocajele active afectează o oportunitate cu valoare estimată."
+};
+
+const humanDecisions: Record<WorkspaceDecisionType, string> = {
+  overdue_follow_up: "Confirmă dacă acțiunea rămâne relevantă și actualizează termenul sau starea.",
+  pending_approval: "Verifică dovada, apoi aprobă sau respinge propunerea.",
+  prepared_work_not_advanced: "Verifică documentul și decide separat dacă pasul următor poate fi executat.",
+  unresolved_signal: "Revizuiește semnalul și decide dacă trebuie convertit, legat sau închis.",
+  opportunity_without_next_action: "Stabilește acțiunea, persoana responsabilă și termenul.",
+  opportunity_without_owner: "Atribuie o persoană responsabilă înainte de continuarea execuției.",
+  company_without_primary_contact: "Confirmă persoana potrivită înainte de orice follow-up.",
+  inactive_active_opportunity: "Decide dacă oportunitatea continuă, necesită un nou pas sau trebuie închisă.",
+  high_value_blocked_opportunity: "Revizuiește blocajele și confirmă primul pas sigur."
+};
+
+function sourceTypeLabel(evidence: WorkspaceDecisionEvidence) {
+  return ({
+    opportunity: "Oportunitate",
+    opportunity_action: "Acțiune",
+    opportunity_document: "Document",
+    commercial_signal: "Semnal comercial",
+    approval: "Aprobare"
+  } as const)[evidence.sourceType];
+}
+
+function missingInformationFor(item: WorkspaceDecisionItem) {
+  const missing: string[] = [];
+
+  if (item.relatedOpportunityId && !item.ownerName) missing.push("Responsabil neatribuit.");
+  if (!item.relatedCompanyName) missing.push("Compania asociată nu este confirmată.");
+
+  if (item.type === "pending_approval") missing.push("Decizia de aprobare nu este încă înregistrată.");
+  if (item.type === "prepared_work_not_advanced") missing.push("Utilizarea sau trimiterea documentului nu este confirmată.");
+  if (item.type === "unresolved_signal") missing.push("Semnalul nu este încă revizuit și nu are o oportunitate confirmată.");
+  if (item.type === "opportunity_without_next_action") missing.push("Acțiunea următoare și termenul nu sunt confirmate.");
+  if (item.type === "opportunity_without_owner") missing.push("Persoana responsabilă nu este atribuită.");
+  if (item.type === "company_without_primary_contact") missing.push("Contactul principal nu este confirmat.");
+  if (item.type === "inactive_active_opportunity") missing.push("Motivul lipsei de progres trebuie verificat.");
+
+  missing.push(item.estimatedValue
+    ? "Valoarea este estimată; rezultatul comercial și venitul rămân neconfirmate."
+    : "Valoarea și rezultatul comercial nu sunt confirmate.");
+
+  return Array.from(new Set(missing));
+}
+
+function traceFor(
+  item: WorkspaceDecisionItem,
+  primaryEvidence: WorkspaceDecisionEvidence | undefined
+): EvidenceToDecisionTrace {
+  const knownFacts = [
+    `Stare observată: ${item.statusLabel}.`,
+    item.relatedCompanyName ? `Companie: ${item.relatedCompanyName}.` : null,
+    item.relatedOpportunityTitle ? `Oportunitate: ${item.relatedOpportunityTitle}.` : null,
+    `Dovezi disponibile: ${item.evidence.length}.`
+  ].filter((fact): fact is string => Boolean(fact));
+
+  return {
+    sourceTypeLabel: primaryEvidence ? sourceTypeLabel(primaryEvidence) : "Dovadă indisponibilă",
+    sourceLabel: primaryEvidence?.label ?? "Dovezile trebuie completate înainte de decizie.",
+    evidenceSummary: item.reason,
+    evidenceHref: primaryEvidence?.href ?? item.actionHref,
+    prioritizationReasons: [
+      prioritizationRules[item.type],
+      item.reason,
+      item.severity === "critical"
+        ? "Elementele critice și restante sunt afișate înaintea celor informative."
+        : "Elementele care necesită atenție sunt ordonate după termen și impactul comercial disponibil."
+    ],
+    knownFacts,
+    missingInformation: missingInformationFor(item),
+    humanDecision: humanDecisions[item.type],
+    outcomeStatus: "not_confirmed",
+    outcomeLabel: "Nu există un rezultat comercial confirmat de utilizator pentru această recomandare.",
+    continueLabel: item.actionLabel,
+    continueHref: item.actionHref,
+    ...(item.dueAt ? { dueAt: item.dueAt } : {})
+  };
+}
+
 function recommendationFor(item: WorkspaceDecisionItem): OperationalIntelligenceRecommendation {
   const primaryEvidence = item.evidence[0];
   const evidenceCount = item.evidence.length;
@@ -97,7 +204,8 @@ function recommendationFor(item: WorkspaceDecisionItem): OperationalIntelligence
     actionHref: item.actionHref,
     ...(item.estimatedValue && item.currency ? { estimatedValue: item.estimatedValue, currency: item.currency } : {}),
     ...(item.relatedCompanyName ? { companyName: item.relatedCompanyName } : {}),
-    ...(item.relatedOpportunityTitle ? { opportunityTitle: item.relatedOpportunityTitle } : {})
+    ...(item.relatedOpportunityTitle ? { opportunityTitle: item.relatedOpportunityTitle } : {}),
+    trace: traceFor(item, primaryEvidence)
   };
 }
 

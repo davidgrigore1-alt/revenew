@@ -77,6 +77,59 @@ test("operational intelligence derives at most three evidence-backed recommendat
   assert.equal("confirmedRevenue" in result, false);
 });
 
+test("recommendations expose a non-technical evidence-to-decision trace", () => {
+  const { buildOperationalIntelligenceCenter } = loadIntelligenceBuilder();
+  const result = buildOperationalIntelligenceCenter(queue());
+  const trace = result.recommendations[0].trace;
+
+  assert.equal(trace.sourceTypeLabel, "Acțiune");
+  assert.equal(trace.sourceLabel, "Dovada 1");
+  assert.match(trace.evidenceSummary, /Termen depășit/);
+  assert.ok(trace.prioritizationReasons.some((reason) => /Termenul acțiunii a fost depășit/));
+  assert.ok(trace.knownFacts.some((fact) => /Dovezi disponibile: 1/));
+  assert.ok(trace.missingInformation.some((item) => /Responsabil neatribuit/));
+  assert.ok(trace.missingInformation.some((item) => /venitul rămân neconfirmate/));
+  assert.match(trace.humanDecision, /Confirmă dacă acțiunea rămâne relevantă/);
+  assert.equal(trace.outcomeStatus, "not_confirmed");
+  assert.match(trace.outcomeLabel, /rezultat comercial confirmat de utilizator/);
+  assert.equal(trace.continueLabel, "Revizuiește oportunitatea");
+  assert.equal(trace.continueHref, "/opportunities/opportunity-1");
+  assert.equal(trace.evidenceHref, "/opportunities/opportunity-1#opportunity-timeline");
+  assert.doesNotMatch(JSON.stringify(trace), /evidence-1|decision-1/);
+});
+
+test("approval traces explain the missing human decision and preserve the approval route", () => {
+  const { buildOperationalIntelligenceCenter } = loadIntelligenceBuilder();
+  const approval = decision(1, {
+    type: "pending_approval",
+    title: "Aprobare în așteptare",
+    actionLabel: "Verifică aprobarea",
+    actionHref: "/approvals?signal=signal-1",
+    relatedOpportunityId: undefined,
+    relatedOpportunityTitle: undefined,
+    evidence: [{
+      sourceType: "approval",
+      sourceId: "signal-1",
+      sourceTimestamp: "2026-07-30T09:00:00.000Z",
+      label: "Aprobarea semnalului comercial",
+      href: "/approvals?signal=signal-1"
+    }]
+  });
+  const result = buildOperationalIntelligenceCenter(queue({
+    items: [approval],
+    totalCandidates: 1,
+    criticalCount: 0,
+    attentionCount: 1,
+    estimatedExposedValueByCurrency: {}
+  }));
+  const trace = result.recommendations[0].trace;
+
+  assert.equal(trace.sourceTypeLabel, "Aprobare");
+  assert.ok(trace.missingInformation.some((item) => /Decizia de aprobare/));
+  assert.match(trace.humanDecision, /aprobă sau respinge/);
+  assert.equal(trace.continueHref, "/approvals?signal=signal-1");
+});
+
 test("insufficient data produces an honest intake state without invented recommendations", () => {
   const { buildOperationalIntelligenceCenter } = loadIntelligenceBuilder();
   const result = buildOperationalIntelligenceCenter(queue({
@@ -110,6 +163,13 @@ test("AI page leads with current operational intelligence and keeps the registry
   assert.match(page, /\{ limit: 3 \}/);
   assert.match(page, /intelligence\.recommendations\.map/);
   assert.match(page, /Bazat pe:/);
+  assert.match(page, /Vezi de ce/);
+  assert.match(page, /Cum a fost prioritizat/);
+  assert.match(page, /Ce este cunoscut/);
+  assert.match(page, /Ce lipsește/);
+  assert.match(page, /Decizie umană necesară/);
+  assert.match(page, /trace\.continueHref/);
+  assert.match(page, /trace\.evidenceHref/);
   assert.match(page, /Nu există recomandări verificabile acum/);
   assert.match(page, /<details className="group rounded-panel/);
 });

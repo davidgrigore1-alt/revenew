@@ -19,7 +19,7 @@ import {
 } from "@/lib/operational-intelligence";
 import { getRecoverySummary } from "@/lib/recovery";
 import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -147,14 +147,57 @@ function RecommendationCard({
       ) : null}
 
       <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
-        <p className="flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {recommendation.evidenceLabel}</span></p>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Sursă: {recommendation.trace.sourceTypeLabel} · {recommendation.evidenceCount} {recommendation.evidenceCount === 1 ? "dovadă" : "dovezi"}</p>
+        <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {recommendation.evidenceLabel}</span></p>
         <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{recommendation.uncertainty}</p>
         <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{recommendation.controlNote}</p>
       </div>
 
+      <details className="group mt-4 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+        <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control px-3 py-2 marker:hidden">
+          <span>
+            <span className="block text-xs font-semibold text-[rgb(var(--foreground))]">Vezi de ce</span>
+            <span className="mt-0.5 block text-[0.6875rem] text-[rgb(var(--text-muted))]">Reguli și dovezi</span>
+          </span>
+          <span className="text-sm font-semibold text-[rgb(var(--primary))] group-open:hidden">+</span>
+        </summary>
+        <div className="grid gap-4 border-t border-[rgb(var(--border))] p-3 text-xs leading-5">
+          <div>
+            <p className="font-semibold text-[rgb(var(--foreground))]">Cum a fost prioritizat</p>
+            <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">
+              {recommendation.trace.prioritizationReasons.map((reason, index) => (
+                <li key={`${recommendation.id}-reason-${index}`}>• {reason}</li>
+              ))}
+              {recommendation.trace.dueAt ? <li>• Termen înregistrat: {formatDate(recommendation.trace.dueAt)}.</li> : null}
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-[rgb(var(--foreground))]">Ce este cunoscut</p>
+            <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">
+              {recommendation.trace.knownFacts.map((fact, index) => (
+                <li key={`${recommendation.id}-fact-${index}`}>• {fact}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-[rgb(var(--foreground))]">Ce lipsește</p>
+            <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">
+              {recommendation.trace.missingInformation.map((item, index) => (
+                <li key={`${recommendation.id}-gap-${index}`}>• {item}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3">
+            <p className="font-semibold text-[rgb(var(--warning-text))]">Decizie umană necesară</p>
+            <p className="mt-1 text-[rgb(var(--text-muted))]">{recommendation.trace.humanDecision}</p>
+            <p className="mt-2 text-[rgb(var(--text-muted))]">{recommendation.trace.outcomeLabel}</p>
+          </div>
+        </div>
+      </details>
+
       <div className="mt-auto flex flex-wrap gap-2 pt-5">
-        <Button href={recommendation.actionHref} size="small">{recommendation.actionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
-        <Button href={recommendation.evidenceHref} variant="ghost" size="small">Verifică dovada</Button>
+        <Button href={recommendation.trace.continueHref} size="small">{recommendation.trace.continueLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+        <Button href={recommendation.trace.evidenceHref} variant="ghost" size="small">Deschide dovada</Button>
       </div>
     </article>
   );

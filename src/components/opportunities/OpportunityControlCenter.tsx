@@ -126,7 +126,8 @@ export function OpportunityControlCenter({
             </div>
 
             <div className="mt-8 border-t border-[rgb(var(--border))] pt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--text-muted))]">Blocaje și excepții</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--text-muted))]">De ce este prioritară</p>
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-[rgb(var(--text-muted))]">Blocajele, termenul, responsabilul, dovezile și valoarea estimată explică ordinea de intervenție. Rezultatul rămâne neconfirmat până la decizia unei persoane.</p>
               {attention.reasons.length > 0 ? <div aria-label="Motive de atenție" className="mt-3 grid gap-2 sm:grid-cols-2">{attention.reasons.map((reason) => <div key={reason.code} className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3"><p className="text-sm font-semibold text-[rgb(var(--warning-text))]">{reason.label}</p><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{reason.explanation}</p></div>)}</div> : <StatusNotice tone="success">Nu există excepții operaționale determinate din datele disponibile.</StatusNotice>}
             </div>
           </div>

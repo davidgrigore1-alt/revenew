@@ -41,6 +41,9 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
   assert.match(controlCenter, /Dovezi disponibile/);
   assert.match(controlCenter, /Verifică dovezile/);
   assert.match(controlCenter, /Lipsește o dovadă verificabilă/);
+  assert.match(controlCenter, /De ce este prioritară/);
+  assert.match(controlCenter, /Blocajele, termenul, responsabilul, dovezile și valoarea estimată explică ordinea de intervenție/);
+  assert.match(controlCenter, /Rezultatul rămâne neconfirmat până la decizia unei persoane/);
   assert.match(workflow, /Dovezi și istoric/);
   assert.match(workflow, /Consultă textul sursă/);
   assert.doesNotMatch(workflow, />Text sursă brut</);
