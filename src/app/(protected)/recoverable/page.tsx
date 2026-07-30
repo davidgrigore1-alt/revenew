@@ -72,7 +72,7 @@ export default async function RecoverablePage() {
             <div className="p-5">
               <EmptyState
                 title="Coada se construiește din semnale aprobate"
-                description="Aici apar oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune. Adaugă un semnal în Inbox Comercial, verifică analiza și aprobă conversia; ReveNew nu inventează riscuri sau valori pentru un workspace gol."
+                description="Aici apar oportunitățile care au nevoie de responsabil, termen sau următoarea acțiune. Adaugă un semnal în Inbox Comercial, verifică analiza și aprobă conversia; ReveNew nu inventează riscuri sau valori pentru un spațiu de lucru gol."
                 actions={<><Button href="/inbox?create=1">Adaugă primul semnal</Button><Button href="/inbox/import" variant="secondary">Importă semnale comerciale</Button></>}
               />
             </div>
@@ -117,7 +117,7 @@ export default async function RecoverablePage() {
           )}
         </Card>
 
-        <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Coada include numai oportunitățile accesibile în workspace-ul curent. Estimările rămân separate de venitul confirmat și nu există acțiuni externe automate.</p>
+        <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Coada include numai oportunitățile accesibile în spațiul de lucru curent. Estimările rămân separate de venitul confirmat și nu există acțiuni externe automate.</p>
       </div>
     </PageShell>
   );

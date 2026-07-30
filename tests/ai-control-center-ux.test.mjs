@@ -25,9 +25,9 @@ test("AI Control Center is protected by the existing app shell and derives claim
 
   assert.match(page, /aiCapabilities/);
   assert.match(page, /Controlul inteligenței operaționale/);
-  assert.match(page, /Activ intern/);
-  assert.match(page, /Mediu controlat/);
-  assert.match(page, /Blocat până la revizuirea de securitate/);
+  assert.match(page, /Capabilitate disponibilă intern/);
+  assert.match(page, /Mediu demonstrativ/);
+  assert.match(page, /Blocat până la revizuire de securitate/);
   assert.match(page, /Niciunul/);
   assert.match(page, /Aprobare necesară/);
   assert.match(page, /Indisponibil în versiunea curentă/);
@@ -67,12 +67,12 @@ test("input guidance distinguishes required context from optional execution data
   const inboxClient = read("src/components/inbox/CommercialInboxClient.tsx");
   const importPage = read("src/app/(protected)/inbox/import/page.tsx");
 
-  assert.match(inbox, /Necesare:/);
-  assert.match(inbox, /Opționale, dar utile:/);
+  assert.match(inbox, /Obligatoriu:/);
+  assert.match(inbox, /Opțional, dar util:/);
   assert.match(inbox, /păstrează dovada/);
   assert.doesNotMatch(inboxClient, /ownership/i);
-  assert.match(importPage, /Recomandate:/);
-  assert.match(importPage, /importul nu aprobă automat oportunități/);
+  assert.match(importPage, /Opțional, dar util:/);
+  assert.match(importPage, /importul nu aprobă oportunități/);
 });
 
 test("access surface uses the warm palette and keeps activation safety explicit", () => {
