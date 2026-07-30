@@ -23,6 +23,8 @@ async function verifyTenantIsolation(admin, local) {
   const password = randomBytes(24).toString("base64url");
   const profileId = randomUUID();
   const businessId = randomUUID();
+  const opportunityId = randomUUID();
+  const actionIds = [randomUUID(), randomUUID(), randomUUID()];
   let userId;
   try {
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
@@ -32,6 +34,13 @@ async function verifyTenantIsolation(admin, local) {
       insert into public.profiles(id,user_id,full_name,email,role) values ('${profileId}','${userId}','Tenant Isolation Test','${email}',null);
       insert into public.businesses(id,owner_profile_id,name) values ('${businessId}','${profileId}','[TEST] Tenant Isolation');
       insert into public.business_members(business_id,profile_id,role,status) values ('${businessId}','${profileId}','owner','active');
+      insert into public.opportunities(id,business_id,title,type,status,owner_profile_id)
+      values ('${opportunityId}','${businessId}','[TEST] Acțiuni interne','manual','reviewed','${profileId}');
+      insert into public.opportunity_actions(id,business_id,opportunity_id,title,status,assigned_to_profile_id)
+      values
+        ('${actionIds[0]}','${businessId}','${opportunityId}','[TEST] Finalizare','pending','${profileId}'),
+        ('${actionIds[1]}','${businessId}','${opportunityId}','[TEST] Amânare','pending','${profileId}'),
+        ('${actionIds[2]}','${businessId}','${opportunityId}','[TEST] Anulare','pending','${profileId}');
       commit;`);
     const userClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const login = await userClient.auth.signInWithPassword({ email, password });
@@ -45,6 +54,52 @@ async function verifyTenantIsolation(admin, local) {
     assert(foreignBusiness.data.length === 0, "RLS a expus workspace-ul demo altui tenant.");
     assert(foreignOpportunity.data.length === 0, "RLS a expus oportunități altui tenant.");
     assert(foreignSignal.data.length === 0, "RLS a expus semnale comerciale altui tenant.");
+
+    const completedAt = new Date().toISOString();
+    const postponedUntil = new Date(Date.now() + 3 * 86_400_000).toISOString();
+    const cancelledAt = new Date().toISOString();
+    const completed = await userClient.from("opportunity_actions")
+      .update({ status: "done", completed_at: completedAt })
+      .eq("id", actionIds[0]).eq("business_id", businessId).eq("opportunity_id", opportunityId)
+      .select("id,status").single();
+    const postponed = await userClient.from("opportunity_actions")
+      .update({ due_at: postponedUntil })
+      .eq("id", actionIds[1]).eq("business_id", businessId).eq("opportunity_id", opportunityId)
+      .select("id,status,due_at").single();
+    const cancelled = await userClient.from("opportunity_actions")
+      .update({ status: "cancelled", cancelled_at: cancelledAt })
+      .eq("id", actionIds[2]).eq("business_id", businessId).eq("opportunity_id", opportunityId)
+      .select("id,status").single();
+    assert(!completed.error && completed.data.status === "done", `Finalizarea acțiunii interne autorizate a eșuat: ${completed.error?.message ?? "stare invalidă"}`);
+    assert(!postponed.error && postponed.data.status === "pending" && postponed.data.due_at, `Amânarea acțiunii interne autorizate a eșuat: ${postponed.error?.message ?? "stare invalidă"}`);
+    assert(!cancelled.error && cancelled.data.status === "cancelled", `Anularea acțiunii interne autorizate a eșuat: ${cancelled.error?.message ?? "stare invalidă"}`);
+
+    const audit = await userClient.from("opportunity_events").insert({
+      business_id: businessId,
+      opportunity_id: opportunityId,
+      actor_profile_id: profileId,
+      event_type: "action_completed",
+      label: "Acțiune internă finalizată",
+      description: "Verificare locală fără efect extern.",
+      metadata: { action_id: actionIds[0], external_action: false }
+    }).select("id").single();
+    assert(!audit.error && audit.data.id, `Auditul acțiunii interne autorizate a eșuat: ${audit.error?.message ?? "răspuns invalid"}`);
+
+    const demoAction = runLocalSql(`select json_build_object(
+      'id', id,
+      'due_at', due_at
+    ) from public.opportunity_actions where business_id='${DEMO.businessId}' order by created_at limit 1;`, { json: true });
+    assert(demoAction?.id, "Acțiunea demo necesară verificării cross-tenant lipsește.");
+    const crossTenantUpdate = await userClient.from("opportunity_actions")
+      .update({ due_at: postponedUntil })
+      .eq("id", demoAction.id)
+      .select("id");
+    assert(!crossTenantUpdate.error && crossTenantUpdate.data.length === 0, "RLS a permis actualizarea unei acțiuni din alt workspace.");
+    const demoActionAfter = runLocalSql(`select json_build_object(
+      'id', id,
+      'due_at', due_at
+    ) from public.opportunity_actions where id='${demoAction.id}';`, { json: true });
+    assert(demoActionAfter.due_at === demoAction.due_at, "Încercarea cross-tenant a modificat acțiunea demo.");
   } finally {
     runLocalSql(`delete from public.businesses where id='${businessId}'; delete from public.profiles where id='${profileId}';`);
     if (userId) await admin.auth.admin.deleteUser(userId);

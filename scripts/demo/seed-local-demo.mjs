@@ -69,6 +69,12 @@ async function main() {
       to authenticated;
     grant insert, update on public.commercial_signals to authenticated;
     grant insert on public.commercial_signal_events to authenticated;
+    grant update (status, due_at, completed_at, cancelled_at)
+      on public.opportunity_actions to authenticated;
+    grant insert (
+      business_id, opportunity_id, actor_profile_id, event_type,
+      label, description, metadata
+    ) on public.opportunity_events to authenticated;
     delete from public.businesses where id = '${DEMO.businessId}';
     insert into public.profiles (id,user_id,full_name,email,role)
     values ('${profileId}','${user.id}','${DEMO.operatorName}','${DEMO.email}','business_owner')
