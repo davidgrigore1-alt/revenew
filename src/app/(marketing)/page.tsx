@@ -50,16 +50,18 @@ export const metadata: Metadata = {
 
 const painPoints = [
   ["Follow-up întârziat", "O conversație relevantă rămâne fără revenire și fără un termen clar.", ClockIcon],
-  ["Responsabilitate neclară", "Echipa vede oportunitatea, dar nimeni nu răspunde explicit de următorul pas.", UserGroupIcon],
-  ["Prioritate difuză", "Valoarea, riscul și vechimea nu sunt comparate într-un singur sistem.", FlagIcon],
-  ["Vizibilitate incompletă", "Managementul află târziu unde s-a blocat execuția comercială.", EyeIcon]
+  ["Responsabil neclar", "Echipa vede oportunitatea, dar nimeni nu răspunde explicit de următorul pas.", UserGroupIcon],
+  ["Ofertă fără decizie", "Documentul este pregătit, dar verificarea sau aprobarea rămâne deschisă.", FlagIcon],
+  ["Cerere pierdută în zgomot", "Managementul află târziu unde s-a rupt continuitatea comercială.", EyeIcon]
 ] as const;
 
 const steps = [
-  ["01", "Detectezi", "Aduni semnalele comerciale care există deja."],
-  ["02", "Prioritizezi", "Compari valoarea, riscul și informațiile lipsă."],
-  ["03", "Atribui", "Stabilești responsabilul, termenul și următoarea acțiune."],
-  ["04", "Urmărești", "Păstrezi deciziile și rezultatul auditabile."]
+  ["01", "Semnal", "Identifici cazul comercial care riscă să iasă din atenție."],
+  ["02", "Dovezi", "Vezi faptele disponibile și informațiile care lipsesc."],
+  ["03", "Recomandare", "Primești o prioritate explicată, nu o concluzie opacă."],
+  ["04", "Decizie umană", "O persoană verifică și aprobă pasul potrivit."],
+  ["05", "Acțiune sigură", "Responsabilul și următorul pas devin explicite."],
+  ["06", "Audit și pilot", "Rezultatele susțin continuarea, ajustarea sau oprirea."]
 ] as const;
 
 const audiences = [
@@ -67,15 +69,6 @@ const audiences = [
   ["Echipe comerciale", "Mai multe surse, contacte și propuneri care trebuie ordonate operațional.", UserGroupIcon],
   ["Responsabili și management", "Vizibilitate asupra valorii în risc, responsabililor și blocajelor curente.", EyeIcon],
   ["Consultanță și servicii", "Brief-uri, oferte și relații recurente care nu pot fi lăsate fără urmărire.", DocumentCheckIcon]
-] as const;
-
-const deliverables = [
-  ["Control Center operațional", "Vezi într-un singur loc ce necesită intervenție astăzi și de ce."],
-  ["Responsabil și acțiune următoare", "Fiecare oportunitate are responsabil, termen și pas următor explicit."],
-  ["Prioritizare comercială", "Valoarea estimată, riscul și vechimea susțin ordinea de lucru."],
-  ["Timeline și audit", "Schimbările, documentele, aprobările și rezultatele păstrează context."],
-  ["Follow-up pregătit", "Echipa poate revizui și ajusta drafturile înainte de orice utilizare."],
-  ["Raportare executivă", "Managementul primește un sumar clar, cu estimări separate de rezultatele confirmate."]
 ] as const;
 
 const faqCategories: FaqCategory[] = [
@@ -120,28 +113,28 @@ export default function LandingPage() {
       <a href="#continut" className="focus-ring sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-button focus:bg-[rgb(var(--surface))] focus:px-4 focus:py-3 focus:text-sm focus:font-semibold">Sari la conținut</a>
       <MarketingNav />
 
-      <section id="continut" className="relative isolate border-b border-[rgb(var(--border))] bg-[radial-gradient(circle_at_80%_28%,rgb(var(--brand-100)/0.46),transparent_34%)] dark:bg-[radial-gradient(circle_at_80%_28%,rgb(var(--brand-900)/0.16),transparent_35%)]">
+      <section id="continut" className="marketing-hero-shell relative isolate border-b border-[rgb(var(--border))]">
         <div aria-hidden="true" className="marketing-grid pointer-events-none absolute inset-0 -z-20 opacity-35" />
         <div aria-hidden="true" className="marketing-noise pointer-events-none absolute inset-0 -z-20 opacity-[0.07]" />
         <div aria-hidden="true" className="marketing-ambient pointer-events-none absolute left-[8%] top-24 -z-10 h-64 w-64 rounded-full bg-[rgb(var(--brand-300)/0.14)] blur-[110px] dark:bg-[rgb(var(--brand-700)/0.10)]" />
         <div className="mx-auto grid min-h-[calc(100svh-64px)] w-full max-w-[1280px] items-center gap-12 px-4 py-14 sm:px-6 md:py-20 lg:grid-cols-12 lg:px-8 xl:gap-16">
           <Reveal className="lg:col-span-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--brand-500)/0.42)] bg-[rgb(var(--brand-50)/0.78)] px-3.5 py-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--brand-800))] shadow-card dark:bg-[rgb(var(--brand-950)/0.62)] dark:text-[rgb(var(--brand-300))]">
-              <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Revenue recovery · sub control uman
+              <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Inteligență operațională · sub control uman
             </p>
             <h1 className="mt-7 max-w-[700px] text-[clamp(2.75rem,5.5vw,4.5rem)] font-semibold leading-[1.01] tracking-[-0.052em]">
-              Venitul nu se pierde doar în pipeline. <span className="text-[rgb(var(--primary))]">Se pierde între acțiuni.</span>
+              Vezi unde se blochează venitul. <span className="text-[rgb(var(--brand-400))]">Înainte să se piardă.</span>
             </h1>
             <p className="mt-6 max-w-[620px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-lg sm:leading-8">
-              ReveNew identifică oportunitățile comerciale rămase în urmă, clarifică responsabilitatea și transformă follow-up-ul într-un proces urmărit până la rezultat.
+              Pentru echipe B2B care vor să identifice oportunitățile rămase în urmă, să clarifice responsabilul și să decidă următoarea acțiune pe baza dovezilor.
             </p>
             <p className="mt-4 max-w-[650px] text-sm font-semibold leading-6 text-[rgb(var(--foreground))]">ReveNew recomandă, iar echipa ta decide. Nu este recuperare de creanțe: urmărește oportunități comerciale, nu datorii.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="#preturi" size="large" className="group shadow-[0_16px_38px_rgb(var(--brand-700)/0.16)]">Solicită Revenue Recovery Audit <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></Button>
+              <Button href="#preturi" size="large" className="group shadow-[0_16px_38px_rgb(var(--brand-700)/0.14)]">Solicită auditul controlat <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></Button>
               <Button href="#cum-functioneaza" variant="secondary" size="large">Vezi cum funcționează</Button>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-[rgb(var(--text-muted))]">
-              {["Fără promisiuni de venit", "Fără outreach autonom", "Date izolate pe spațiu de lucru"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" aria-hidden="true" />{item}</span>)}
+              {["Dovezi verificabile", "Aprobare umană", "Valoare estimată, nu venit confirmat"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" aria-hidden="true" />{item}</span>)}
             </div>
           </Reveal>
           <Reveal delay={120} className="pb-7 lg:col-span-6 lg:pb-0"><ProductPreview /></Reveal>
@@ -174,7 +167,7 @@ export default function LandingPage() {
       <section id="cum-functioneaza" className="scroll-mt-28 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
           <Reveal><SectionHeading eyebrow="Metoda ReveNew" title="Patru etape. Un fir operațional.">De la semnal la rezultat, fără rupturi de context.</SectionHeading></Reveal>
-          <div className="relative mt-10 grid gap-4 lg:grid-cols-4">
+          <div className="relative mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div aria-hidden="true" className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-[linear-gradient(90deg,transparent,rgb(var(--brand-500)/0.55),transparent)] lg:block" />
             {steps.map(([number, title, description], index) => (
               <Reveal key={title} delay={index * 80}>
@@ -237,30 +230,47 @@ export default function LandingPage() {
       </section>
 
       <section id="ce-primesti" className="scroll-mt-28 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
-        <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.72fr_1.28fr] lg:px-8">
+        <div className="mx-auto grid max-w-[1280px] items-center gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.72fr_1.28fr] lg:px-8">
           <Reveal>
-            <SectionHeading eyebrow="Ce primești" title="Control operațional, nu încă un strat de raportare.">ReveNew conectează semnalul comercial, persoana responsabilă, următorul pas și rezultatul într-o imagine pe care echipa o poate folosi zilnic.</SectionHeading>
+            <SectionHeading eyebrow="Inteligență operațională" title="O recomandare bună îți arată și de ce.">ReveNew ordonează riscurile din datele disponibile și păstrează traseul de la dovadă la acțiunea sigură.</SectionHeading>
             <div className="mt-6 rounded-panel border border-[rgb(var(--brand-500)/0.4)] bg-[rgb(var(--brand-50))] p-4 dark:bg-[rgb(var(--brand-950)/0.55)]">
-              <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Principiul de bază</p>
-              <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">Nicio valoare estimată nu este prezentată drept venit confirmat. Fiecare intervenție importantă păstrează context și control uman.</p>
+              <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Limita este vizibilă</p>
+              <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">Inteligența asistă decizia. Nu trimite mesaje, nu execută acțiuni externe și nu transformă estimările în venit confirmat.</p>
             </div>
           </Reveal>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {deliverables.map(([title, description], index) => (
-              <Reveal key={title} delay={index * 55} className={index === 0 || index === deliverables.length - 1 ? "sm:col-span-2" : ""}>
-                <article className={`marketing-card-lift h-full rounded-card border p-4 ${index === 0 ? "border-[rgb(var(--brand-500)/0.46)] bg-[linear-gradient(110deg,rgb(var(--brand-50)),rgb(var(--surface-elevated))_76%)] shadow-elevated dark:bg-[linear-gradient(110deg,rgb(var(--brand-950)/0.55),rgb(var(--surface-elevated))_76%)] sm:p-5" : index === deliverables.length - 1 ? "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] shadow-card"}`}>
-                  <div className="flex items-start gap-3"><CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><div><h3 className={index === 0 ? "text-lg font-semibold" : "font-semibold"}>{title}</h3><p className="mt-1.5 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{description}</p></div></div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal delay={80}>
+            <article className="ai-command-grid overflow-hidden rounded-[1.25rem] border border-[rgb(var(--brand-500)/0.34)] bg-[rgb(var(--surface-elevated))] p-5 shadow-elevated sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-4">
+                <div><p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Recomandare explicabilă</p><h3 className="mt-2 text-xl font-semibold">Follow-up întârziat</h3></div>
+                <span className="rounded-pill border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] px-3 py-1 text-xs font-semibold text-[rgb(var(--danger-text))]">Intervenție necesară</span>
+              </div>
+              <div className="ai-evidence-rail mt-5 grid gap-5 pl-5 sm:grid-cols-3">
+                {[
+                  ["Dovadă", "Termen depășit și ultima acțiune înregistrată."],
+                  ["De ce contează", "Continuitatea comercială poate fi pierdută."],
+                  ["Acțiune sigură", "Revizuiește oportunitatea înainte de orice trimitere."]
+                ].map(([title, description]) => <div key={title}><p className="text-xs font-bold uppercase tracking-[0.12em] text-[rgb(var(--brand-600))] dark:text-[rgb(var(--brand-300))]">{title}</p><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{description}</p></div>)}
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--border))] pt-4">
+                <p className="text-xs text-[rgb(var(--text-muted))]">Decizia finală și aprobarea rămân la echipă.</p>
+                <Button href={authPath("/login", "login")} variant="secondary" size="small">Vezi produsul <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+              </div>
+            </article>
+          </Reveal>
         </div>
       </section>
 
       <section id="portofoliu" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto grid max-w-[1280px] items-center gap-9 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.68fr_1.32fr] lg:px-8">
           <Reveal>
-            <SectionHeading eyebrow="Vizibilitate executivă" title="Separi estimarea de rezultatul confirmat.">Un portofoliu sănătos rămâne credibil când valoarea, progresul și intervențiile sunt explicate distinct.</SectionHeading>
+            <SectionHeading eyebrow="Audit controlat" title="Începi cu puține date. Decizi pe dovezi.">Primul audit poate folosi 20–50 de cazuri comerciale recente, inclusiv date anonimizate. Nu cere parole, acces complet la inbox sau conectarea Gmail ori Calendar.</SectionHeading>
+            <div className="mt-6 grid gap-3">
+              {[
+                ["Audit de recuperare venituri", "Clarifică expunerea estimată și blocajele curente."],
+                ["Pilot controlat · 14 zile", "Validează procesul, responsabilitățile și criteriile de succes."],
+                ["Proof-of-value", "Susține o decizie prudentă: continuă, ajustează sau oprește."]
+              ].map(([title, description], index) => <div key={title} className="flex gap-3 border-t border-[rgb(var(--border))] pt-3"><span className="text-xs font-bold text-[rgb(var(--primary))]">0{index + 1}</span><div><p className="font-semibold">{title}</p><p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p></div></div>)}
+            </div>
           </Reveal>
           <Reveal delay={80}><PortfolioSummaryPreview /></Reveal>
         </div>

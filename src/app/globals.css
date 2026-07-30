@@ -21,22 +21,22 @@
   --text-faint: 151 142 128;
   --sidebar-foreground: 29 28 25;
 
-  /* ReveNew yellow accent: vivid at the center, restrained at the edges. */
-  --brand-950: 40 35 4;
-  --brand-900: 62 53 5;
-  --brand-800: 91 77 4;
-  --brand-700: 126 106 3;
-  --brand-600: 177 150 6;
-  --brand-500: 241 210 23;
-  --brand-400: 230 200 74;
-  --brand-300: 236 217 120;
-  --brand-100: 254 248 209;
-  --brand-50: 255 253 239;
-  --gold-700: 126 106 3;
-  --gold-500: 241 210 23;
-  --gold-300: 236 217 120;
-  --gold-100: 254 248 209;
-  --gold-50: 255 253 239;
+  /* ReveNew antique-gold accent: decisive on actions, quiet on large surfaces. */
+  --brand-950: 39 33 9;
+  --brand-900: 59 49 12;
+  --brand-800: 92 75 17;
+  --brand-700: 128 103 24;
+  --brand-600: 171 139 43;
+  --brand-500: 214 183 74;
+  --brand-400: 226 201 104;
+  --brand-300: 235 218 155;
+  --brand-100: 249 241 207;
+  --brand-50: 253 250 239;
+  --gold-700: 128 103 24;
+  --gold-500: 214 183 74;
+  --gold-300: 235 218 155;
+  --gold-100: 249 241 207;
+  --gold-50: 253 250 239;
   --primary: var(--brand-700);
   --primary-hover: var(--brand-800);
   --primary-active: var(--brand-900);
@@ -116,19 +116,19 @@
 
 .dark {
   color-scheme: dark;
-  --background: 13 14 15;
-  --background-soft: 18 19 20;
-  --surface: 23 24 25;
-  --surface-subtle: 29 30 31;
-  --surface-muted: 36 37 38;
-  --surface-elevated: 32 33 34;
-  --sidebar: 16 17 18;
-  --border: 46 47 48;
-  --border-strong: 67 65 61;
+  --background: 13 14 14;
+  --background-soft: 18 19 19;
+  --surface: 23 24 24;
+  --surface-subtle: 29 30 30;
+  --surface-muted: 36 37 37;
+  --surface-elevated: 32 33 33;
+  --sidebar: 16 17 17;
+  --border: 48 48 46;
+  --border-strong: 72 69 63;
   --foreground: 243 239 230;
   --text-secondary: 205 201 192;
-  --text-muted: 159 155 146;
-  --text-faint: 113 111 106;
+  --text-muted: 169 165 155;
+  --text-faint: 125 121 114;
   --sidebar-foreground: 243 239 230;
   --primary: var(--brand-400);
   --primary-hover: var(--brand-300);
@@ -279,6 +279,30 @@ body {
 
 .marketing-ambient {
   animation: revenew-hero-orbit 12s var(--ease-standard) infinite;
+}
+
+.marketing-hero-shell {
+  background:
+    linear-gradient(90deg, rgb(var(--background)) 0%, rgb(var(--background) / 0.96) 48%, rgb(var(--brand-950) / 0.16) 100%),
+    radial-gradient(circle at 78% 22%, rgb(var(--brand-500) / 0.1), transparent 34rem);
+}
+
+.marketing-editorial-rule {
+  background: linear-gradient(90deg, rgb(var(--brand-500) / 0.72), rgb(var(--brand-500) / 0.08) 62%, transparent);
+}
+
+.ai-evidence-rail {
+  position: relative;
+}
+
+.ai-evidence-rail::before {
+  position: absolute;
+  inset-block: 1rem;
+  left: 0;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to bottom, rgb(var(--brand-400) / 0.9), rgb(var(--brand-500) / 0.12));
+  content: "";
 }
 
 *::-webkit-scrollbar {

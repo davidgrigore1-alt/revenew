@@ -127,7 +127,7 @@ function RecommendationCard({
   position: number;
 }) {
   return (
-    <article className="flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
+    <article className="marketing-card-lift flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Badge tone={recommendationTone(recommendation)} size="small">{recommendation.typeLabel}</Badge>
         <span className="text-xs font-semibold text-[rgb(var(--text-faint))]">Prioritatea {position}</span>
@@ -238,7 +238,7 @@ export default async function AiControlCenterPage() {
             <h2 id="operational-intelligence-summary" className="mt-5 max-w-3xl text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">{intelligence.headline}</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{intelligence.observation}</p>
 
-            <div className="mt-6 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+            <div className="ai-evidence-rail mt-6 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 pl-6 sm:p-5 sm:pl-7">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Decizia care merită atenție</p>
               <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em]">{intelligence.decisionTitle}</h3>
               <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Dovadă:</strong> {intelligence.evidenceLabel}</span></p>

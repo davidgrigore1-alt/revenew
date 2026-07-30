@@ -46,7 +46,7 @@ test("marketing registry defines the approved anchors in order", () => {
 
   assert.equal(JSON.stringify(marketingSections.map((item) => item.id)), JSON.stringify(["cum-functioneaza", "pentru-cine", "ce-primesti", "control", "preturi", "intrebari"]));
   assert.equal(JSON.stringify(marketingSections.map((item) => item.href)), JSON.stringify(["#cum-functioneaza", "#pentru-cine", "#ce-primesti", "#control", "#preturi", "#intrebari"]));
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Cum funcționează", "Pentru cine", "Ce primești", "Control și siguranță", "Prețuri", "Întrebări"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Cum funcționează", "Pentru cine", "Inteligență", "Control și siguranță", "Prețuri", "Întrebări"]));
 });
 
 test("landing page uses centralized navigation and truthful pricing/copy", () => {

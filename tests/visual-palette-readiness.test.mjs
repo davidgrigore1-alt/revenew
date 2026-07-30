@@ -7,10 +7,10 @@ const panelUrl = new URL("../src/components/dashboard/PremiumPanel.tsx", import.
 const memoryUrl = new URL("../src/components/company/CompanyBusinessMemory.tsx", import.meta.url);
 const gitignoreUrl = new URL("../.gitignore", import.meta.url);
 
-test("dark theme reserves vivid yellow for emphasis and softens large primary surfaces", async () => {
+test("dark theme uses restrained antique gold for emphasis and large primary surfaces", async () => {
   const css = await readFile(globalsUrl, "utf8");
-  assert.match(css, /--brand-500:\s*241 210 23;/);
-  assert.match(css, /--brand-400:\s*230 200 74;/);
+  assert.match(css, /--brand-500:\s*214 183 74;/);
+  assert.match(css, /--brand-400:\s*226 201 104;/);
   assert.match(css, /\.dark\s*\{[\s\S]*?--primary:\s*var\(--brand-400\);/);
   assert.match(css, /--primary-foreground:\s*var\(--brand-950\);/);
   assert.match(css, /--primary-hover:\s*var\(--brand-300\);/);
