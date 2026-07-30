@@ -142,4 +142,6 @@ Schimbarea preferinței redeschide data, intervalul și persoana înainte de han
 
 ## Următorul pas
 
-Următoarea iterație recomandată este un protocol local de pilot cu evaluatori umani: checklist de prezentare, fișe anonime de observație și criterii explicite de continuare, ajustare sau oprire. Acesta trebuie să reutilizeze rezultatele deterministe, fără integrare live, persistență de date personale sau afirmații despre venit garantat.
+Protocolul local pentru 3–5 evaluatori este documentat în [Appointment Control Pilot Validation Protocol](appointment-control-validation-protocol.md), împreună cu [formularul minim de feedback](appointment-control-feedback-template.md) și [scriptul comercial sigur](sales/appointment-control-demo-script.md).
+
+După sesiuni, următorul pas este sintetizarea constatărilor anonimizate și aplicarea criteriilor continuă / ajustează / oprește. Nu se recomandă o integrare live înainte ca rezultatul să justifice un pilot limitat.

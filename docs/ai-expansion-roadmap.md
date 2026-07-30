@@ -146,6 +146,10 @@ Evaluatorul local `src/lib/text-receptionist-evaluation.ts` acoperă cererea com
 
 Interfața permite redeschiderea controlată a preferințelor înainte de handoff. Propunerile anterioare sunt eliminate și recalculate; o propunere deja predată operatorului nu este modificată implicit.
 
+#### Stare curentă — validare umană locală
+
+Protocolul [Appointment Control Pilot Validation](appointment-control-validation-protocol.md) definește sesiuni de 15 minute cu 3–5 evaluatori, scenarii operaționale, feedback minimizat și criterii continuă / ajustează / oprește. Rezultatele validează numai claritatea și interesul pentru un pilot; nu demonstrează venit, ROI, booking live sau product-market fit.
+
 ### Etapa G — Recepționer AI real
 
 Necesită înainte de producție:

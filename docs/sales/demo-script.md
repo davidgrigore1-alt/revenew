@@ -71,6 +71,8 @@ Pentru discuția de închidere a pilotului, deschide `/reports/pilot-proof-of-va
 
 > Din situațiile prezentate, care seamănă cel mai mult cu procesul dumneavoastră: follow-up întârziat, responsabil neclar, aprobare blocată sau rezultat neconfirmat? Ar merita să verificăm această ipoteză pe 20–50 de cazuri anonimizate?
 
+Pentru validarea separată a fluxului Appointment Control folosește [scriptul dedicat](appointment-control-demo-script.md) și [protocolul de 15 minute](../appointment-control-validation-protocol.md). Nu îl combina cu traseul principal de cinci minute dacă interlocutorul nu evaluează procese de programare.
+
 ## Ce nu afirmăm
 
 - Nu afirmăm venit garantat, ROI promis sau recuperare automată.
