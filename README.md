@@ -131,7 +131,7 @@ Fluxul recomandat este: eșantion anonimizabil de 20–50 de înregistrări → 
 
 ## Outreach și discovery comercial
 
-Pentru primele conversații cu clienți folosește [playbook-ul de outreach](docs/sales/outreach-playbook.md), [scriptul apelului de discovery](docs/sales/discovery-call-script.md), [scriptul demonstrației](docs/sales/demo-script.md), [răspunsurile la obiecții](docs/sales/objection-handling.md), [ghidul primelor 50 de companii prospect](docs/sales/first-50-prospect-list-guide.md) și [draftul de ofertă și prețuri](docs/sales/offer-and-pricing-draft.md).
+Pentru primele conversații cu clienți folosește [playbook-ul de outreach](docs/sales/outreach-playbook.md), [scriptul apelului de discovery](docs/sales/discovery-call-script.md), [scriptul demonstrației de 5 minute](docs/sales/demo-script.md), [scriptul complet de 7–10 minute](docs/sales/full-buyer-demo-script.md), [checklistul de pregătire](docs/sales/demo-readiness-checklist.md), [răspunsurile la obiecții](docs/sales/objection-handling.md), [ghidul primelor 50 de companii prospect](docs/sales/first-50-prospect-list-guide.md) și [draftul de ofertă și prețuri](docs/sales/offer-and-pricing-draft.md).
 
 ## Fundația pentru extinderea AI
 
