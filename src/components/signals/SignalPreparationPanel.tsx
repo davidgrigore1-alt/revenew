@@ -89,7 +89,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
       ) : (
         <div className="grid gap-2 p-4 sm:p-5">
           <p className="text-sm font-medium">Pregătirea pornește numai după acțiunea ta explicită.</p>
-          <p className="text-sm leading-5 text-[rgb(var(--text-muted))]">Dacă providerul AI nu este disponibil, ReveNew folosește reguli locale și marchează clar rezultatul.</p>
+          <p className="text-sm leading-5 text-[rgb(var(--text-muted))]">Dacă serviciul de analiză asistată nu este disponibil, ReveNew folosește reguli locale și marchează clar rezultatul.</p>
         </div>
       )}
 

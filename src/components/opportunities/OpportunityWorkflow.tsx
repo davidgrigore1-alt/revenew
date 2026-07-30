@@ -110,6 +110,8 @@ export function OpportunityWorkflow({
   const [recipientEmail, setRecipientEmail] = useState(opportunity.contact?.email ?? "");
   const [ccEmail, setCcEmail] = useState("");
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const [followUpTitle, setFollowUpTitle] = useState(`Follow-up pentru ${opportunity.title}`);
   const [followUpDate, setFollowUpDate] = useState(applicationDateKey(new Date(Date.now() + 3 * 86400000)));
   const [followUpTime, setFollowUpTime] = useState("09:00");
@@ -122,7 +124,7 @@ export function OpportunityWorkflow({
   const [pendingLocalDocument, setPendingLocalDocument] = useState<PendingLocalDocument | null>(null);
   const [highlightedDocumentId, setHighlightedDocumentId] = useState("");
   const pendingScrollToGeneratedDocumentId = useRef<string | null>(null);
-  const documentsSectionRef = useRef<HTMLDivElement>(null);
+  const documentsSectionRef = useRef<HTMLDetailsElement>(null);
 
   const source = opportunity.source ?? getOpportunityTypeLabel(opportunity.type);
   const savedDocuments = opportunity.documents.map((document) => ({ ...document, ...(documentOverrides[document.id] ?? {}) }));
@@ -163,6 +165,16 @@ export function OpportunityWorkflow({
     showToast({ title: "Acțiunea nu a fost aplicată", description: safeError, tone: "danger" });
   }, [pendingLocalDocument, safeError, showToast]);
 
+  useEffect(() => {
+    function openTargetedSection() {
+      if (window.location.hash === "#opportunity-timeline") setEvidenceOpen(true);
+      if (window.location.hash === "#opportunity-documents" || window.location.hash === "#documents") setDocumentsOpen(true);
+    }
+    openTargetedSection();
+    window.addEventListener("hashchange", openTargetedSection);
+    return () => window.removeEventListener("hashchange", openTargetedSection);
+  }, []);
+
   function restoreScrollPosition(top: number, left = 0) {
     requestAnimationFrame(() => {
       window.scrollTo({ top, left, behavior: "auto" });
@@ -178,6 +190,7 @@ export function OpportunityWorkflow({
     window.setTimeout(() => {
       if (pendingScrollToGeneratedDocumentId.current !== documentId) return;
       pendingScrollToGeneratedDocumentId.current = null;
+      setDocumentsOpen(true);
       documentsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
   }
@@ -406,6 +419,7 @@ export function OpportunityWorkflow({
   }
 
   function openDocument(document: GeneratedDocument | OpportunityDocument) {
+    setDocumentsOpen(true);
     setSelectedDocumentId(document.id);
     setEditorTitle(document.title);
     setEditorContent(document.content ?? "");
@@ -530,16 +544,21 @@ export function OpportunityWorkflow({
         {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Dovezi'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
       </nav>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">Semnale de evaluare</span>
-        <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-semibold">{getOpportunityTypeLabel(opportunity.type)}</span>
-        <StatusBadge status={status} />
-        <ScoreBadge label="Fit" score={opportunity.fitScore} />
-        <ScoreBadge label="Urgență" score={opportunity.urgencyScore} />
-        <ScoreBadge label="Valoare" score={opportunity.moneyScore} />
-        <ScoreBadge label="Încredere" score={opportunity.confidenceScore} />
-        <span className="ml-auto text-xs text-[rgb(var(--text-muted))]">Scorurile susțin prioritizarea; nu confirmă venit.</span>
-      </div>
+      <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+        <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+          <span>Evaluare și date operaționale <span className="font-normal text-[rgb(var(--text-muted))]">· consultă la nevoie</span></span>
+          <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="flex flex-wrap items-center gap-2 border-t border-[rgb(var(--border))] px-4 py-4">
+          <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 py-1 text-xs font-semibold">{getOpportunityTypeLabel(opportunity.type)}</span>
+          <StatusBadge status={status} />
+          <ScoreBadge label="Fit" score={opportunity.fitScore} />
+          <ScoreBadge label="Urgență" score={opportunity.urgencyScore} />
+          <ScoreBadge label="Valoare" score={opportunity.moneyScore} />
+          <ScoreBadge label="Încredere" score={opportunity.confidenceScore} />
+          <span className="w-full text-xs text-[rgb(var(--text-muted))] sm:ml-auto sm:w-auto">Scorurile susțin prioritizarea; nu confirmă venit.</span>
+        </div>
+      </details>
 
       <div id="workflow-actions" className="hidden scroll-mt-24 target:block">
         <DataCard title="Pregătește un document" description={workflowDescription} action={<a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a>}>
@@ -617,25 +636,31 @@ export function OpportunityWorkflow({
 
       <div id="action-contacts" className="hidden scroll-mt-24 target:block has-[:target]:block"><span id="opportunity-contacts" className="scroll-mt-24" /><div className="mb-3 flex justify-end"><a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a></div><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <DataCard title="Rezumat de lucru">
-          <p className="text-sm leading-6 text-[rgb(var(--text-secondary))]">{opportunity.summary}</p>
-        </DataCard>
-        <DataCard title="De ce contează">
-          <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
-            {opportunity.relevance.map((item, index) => (
-              <li key={`${index}-${item}`}>{item}</li>
-            ))}
-          </ul>
-        </DataCard>
-        <DataCard title="Riscuri">
-          <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
-            {opportunity.risks.map((item, index) => (
-              <li key={`${index}-${item}`}>{item}</li>
-            ))}
-          </ul>
-        </DataCard>
-      </div>
+      <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+        <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+          <span>Context comercial complet <span className="font-normal text-[rgb(var(--text-muted))]">· rezumat, relevanță și riscuri</span></span>
+          <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 lg:grid-cols-3">
+          <DataCard title="Rezumat de lucru">
+            <p className="text-sm leading-6 text-[rgb(var(--text-secondary))]">{opportunity.summary}</p>
+          </DataCard>
+          <DataCard title="De ce contează">
+            <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
+              {opportunity.relevance.map((item, index) => (
+                <li key={`${index}-${item}`}>{item}</li>
+              ))}
+            </ul>
+          </DataCard>
+          <DataCard title="Riscuri">
+            <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
+              {opportunity.risks.map((item, index) => (
+                <li key={`${index}-${item}`}>{item}</li>
+              ))}
+            </ul>
+          </DataCard>
+        </div>
+      </details>
 
         <div id="workflow-actions-list" className="scroll-mt-24"><DataCard title="Acțiuni programate">
         <div className="mb-4">
@@ -703,7 +728,15 @@ export function OpportunityWorkflow({
         )}
       </DataCard></div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <details id="opportunity-timeline" open={evidenceOpen} onToggle={(event) => setEvidenceOpen(event.currentTarget.open)} className="group scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+        <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-card px-4 py-3 marker:hidden sm:px-5">
+          <span>
+            <span className="block text-sm font-semibold">Dovezi și istoric</span>
+            <span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">{opportunity.timeline.length} evenimente verificabile · contextul original rămâne disponibil</span>
+          </span>
+          <span aria-hidden="true" className="shrink-0 text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+        </summary>
+      <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 xl:grid-cols-[0.9fr_1.1fr]">
         <DataCard title="Context inițial" description="Textul sursă este păstrat pentru verificare și nu înlocuiește analiza umană.">
           <details className="group rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3">
             <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-1 text-sm font-semibold text-[rgb(var(--foreground))] marker:hidden">
@@ -715,7 +748,7 @@ export function OpportunityWorkflow({
             </p>
           </details>
         </DataCard>
-        <div id="opportunity-timeline" className="scroll-mt-24"><DataCard title="Dovezi și istoric" description="Evenimente comerciale verificabile, ordonate în contextul oportunității.">
+        <div><DataCard title="Istoric și evenimente" description="Evenimente comerciale verificabile, ordonate în contextul oportunității.">
           <div className="space-y-4">
             {opportunity.timeline.length > 0 ? (
               opportunity.timeline.map((event) => (
@@ -743,8 +776,17 @@ export function OpportunityWorkflow({
           </div>
         </DataCard></div>
       </div>
+      </details>
 
-      <div id="opportunity-documents" ref={documentsSectionRef} className="scroll-mt-24">
+      <details id="opportunity-documents" ref={documentsSectionRef} open={documentsOpen} onToggle={(event) => setDocumentsOpen(event.currentTarget.open)} className="group scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+      <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-card px-4 py-3 marker:hidden sm:px-5">
+        <span>
+          <span className="block text-sm font-semibold">Documente și drafturi</span>
+          <span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">{allDocuments.length} documente · revizuire umană înainte de orice utilizare</span>
+        </span>
+        <span aria-hidden="true" className="shrink-0 text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <div className="border-t border-[rgb(var(--border))] p-4">
       <span id="documents" className="scroll-mt-24" />
       <DataCard
         title="Documente generate"
@@ -815,7 +857,7 @@ export function OpportunityWorkflow({
                   Deschide în client email
                 </a>
               ) : null}
-              <Link href={`/outreach/${selectedDocument.id}`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-300">Deschide Follow-up Studio</Link>
+              <Link href={`/outreach/${selectedDocument.id}`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-300">Deschide Studio de follow-up</Link>
               {!['approved', 'ready_to_send'].includes(selectedDocument.status) ? <button type="button" onClick={() => saveDocumentEdits("approved")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Aprobă draftul</button> : null}
               {selectedDocument.status === "approved" ? <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Pregătit pentru utilizare</button> : null}
               <a
@@ -857,6 +899,7 @@ export function OpportunityWorkflow({
         )}
       </DataCard>
       </div>
+      </details>
     </div>
   );
 }

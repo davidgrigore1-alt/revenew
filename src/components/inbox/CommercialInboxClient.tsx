@@ -190,8 +190,15 @@ function fieldClasses() {
   return "min-h-11 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]";
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]"><span>{label}</span>{children}</label>;
+function Field({ label, required = false, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+  return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]">
+    <span className="flex flex-wrap items-center justify-between gap-2">
+      <span>{label}</span>
+      <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span>
+    </span>
+    {hint ? <span className="text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">{hint}</span> : null}
+    {children}
+  </label>;
 }
 
 function urgencyRank(value?: RecoverabilityUrgency | null) {
@@ -303,6 +310,9 @@ export function CommercialInboxClient({
     setPostponeUntil("");
     setNotice("");
     setError("");
+    if (window.matchMedia("(max-width: 1279px)").matches) {
+      window.setTimeout(() => document.getElementById("signal-review-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    }
   }
 
   function updateCreateForm(patch: Partial<CreateForm>) {
@@ -316,7 +326,11 @@ export function CommercialInboxClient({
     });
   }
 
-  function runAction(action: () => Promise<{ ok: boolean; message?: string; signal?: CommercialSignal; fallbackUsed?: boolean; opportunityId?: string; alreadyConverted?: boolean }>, successMessage: string) {
+  function runAction(
+    action: () => Promise<{ ok: boolean; message?: string; signal?: CommercialSignal; fallbackUsed?: boolean; opportunityId?: string; alreadyConverted?: boolean }>,
+    successMessage: string,
+    nextRoute?: { label: string; href: string }
+  ) {
     setNotice("");
     setError("");
     startTransition(async () => {
@@ -338,7 +352,7 @@ export function CommercialInboxClient({
         title: result.opportunityId ? "Decizie internă înregistrată" : "Actualizare salvată",
         description: message,
         tone: "success",
-        action: result.opportunityId ? { label: "Revizuiește oportunitatea", href: `/opportunities/${result.opportunityId}` } : undefined
+        action: result.opportunityId ? { label: "Revizuiește oportunitatea", href: `/opportunities/${result.opportunityId}` } : nextRoute
       });
     });
   }
@@ -381,7 +395,7 @@ export function CommercialInboxClient({
         setCreateOpen(false);
       }
       return result;
-    }, "Semnalul a fost salvat. Revizuiește elementul selectat și generează analiza înainte de orice decizie.");
+    }, "Semnalul a fost salvat. Revizuiește elementul selectat și generează analiza înainte de orice decizie.", { label: "Revizuiește semnalul", href: "#signal-review-panel" });
   }
 
   function saveReviewFields() {
@@ -403,7 +417,7 @@ export function CommercialInboxClient({
       matchedContactId: reviewForm.contactId,
       linkedOpportunityId: reviewForm.opportunityId,
       reviewedDraft: formatRecoveryDraft(reviewForm.draftSubject, reviewForm.draftBody)
-    }), "Câmpurile revizuite au fost salvate.");
+    }), "Câmpurile revizuite au fost salvate. Următoarea verificare rămâne în Activitatea mea.", { label: "Deschide Activitatea mea", href: "/today" });
   }
 
   function decide(decision: "dismissed" | "duplicate" | "postponed") {
@@ -449,7 +463,7 @@ export function CommercialInboxClient({
 
       <div className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:hidden" role="group" aria-label="Fluxul de la semnal la oportunitate">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Flux controlat</p>
-        <p className="mt-2 text-sm font-semibold">Semnal <span aria-hidden="true">→</span> Revizuire <span aria-hidden="true">→</span> Decizie <span aria-hidden="true">→</span> Oportunitate</p>
+        <p className="mt-2 text-sm font-semibold">Semnal primit <span aria-hidden="true">→</span> Revizuire <span aria-hidden="true">→</span> Decizie umană <span aria-hidden="true">→</span> Oportunitate</p>
         <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Nimic nu este convertit sau trimis fără confirmarea echipei.</p>
       </div>
       <ol className="hidden overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
@@ -458,7 +472,7 @@ export function CommercialInboxClient({
 
       <DataSummaryStrip label="Rezumat Inbox Comercial" items={[
         { label: "În revizuire", value: awaitingReview.length, note: "Necesită decizia echipei.", tone: "warning" },
-        { label: "Potențial estimat", value: estimatedUnderReview, note: "Grupat pe monedă; separat de venitul confirmat.", tone: "brand" },
+        { label: "Valoare estimată, neconfirmată", value: estimatedUnderReview, note: "Grupată pe monedă; separat de venitul confirmat.", tone: "brand" },
         { label: "Convertite", value: converted, note: "Aprobate de echipă.", tone: "success" },
         { label: "Control extern", value: "Manual", note: "Nicio trimitere automată.", tone: "neutral" }
       ]} />
@@ -471,26 +485,32 @@ export function CommercialInboxClient({
       {createOpen ? (
         <DataCard title="Adaugă un semnal comercial" description="Copiază mesajul sau nota exact așa cum a fost primită. ReveNew pregătește contextul, iar tu alegi ce se aplică.">
           <form onSubmit={handleCreate} noValidate className="grid gap-5">
-            <div className="grid gap-4 md:grid-cols-3">
-              <Field label="Titlu"><Input maxLength={240} value={createForm.title} onChange={(event) => updateCreateForm({ title: event.target.value })} invalid={Boolean(createErrors.title)} aria-describedby={createErrors.title ? "signal-title-error" : undefined} />{createErrors.title ? <span id="signal-title-error" className="text-xs text-[rgb(var(--danger-text))]">{createErrors.title}</span> : null}</Field>
-              <Field label="Sursă"><Select value={createForm.source} onChange={(event) => updateCreateForm({ source: event.target.value as CommercialSignalSource })} invalid={Boolean(createErrors.source)}>{captureSources.map((value) => <option key={value} value={value}>{sourceLabels[value]}</option>)}</Select></Field>
-              <Field label="Referință sursă"><Input maxLength={500} value={createForm.sourceReference} onChange={(event) => setCreateForm({ ...createForm, sourceReference: event.target.value })} placeholder="Opțional: subiect, ID intern sau fișier" /></Field>
-              <Field label="Companie menționată"><Input value={createForm.company} onChange={(event) => setCreateForm({ ...createForm, company: event.target.value })} /></Field>
-              <Field label="Contact menționat"><Input value={createForm.contact} onChange={(event) => setCreateForm({ ...createForm, contact: event.target.value })} /></Field>
-              <Field label="Email"><Input type="text" inputMode="email" value={createForm.email} onChange={(event) => updateCreateForm({ email: event.target.value })} invalid={Boolean(createErrors.email)} />{createErrors.email ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.email}</span> : null}</Field>
-              <Field label="Telefon"><Input value={createForm.phone} onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })} /></Field>
-              <Field label="Valoare estimată"><Input type="number" min="0" value={createForm.value} onChange={(event) => updateCreateForm({ value: event.target.value })} invalid={Boolean(createErrors.value)} />{createErrors.value ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.value}</span> : null}</Field>
-              <Field label="Monedă"><Select value={createForm.currency} onChange={(event) => setCreateForm({ ...createForm, currency: event.target.value })}><option>RON</option><option>EUR</option><option>USD</option></Select></Field>
-              <Field label="Data semnalului"><Input type="datetime-local" value={createForm.lastInteractionAt} onChange={(event) => setCreateForm({ ...createForm, lastInteractionAt: event.target.value })} /></Field>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Titlu" required hint="Identifică pe scurt problema comercială."><Input maxLength={240} value={createForm.title} onChange={(event) => updateCreateForm({ title: event.target.value })} invalid={Boolean(createErrors.title)} aria-describedby={createErrors.title ? "signal-title-error" : undefined} />{createErrors.title ? <span id="signal-title-error" className="text-xs text-[rgb(var(--danger-text))]">{createErrors.title}</span> : null}</Field>
+              <Field label="Sursă" required hint="Păstrează proveniența dovezii."><Select value={createForm.source} onChange={(event) => updateCreateForm({ source: event.target.value as CommercialSignalSource })} invalid={Boolean(createErrors.source)}>{captureSources.map((value) => <option key={value} value={value}>{sourceLabels[value]}</option>)}</Select></Field>
             </div>
-            <Field label="Text sau notă"><Textarea rows={5} maxLength={12000} value={createForm.context} onChange={(event) => updateCreateForm({ context: event.target.value })} invalid={Boolean(createErrors.context)} aria-describedby={createErrors.context ? "signal-context-error" : "signal-context-help"} placeholder="Lipește emailul, mesajul WhatsApp sau nota după apel." /><span id={createErrors.context ? "signal-context-error" : "signal-context-help"} className={`text-xs ${createErrors.context ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`}>{createErrors.context ?? "Textul rămâne context neconfirmat și nu declanșează nicio acțiune externă."}</span></Field>
-            <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5 md:grid-cols-2 xl:grid-cols-5">
-              <Field label="Companie CRM"><Select value={createForm.organizationId} onChange={(event) => setCreateForm({ ...createForm, organizationId: event.target.value, contactId: "", opportunityId: "" })}><option value="">Leagă ulterior</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</Select></Field>
-              <Field label="Contact CRM"><Select value={createForm.contactId} onChange={(event) => setCreateForm({ ...createForm, contactId: event.target.value })}><option value="">Leagă ulterior</option>{contacts.filter((contact) => !createForm.organizationId || !contact.organizationId || contact.organizationId === createForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}</option>)}</Select></Field>
-              <Field label="Oportunitate"><Select value={createForm.opportunityId} onChange={(event) => setCreateForm({ ...createForm, opportunityId: event.target.value })}><option value="">Creează sau leagă ulterior</option>{opportunities.filter((opportunity) => !createForm.organizationId || !opportunity.organizationId || opportunity.organizationId === createForm.organizationId).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{opportunity.title}</option>)}</Select></Field>
-              <Field label="Responsabil"><Select value={createForm.ownerProfileId} onChange={(event) => setCreateForm({ ...createForm, ownerProfileId: event.target.value })}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</Select></Field>
-              <Field label="Termen orientativ"><Input type="date" value={createForm.dueAt} onChange={(event) => setCreateForm({ ...createForm, dueAt: event.target.value })} /></Field>
-            </div>
+            <Field label="Text sau notă" required hint="Dovada de bază pentru revizuire; poate fi anonimizată pentru audit."><Textarea rows={5} maxLength={12000} value={createForm.context} onChange={(event) => updateCreateForm({ context: event.target.value })} invalid={Boolean(createErrors.context)} aria-describedby={createErrors.context ? "signal-context-error" : "signal-context-help"} placeholder="Lipește emailul, mesajul WhatsApp sau nota după apel." /><span id={createErrors.context ? "signal-context-error" : "signal-context-help"} className={`text-xs ${createErrors.context ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`}>{createErrors.context ?? "Textul rămâne context neconfirmat și nu declanșează nicio acțiune externă."}</span></Field>
+            <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+              <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                <span>Completează datele opționale <span className="font-normal text-[rgb(var(--text-muted))]">· companie, contact, valoare și legături</span></span>
+                <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2 xl:grid-cols-3">
+                <Field label="Referință sursă"><Input maxLength={500} value={createForm.sourceReference} onChange={(event) => setCreateForm({ ...createForm, sourceReference: event.target.value })} placeholder="Subiect, ID intern sau fișier" /></Field>
+                <Field label="Companie menționată" hint="Ajută la potrivire și evitarea duplicatelor."><Input value={createForm.company} onChange={(event) => setCreateForm({ ...createForm, company: event.target.value })} /></Field>
+                <Field label="Contact menționat"><Input value={createForm.contact} onChange={(event) => setCreateForm({ ...createForm, contact: event.target.value })} /></Field>
+                <Field label="Email"><Input type="text" inputMode="email" value={createForm.email} onChange={(event) => updateCreateForm({ email: event.target.value })} invalid={Boolean(createErrors.email)} />{createErrors.email ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.email}</span> : null}</Field>
+                <Field label="Telefon"><Input value={createForm.phone} onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })} /></Field>
+                <Field label="Valoare estimată" hint="Este o estimare, nu venit confirmat."><Input type="number" min="0" value={createForm.value} onChange={(event) => updateCreateForm({ value: event.target.value })} invalid={Boolean(createErrors.value)} />{createErrors.value ? <span className="text-xs text-[rgb(var(--danger-text))]">{createErrors.value}</span> : null}</Field>
+                <Field label="Monedă"><Select value={createForm.currency} onChange={(event) => setCreateForm({ ...createForm, currency: event.target.value })}><option>RON</option><option>EUR</option><option>USD</option></Select></Field>
+                <Field label="Data semnalului"><Input type="datetime-local" value={createForm.lastInteractionAt} onChange={(event) => setCreateForm({ ...createForm, lastInteractionAt: event.target.value })} /></Field>
+                <Field label="Companie CRM"><Select value={createForm.organizationId} onChange={(event) => setCreateForm({ ...createForm, organizationId: event.target.value, contactId: "", opportunityId: "" })}><option value="">Leagă ulterior</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</Select></Field>
+                <Field label="Contact CRM"><Select value={createForm.contactId} onChange={(event) => setCreateForm({ ...createForm, contactId: event.target.value })}><option value="">Leagă ulterior</option>{contacts.filter((contact) => !createForm.organizationId || !contact.organizationId || contact.organizationId === createForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}</option>)}</Select></Field>
+                <Field label="Oportunitate"><Select value={createForm.opportunityId} onChange={(event) => setCreateForm({ ...createForm, opportunityId: event.target.value })}><option value="">Creează sau leagă ulterior</option>{opportunities.filter((opportunity) => !createForm.organizationId || !opportunity.organizationId || opportunity.organizationId === createForm.organizationId).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{opportunity.title}</option>)}</Select></Field>
+                <Field label="Responsabil"><Select value={createForm.ownerProfileId} onChange={(event) => setCreateForm({ ...createForm, ownerProfileId: event.target.value })}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</Select></Field>
+                <Field label="Termen orientativ"><Input type="date" value={createForm.dueAt} onChange={(event) => setCreateForm({ ...createForm, dueAt: event.target.value })} /></Field>
+              </div>
+            </details>
             <div className="flex flex-wrap items-center gap-3"><Button type="submit" disabled={isPending}>Salvează semnalul</Button><span className="text-xs text-[rgb(var(--text-muted))]">Salvarea creează doar un element intern de revizuit.</span></div>
           </form>
         </DataCard>
@@ -530,7 +550,7 @@ export function CommercialInboxClient({
                 <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{signal.contactCompany || signal.contactName || "Companie neconfirmată"}</p>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
                   <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Scor</span><strong>{signal.recoverabilityScore ?? "—"}</strong></div>
-                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Potențial</span><strong>{signal.estimatedRecoverableValue === null || signal.estimatedRecoverableValue === undefined ? "—" : formatCurrency(Number(signal.estimatedRecoverableValue), signal.currency)}</strong></div>
+                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Valoare estimată</span><strong>{signal.estimatedRecoverableValue === null || signal.estimatedRecoverableValue === undefined ? "—" : formatCurrency(Number(signal.estimatedRecoverableValue), signal.currency)}</strong></div>
                   <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Stare</span><strong>{reviewLabels[signal.reviewStatus]}</strong></div>
                 </div>
                 <p className="mt-3 line-clamp-2 text-sm text-[rgb(var(--muted-foreground))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
@@ -550,6 +570,7 @@ export function CommercialInboxClient({
           </div>
         </DataCard>
 
+        <div id="signal-review-panel" className="scroll-mt-24">
         <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description={reviewForm.opportunityId ? "Verifică datele și confirmă acțiunea internă pentru oportunitatea existentă. Nu se trimite niciun mesaj." : "Verifică datele și confirmă oportunitatea nouă. Nu se trimite niciun mesaj."}>
           {selectedSignal ? (
             <div className="grid gap-6">
@@ -566,13 +587,42 @@ export function CommercialInboxClient({
               {selectedSignal.analysisStatus === "completed" ? (
                 <DataSummaryStrip label="Interpretarea semnalului selectat" items={[
                   { label: "Scor recuperabilitate", value: `${selectedSignal.recoverabilityScore ?? 0}/100`, note: "Prioritate estimată; necesită revizuire.", tone: "brand" },
-                  { label: "Potențial estimat", value: formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency), note: "Nu reprezintă venit confirmat.", tone: "neutral" },
+                  { label: "Valoare estimată, neconfirmată", value: formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency), note: "Nu reprezintă venit confirmat.", tone: "neutral" },
                   { label: "Încredere", value: selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută", note: selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare.", tone: "warning" },
                   { label: "Decizie", value: "Umană", note: reviewForm.opportunityId ? "Aprobarea creează o acțiune internă." : "Aprobarea creează oportunitatea.", tone: "success" }
                 ]} />
               ) : (
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
+
+              {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
+
+              <section aria-labelledby="signal-essential-title" className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">01 · Date esențiale</p>
+                  <h3 id="signal-essential-title" className="mt-1 text-base font-semibold">Confirmă ce s-a întâmplat și unde există valoare</h3>
+                  <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Compania și contactul reduc riscul de duplicare. Valoarea rămâne estimată și nu reprezintă venit confirmat.</p>
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <Field label="Titlu" required><input value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Companie extrasă" hint="Ajută la potrivirea cu relația comercială corectă."><input value={reviewForm.company} onChange={(event) => setReviewForm({ ...reviewForm, company: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Contact extras"><input value={reviewForm.contact} onChange={(event) => setReviewForm({ ...reviewForm, contact: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Valoare estimată, neconfirmată"><input type="number" min="0" value={reviewForm.value} onChange={(event) => setReviewForm({ ...reviewForm, value: event.target.value })} className={fieldClasses()} /></Field>
+                </div>
+              </section>
+
+              <section aria-labelledby="signal-action-title" className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">02 · Acțiune și responsabil</p>
+                  <h3 id="signal-action-title" className="mt-1 text-base font-semibold">Stabilește primul pas sigur</h3>
+                  <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Responsabilul, acțiunea și termenul previn un follow-up uitat după aprobare.</p>
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <Field label="Responsabil" required><select value={reviewForm.ownerProfileId} onChange={(event) => setReviewForm({ ...reviewForm, ownerProfileId: event.target.value })} className={fieldClasses()}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</select></Field>
+                  <Field label="Termen recomandat" required><input type="date" value={reviewForm.dueAt} onChange={(event) => setReviewForm({ ...reviewForm, dueAt: event.target.value })} className={fieldClasses()} /></Field>
+                  <div className="md:col-span-2"><Field label="Următoarea acțiune" required hint="Descrie un pas intern clar, verificabil."><input value={reviewForm.recommendedAction} onChange={(event) => setReviewForm({ ...reviewForm, recommendedAction: event.target.value })} className={fieldClasses()} /></Field></div>
+                </div>
+              </section>
 
               <SignalPreparationPanel
                 signal={selectedSignal}
@@ -584,38 +634,44 @@ export function CommercialInboxClient({
                 >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou cu AI" : "Pregătește cu AI"}</Button>}
               />
 
-              {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Titlu"><input value={reviewForm.title} onChange={(event) => setReviewForm({ ...reviewForm, title: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Companie extrasă"><input value={reviewForm.company} onChange={(event) => setReviewForm({ ...reviewForm, company: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Contact extras"><input value={reviewForm.contact} onChange={(event) => setReviewForm({ ...reviewForm, contact: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Email"><input type="email" value={reviewForm.email} onChange={(event) => setReviewForm({ ...reviewForm, email: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Telefon"><input value={reviewForm.phone} onChange={(event) => setReviewForm({ ...reviewForm, phone: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Valoare comercială"><input type="number" min="0" value={reviewForm.value} onChange={(event) => setReviewForm({ ...reviewForm, value: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Ultima interacțiune"><input type="datetime-local" value={reviewForm.lastInteractionAt} onChange={(event) => setReviewForm({ ...reviewForm, lastInteractionAt: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Termen recomandat"><input type="date" value={reviewForm.dueAt} onChange={(event) => setReviewForm({ ...reviewForm, dueAt: event.target.value })} className={fieldClasses()} /></Field>
-              </div>
-              <Field label="Context original"><textarea rows={4} value={reviewForm.context} onChange={(event) => setReviewForm({ ...reviewForm, context: event.target.value })} className={`${fieldClasses()} py-3`} /></Field>
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <Field label="Responsabil"><select value={reviewForm.ownerProfileId} onChange={(event) => setReviewForm({ ...reviewForm, ownerProfileId: event.target.value })} className={fieldClasses()}><option value="">Neatribuit</option>{assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}</select></Field>
-                <Field label="Companie CRM"><select value={reviewForm.organizationId} onChange={(event) => setReviewForm({ ...reviewForm, organizationId: event.target.value, contactId: "", opportunityId: "" })} className={fieldClasses()}><option value="">Fără potrivire</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select></Field>
-                <Field label="Contact CRM"><select value={reviewForm.contactId} onChange={(event) => setReviewForm({ ...reviewForm, contactId: event.target.value })} className={fieldClasses()}><option value="">Fără potrivire</option>{contacts.filter((contact) => !reviewForm.organizationId || !contact.organizationId || contact.organizationId === reviewForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}{contact.email ? ` · ${contact.email}` : ""}</option>)}</select></Field>
-                <Field label="Oportunitate existentă"><select value={reviewForm.opportunityId} onChange={(event) => setReviewForm({ ...reviewForm, opportunityId: event.target.value })} className={fieldClasses()}><option value="">Creează oportunitate nouă</option>{opportunities.filter((opportunity) => !reviewForm.organizationId || !opportunity.organizationId || opportunity.organizationId === reviewForm.organizationId).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{opportunity.title}</option>)}</select></Field>
-              </div>
-
-              {!reviewForm.organizationId ? <div className="grid gap-4 md:grid-cols-2"><Field label="Companie CRM nouă"><input value={reviewForm.newOrganizationName} onChange={(event) => setReviewForm({ ...reviewForm, newOrganizationName: event.target.value })} placeholder={reviewForm.company || "Denumire companie"} className={fieldClasses()} /></Field></div> : null}
-              {!reviewForm.contactId ? <div className="grid gap-4 md:grid-cols-3"><Field label="Contact CRM nou"><input value={reviewForm.newContactName} onChange={(event) => setReviewForm({ ...reviewForm, newContactName: event.target.value })} placeholder={reviewForm.contact || "Nume contact"} className={fieldClasses()} /></Field><Field label="Email contact nou"><input type="email" value={reviewForm.newContactEmail} onChange={(event) => setReviewForm({ ...reviewForm, newContactEmail: event.target.value })} className={fieldClasses()} /></Field><Field label="Telefon contact nou"><input value={reviewForm.newContactPhone} onChange={(event) => setReviewForm({ ...reviewForm, newContactPhone: event.target.value })} className={fieldClasses()} /></Field></div> : null}
-
-              <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5">
-                <div>
-                  <h3 className="text-sm font-semibold">Draft recomandat</h3>
-                  <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți edita conținutul. ReveNew îl păstrează ca draft intern și nu îl trimite automat.</p>
+              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                  <span>Detalii de contact și context <span className="font-normal text-[rgb(var(--text-muted))]">· consultă numai dacă influențează decizia</span></span>
+                  <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2">
+                  <Field label="Email"><input type="email" value={reviewForm.email} onChange={(event) => setReviewForm({ ...reviewForm, email: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Telefon"><input value={reviewForm.phone} onChange={(event) => setReviewForm({ ...reviewForm, phone: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Ultima interacțiune"><input type="datetime-local" value={reviewForm.lastInteractionAt} onChange={(event) => setReviewForm({ ...reviewForm, lastInteractionAt: event.target.value })} className={fieldClasses()} /></Field>
+                  <div className="md:col-span-2"><Field label="Context original" hint="Poate fi anonimizat pentru audit; păstrează numai informația necesară deciziei."><textarea rows={4} value={reviewForm.context} onChange={(event) => setReviewForm({ ...reviewForm, context: event.target.value })} className={`${fieldClasses()} py-3`} /></Field></div>
                 </div>
-                <Field label="Subiect"><input maxLength={160} value={reviewForm.draftSubject} onChange={(event) => setReviewForm({ ...reviewForm, draftSubject: event.target.value })} className={fieldClasses()} /></Field>
-                <Field label="Mesaj"><textarea rows={7} maxLength={4000} value={reviewForm.draftBody} onChange={(event) => setReviewForm({ ...reviewForm, draftBody: event.target.value })} placeholder="Draft opțional; necesită revizuire umană." className={`${fieldClasses()} py-3`} /></Field>
-              </div>
+              </details>
+
+              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                  <span>03 · Legături CRM <span className="font-normal text-[rgb(var(--text-muted))]">· previn duplicatele și păstrează continuitatea</span></span>
+                  <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2 xl:grid-cols-3">
+                  <Field label="Companie CRM"><select value={reviewForm.organizationId} onChange={(event) => setReviewForm({ ...reviewForm, organizationId: event.target.value, contactId: "", opportunityId: "" })} className={fieldClasses()}><option value="">Fără potrivire</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select></Field>
+                  <Field label="Contact CRM"><select value={reviewForm.contactId} onChange={(event) => setReviewForm({ ...reviewForm, contactId: event.target.value })} className={fieldClasses()}><option value="">Fără potrivire</option>{contacts.filter((contact) => !reviewForm.organizationId || !contact.organizationId || contact.organizationId === reviewForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}{contact.email ? ` · ${contact.email}` : ""}</option>)}</select></Field>
+                  <Field label="Oportunitate existentă"><select value={reviewForm.opportunityId} onChange={(event) => setReviewForm({ ...reviewForm, opportunityId: event.target.value })} className={fieldClasses()}><option value="">Creează oportunitate nouă</option>{opportunities.filter((opportunity) => !reviewForm.organizationId || !opportunity.organizationId || opportunity.organizationId === reviewForm.organizationId).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{opportunity.title}</option>)}</select></Field>
+                  {!reviewForm.organizationId ? <Field label="Companie CRM nouă"><input value={reviewForm.newOrganizationName} onChange={(event) => setReviewForm({ ...reviewForm, newOrganizationName: event.target.value })} placeholder={reviewForm.company || "Denumire companie"} className={fieldClasses()} /></Field> : null}
+                  {!reviewForm.contactId ? <><Field label="Contact CRM nou"><input value={reviewForm.newContactName} onChange={(event) => setReviewForm({ ...reviewForm, newContactName: event.target.value })} placeholder={reviewForm.contact || "Nume contact"} className={fieldClasses()} /></Field><Field label="Email contact nou"><input type="email" value={reviewForm.newContactEmail} onChange={(event) => setReviewForm({ ...reviewForm, newContactEmail: event.target.value })} className={fieldClasses()} /></Field><Field label="Telefon contact nou"><input value={reviewForm.newContactPhone} onChange={(event) => setReviewForm({ ...reviewForm, newContactPhone: event.target.value })} className={fieldClasses()} /></Field></> : null}
+                </div>
+              </details>
+
+              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                  <span>04 · Draft recomandat <span className="font-normal text-[rgb(var(--text-muted))]">· opțional, netrimis automat</span></span>
+                  <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4">
+                  <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Poți edita conținutul. ReveNew îl păstrează ca draft intern, iar utilizarea externă necesită revizuire și aprobare umană.</p>
+                  <Field label="Subiect"><input maxLength={160} value={reviewForm.draftSubject} onChange={(event) => setReviewForm({ ...reviewForm, draftSubject: event.target.value })} className={fieldClasses()} /></Field>
+                  <Field label="Mesaj"><textarea rows={7} maxLength={4000} value={reviewForm.draftBody} onChange={(event) => setReviewForm({ ...reviewForm, draftBody: event.target.value })} placeholder="Draft opțional; necesită revizuire umană." className={`${fieldClasses()} py-3`} /></Field>
+                </div>
+              </details>
 
               <div className="flex flex-wrap gap-3">
                 <Button variant="secondary" onClick={saveReviewFields} disabled={isPending}>Salvează legăturile și contextul</Button>
@@ -631,22 +687,32 @@ export function CommercialInboxClient({
                 : "La aprobare, ReveNew creează o oportunitate și o acțiune internă din datele revizuite. Nu se trimite niciun mesaj."}</StatusNotice>
 
               {selectedSignal.status !== "converted" ? (
-                <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-5 md:grid-cols-[1fr_auto]">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Motiv decizie"><input value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Obligatoriu pentru arhivare, respingere sau duplicat" className={fieldClasses()} /></Field>
-                    <Field label="Reia revizuirea la"><input type="datetime-local" value={postponeUntil} onChange={(event) => setPostponeUntil(event.target.value)} className={fieldClasses()} /></Field>
+                <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+                  <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                    <span>Amânare, respingere și arhivare <span className="font-normal text-[rgb(var(--text-muted))]">· decizii secundare</span></span>
+                    <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-[1fr_auto]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Motiv decizie" required><input value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Necesar pentru arhivare, respingere sau duplicat" className={fieldClasses()} /></Field>
+                      <Field label="Reia revizuirea la"><input type="datetime-local" value={postponeUntil} onChange={(event) => setPostponeUntil(event.target.value)} className={fieldClasses()} /></Field>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-2"><Button variant="ghost" onClick={archive} disabled={isPending || !decisionReason.trim()}>Arhivează</Button><Button variant="ghost" onClick={() => decide("dismissed")} disabled={isPending}>Respinge</Button><Button variant="ghost" onClick={() => decide("duplicate")} disabled={isPending}>Marchează duplicat</Button><Button variant="secondary" onClick={() => decide("postponed")} disabled={isPending || !postponeUntil}>Amână</Button></div>
                   </div>
-                  <div className="flex flex-wrap items-end gap-2"><Button variant="ghost" onClick={archive} disabled={isPending || !decisionReason.trim()}>Arhivează</Button><Button variant="ghost" onClick={() => decide("dismissed")} disabled={isPending}>Respinge</Button><Button variant="ghost" onClick={() => decide("duplicate")} disabled={isPending}>Marchează duplicat</Button><Button variant="secondary" onClick={() => decide("postponed")} disabled={isPending || !postponeUntil}>Amână</Button></div>
-                </div>
+                </details>
               ) : null}
 
-              <div className="border-t border-[rgb(var(--border))] pt-5">
-                <h3 className="text-sm font-semibold">Istoric verificabil</h3>
-                <div className="mt-3 grid gap-3">{(selectedSignal.events ?? []).map((event) => <div key={event.id} className="rounded-lg bg-[rgb(var(--surface-elevated))] p-3"><p className="text-sm font-medium">{event.description || event.eventType}</p><p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{formatDateTimeWithSeconds(event.createdAt)}</p></div>)}{(selectedSignal.events ?? []).length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente înregistrate încă.</p> : null}</div>
-              </div>
+              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                  <span>Istoric verificabil <span className="font-normal text-[rgb(var(--text-muted))]">· {(selectedSignal.events ?? []).length} evenimente</span></span>
+                  <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <div className="grid gap-3 border-t border-[rgb(var(--border))] p-4">{(selectedSignal.events ?? []).map((event) => <div key={event.id} className="rounded-lg bg-[rgb(var(--surface-elevated))] p-3"><p className="text-sm font-medium">{event.description || event.eventType}</p><p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{formatDateTimeWithSeconds(event.createdAt)}</p></div>)}{(selectedSignal.events ?? []).length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente înregistrate încă.</p> : null}</div>
+              </details>
             </div>
           ) : <EmptyState title="Selectează un semnal" description="Alege un element din coadă pentru analiză și revizuire." />}
         </DataCard>
+        </div>
       </div>
     </div>
   );

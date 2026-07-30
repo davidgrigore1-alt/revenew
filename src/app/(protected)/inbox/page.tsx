@@ -28,8 +28,8 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
           <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
         </summary>
         <div className="mt-3 grid gap-3 border-t border-[rgb(var(--border))] pt-3 text-sm leading-6 text-[rgb(var(--text-muted))] sm:grid-cols-2">
-          <p><strong className="text-[rgb(var(--foreground))]">Necesare:</strong> titlul, sursa și contextul original. Acestea păstrează dovada pe care se bazează revizuirea.</p>
-          <p><strong className="text-[rgb(var(--foreground))]">Opționale, dar utile:</strong> compania, contactul, valoarea estimată, responsabilul și termenul. Ele reduc riscul de duplicare și de follow-up uitat.</p>
+          <p><strong className="text-[rgb(var(--foreground))]">Obligatoriu:</strong> titlul, sursa și contextul original. Acestea păstrează dovada pe care se bazează revizuirea.</p>
+          <p><strong className="text-[rgb(var(--foreground))]">Opțional, dar util:</strong> compania, contactul, valoarea estimată, responsabilul și termenul. Datele pot fi anonimizate pentru audit.</p>
         </div>
       </details>
       <CommercialInboxClient

@@ -38,7 +38,7 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
   ]);
   assert.match(page, /const evidenceBackedDescription = sourceSignal\?\.primaryRecoveryReason/);
   assert.match(page, /description=\{evidenceBackedDescription\}/);
-  assert.match(controlCenter, /Dovadă disponibilă/);
+  assert.match(controlCenter, /Dovezi disponibile/);
   assert.match(controlCenter, /Verifică dovezile/);
   assert.match(controlCenter, /Lipsește o dovadă verificabilă/);
   assert.match(workflow, /Dovezi și istoric/);

@@ -22,6 +22,7 @@ import {
 import { openOutcomeConfirmation } from "@/lib/commercial-response-actions";
 import type { Opportunity, OpportunityLifecycleStatus } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 type AssignableProfile = { id: string; fullName: string };
 
@@ -30,6 +31,10 @@ const stageLabels = { lead: "Lead", qualified: "Calificare", proposal: "Propuner
 const attentionLabels = { on_track: "În grafic", needs_attention: "Necesită atenție", at_risk: "În risc", blocked: "Blocat", closed: "Închis" };
 
 type ControlCenterMode = "summary" | "responsibility" | "outcome";
+
+function FormLabel({ children, required = false }: { children: React.ReactNode; required?: boolean }) {
+  return <span className="flex items-center justify-between gap-2"><span>{children}</span><span className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span></span>;
+}
 
 export function OpportunityControlCenter({
   opportunity,
@@ -49,6 +54,8 @@ export function OpportunityControlCenter({
   const lifecycle = lifecycleForOpportunity(opportunity);
   const attention = assessOpportunityAttention(opportunity);
   const primaryContact = opportunity.contacts?.find((contact) => contact.isPrimary) ?? null;
+  const companyName = primaryContact?.contact.organization?.name ?? opportunity.contact?.company ?? "Companie neconfirmată";
+  const evidenceCount = opportunity.timeline.length + opportunity.documents.length;
   const ownerName = assignableProfiles.find((profile) => profile.id === opportunity.ownerProfileId)?.fullName ?? null;
   const decisionMaker = opportunity.contacts?.find((association) => {
     const value = `${association.role ?? ""} ${association.contact.decisionRole ?? ""}`.toLowerCase();
@@ -71,7 +78,7 @@ export function OpportunityControlCenter({
       router.refresh();
     } else {
       setNotice("");
-      setError(result.error ?? "Schimbarea nu a putut fi salvată.");
+      setError(toUserFacingActionError(result.error, "Schimbarea nu a putut fi salvată. Verifică datele și încearcă din nou."));
     }
   }
 
@@ -105,6 +112,8 @@ export function OpportunityControlCenter({
                 <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold">{stageLabels[stageForLegacyStatus(opportunity.status)]}</span>
                 <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-3 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
                 <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
+                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Valoare estimată: {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
+                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Dovezi: {evidenceCount}</span>
               </div>
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.15em] text-[rgb(var(--primary))]">Acțiunea care deblochează progresul</p>
               <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{attention.primaryNextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
@@ -125,12 +134,13 @@ export function OpportunityControlCenter({
           <aside className="bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 xl:p-8" aria-label="Fapte comerciale">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Fapte comerciale</p>
             <dl className="mt-5 grid gap-5">
+              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Companie</dt><dd className="mt-1 text-sm font-semibold">{companyName}</dd></div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Valoare estimată, nu confirmată</dt><dd className="mt-1 text-2xl font-semibold tracking-tight">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
               <div className="grid grid-cols-2 gap-4 border-y border-[rgb(var(--border))] py-5"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 text-sm font-semibold">{ownerName ?? "Neatribuit"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ciclu de viață</dt><dd className="mt-1 text-sm font-semibold">{lifecycleLabels[lifecycle]}</dd></div></div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 text-sm font-semibold">{primaryContact?.contact.fullName ?? "Lipsește"}</dd>{primaryContact?.contact.email ? <p className="mt-1 break-all text-xs text-[rgb(var(--text-muted))]">{primaryContact.contact.email}</p> : null}</div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Decident</dt><dd className="mt-1 text-sm font-semibold">{decisionMaker?.contact.fullName ?? "Neconfirmat"}</dd></div>
               <div className="border-t border-[rgb(var(--border))] pt-5">
-                <dt className="text-xs text-[rgb(var(--text-muted))]">Dovadă disponibilă</dt>
+                <dt className="text-xs text-[rgb(var(--text-muted))]">Dovezi disponibile · {evidenceCount}</dt>
                 {visibleEvidence ? (
                   <>
                     <dd className="mt-1 text-sm font-semibold"><a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{visibleEvidence.label}</a></dd>
@@ -147,13 +157,13 @@ export function OpportunityControlCenter({
       {mode === "responsibility" && lifecycle === "open" ? (
           <DataCard title="Responsabilitate" description="Atribuie oportunitatea și confirmă clasificarea comercială.">
             <form action={(formData) => startTransition(async () => handleResult(await updateOpportunityCommercialDetails(opportunity.id, formData), "Responsabilitatea a fost actualizată."))} className="grid gap-3">
-              <label className="grid gap-2 text-sm font-semibold">Responsabil
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Responsabil</FormLabel>
                 <select name="ownerProfileId" defaultValue={opportunity.ownerProfileId ?? ""} className={fieldClass}>
                   <option value="">Neatribuit</option>
                   {assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}
                 </select>
               </label>
-              <label className="grid gap-2 text-sm font-semibold">Tip comercial
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel>Tip comercial</FormLabel>
                 <select name="commercialType" defaultValue={commercialTypeForOpportunity(opportunity)} className={fieldClass}>
                   {Object.entries(commercialTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                 </select>
@@ -166,13 +176,13 @@ export function OpportunityControlCenter({
           <DataCard title="Înregistrează rezultatul" description="ReveNew păstrează rezultatul declarat de echipă; estimările nu devin automat venit.">
             <form action={reviewOutcome} className="grid gap-3">
               <input type="hidden" name="expectedUpdatedAt" value={opportunity.updatedAt ?? ""} />
-              <label className="grid gap-2 text-sm font-semibold">Rezultat
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Rezultat</FormLabel>
                 <select name="lifecycleStatus" value={outcomeStatus} onChange={(event) => setOutcomeStatus(event.target.value as OpportunityLifecycleStatus)} className={fieldClass}>
                   <option value="won">Câștigată / recuperată</option>
                   <option value="lost">Pierdută</option>
                 </select>
               </label>
-              <label className="grid gap-2 text-sm font-semibold">Motiv
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Motiv</FormLabel>
                 <select name="outcomeReason" className={fieldClass} defaultValue={outcomeStatus === "won" ? "won" : "other"} key={outcomeStatus}>
                   {outcomeStatus === "won" ? <>
                     <option value="won">Contract câștigat</option><option value="recovered">Venit recuperat</option><option value="expanded">Extindere</option><option value="renewed">Reînnoire</option><option value="other">Alt motiv</option>
@@ -182,11 +192,11 @@ export function OpportunityControlCenter({
                 </select>
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm font-semibold">Data rezultatului<input name="outcomeDate" type="date" required defaultValue={applicationDateKey()} className={fieldClass} /></label>
-                {outcomeStatus === "won" ? <label className="grid gap-2 text-sm font-semibold">Valoare efectivă<input name="actualOutcomeAmount" inputMode="decimal" required pattern="[0-9]+([.,][0-9]{1,2})?" className={fieldClass} /></label> : null}
+                <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Data rezultatului</FormLabel><input name="outcomeDate" type="date" required defaultValue={applicationDateKey()} className={fieldClass} /></label>
+                {outcomeStatus === "won" ? <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Venit confirmat de echipă</FormLabel><input name="actualOutcomeAmount" inputMode="decimal" required pattern="[0-9]+([.,][0-9]{1,2})?" className={fieldClass} /></label> : null}
               </div>
-              <label className="grid gap-2 text-sm font-semibold">Monedă<input name="currency" required maxLength={3} defaultValue={opportunity.currency ?? "RON"} className={fieldClass} /></label>
-              <label className="grid gap-2 text-sm font-semibold">Notă opțională<textarea name="outcomeNote" rows={3} maxLength={1000} className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" /></label>
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Monedă</FormLabel><input name="currency" required maxLength={3} defaultValue={opportunity.currency ?? "RON"} className={fieldClass} /></label>
+              <label className="grid gap-2 text-sm font-semibold"><FormLabel>Notă</FormLabel><textarea name="outcomeNote" rows={3} maxLength={1000} className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" /></label>
               <Button type="submit" disabled={isPending}>{isPending ? "Se verifică..." : "Verifică și confirmă rezultatul"}</Button>
             </form>
           </DataCard>

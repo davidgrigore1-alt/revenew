@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ui/ToastProvider";
 import { completeOpportunityTask, createOpportunityTask } from "@/lib/revenue-workspace/actions";
 import type { OpportunityActionType } from "@/lib/types";
+import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 export function CompleteTaskButton({ opportunityId, actionId }: { opportunityId: string; actionId: string }) {
   const router = useRouter();
@@ -41,6 +43,7 @@ export function CompleteTaskButton({ opportunityId, actionId }: { opportunityId:
 
 export function CreateTaskForm({ opportunityId, compact = false, assignableProfiles = [] }: { opportunityId: string; compact?: boolean; assignableProfiles?: Array<{ id: string; fullName: string }> }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -49,11 +52,13 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
     startTransition(async () => {
       const result = await createOpportunityTask(opportunityId, formData);
       if (result.ok) {
-        setNotice("Acțiunea a fost creată.");
+        const message = "Acțiunea a fost creată. O poți revizui în Activitatea mea.";
+        setNotice(message);
         setError("");
+        showToast({ title: "Acțiune internă creată", description: message, tone: "success", action: { label: "Deschide Activitatea mea", href: "/today" } });
         router.refresh();
       } else {
-        setError(result.error ?? "Acțiunea nu a putut fi creată.");
+        setError(toUserFacingActionError(result.error, "Acțiunea nu a putut fi creată. Verifică datele și încearcă din nou."));
         setNotice("");
       }
     });
@@ -65,11 +70,11 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Titlu
+          <FieldLabel label="Titlu" required />
           <Input name="title" required defaultValue="Follow-up comercial" className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Tip
+          <FieldLabel label="Tip" required />
           <Select name="type" defaultValue={"follow_up" satisfies OpportunityActionType} className="min-h-11 bg-[rgb(var(--background))]">
             <option value="call_contact">Apel</option>
             <option value="send_email">Email</option>
@@ -80,15 +85,15 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
           </Select>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Data
-          <Input name="dueDate" type="date" className="min-h-11 bg-[rgb(var(--background))]" />
+          <FieldLabel label="Data" required />
+          <Input name="dueDate" type="date" required className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Ora
+          <FieldLabel label="Ora" />
           <Input name="dueTime" type="time" defaultValue="09:00" className="min-h-11 bg-[rgb(var(--background))]" />
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Prioritate
+          <FieldLabel label="Prioritate" required />
           <Select name="priority" defaultValue="medium" className="min-h-11 bg-[rgb(var(--background))]">
             <option value="high">Ridicată</option>
             <option value="medium">Medie</option>
@@ -96,7 +101,7 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
           </Select>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Responsabil
+          <FieldLabel label="Responsabil" required />
           <Select name="assignedToProfileId" defaultValue="" className="min-h-11 bg-[rgb(var(--background))]">
             <option value="">Eu</option>
             {assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}
@@ -105,7 +110,7 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
       </div>
       {!compact ? (
         <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
-          Note
+          <FieldLabel label="Note" />
           <Textarea name="description" rows={3} className="bg-[rgb(var(--background))]" />
         </label>
       ) : null}
@@ -114,4 +119,8 @@ export function CreateTaskForm({ opportunityId, compact = false, assignableProfi
       </div>
     </form>
   );
+}
+
+function FieldLabel({ label, required = false }: { label: string; required?: boolean }) {
+  return <span className="flex items-center justify-between gap-2"><span>{label}</span><span className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span></span>;
 }

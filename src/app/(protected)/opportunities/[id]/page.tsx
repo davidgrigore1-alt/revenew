@@ -82,15 +82,23 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
           </DataCard>
         </div>
         {sourceSignal ? (
-          <DataCard
-            title="Semnale asociate"
-            description="Contextul de origine rămâne verificabil; execuția continuă din următoarea acțiune a oportunității."
-            action={pendingApprovalSignal
-              ? <Button href={`/approvals?signal=${pendingApprovalSignal.id}`} variant="secondary">Revizuiește aprobarea</Button>
-              : <Button href={`/inbox?signal=${sourceSignal.id}`} variant="secondary">Revizuiește semnalul</Button>}
-          >
-            <div className="divide-y divide-[rgb(var(--border))]">{linkedSignals.slice(0, 5).map((signal) => <div key={signal.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto]"><div><p className="text-sm font-semibold">{signal.title}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {[signal.contactName, signal.contactCompany].filter(Boolean).join(" · ") || "Contact neconfirmat"}</p></div><p className="max-w-md text-sm text-[rgb(var(--text-secondary))]"><span className="font-medium text-[rgb(var(--foreground))]">Context pentru execuție:</span> {signal.recommendedAction || signal.extractedSummary || "Necesită verificare."}</p></div>)}</div>
-          </DataCard>
+          <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+            <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-card px-4 py-3 marker:hidden sm:px-5">
+              <span>
+                <span className="block text-sm font-semibold">Semnale asociate <span className="font-normal text-[rgb(var(--text-muted))]">({linkedSignals.length})</span></span>
+                <span className="mt-0.5 block text-xs text-[rgb(var(--text-muted))]">Contextul de origine rămâne verificabil și poate fi consultat la nevoie.</span>
+              </span>
+              <span aria-hidden="true" className="shrink-0 text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <div className="border-t border-[rgb(var(--border))] p-4 sm:p-5">
+              <div className="mb-4 flex justify-end">
+                {pendingApprovalSignal
+                  ? <Button href={`/approvals?signal=${pendingApprovalSignal.id}`} variant="secondary" size="small">Revizuiește aprobarea</Button>
+                  : <Button href={`/inbox?signal=${sourceSignal.id}`} variant="secondary" size="small">Revizuiește semnalul</Button>}
+              </div>
+              <div className="divide-y divide-[rgb(var(--border))]">{linkedSignals.slice(0, 5).map((signal) => <div key={signal.id} className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_auto]"><div><p className="text-sm font-semibold">{signal.title}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{signal.sourceLabel ?? signal.source} · {[signal.contactName, signal.contactCompany].filter(Boolean).join(" · ") || "Contact neconfirmat"}</p></div><p className="max-w-md text-sm text-[rgb(var(--text-secondary))]"><span className="font-medium text-[rgb(var(--foreground))]">Context pentru execuție:</span> {signal.recommendedAction || signal.extractedSummary || "Necesită verificare."}</p></div>)}</div>
+            </div>
+          </details>
         ) : null}
         <OpportunityWorkflow
           opportunity={workflowOpportunity}

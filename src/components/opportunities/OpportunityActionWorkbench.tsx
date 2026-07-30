@@ -23,11 +23,11 @@ export function OpportunityActionWorkbench({
   const preparedDocuments = opportunity.documents.filter((document) => !["sent", "archived"].includes(document.status)).length;
   const actions: WorkbenchAction[] = [
     {
-      href: "#action-schedule",
+      href: nextAction ? "#workflow-actions-list" : "#action-schedule",
       title: recommendation.action,
       status: nextAction ? "Acțiune existentă" : "Acțiune lipsă",
       reason: `${recommendation.reason}${recommendation.missingInformation.length ? ` De confirmat: ${recommendation.missingInformation.join(", ")}.` : ""}`,
-      cta: nextAction ? "Programează o acțiune" : "Completează următoarea acțiune",
+      cta: nextAction ? "Revizuiește acțiunea" : "Completează următoarea acțiune",
       recommended: open
     },
     {
@@ -74,27 +74,43 @@ export function OpportunityActionWorkbench({
       cta: primaryContact ? "Actualizează contactele" : "Adaugă contact principal"
     }
   ];
+  const primaryAction = actions.find((action) => action.recommended) ?? actions[0];
+  const secondaryActions = actions.filter((action) => action !== primaryAction);
 
   return (
     <section id="action-workbench" aria-labelledby="action-workbench-title" className="scroll-mt-24 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
       <div className="max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Acțiuni de execuție</p>
         <h2 id="action-workbench-title" className="mt-2 font-display text-2xl font-semibold tracking-tight">Alege intervenția sigură</h2>
-        <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Un singur formular se deschide pentru sarcina aleasă. Contextul, dovezile și starea oportunității rămân disponibile mai jos.</p>
+        <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Intervenția recomandată rămâne în prim-plan. Formularele și acțiunile secundare se deschid numai când sunt necesare.</p>
       </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {actions.map((action) => (
-          <article key={action.href} className={`flex min-w-0 flex-col rounded-card border p-4 ${action.recommended ? "border-[rgb(var(--primary)/0.45)] bg-[rgb(var(--primary)/0.07)]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]"}`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
+      <article className="mt-5 grid min-w-0 gap-4 rounded-card border border-[rgb(var(--primary)/0.45)] bg-[rgb(var(--primary)/0.07)] p-4 sm:p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-pill bg-[rgb(var(--primary))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--primary-foreground))]">Recomandat acum</span>
+            <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">{primaryAction.status}</span>
+          </div>
+          <h3 className="mt-3 text-lg font-semibold">{primaryAction.title}</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">{primaryAction.reason}</p>
+        </div>
+        <a href={primaryAction.href} className="focus-ring inline-flex min-h-11 items-center justify-center rounded-button bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition hover:bg-[rgb(var(--primary-hover))]">{primaryAction.cta}</a>
+      </article>
+      <details className="group mt-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+        <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+          <span>Alte intervenții controlate <span className="font-normal text-[rgb(var(--text-muted))]">({secondaryActions.length})</span></span>
+          <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="grid gap-3 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2 xl:grid-cols-3">
+          {secondaryActions.map((action) => (
+            <article key={action.href} className="flex min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
               <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">{action.status}</span>
-              {action.recommended ? <span className="rounded-pill bg-[rgb(var(--primary))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--primary-foreground))]">Recomandat acum</span> : null}
-            </div>
-            <h3 className="mt-3 text-base font-semibold">{action.title}</h3>
-            <p className="mt-2 flex-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{action.reason}</p>
-            <a href={action.href} className="focus-ring mt-4 inline-flex min-h-10 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm font-semibold transition hover:border-[rgb(var(--primary)/0.5)] hover:text-[rgb(var(--primary))]">{action.cta}</a>
-          </article>
-        ))}
-      </div>
+              <h3 className="mt-2 text-base font-semibold">{action.title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{action.reason}</p>
+              <a href={action.href} className="focus-ring mt-4 inline-flex min-h-10 items-center justify-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold transition hover:border-[rgb(var(--primary)/0.5)] hover:text-[rgb(var(--primary))]">{action.cta}</a>
+            </article>
+          ))}
+        </div>
+      </details>
       <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Nicio comunicare externă nu este trimisă automat. Aprobarea și confirmarea umană rămân obligatorii.</p>
     </section>
   );
