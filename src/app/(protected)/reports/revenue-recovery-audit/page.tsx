@@ -69,7 +69,7 @@ export default async function RevenueRecoveryAuditPage() {
       breadcrumbs={[{ label: "Rapoarte", href: "/reports" }, { label: "Audit de recuperare venituri" }]}
       actions={<div className="flex flex-wrap gap-2 print:hidden"><Button href={audit.firstSafeActionHref} size="small">{audit.firstSafeActionLabel}</Button><Button href="/reports/enterprise-pilot-pack" variant="secondary" size="small">Vezi propunerea pilot</Button><PrintAuditButton /></div>}
     >
-      <article className="revenue-recovery-audit space-y-5">
+      <article data-guide-anchor="reports-audit-summary" className="revenue-recovery-audit space-y-5">
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">ReveNew · Audit operațional</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Audit de recuperare venituri</h1>

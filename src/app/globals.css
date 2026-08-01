@@ -221,6 +221,13 @@ body {
   outline-color: rgb(var(--focus-ring));
 }
 
+[data-revenew-guide-highlight="true"] {
+  outline: 2px solid rgb(var(--gold-500));
+  outline-offset: 4px;
+  box-shadow: 0 0 0 7px rgb(var(--gold-500) / 0.12), var(--shadow-card);
+  transition: outline-color 180ms ease, box-shadow 180ms ease;
+}
+
 .subtle-grid {
   background-image:
     linear-gradient(rgb(var(--border) / 0.32) 1px, transparent 1px),
@@ -347,6 +354,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-revenew-guide-highlight="true"] {
+    transition: none;
+  }
   html {
     scroll-behavior: auto;
   }

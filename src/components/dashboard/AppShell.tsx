@@ -4,6 +4,7 @@ import { BuyerDemoRail } from "@/components/demo/BuyerDemoRail";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { GuidedProductTour } from "@/components/guidance/GuidedProductTour";
+import { ContextualAssistant } from "@/components/guidance/ContextualAssistant";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
@@ -40,6 +41,7 @@ export function AppShell({
       </div>
       <MobileNav items={primaryItems} />
       <GuidedProductTour />
+      <ContextualAssistant />
     </div>
     </ToastProvider>
   );

@@ -110,12 +110,14 @@ export default async function DashboardPage() {
 
         <ContextualPageGuide showFlow />
 
-        <ExecutiveMorningBrief
-          brief={morningBrief}
-          pipelineValueRon={summary.metrics.activePipelineValue}
-          confirmedRevenueRon={responseLoop.confirmedRevenueRon}
-          recommendation={primaryRecommendation}
-        />
+        <div data-guide-anchor="dashboard-critical-decision">
+          <ExecutiveMorningBrief
+            brief={morningBrief}
+            pipelineValueRon={summary.metrics.activePipelineValue}
+            confirmedRevenueRon={responseLoop.confirmedRevenueRon}
+            recommendation={primaryRecommendation}
+          />
+        </div>
 
         <section aria-label="Indicatori financiari esențiali pentru mobil" className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] shadow-card sm:hidden">
           <div className="bg-[rgb(var(--surface))] p-4 sm:p-5">

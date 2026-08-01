@@ -233,7 +233,7 @@ export function BuyerFeedbackCapture() {
       </div>
 
       <aside className="min-w-0 space-y-5 lg:sticky lg:top-24" aria-label="Evaluarea și rezumatul conversației">
-        <section className="rounded-panel border border-[rgb(var(--gold-500)/0.36)] bg-[linear-gradient(145deg,rgb(var(--surface)),rgb(var(--surface-subtle)))] p-5 shadow-card">
+        <section data-guide-anchor="demo-feedback-fit" className="rounded-panel border border-[rgb(var(--gold-500)/0.36)] bg-[linear-gradient(145deg,rgb(var(--surface)),rgb(var(--surface-subtle)))] p-5 shadow-card">
           <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Evaluare transparentă</p><h2 className="mt-2 text-lg font-semibold">Fit pentru audit</h2></div><ShieldCheckIcon className="h-5 w-5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /></div>
           <Badge tone={fitTone[assessment.label]} className="mt-4">{assessment.label}</Badge>
           <div className="mt-4">

@@ -177,7 +177,7 @@ export function ApprovalCenterClient({
   const filteredContacts = contacts.filter((contact) => !form.organizationId || !contact.organizationId || contact.organizationId === form.organizationId);
 
   return (
-    <div className="grid gap-6">
+    <div data-guide-anchor="approvals-human-control" className="grid gap-6">
       <Card padding="none" aria-label="Calitatea recomandărilor pregătite">
         <dl className="grid grid-cols-2 divide-x divide-y divide-[rgb(var(--border))] sm:grid-cols-4 sm:divide-y-0">
           {([

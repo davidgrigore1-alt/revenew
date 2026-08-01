@@ -72,8 +72,8 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
-        {explainedRecommendation ? <RecommendationExplanationCard recommendation={explainedRecommendation} compact /> : null}
+        <div data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} /></div>
+        {explainedRecommendation ? <div data-guide-anchor="opportunity-evidence"><RecommendationExplanationCard recommendation={explainedRecommendation} compact /></div> : null}
         <OpportunityActionWorkbench opportunity={opportunity} recommendation={assistedPreparation} />
         <div id="action-responsibility" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>

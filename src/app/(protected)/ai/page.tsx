@@ -233,7 +233,7 @@ export default async function AiControlCenterPage() {
       description="Riscuri, dovezi și acțiuni sigure derivate din datele comerciale disponibile, cu decizia finală păstrată la oameni."
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
     >
-      <section className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6 lg:p-8" aria-labelledby="operational-intelligence-summary">
+      <section data-guide-anchor="ai-recommendation" className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6 lg:p-8" aria-labelledby="operational-intelligence-summary">
         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">

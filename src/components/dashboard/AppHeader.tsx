@@ -6,7 +6,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ShellNavigation } from "@/components/dashboard/ShellNavigation";
 import { WorkspaceMenu } from "@/components/dashboard/WorkspaceMenu";
-import { GuideReplayButton } from "@/components/guidance/GuidedProductTour";
+import { AssistantButton } from "@/components/guidance/ContextualAssistant";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 export function AppHeader({
@@ -82,7 +82,7 @@ export function AppHeader({
           </div>
 
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <GuideReplayButton className="hidden md:inline-flex" />
+            <AssistantButton />
             <GlobalSearch />
             <WorkspaceMenu
               businessName={businessName}

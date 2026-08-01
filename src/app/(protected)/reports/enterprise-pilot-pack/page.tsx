@@ -63,7 +63,7 @@ export default async function EnterprisePilotPackPage() {
         </div>
       }
     >
-      <article className="enterprise-pilot-pack space-y-5">
+      <article data-guide-anchor="reports-audit-summary" className="enterprise-pilot-pack space-y-5">
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">ReveNew · Propunere de validare</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[rgb(var(--foreground))]">{pack.executiveTitle}</h1>

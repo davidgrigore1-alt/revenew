@@ -371,7 +371,7 @@ export default async function ReportsPage() {
           <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." />
         ) : null}
 
-        <section aria-labelledby="metric-meaning-title" className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:p-5">
+        <section data-guide-anchor="reports-audit-summary" aria-labelledby="metric-meaning-title" className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-label text-[rgb(var(--primary))]">Interpretarea valorilor</p>

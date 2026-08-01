@@ -471,7 +471,7 @@ export function CommercialInboxClient({
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
       {selectedSignal ? (
-        <section id="signal-intelligence-spotlight" className="grid gap-3" aria-labelledby="signal-intelligence-title">
+        <section id="signal-intelligence-spotlight" data-guide-anchor="inbox-signal-intelligence" className="grid gap-3" aria-labelledby="signal-intelligence-title">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Semnal selectat · inteligență operațională</p>

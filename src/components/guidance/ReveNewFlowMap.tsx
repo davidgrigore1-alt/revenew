@@ -1,33 +1,37 @@
 const flowSteps = [
-  "Semnal",
-  "Dovezi",
-  "Recomandare",
-  "Decizie umană",
-  "Acțiune sigură",
-  "Audit / pilot"
+  { label: "Semnal", detail: "de verificat", full: "Semnal comercial de verificat" },
+  { label: "Dovezi", detail: "și lipsuri", full: "Dovezi și informații lipsă" },
+  { label: "Recomandare", detail: "explicată", full: "Recomandare explicată" },
+  { label: "Decizie", detail: "umană", full: "Decizie umană" },
+  { label: "Acțiune", detail: "sigură", full: "Acțiune sigură" },
+  { label: "Audit / Pilot", detail: "validare", full: "Audit sau pilot controlat" }
 ] as const;
 
 export function ReveNewFlowMap({ activeStep = 0, compact = false }: { activeStep?: number; compact?: boolean }) {
   return (
+    <div className={compact ? "app-scrollbar max-w-full overflow-x-auto pb-1" : "max-w-full"}>
     <ol
       aria-label="Fluxul ReveNew: semnal, dovezi, recomandare, decizie umană, acțiune sigură și audit sau pilot"
-      className={`grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] ${compact ? "grid-cols-2 sm:grid-cols-3 xl:grid-cols-6" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+      className={`grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] ${compact ? "min-w-[720px] grid-cols-6" : "sm:grid-cols-2 lg:grid-cols-3"}`}
     >
       {flowSteps.map((step, index) => {
         const active = index === activeStep;
         return (
           <li
-            key={step}
+            key={step.label}
             aria-current={active ? "step" : undefined}
-            className={`flex min-h-14 items-center gap-2.5 bg-[rgb(var(--surface-subtle))] px-3 py-2.5 ${active ? "shadow-[inset_3px_0_0_rgb(var(--primary))]" : ""}`}
+            aria-label={`${index + 1}. ${step.full}`}
+            title={step.full}
+            className={`flex min-h-[4.5rem] min-w-0 items-center gap-2.5 bg-[rgb(var(--surface-subtle))] px-3 py-3 ${active ? "shadow-[inset_3px_0_0_rgb(var(--primary))]" : ""}`}
           >
             <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[0.6875rem] font-semibold tabular-nums ${active ? "border-[rgb(var(--primary))] bg-[rgb(var(--gold-100)/0.35)] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]" : "border-[rgb(var(--border-strong))] text-[rgb(var(--text-faint))]"}`}>
               {index + 1}
             </span>
-            <span className={`text-xs font-semibold leading-4 ${active ? "text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))]"}`}>{step}</span>
+            <span className="min-w-0"><span className={`block text-xs font-semibold leading-4 ${active ? "text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))]"}`}>{step.label}</span><span className="mt-0.5 block text-[0.6875rem] leading-4 text-[rgb(var(--text-faint))]">{step.detail}</span></span>
           </li>
         );
       })}
     </ol>
+    </div>
   );
 }

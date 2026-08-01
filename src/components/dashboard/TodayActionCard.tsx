@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 
 export function TodayActionCard({ action, compact = false }: { action: RecoveryAction; compact?: boolean }) {
   return (
-    <article className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4">
+    <article data-guide-anchor="today-action" className="rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-semibold text-[rgb(var(--foreground))]">{action.title}</h3>

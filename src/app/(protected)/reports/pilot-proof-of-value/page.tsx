@@ -80,7 +80,7 @@ export default async function PilotProofOfValuePage() {
         </div>
       }
     >
-      <article className="pilot-proof-of-value space-y-5">
+      <article data-guide-anchor="reports-audit-summary" className="pilot-proof-of-value space-y-5">
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">ReveNew · Concluzie după pilot</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Dovadă de valoare pilot</h1>

@@ -10,7 +10,7 @@ test("first-run guide explains the complete ReveNew flow and stays optional", ()
   const tour = read("src/components/guidance/GuidedProductTour.tsx");
   const flow = read("src/components/guidance/ReveNewFlowMap.tsx");
 
-  assert.match(flow, /"Semnal"[\s\S]*"Dovezi"[\s\S]*"Recomandare"[\s\S]*"Decizie umană"[\s\S]*"Acțiune sigură"[\s\S]*"Audit \/ pilot"/);
+  assert.match(flow, /label: "Semnal"[\s\S]*label: "Dovezi"[\s\S]*label: "Recomandare"[\s\S]*full: "Decizie umană"[\s\S]*full: "Acțiune sigură"[\s\S]*label: "Audit \/ Pilot"/);
   assert.match(tour, /Începe turul/);
   assert.match(tour, /Sari peste/);
   assert.match(tour, /Revizuiește mai târziu/);
@@ -56,7 +56,8 @@ test("shared shell exposes first-run and replay guidance without changing server
   const help = read("src/app/(protected)/help/page.tsx");
 
   assert.match(shell, /<GuidedProductTour \/>/);
-  assert.match(header, /<GuideReplayButton/);
+  assert.match(header, /<AssistantButton/);
+  assert.match(shell, /<ContextualAssistant \/>/);
   assert.match(pageShell, /<ContextualPageGuide/);
   assert.match(help, /<GuideReplayButton \/>/);
   assert.match(help, /<ReveNewFlowMap/);
