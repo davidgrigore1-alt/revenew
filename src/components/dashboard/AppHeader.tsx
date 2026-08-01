@@ -7,6 +7,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ShellNavigation } from "@/components/dashboard/ShellNavigation";
 import { WorkspaceMenu } from "@/components/dashboard/WorkspaceMenu";
 import { AssistantButton } from "@/components/guidance/ContextualAssistant";
+import { WorkspaceIdentityDisplay } from "@/components/theme/WorkspaceIdentityDisplay";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 export function AppHeader({
@@ -77,7 +78,7 @@ export function AppHeader({
             </button>
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]">Spațiu de lucru comercial</p>
-              <p className="truncate text-xs text-[rgb(var(--text-muted))]">{displayName}</p>
+              <WorkspaceIdentityDisplay fallbackName={displayName} compact />
             </div>
           </div>
 

@@ -3,6 +3,7 @@ import { DataCard } from "@/components/dashboard/DataCard";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { PersonalizationSettingsPanel } from "@/components/settings/PersonalizationSettingsPanel";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
 import { getCurrentPaidAccessContext, getPaidAccessStatusLabel } from "@/lib/billing/paid-access";
@@ -70,8 +71,10 @@ export default async function SettingsPage() {
         </div> : null}
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <nav className="sticky top-[4.25rem] z-20 flex gap-1 overflow-x-auto rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.94)] p-1 shadow-card backdrop-blur" aria-label="Secțiuni setări">
-          {[["#companie", "Companie"], ["#workspace", "Spațiu de lucru"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode && !isPreviewMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
+          {[["#aspect", "Aspect"], ["#identitate", "Identitate"], ["#companie", "Companie"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode && !isPreviewMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
         </nav>
+
+        <PersonalizationSettingsPanel baselineName={business?.name ?? "Spațiu de lucru"} baselineIndustry={business?.industry ?? ""} />
 
         <section id="companie" className="scroll-mt-36 grid gap-4">
           <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Configurație</p><h2 className="mt-1 text-lg font-semibold">Companie și afișare</h2></div>
@@ -104,7 +107,7 @@ export default async function SettingsPage() {
           <div id="recomandari" className="scroll-mt-36"><DataCard title="Recomandări și AI" description="ReveNew pregătește recomandări. Echipa păstrează controlul deciziilor și trimiterilor.">
             <DefinitionList
               items={[
-                ["Analiză AI", openAIConnected ? "Disponibilă când există credit API" : "Fallback local activ"],
+                ["Analiză AI", openAIConnected ? "Disponibilă când există credit API" : "Reguli interne active"],
                 ["Generare mesaje", openAIConnected ? "Disponibilă pentru documente și follow-up-uri" : "Drafturi standard disponibile"],
                 ["Control uman", "Mesajele nu sunt trimise automat"],
                 ["Chei API", "Rămân doar pe server"]

@@ -21,22 +21,40 @@
   --text-faint: 151 142 128;
   --sidebar-foreground: 29 28 25;
 
-  /* ReveNew antique-gold accent: decisive on actions, quiet on large surfaces. */
-  --brand-950: 39 33 9;
-  --brand-900: 59 49 12;
-  --brand-800: 92 75 17;
-  --brand-700: 128 103 24;
-  --brand-600: 171 139 43;
-  --brand-500: 214 183 74;
-  --brand-400: 226 201 104;
-  --brand-300: 235 218 155;
-  --brand-100: 249 241 207;
-  --brand-50: 253 250 239;
-  --gold-700: 128 103 24;
-  --gold-500: 214 183 74;
-  --gold-300: 235 218 155;
-  --gold-100: 249 241 207;
-  --gold-50: 253 250 239;
+  /* Controlled accent roles. Presets override only these variables. */
+  --rn-accent: 214 183 74;
+  --rn-accent-foreground: 39 33 9;
+  --rn-accent-soft: 249 241 207;
+  --rn-accent-muted: 253 250 239;
+  --rn-accent-border: 226 201 104;
+  --rn-accent-ring: 171 139 43;
+  --rn-accent-glow: 214 183 74;
+  --rn-accent-surface: 253 250 239;
+  --rn-accent-950: 39 33 9;
+  --rn-accent-900: 59 49 12;
+  --rn-accent-800: 92 75 17;
+  --rn-accent-700: 128 103 24;
+  --rn-accent-600: 171 139 43;
+  --rn-accent-500: 214 183 74;
+  --rn-accent-400: 226 201 104;
+  --rn-accent-300: 235 218 155;
+  --rn-accent-100: 249 241 207;
+  --rn-accent-50: 253 250 239;
+  --brand-950: var(--rn-accent-950);
+  --brand-900: var(--rn-accent-900);
+  --brand-800: var(--rn-accent-800);
+  --brand-700: var(--rn-accent-700);
+  --brand-600: var(--rn-accent-600);
+  --brand-500: var(--rn-accent-500);
+  --brand-400: var(--rn-accent-400);
+  --brand-300: var(--rn-accent-300);
+  --brand-100: var(--rn-accent-100);
+  --brand-50: var(--rn-accent-50);
+  --gold-700: var(--rn-accent-700);
+  --gold-500: var(--rn-accent-500);
+  --gold-300: var(--rn-accent-300);
+  --gold-100: var(--rn-accent-100);
+  --gold-50: var(--rn-accent-50);
   --primary: var(--brand-700);
   --primary-hover: var(--brand-800);
   --primary-active: var(--brand-900);
@@ -222,9 +240,9 @@ body {
 }
 
 [data-revenew-guide-highlight="true"] {
-  outline: 2px solid rgb(var(--gold-500));
+  outline: 2px solid rgb(var(--rn-accent));
   outline-offset: 4px;
-  box-shadow: 0 0 0 7px rgb(var(--gold-500) / 0.12), var(--shadow-card);
+  box-shadow: 0 0 0 7px rgb(var(--rn-accent-glow) / 0.12), var(--shadow-card);
   transition: outline-color 180ms ease, box-shadow 180ms ease;
 }
 

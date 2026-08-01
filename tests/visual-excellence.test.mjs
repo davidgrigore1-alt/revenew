@@ -23,12 +23,13 @@ test("landing presents an evidence-led and human-controlled commercial path", ()
   assert.doesNotMatch(landing, /live Gmail|live Google Calendar|voce activă/i);
 });
 
-test("visual system uses restrained antique gold and an explicit evidence rail", () => {
+test("visual system keeps Champagne Gold as the restrained default and an explicit evidence rail", () => {
   const globals = read("src/app/globals.css");
   const aiPage = read("src/app/(protected)/ai/page.tsx");
 
-  assert.match(globals, /antique-gold accent/);
-  assert.match(globals, /--brand-500: 214 183 74/);
+  assert.match(globals, /Controlled accent roles/);
+  assert.match(globals, /--rn-accent-500: 214 183 74/);
+  assert.match(globals, /--brand-500: var\(--rn-accent-500\)/);
   assert.match(globals, /\.ai-evidence-rail/);
   assert.match(aiPage, /ai-evidence-rail/);
   assert.match(aiPage, /Vezi de ce/);

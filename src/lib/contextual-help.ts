@@ -16,6 +16,7 @@ export type ContextualHelpResult = {
   matched: boolean;
   score: number;
   confidence: "high" | "guided" | "fallback";
+  mode: "answer" | "clarify" | "fallback";
   entry: ContextualHelpEntry | null;
   suggestions: string[];
 };
@@ -25,7 +26,7 @@ export function normalizeHelpText(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("ro-RO")
-    .replace(/[^a-z0-9\s/-]/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -104,8 +105,8 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
   {
     id: "opportunity-contact",
     title: "Contactul și decidentul unei oportunități",
-    aliases: ["Cum asociez un contact acestei oportunități?", "Unde verific persoana de contact?", "Cum găsesc decidentul?"],
-    keywords: ["contact", "persoana", "decident", "asociez", "oportunitate", "caz", "oferta"],
+    aliases: ["Cum asociez un contact acestei oportunități?", "Unde verific persoana de contact?", "Cum găsesc decidentul?", "Ce fac dacă lipsește contactul principal?"],
+    keywords: ["contact", "persoana", "decident", "asociez", "oportunitate", "caz", "oferta", "lipseste"],
     routes: ["/opportunities"],
     anchor: "opportunity-commercial-facts",
     shortAnswer: "În detaliul oportunității verifică faptele comerciale și zona de contacte. Dacă nu există un contact confirmat, tratează lipsa ca informație de verificat înaintea comunicării.",
@@ -163,10 +164,11 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
   {
     id: "controlled-audit",
     title: "Cum pregătești un audit controlat",
-    aliases: ["Cum pregătesc un audit controlat?", "Care este diferența dintre audit și pilot?", "Unde este raportul de audit?"],
+    aliases: ["Cum pregătesc un audit controlat?", "Cum încep un audit controlat?", "Începe audit controlat", "Care este diferența dintre audit și pilot?", "Unde este raportul de audit?", "Ce date sunt necesare pentru audit?"],
     keywords: ["audit", "pilot", "raport", "dovada", "anonimizate"],
     routes: ["/reports/revenue-recovery-audit", "/reports/enterprise-pilot-pack", "/reports/pilot-proof-of-value"],
     anchor: "reports-audit-summary",
+    primaryActionLabel: "Începe audit controlat",
     shortAnswer: "Auditul pornește dintr-un eșantion limitat și verifică blocajele, dovezile și acțiunile sigure. Pilotul validează procesul controlat; dovada valorii susține decizia de continuare, ajustare sau oprire.",
     steps: ["Pregătește 20–50 de cazuri recente.", "Anonimizează datele când este necesar.", "Verifică riscurile și dovezile din audit.", "Definește pilotul și criteriile de succes.", "Evaluează dovada valorii fără promisiuni financiare."],
     safetyNote: "Primul audit nu necesită acces complet la inbox și nu garantează venit.",
@@ -207,10 +209,36 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     relatedQuestions: ["Ce înseamnă aprobarea?", "Cum verific o recomandare?", "Cum pregătesc un audit controlat?"]
   },
   {
+    id: "settings-appearance",
+    title: "Aspect și culoare accent",
+    aliases: ["Cum schimb culoarea accent?", "Unde aleg tema?", "Cum personalizez aspectul?", "Ce teme sunt disponibile?"],
+    keywords: ["aspect", "culoare", "accent", "tema", "teme", "personalizare", "branding"],
+    routes: ["/settings"],
+    anchor: "settings-appearance",
+    primaryActionLabel: "Deschide Aspect",
+    shortAnswer: "În Setări → Aspect alegi unul dintre preseturile premium. Accentul schimbă acțiunile și selecțiile, dar nu modifică statusurile critice, succesul sau avertizările.",
+    steps: ["Deschide Setări.", "Alege un preset în Culoare accent.", "Verifică previzualizarea.", "Aplică tema sau revino la implicit."],
+    safetyNote: "Preferința vizuală se aplică numai în acest browser și nu schimbă logica comercială.",
+    relatedQuestions: ["Cum personalizez identitatea spațiului?", "Cum aleg moneda principală?", "Unde găsesc setările?"]
+  },
+  {
+    id: "settings-identity",
+    title: "Identitatea spațiului de lucru",
+    aliases: ["Cum personalizez identitatea spațiului?", "Cum schimb numele afișat?", "Unde aleg inițialele?", "Cum aleg moneda principală?", "Cum schimb limba?"],
+    keywords: ["identitate", "nume", "initiale", "industrie", "moneda", "valuta", "limba", "branding"],
+    routes: ["/settings"],
+    anchor: "settings-identity",
+    primaryActionLabel: "Deschide Identitate",
+    shortAnswer: "Identitatea locală controlează numele afișat, inițialele, industria și preferințele de monedă și limbă din acest browser. Nu suprascrie denumirea legală și nu convertește valori.",
+    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Alege industria și moneda principală.", "Verifică previzualizarea.", "Aplică afișarea locală."],
+    safetyNote: "Interfața rămâne în română, iar monedele istorice rămân separate.",
+    relatedQuestions: ["Cum schimb culoarea accent?", "Cum aleg moneda principală?", "Unde găsesc setările?"]
+  },
+  {
     id: "access-settings-help",
     title: "Acces, setări și ajutor",
-    aliases: ["Unde găsesc setările?", "Ce fac dacă lipsește o opțiune?", "Unde găsesc ajutor?"],
-    keywords: ["acces", "setari", "ajutor", "lipseste", "optiune", "cont"],
+    aliases: ["Unde găsesc setările?", "Ce fac dacă lipsește o opțiune?", "Unde găsesc ajutor?", "Cum caut o secțiune?"],
+    keywords: ["acces", "setari", "ajutor", "lipseste", "optiune", "cont", "caut", "sectiune"],
     routes: ["/help", "/settings", "/access"],
     shortAnswer: "Folosește Ajutor pentru orientare și Setări pentru contextul companiei și controalele disponibile rolului tău. Dacă o opțiune lipsește, poate depinde de acces sau de starea datelor.",
     steps: ["Deschide Ajutor pentru traseul operațional.", "Verifică Setări pentru configurația disponibilă.", "Consultă pagina de acces dacă funcția este restricționată.", "Nu încerca să ocolești permisiunile."],
@@ -218,8 +246,72 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
   }
 ];
 
+export const screenExplanationEntries: ContextualHelpEntry[] = [
+  {
+    id: "screen-dashboard", title: "Cum folosești Control Center", aliases: ["Explică această pagină"], keywords: [], routes: ["/dashboard"], anchor: "dashboard-critical-decision",
+    shortAnswer: "Ești în Control Center. Începe cu decizia critică, valoarea estimată, venitul confirmat și prima acțiune sigură.",
+    steps: ["Vrei să înțelegi decizia critică?", "Vrei să verifici dovezile?", "Vrei să vezi ce acțiune urmează?"],
+    safetyNote: "Estimările rămân separate de venitul confirmat, iar decizia finală aparține echipei.",
+    relatedQuestions: ["Ce verific prima dată pe Dashboard?", "Unde văd dovezile?", "Ce înseamnă valoare estimată, neconfirmată?"]
+  },
+  {
+    id: "screen-ai", title: "Cum folosești Inteligență operațională", aliases: ["Explică această pagină"], keywords: [], routes: ["/ai"], anchor: "ai-recommendation",
+    shortAnswer: "Ești în Inteligență operațională. Aici verifici recomandarea, dovada, informațiile lipsă și acțiunea sigură. ReveNew explică; omul decide.",
+    steps: ["Vrei să înțelegi recomandarea?", "Vrei să verifici dovezile?", "Vrei să înțelegi de ce aprobă omul?"],
+    safetyNote: "Asistența nu aplică recomandarea și nu trimite comunicări automat.",
+    relatedQuestions: ["Cum verific o recomandare?", "Unde văd dovezile?", "De ce AI-ul nu trimite automat?"]
+  },
+  {
+    id: "screen-inbox", title: "Cum folosești Inbox Comercial", aliases: ["Explică această pagină"], keywords: [], routes: ["/inbox"], anchor: "inbox-signal-intelligence",
+    shortAnswer: "Ești în Inbox Comercial. Aici transformi semnale în decizii verificabile. Începe cu semnalul selectat, apoi verifică dovada, lipsurile și acțiunea sigură.",
+    steps: ["Vrei să înțelegi ce este un semnal?", "Vrei să vezi cum devine oportunitate?", "Vrei să verifici ce a înțeles ReveNew?"],
+    safetyNote: "Un semnal rămâne de verificat și nu declanșează automat o comunicare.",
+    relatedQuestions: ["Ce este un semnal?", "Cum verific un semnal în Inbox?", "Ce înseamnă Ce a înțeles ReveNew?"]
+  },
+  {
+    id: "screen-opportunity", title: "Cum folosești detaliul oportunității", aliases: ["Explică această pagină"], keywords: [], routes: ["/opportunities"], anchor: "opportunity-commercial-facts",
+    shortAnswer: "Ești pe detaliul oportunității. Începe cu valoarea estimată, dovezile, responsabilul, termenul și acțiunea sigură.",
+    steps: ["Vrei să verifici contactul?", "Vrei să deschizi dovezile?", "Vrei să clarifici acțiunea următoare?"],
+    safetyNote: "Valoarea este estimată până la confirmarea explicită a unui rezultat câștigat.",
+    relatedQuestions: ["Cum asociez un contact acestei oportunități?", "Unde văd dovezile unei oportunități?", "Ce înseamnă valoare estimată, neconfirmată?"]
+  },
+  {
+    id: "screen-feedback", title: "Cum folosești concluziile după demo", aliases: ["Explică această pagină"], keywords: [], routes: ["/demo/feedback"], anchor: "demo-feedback-fit",
+    shortAnswer: "Ești în feedbackul după demo. Notează durerea, obiecțiile, potrivirea pentru audit și următorul pas.",
+    steps: ["Vrei să notezi durerea comercială?", "Vrei să clarifici obiecțiile?", "Vrei să evaluezi potrivirea pentru audit?"],
+    relatedQuestions: ["Cum notez feedbackul după demo?", "Cum pregătesc un audit controlat?", "Cum pornesc demo-ul?"]
+  },
+  {
+    id: "screen-demo", title: "Cum folosești traseul demo", aliases: ["Explică această pagină"], keywords: [], routes: ["/demo"],
+    shortAnswer: "Ești în traseul demo. Urmează pașii pentru o prezentare controlată de 7–10 minute și încheie cu auditul pe un eșantion limitat.",
+    steps: ["Vrei să pornești prezentarea?", "Vrei să vezi traseul complet?", "Vrei să începi auditul controlat?"],
+    relatedQuestions: ["Cum pornesc demo-ul?", "Cum pregătesc un audit controlat?", "Cum notez feedbackul după demo?"]
+  },
+  {
+    id: "screen-reports", title: "Cum folosești rapoartele", aliases: ["Explică această pagină"], keywords: [], routes: ["/reports"], anchor: "reports-audit-summary",
+    shortAnswer: "Ești în zona de rapoarte. Folosește aceste pagini pentru audit, pilot și dovada valorii. Estimările rămân separate de rezultatele confirmate.",
+    steps: ["Vrei să deschizi auditul?", "Vrei să înțelegi valoarea estimată?", "Vrei să pregătești pilotul?"],
+    safetyNote: "Rapoartele nu promit venit recuperat și nu execută acțiuni.",
+    relatedQuestions: ["Cum pregătesc un audit controlat?", "Ce înseamnă valoare estimată, neconfirmată?", "Care este diferența dintre audit și pilot?"]
+  },
+  {
+    id: "screen-settings", title: "Cum folosești Setări", aliases: ["Explică această pagină"], keywords: [], routes: ["/settings"], anchor: "settings-appearance",
+    shortAnswer: "Ești în Setări. Aici controlezi aspectul local, identitatea de afișare, accesul și preferințele disponibile rolului tău.",
+    steps: ["Vrei să schimbi accentul?", "Vrei să personalizezi identitatea?", "Vrei să verifici accesul?"],
+    relatedQuestions: ["Cum schimb culoarea accent?", "Cum personalizez identitatea spațiului?", "Unde găsesc setările?"]
+  }
+];
+
+const vagueGuidancePhrases = ["nu inteleg", "ce fac aici", "ajuta ma", "nu stiu unde sa merg", "ce trebuie sa fac", "unde incep"];
+
 function routeMatches(entryRoute: string, pathname: string) {
   return pathname === entryRoute || pathname.startsWith(`${entryRoute}/`);
+}
+
+export function getScreenExplanation(pathname: string): ContextualHelpResult {
+  const entry = screenExplanationEntries.find((candidate) => candidate.routes.some((route) => routeMatches(route, pathname)))
+    ?? contextualHelpEntries.find((candidate) => candidate.id === "revenew-core-flow")!;
+  return { matched: true, score: 100, confidence: "high", mode: "clarify", entry, suggestions: entry.relatedQuestions.slice(0, 4) };
 }
 
 function scoreEntry(entry: ContextualHelpEntry, normalizedQuestion: string, pathname: string) {
@@ -256,12 +348,15 @@ export function suggestedHelpQuestions(pathname: string, limit = 4) {
 
 export function findContextualHelp(question: string, pathname = "/dashboard"): ContextualHelpResult {
   const normalizedQuestion = normalizeHelpText(question);
-  if (!normalizedQuestion) return { matched: false, score: 0, confidence: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
+  if (!normalizedQuestion) return { matched: false, score: 0, confidence: "fallback", mode: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
+  if (normalizedQuestion === "explica aceasta pagina" || vagueGuidancePhrases.some((phrase) => normalizedQuestion.includes(phrase))) {
+    return getScreenExplanation(pathname);
+  }
 
   const ranked = contextualHelpEntries
     .map((entry, index) => ({ entry, index, score: scoreEntry(entry, normalizedQuestion, pathname) }))
     .sort((left, right) => right.score - left.score || left.index - right.index);
   const best = ranked[0];
-  if (!best || best.score < 5) return { matched: false, score: best?.score ?? 0, confidence: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
-  return { matched: true, score: best.score, confidence: best.score >= 30 ? "high" : "guided", entry: best.entry, suggestions: best.entry.relatedQuestions.slice(0, 3) };
+  if (!best || best.score < 5) return { matched: false, score: best?.score ?? 0, confidence: "fallback", mode: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
+  return { matched: true, score: best.score, confidence: best.score >= 30 ? "high" : "guided", mode: "answer", entry: best.entry, suggestions: best.entry.relatedQuestions.slice(0, 4) };
 }

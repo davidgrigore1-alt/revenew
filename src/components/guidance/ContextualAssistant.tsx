@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { findContextualHelp, suggestedHelpQuestions, type ContextualHelpEntry, type ContextualHelpResult } from "@/lib/contextual-help";
+import { findContextualHelp, getScreenExplanation, suggestedHelpQuestions, type ContextualHelpEntry, type ContextualHelpResult } from "@/lib/contextual-help";
 import { resetDismissedGuides } from "@/lib/guide-persistence";
 import { highlightGuideAnchor } from "@/lib/guide-navigation";
 import { cn } from "@/lib/utils";
@@ -48,11 +48,11 @@ export function AssistantButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] shadow-sm transition-colors hover:border-[rgb(var(--gold-500)/0.5)] hover:bg-[rgb(var(--gold-500)/0.07)] sm:px-3", className)}
+      className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] shadow-sm transition-colors hover:border-[rgb(var(--primary)/0.5)] hover:bg-[rgb(var(--primary-muted))] sm:px-3", className)}
       onClick={() => window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT))}
       aria-label="Deschide Asistent ReveNew"
     >
-      <QuestionMarkCircleIcon className="h-4 w-4 text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]" aria-hidden="true" />
+      <QuestionMarkCircleIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />
       <span className="hidden sm:inline">Asistent</span>
     </button>
   );
@@ -141,6 +141,12 @@ export function ContextualAssistant() {
     setNotice("");
   }
 
+  function explainCurrentScreen() {
+    setQuestion("Explică această pagină");
+    setResult(getScreenExplanation(pathname));
+    setNotice("");
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     answer(question);
@@ -173,7 +179,7 @@ export function ContextualAssistant() {
     setNotice(count > 0 ? "Ghidurile închise pot fi afișate din nou." : "Nu există ghiduri închise în acest browser.");
   }
 
-  if (!open) return notice ? <p className="fixed bottom-20 right-4 z-[90] max-w-[calc(100vw-2rem)] rounded-control border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-sm leading-5 text-[rgb(var(--foreground))] shadow-modal sm:bottom-6 sm:right-6 sm:max-w-sm" role="status">{notice}</p> : null;
+  if (!open) return notice ? <p className="fixed bottom-20 right-4 z-[90] max-w-[calc(100vw-2rem)] rounded-control border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--surface-elevated))] px-4 py-3 text-sm leading-5 text-[rgb(var(--foreground))] shadow-modal sm:bottom-6 sm:right-6 sm:max-w-sm" role="status">{notice}</p> : null;
   const entry = result?.entry ?? null;
 
   return (
@@ -185,11 +191,11 @@ export function ContextualAssistant() {
         aria-modal="true"
         aria-labelledby="contextual-assistant-title"
         aria-describedby="contextual-assistant-description"
-        className="app-scrollbar absolute inset-x-0 bottom-0 flex max-h-[94dvh] flex-col overflow-y-auto rounded-t-panel border border-[rgb(var(--gold-500)/0.32)] bg-[rgb(var(--surface-elevated))] shadow-modal sm:inset-y-0 sm:left-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel"
+        className="app-scrollbar absolute inset-x-0 bottom-0 flex max-h-[94dvh] flex-col overflow-y-auto rounded-t-panel border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--surface-elevated))] shadow-modal sm:inset-y-0 sm:left-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel"
       >
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated)/0.96)] p-4 backdrop-blur-md sm:p-5">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Ghid intern al produsului</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Ghid intern al produsului</p>
             <h2 id="contextual-assistant-title" className="mt-1 text-xl font-semibold">Asistent ReveNew</h2>
             <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Asistentul răspunde pe baza ghidului intern și te trimite către zona relevantă.</p>
           </div>
@@ -203,24 +209,26 @@ export function ContextualAssistant() {
               <Input ref={inputRef} id="contextual-assistant-question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Întreabă cum folosești ReveNew…" autoComplete="off" />
               <Button type="submit" size="icon" aria-label="Caută răspuns sigur"><MagnifyingGlassIcon className="h-5 w-5" aria-hidden="true" /></Button>
             </div>
-            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Asistentul răspunde pe baza ghidului intern. Pentru întrebări în afara aplicației, indică ce lipsește în loc să inventeze.</p>
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Răspunde pe baza ghidului intern. Dacă nu are un răspuns sigur, indică ce lipsește.</p>
           </form>
+
+          <button type="button" className="focus-ring flex min-h-11 items-center justify-between gap-3 rounded-control border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--primary-muted))] px-3 py-2 text-left text-sm font-semibold text-[rgb(var(--foreground))] hover:border-[rgb(var(--primary)/0.5)]" onClick={explainCurrentScreen}><span>Explică această pagină</span><ArrowRightIcon className="h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /></button>
 
           {!result ? (
             <section aria-labelledby="assistant-suggestions-title">
               <h3 id="assistant-suggestions-title" className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Întrebări utile aici</h3>
-              <div className="mt-2 grid gap-2">{suggestions.map((suggestion) => <button key={suggestion} type="button" className="focus-ring min-h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-left text-sm font-medium transition-colors hover:border-[rgb(var(--gold-500)/0.45)] hover:bg-[rgb(var(--gold-500)/0.06)]" onClick={() => answer(suggestion)}>{suggestion}</button>)}</div>
+              <div className="mt-2 grid gap-2">{suggestions.map((suggestion) => <button key={suggestion} type="button" className="focus-ring min-h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-left text-sm font-medium transition-colors hover:border-[rgb(var(--primary)/0.45)] hover:bg-[rgb(var(--primary-muted))]" onClick={() => answer(suggestion)}>{suggestion}</button>)}</div>
             </section>
           ) : entry ? (
-            <section className="overflow-hidden rounded-panel border border-[rgb(var(--gold-500)/0.3)] bg-[rgb(var(--surface))]" aria-live="polite">
+            <section className="overflow-hidden rounded-panel border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--surface))]" aria-live="polite">
               <div className="border-b border-[rgb(var(--border))] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Răspuns sigur din ghid</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">{result.mode === "clarify" ? "Orientare contextuală" : "Răspuns sigur din ghid"}</p>
                 <h3 className="mt-2 text-lg font-semibold">{entry.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{entry.shortAnswer}</p>
               </div>
               <div className="p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Pași concreți</p>
-                <ol className="mt-3 grid gap-2.5">{entry.steps.map((step, index) => <li key={step} className="flex gap-3 text-sm leading-5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--gold-500)/0.32)] bg-[rgb(var(--gold-500)/0.08)] text-xs font-semibold text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">{index + 1}</span><span className="pt-0.5">{step}</span></li>)}</ol>
+                <ol className="mt-3 grid gap-2.5">{entry.steps.map((step, index) => <li key={step} className="flex gap-3 text-sm leading-5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--primary-muted))] text-xs font-semibold text-[rgb(var(--primary))]">{index + 1}</span><span className="pt-0.5">{step}</span></li>)}</ol>
                 {entry.safetyNote ? <p className="mt-4 rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Limită de control:</strong> {entry.safetyNote}</p> : null}
                 <div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => navigate(entry)} size="small">{entry.primaryActionLabel ?? "Du-mă acolo"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>{entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />Arată-mi zona</Button> : null}</div>
                 <div className="mt-4 border-t border-[rgb(var(--border))] pt-4"><p className="text-xs font-semibold text-[rgb(var(--text-muted))]">Destinații relevante</p><div className="mt-2 flex flex-wrap gap-2">{entry.routes.map((route) => <button key={route} type="button" className="focus-ring rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline" onClick={() => { router.push(route); closeAssistant(); }}>{routeLabels[route] ?? route}</button>)}</div></div>
