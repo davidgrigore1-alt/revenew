@@ -124,7 +124,7 @@ test("company wayfinding exposes an explicit detail action and accessible breadc
 test("dashboard provides direct entries to companies and the recovery queue", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   const morningBrief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
-  assert.match(dashboard, /<ExecutiveMorningBrief brief=\{morningBrief\}/);
+  assert.match(dashboard, /<ExecutiveMorningBrief[\s\S]{0,120}brief=\{morningBrief\}/);
   assert.match(morningBrief, /href="\/companies"[\s\S]{0,180}Vezi companiile/);
   assert.match(morningBrief, /href="\/recoverable"[\s\S]{0,180}Vezi coada de recuperare/);
 });

@@ -22,7 +22,15 @@ const countLabels: Array<[keyof ExecutiveMorningBriefModel["counts"], string]> =
   ["missingPrimaryContacts", "contacte principale lipsă"]
 ];
 
-export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefModel }) {
+export function ExecutiveMorningBrief({
+  brief,
+  pipelineValueRon,
+  confirmedRevenueRon
+}: {
+  brief: ExecutiveMorningBriefModel;
+  pipelineValueRon: number;
+  confirmedRevenueRon: number;
+}) {
   const visibleCounts = countLabels.filter(([key]) => brief.counts[key] > 0).slice(0, 4);
 
   return (
@@ -43,7 +51,7 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefM
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))] sm:text-base">{brief.summary}</p>
 
             {brief.bullets.length > 0 ? (
-              <ol className="mt-5 hidden gap-2.5 sm:grid sm:grid-cols-3" aria-label="Primele decizii ale zilei">
+              <ol className="mt-5 hidden gap-2.5 2xl:grid 2xl:grid-cols-3" aria-label="Primele decizii ale zilei">
                 {brief.bullets.map((item, index) => (
                   <li key={item.id} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.74)] p-3.5">
                     <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Prioritatea {index + 1}</p>
@@ -63,6 +71,19 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveMorningBriefM
                 ))}
               </div>
             ) : null}
+
+            <dl aria-label="Indicatori financiari esențiali" className="mt-4 hidden grid-cols-2 gap-px overflow-hidden rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid">
+              <div className="bg-[rgb(var(--surface)/0.78)] p-3.5">
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-muted))]">Valoare estimată în pipeline · RON</dt>
+                <dd className="mt-1 text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(pipelineValueRon, "RON")}</dd>
+                <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Estimare activă, separată de valoarea expusă.</p>
+              </div>
+              <div className="bg-[rgb(var(--surface)/0.78)] p-3.5">
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--success-text))]">Venit confirmat · RON</dt>
+                <dd className="mt-1 text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(confirmedRevenueRon, "RON")}</dd>
+                <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate declarate explicit.</p>
+              </div>
+            </dl>
           </div>
 
           <aside className="rounded-card border border-[rgb(var(--brand-500)/0.28)] bg-[rgb(var(--surface)/0.86)] p-4 shadow-card sm:p-5" aria-label="Prima acțiune sigură">

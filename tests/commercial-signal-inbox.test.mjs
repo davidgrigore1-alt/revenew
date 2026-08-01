@@ -56,9 +56,9 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(inbox, /detected_from_opportunity_id/);
   assert.match(inbox, /signal_archived/);
   assert.match(migration, /insert into public\.opportunity_actions/);
-  assert.match(client, /Pregătește cu AI/);
+  assert.match(client, /Pregătește analiza/);
   assert.match(client, /Trimite spre aprobare/);
-  assert.match(preparation, /Asistent de pregătire/);
+  assert.match(preparation, /Ce a înțeles ReveNew/);
   assert.match(preparation, /Următoarea acțiune recomandată/);
   assert.match(preparation, /Nu se aplică și nu se trimite nimic fără aprobare/);
   assert.doesNotMatch(client + inbox + preparation, /sendEmail|sendMessage|webhook|twilio|gmail/i);

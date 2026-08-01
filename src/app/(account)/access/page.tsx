@@ -54,7 +54,11 @@ export default async function AccessPage({ searchParams }: { searchParams?: { re
   const isPreviewMode = context.accessMode === "preview";
   const periodEnd = context.subscription?.currentPeriodEnd ? formatDate(context.subscription.currentPeriodEnd) : "Nu este stabilită";
   const statusLabel = isPreviewMode ? "Acces de evaluare" : getPaidAccessStatusLabel(context.accessStatus);
-  const planLabel = isPreviewMode ? context.previewPlan?.title ?? "Niciun plan selectat" : context.subscription?.plan ?? "Fără plan activ";
+  const planLabel = isPreviewMode
+    ? context.previewPlan?.id === "audit"
+      ? "Audit de recuperare venituri"
+      : context.previewPlan?.title ?? "Niciun plan selectat"
+    : context.subscription?.plan ?? "Fără plan activ";
   const accessLabel = isPreviewMode ? "Acces demonstrativ controlat" : context.hasAccess ? "Acces comercial activ" : "Confirmare comercială necesară";
 
   return (

@@ -225,7 +225,8 @@ export function CommercialInboxClient({
 }: CommercialInboxClientProps) {
   const { showToast } = useToast();
   const initiallySelectedSignal = initialSignals.find((signal) => signal.id === initialSignalId)
-    ?? initialSignals.find((signal) => !initialBatchId || signal.importBatchId === initialBatchId)
+    ?? (initialBatchId ? initialSignals.find((signal) => signal.importBatchId === initialBatchId) : undefined)
+    ?? initialSignals.find((signal) => signal.analysisStatus === "completed" && ["ready_for_review", "postponed"].includes(signal.reviewStatus))
     ?? initialSignals[0];
   const [signals, setSignals] = useState(initialSignals);
   const [selectedId, setSelectedId] = useState(initiallySelectedSignal?.id ?? "");
@@ -426,6 +427,14 @@ export function CommercialInboxClient({
       decision === "dismissed" ? "Semnalul a fost respins." : decision === "duplicate" ? "Semnalul a fost marcat duplicat." : "Revizuirea a fost amânată.");
   }
 
+  function choosePostponeWindow(days: number) {
+    const target = new Date();
+    target.setDate(target.getDate() + days);
+    target.setHours(9, 0, 0, 0);
+    const localValue = new Date(target.getTime() - target.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setPostponeUntil(localValue);
+  }
+
   function approve() {
     if (!selectedSignal) return;
     runAction(() => approveCommercialSignal(selectedSignal.id, {
@@ -460,6 +469,29 @@ export function CommercialInboxClient({
     <div className="grid gap-6">
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
+
+      {selectedSignal ? (
+        <section id="signal-intelligence-spotlight" className="grid gap-3" aria-labelledby="signal-intelligence-title">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Semnal selectat · inteligență operațională</p>
+              <h2 id="signal-intelligence-title" className="mt-1 truncate text-lg font-semibold text-[rgb(var(--foreground))] sm:text-xl">{selectedSignal.title}</h2>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew structurează problema, dovada și informația lipsă înaintea deciziei echipei.</p>
+            </div>
+            <Button href="#signal-review-panel" variant="secondary" size="small">Revizuiește semnalul</Button>
+          </div>
+          <SignalPreparationPanel
+            signal={selectedSignal}
+            compact
+            action={<Button
+              onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza și acțiunea recomandată sunt pregătite. Verifică faptele, riscurile și termenul, apoi salvează revizuirea.")}
+              disabled={isPending || selectedSignal.status === "converted"}
+              loading={isPending}
+              size="small"
+            >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou" : "Pregătește analiza"}</Button>}
+          />
+        </section>
+      ) : null}
 
       <div className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:hidden" role="group" aria-label="Fluxul de la semnal la oportunitate">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Flux controlat</p>
@@ -624,16 +656,6 @@ export function CommercialInboxClient({
                 </div>
               </section>
 
-              <SignalPreparationPanel
-                signal={selectedSignal}
-                action={<Button
-                  onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza și acțiunea recomandată sunt pregătite. Verifică faptele, riscurile și termenul, apoi salvează revizuirea.")}
-                  disabled={isPending || selectedSignal.status === "converted"}
-                  loading={isPending}
-                  size="small"
-                >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou cu AI" : "Pregătește cu AI"}</Button>}
-              />
-
               <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
                 <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
                   <span>Detalii de contact și context <span className="font-normal text-[rgb(var(--text-muted))]">· consultă numai dacă influențează decizia</span></span>
@@ -692,12 +714,24 @@ export function CommercialInboxClient({
                     <span>Amânare, respingere și arhivare <span className="font-normal text-[rgb(var(--text-muted))]">· decizii secundare</span></span>
                     <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                   </summary>
-                  <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-[1fr_auto]">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Motiv decizie" required><input value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Necesar pentru arhivare, respingere sau duplicat" className={fieldClasses()} /></Field>
-                      <Field label="Reia revizuirea la"><input type="datetime-local" value={postponeUntil} onChange={(event) => setPostponeUntil(event.target.value)} className={fieldClasses()} /></Field>
+                  <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4">
+                    <div className="grid gap-4 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 lg:grid-cols-[minmax(0,1fr)_minmax(15rem,0.72fr)]">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Reia revizuirea</p>
+                        <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Alege o fereastră rapidă sau stabilește termenul exact. Semnalul rămâne intern și auditabil.</p>
+                        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Opțiuni rapide de amânare">
+                          {[1, 3, 7].map((days) => <Button key={days} variant="ghost" size="small" onClick={() => choosePostponeWindow(days)}>Amână {days} {days === 1 ? "zi" : "zile"}</Button>)}
+                        </div>
+                      </div>
+                      <div className="grid content-start gap-3">
+                        <Field label="Alege termen"><input type="datetime-local" value={postponeUntil} onChange={(event) => setPostponeUntil(event.target.value)} className={fieldClasses()} /></Field>
+                        <Button variant="secondary" onClick={() => decide("postponed")} disabled={isPending || !postponeUntil} className="w-full">Amână revizuirea</Button>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-end gap-2"><Button variant="ghost" onClick={archive} disabled={isPending || !decisionReason.trim()}>Arhivează</Button><Button variant="ghost" onClick={() => decide("dismissed")} disabled={isPending}>Respinge</Button><Button variant="ghost" onClick={() => decide("duplicate")} disabled={isPending}>Marchează duplicat</Button><Button variant="secondary" onClick={() => decide("postponed")} disabled={isPending || !postponeUntil}>Amână</Button></div>
+                    <div className="grid gap-3 border-t border-[rgb(var(--border))] pt-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                      <Field label="Motiv decizie" required><input value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Necesar pentru arhivare, respingere sau duplicat" className={fieldClasses()} /></Field>
+                      <div className="flex flex-wrap gap-2"><Button variant="ghost" onClick={archive} disabled={isPending || !decisionReason.trim()}>Arhivează</Button><Button variant="ghost" onClick={() => decide("dismissed")} disabled={isPending}>Respinge</Button><Button variant="ghost" onClick={() => decide("duplicate")} disabled={isPending}>Marchează duplicat</Button></div>
+                    </div>
                   </div>
                 </details>
               ) : null}

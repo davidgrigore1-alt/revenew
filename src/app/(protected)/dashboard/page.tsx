@@ -103,7 +103,24 @@ export default async function DashboardPage() {
       <main className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-6 pb-24 sm:px-6 sm:py-7 lg:px-8 lg:pb-10">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
 
-        <ExecutiveMorningBrief brief={morningBrief} />
+        <ExecutiveMorningBrief
+          brief={morningBrief}
+          pipelineValueRon={summary.metrics.activePipelineValue}
+          confirmedRevenueRon={responseLoop.confirmedRevenueRon}
+        />
+
+        <section aria-label="Indicatori financiari esențiali pentru mobil" className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] shadow-card sm:hidden">
+          <div className="bg-[rgb(var(--surface))] p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--text-muted))]">Valoare estimată în pipeline · RON</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(summary.metrics.activePipelineValue, "RON")}</p>
+            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Oportunități active; estimare separată de valoarea expusă și de venitul confirmat.</p>
+          </div>
+          <div className="bg-[rgb(var(--surface))] p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--success-text))]">Venit confirmat · RON</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(responseLoop.confirmedRevenueRon, "RON")}</p>
+            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate declarate explicit; nu include estimări sau drafturi aprobate.</p>
+          </div>
+        </section>
 
         <WorkspaceDecisionQueue queue={decisionQueue} />
 

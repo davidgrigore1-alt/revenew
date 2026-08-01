@@ -156,12 +156,12 @@ test("implementation stays server-only, deterministic and directly above the dec
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   assert.match(model, /import "server-only"/);
   assert.doesNotMatch(model, /openai|anthropic|llm|fetch\s*\(|createSupabase|\.from\(/i);
-  assert.ok(dashboard.indexOf("<ExecutiveMorningBrief brief={morningBrief} />") < dashboard.indexOf("<WorkspaceDecisionQueue queue={decisionQueue} />"));
+  assert.ok(dashboard.indexOf("<ExecutiveMorningBrief") < dashboard.indexOf("<WorkspaceDecisionQueue queue={decisionQueue} />"));
   assert.match(ui, /Valoare estimată expusă:/);
   assert.match(ui, /nu este venit confirmat/);
   assert.match(ui, /Aprobarea umană rămâne obligatorie/);
   assert.match(ui, /Bazat pe:/);
-  assert.match(ui, /hidden gap-2\.5 sm:grid/);
+  assert.match(ui, /hidden gap-2\.5 2xl:grid/);
   assert.ok(ui.indexOf("<Button href={brief.firstSafeActionHref}") < ui.indexOf("{brief.evidence ?"));
   assert.doesNotMatch(ui, /Continuă|Află mai multe|Explorează/);
 });

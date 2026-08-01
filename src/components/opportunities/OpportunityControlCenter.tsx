@@ -114,6 +114,7 @@ export function OpportunityControlCenter({
                 <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
                 <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Valoare estimată: {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
                 <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Dovezi: {evidenceCount}</span>
+                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Responsabil: {ownerName ?? "Neatribuit"}</span>
               </div>
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.15em] text-[rgb(var(--primary))]">Acțiunea care deblochează progresul</p>
               <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{attention.primaryNextAction?.title ?? "Stabilește următoarea acțiune"}</h2>

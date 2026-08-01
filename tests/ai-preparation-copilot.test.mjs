@@ -79,7 +79,7 @@ test("AI preparation requires an explicit click and never runs on render", () =>
   const callIndex = client.indexOf("analyzeCommercialSignal(selectedSignal.id)");
   const clickIndex = client.lastIndexOf("onClick", callIndex);
   assert.ok(callIndex > 0 && clickIndex > 0 && callIndex - clickIndex < 240);
-  assert.match(client, /Pregătește cu AI/);
+  assert.match(client, /Pregătește analiza/);
   assert.doesNotMatch(client.slice(0, client.indexOf("return (")), /useEffect\([\s\S]*analyzeCommercialSignal/);
 });
 
@@ -122,7 +122,7 @@ test("Approval Center reuses the structured preparation panel", () => {
   const approval = read("src/components/approvals/ApprovalCenterClient.tsx");
   const panel = read("src/components/signals/SignalPreparationPanel.tsx");
   assert.match(approval, /SignalPreparationPanel signal=\{selectedSignal\}/);
-  for (const label of ["Ce a detectat ReveNew", "Dovezi din semnal", "Riscuri / neclarități", "Draft propus"]) {
+  for (const label of ["Ce a înțeles ReveNew", "Ce a detectat ReveNew", "Dovezi din semnal", "Riscuri / neclarități", "Draft propus"]) {
     assert.ok(panel.includes(label), `${label} missing from preparation panel`);
   }
 });

@@ -28,7 +28,7 @@ export function WorkspaceDecisionQueue({ queue }: { queue: WorkspaceDecisionQueu
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Decizii comerciale prioritare</p>
           <h2 id="workspace-decision-queue-title" className="mt-1.5 text-xl font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">De revizuit astăzi</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Cele mai importante bucle care pot bloca progresul comercial, ordonate pe baza dovezilor existente.</p>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew prioritizează deciziile după termen, severitate, dovadă și valoare estimată. Ordinea recomandă unde să verifici mai întâi; nu execută acțiuni.</p>
         </div>
         <Button href="/recoverable" variant="ghost" size="small">Deschide coada de recuperare <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
       </div>
