@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { GuideReplayButton } from "@/components/guidance/GuidedProductTour";
+import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
 
 const pathways = [
   { step: "01", title: "Configurează contextul comercial", description: "Verifică profilul companiei, serviciile și clienții țintă care susțin prioritizarea.", href: "/settings", action: "Deschide setările" },
@@ -49,7 +51,7 @@ const faqGroups = [
 
 export default function HelpPage() {
   return (
-    <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial.">
+    <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial." actions={<GuideReplayButton />}>
       <div className="grid gap-8">
         <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="start-title">
           <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[0.72fr_1.28fr]">
@@ -58,6 +60,7 @@ export default function HelpPage() {
               {pathways.map((item) => <li key={item.step} className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--primary))]">Pasul {item.step}</p><h3 className="mt-2 text-sm font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{item.description}</p><Link href={item.href} className="focus-ring mt-3 inline-flex min-h-10 items-center rounded-button text-sm font-semibold text-[rgb(var(--primary))]">{item.action} →</Link></li>)}
             </ol>
           </div>
+          <div className="border-t border-[rgb(var(--border))] p-4 sm:px-7"><ReveNewFlowMap activeStep={0} compact /></div>
         </section>
 
         <section aria-labelledby="faq-title">

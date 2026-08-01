@@ -15,6 +15,7 @@ import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { ExecutiveMorningBrief } from "@/components/dashboard/ExecutiveMorningBrief";
 import { FirstTimeGuide } from "@/components/dashboard/FirstTimeGuide";
+import { ContextualPageGuide } from "@/components/guidance/ContextualPageGuide";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PremiumPanel } from "@/components/dashboard/PremiumPanel";
@@ -102,6 +103,8 @@ export default async function DashboardPage() {
     return (
       <main className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-6 pb-24 sm:px-6 sm:py-7 lg:px-8 lg:pb-10">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
+
+        <ContextualPageGuide showFlow />
 
         <ExecutiveMorningBrief
           brief={morningBrief}

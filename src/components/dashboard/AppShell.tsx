@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/dashboard/AppHeader";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { GuidedProductTour } from "@/components/guidance/GuidedProductTour";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
@@ -36,6 +37,7 @@ export function AppShell({
         </div>
       </div>
       <MobileNav items={primaryItems} />
+      <GuidedProductTour />
     </div>
     </ToastProvider>
   );

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/dashboard/Breadcrumbs";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { ContextualPageGuide } from "@/components/guidance/ContextualPageGuide";
 
 type PageShellProps = {
   title: string;
@@ -18,7 +19,8 @@ export function PageShell({ title, eyebrow, description, children, actions, brea
       <PageHeader eyebrow={eyebrow} title={title} description={description}>
         {actions}
       </PageHeader>
-      {children ? <div className="mt-6">{children}</div> : null}
+      <ContextualPageGuide className="mt-4" />
+      {children ? <div className="mt-5">{children}</div> : null}
     </section>
   );
 }
