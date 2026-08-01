@@ -12,6 +12,12 @@ import {
   type AccentThemeId,
   type WorkspaceIdentityPreview
 } from "@/lib/theme-presets";
+import {
+  WORKSPACE_LOGO_DATA_URL_KEY,
+  WORKSPACE_LOGO_META_KEY,
+  normalizeWorkspaceLogo,
+  type WorkspaceLogo
+} from "@/lib/workspace-logo";
 
 type Theme = "light" | "dark" | "system";
 
@@ -24,6 +30,9 @@ type ThemeContextValue = {
   identityPreview: WorkspaceIdentityPreview | null;
   setIdentityPreview: (identity: WorkspaceIdentityPreview) => void;
   resetIdentityPreview: () => void;
+  workspaceLogo: WorkspaceLogo | null;
+  setWorkspaceLogo: (logo: WorkspaceLogo) => boolean;
+  removeWorkspaceLogo: () => void;
   personalizationReady: boolean;
 };
 
@@ -58,6 +67,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
   const [accentTheme, setAccentThemeState] = useState<AccentThemeId>(defaultAccentTheme);
   const [identityPreview, setIdentityPreviewState] = useState<WorkspaceIdentityPreview | null>(null);
+  const [workspaceLogo, setWorkspaceLogoState] = useState<WorkspaceLogo | null>(null);
   const [personalizationReady, setPersonalizationReady] = useState(false);
 
   useEffect(() => {
@@ -66,16 +76,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const storedAccent = window.localStorage.getItem(ACCENT_THEME_STORAGE_KEY);
     const initialAccent = isAccentThemeId(storedAccent) ? storedAccent : defaultAccentTheme;
     let storedIdentity: WorkspaceIdentityPreview | null = null;
+    let storedLogo: WorkspaceLogo | null = null;
     try {
       storedIdentity = normalizeWorkspaceIdentityPreview(JSON.parse(window.localStorage.getItem(WORKSPACE_IDENTITY_STORAGE_KEY) ?? "null"));
     } catch {
       storedIdentity = null;
+    }
+    try {
+      storedLogo = normalizeWorkspaceLogo(
+        window.localStorage.getItem(WORKSPACE_LOGO_DATA_URL_KEY),
+        JSON.parse(window.localStorage.getItem(WORKSPACE_LOGO_META_KEY) ?? "null")
+      );
+    } catch {
+      storedLogo = null;
     }
     setThemeState(initialTheme);
     setResolvedTheme(applyTheme(initialTheme));
     setAccentThemeState(initialAccent);
     applyAccentTheme(initialAccent);
     setIdentityPreviewState(storedIdentity);
+    setWorkspaceLogoState(storedLogo);
     setPersonalizationReady(true);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -94,6 +114,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     resolvedTheme,
     accentTheme,
     identityPreview,
+    workspaceLogo,
     personalizationReady,
     setTheme(nextTheme) {
       window.localStorage.setItem(storageKey, nextTheme);
@@ -115,8 +136,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     resetIdentityPreview() {
       window.localStorage.removeItem(WORKSPACE_IDENTITY_STORAGE_KEY);
       setIdentityPreviewState(null);
+    },
+    setWorkspaceLogo(nextLogo) {
+      const normalized = normalizeWorkspaceLogo(nextLogo.dataUrl, nextLogo);
+      if (!normalized) return false;
+      try {
+        window.localStorage.setItem(WORKSPACE_LOGO_DATA_URL_KEY, normalized.dataUrl);
+        window.localStorage.setItem(WORKSPACE_LOGO_META_KEY, JSON.stringify({
+          fileName: normalized.fileName,
+          mimeType: normalized.mimeType,
+          size: normalized.size
+        }));
+        setWorkspaceLogoState(normalized);
+        return true;
+      } catch {
+        window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
+        window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
+        return false;
+      }
+    },
+    removeWorkspaceLogo() {
+      window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
+      window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
+      setWorkspaceLogoState(null);
     }
-  }), [accentTheme, identityPreview, personalizationReady, resolvedTheme, theme]);
+  }), [accentTheme, identityPreview, personalizationReady, resolvedTheme, theme, workspaceLogo]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

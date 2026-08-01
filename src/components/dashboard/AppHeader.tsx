@@ -7,7 +7,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { ShellNavigation } from "@/components/dashboard/ShellNavigation";
 import { WorkspaceMenu } from "@/components/dashboard/WorkspaceMenu";
 import { AssistantButton } from "@/components/guidance/ContextualAssistant";
-import { WorkspaceIdentityDisplay } from "@/components/theme/WorkspaceIdentityDisplay";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
 
 export function AppHeader({
@@ -30,8 +30,10 @@ export function AppHeader({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerItems = [...primaryItems, ...utilityItems];
+  const { identityPreview } = useTheme();
   const canViewSettings = utilityItems.some((item) => item.href === "/settings");
   const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
+  const resolvedDisplayName = identityPreview?.displayName || displayName;
 
   useEffect(() => {
     setOpen(false);
@@ -77,8 +79,8 @@ export function AppHeader({
               <Bars3Icon className="h-5 w-5" aria-hidden="true" />
             </button>
             <div className="hidden min-w-0 sm:block">
-              <p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]">Spațiu de lucru comercial</p>
-              <WorkspaceIdentityDisplay fallbackName={displayName} compact />
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Context comercial</p>
+              <p className="max-w-[18rem] truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p>
             </div>
           </div>
 
@@ -103,7 +105,7 @@ export function AppHeader({
             <div className="flex min-h-[60px] items-center justify-between border-b border-[rgb(var(--border))] px-4">
               <div className="min-w-0">
                 <p id="mobile-navigation-title" className="text-base font-semibold text-[rgb(var(--foreground))]">ReveNew</p>
-                <p className="truncate text-xs text-[rgb(var(--text-muted))]">{displayName}</p>
+                <p className="truncate text-xs text-[rgb(var(--text-muted))]" title={resolvedDisplayName}>{resolvedDisplayName}</p>
               </div>
               <button ref={closeRef} type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-button border border-[rgb(var(--border))] text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))]" aria-label="Închide meniul principal" onClick={closeDrawer}>
                 <XMarkIcon className="h-5 w-5" aria-hidden="true" />

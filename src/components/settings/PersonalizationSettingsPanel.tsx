@@ -5,6 +5,8 @@ import { CheckIcon, PaintBrushIcon, ShieldCheckIcon } from "@heroicons/react/24/
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
+import { WorkspaceLogoPicker } from "@/components/settings/WorkspaceLogoPicker";
 import {
   accentThemePresets,
   accentThemeStyle,
@@ -134,11 +136,13 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
             <label className="grid gap-2 text-sm font-semibold">Industrie<select className={fieldClassName} value={identity.industry} onChange={(event) => updateIdentity("industry", event.target.value)}>{workspaceIndustryOptions.map((industry) => <option key={industry}>{industry}</option>)}</select></label>
             <label className="grid gap-2 text-sm font-semibold">Monedă principală<select className={fieldClassName} value={identity.currency} onChange={(event) => updateIdentity("currency", event.target.value as WorkspaceIdentityPreview["currency"])}><option>RON</option><option>EUR</option><option>RON + EUR</option></select></label>
             <label className="grid gap-2 text-sm font-semibold sm:col-span-2">Preferință de limbă<select className={fieldClassName} value={identity.language} onChange={(event) => updateIdentity("language", event.target.value as WorkspaceIdentityPreview["language"])}><option value="ro">Română</option><option value="en-ready">English · pregătit pentru viitor</option></select></label>
+            <WorkspaceLogoPicker />
             <p className="text-xs leading-5 text-[rgb(var(--text-muted))] sm:col-span-2">Moneda este o preferință de afișare: nu convertește valorile existente, iar monedele rămân separate în rapoarte. Preferința English este pregătită pentru viitor; interfața curentă rămâne în română.</p>
           </div>
           <div data-accent-preview={draftAccent} style={accentThemeStyle(draftAccent)} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Previzualizare spațiu</p>
-            <div className="mt-4 flex items-center gap-3"><span className="flex h-11 min-w-11 items-center justify-center rounded-control border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--primary-muted))] px-2 text-xs font-bold tracking-[0.08em] text-[rgb(var(--primary))]">{identity.initials || "RN"}</span><div className="min-w-0"><p className="truncate font-semibold">{identity.displayName || baselineName}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{identity.industry || "Industrie necompletată"}</p></div></div>
+            <div className="mt-4 flex items-center gap-3"><WorkspaceIdentityMark displayName={identity.displayName || baselineName} initials={identity.initials} /><div className="min-w-0"><p className="truncate font-semibold" title={identity.displayName || baselineName}>{identity.displayName || baselineName}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{identity.industry || "Industrie necompletată"}</p></div></div>
+            <p className="mt-4 border-t border-[rgb(var(--border))] pt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">ReveNew rămâne brandul produsului. Logo-ul și numele de aici identifică separat compania activă.</p>
             <dl className="mt-5 grid gap-2 border-t border-[rgb(var(--border))] pt-4 text-xs"><div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">Monedă principală</dt><dd className="font-semibold">{identity.currency}</dd></div><div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">Interfață</dt><dd className="font-semibold">Română</dd></div></dl>
           </div>
         </div>

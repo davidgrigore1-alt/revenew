@@ -25,7 +25,7 @@ test("app section search resolves business-friendly Romanian aliases", () => {
     ["companii", "Companii", "/companies"],
     ["societati", "Companii", "/companies"],
     ["contacte", "Contacte", "/contacts"],
-    ["audit", "Audit de recuperare venituri", "/reports/revenue-recovery-audit"],
+    ["audit", "Începe audit controlat", "/audit/start"],
     ["feedback", "Concluzii după demo", "/demo/feedback"],
     ["demo", "Demo controlat", "/demo"],
     ["setari", "Setări", "/settings"],

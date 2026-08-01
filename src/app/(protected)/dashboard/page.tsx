@@ -234,8 +234,8 @@ export default async function DashboardPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button href="/reports/revenue-recovery-audit" variant="secondary" size="small">Generează auditul</Button>
-            <Button href="/reports" variant="ghost" size="small">Vezi metodologia</Button>
+            <Button href="/audit/start" variant="secondary" size="small">Începe audit controlat</Button>
+            <Button href="/reports/revenue-recovery-audit" variant="ghost" size="small">Vezi auditul curent</Button>
           </div>
         </PremiumPanel>
       </main>

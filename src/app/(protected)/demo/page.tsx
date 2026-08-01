@@ -76,7 +76,8 @@ export default async function DemoPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--primary))]">Încheiere recomandată</p>
               <h2 id="controlled-audit-title" className="mt-2 text-2xl font-semibold tracking-[-0.03em]">Următorul pas: audit controlat pe 20–50 cazuri comerciale recente.</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">Auditul verifică dacă ReveNew poate reduce timpul de căutare, clarifica buclele deschise și prioritiza acțiunile fără acces inutil la date și fără promisiuni de venit.</p>
-              <div className="mt-5 flex flex-wrap gap-2"><Button href="/reports/revenue-recovery-audit">Începe audit controlat<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button><Button href="/reports/enterprise-pilot-pack" variant="secondary">Deschide Pilot Pack</Button><Button href="/demo/feedback" variant="ghost">Notează feedbackul după demo</Button></div>
+              <p className="mt-3 text-sm font-semibold text-[rgb(var(--foreground))]">După demo, pregătește auditul controlat pe 20–50 cazuri.</p>
+              <div className="mt-5 flex flex-wrap gap-2"><Button href="/audit/start">Începe audit controlat<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button><Button href="/reports/enterprise-pilot-pack" variant="secondary">Deschide Pilot Pack</Button><Button href="/demo/feedback" variant="ghost">Notează feedbackul după demo</Button></div>
             </div>
             <ul className="grid gap-3 rounded-card bg-[rgb(var(--surface-subtle))] p-4 text-sm leading-6 text-[rgb(var(--text-muted))] sm:p-5">
               {closingPrinciples.map((item) => <li key={item} className="flex gap-2"><CheckCircleIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}

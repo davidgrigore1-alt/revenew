@@ -71,7 +71,7 @@ test("section search resolves personalization, currency and controlled audit ali
     ["branding", "settings-identity", "/settings#identitate"],
     ["identitate", "settings-identity", "/settings#identitate"],
     ["moneda", "settings-identity", "/settings#identitate"],
-    ["audit controlat", "audit", "/reports/revenue-recovery-audit"],
+    ["audit controlat", "audit-start", "/audit/start"],
     ["firme", "companies", "/companies"]
   ];
   for (const [query, id, href] of cases) {

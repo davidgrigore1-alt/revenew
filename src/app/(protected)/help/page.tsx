@@ -54,6 +54,10 @@ export default function HelpPage() {
   return (
     <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial." actions={<div className="flex flex-wrap gap-2"><Button href="/demo" variant="secondary">Traseu demo</Button><Button href="/demo/feedback" variant="ghost">După demo: notează feedbackul</Button><GuideReplayButton /></div>}>
       <div className="grid gap-8">
+        <section className="rounded-panel border border-[rgb(var(--rn-accent-border)/0.65)] bg-[rgb(var(--rn-accent-muted))] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6" aria-labelledby="controlled-audit-help-title">
+          <div className="max-w-3xl"><p className="text-label text-[rgb(var(--primary))]">Audit controlat</p><h2 id="controlled-audit-help-title" className="mt-2 text-xl font-semibold">Cum începi un audit controlat</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Pregătește 20–50 de cazuri comerciale recente, confirmă câmpurile disponibile și anonimizează datele. Primul audit nu cere acces complet la inbox și nu trimite nimic automat.</p></div>
+          <Button href="/audit/start" className="mt-4 shrink-0 sm:mt-0">Deschide wizardul de audit</Button>
+        </section>
         <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="start-title">
           <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[0.72fr_1.28fr]">
             <div><p className="text-label text-[rgb(var(--primary))]">Începe cu fluxul real</p><h2 id="start-title" className="mt-2 text-2xl font-semibold tracking-[-0.035em]">De la semnal la acțiune comercială controlată.</h2><p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew organizează informația și recomandă următorii pași. Echipa confirmă relevanța, atribuirea responsabilului, documentele și rezultatele.</p></div>

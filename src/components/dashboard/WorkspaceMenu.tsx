@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRightOnRectangleIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
@@ -26,10 +27,10 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, identityPreview } = useTheme();
   const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
+  const resolvedDisplayName = identityPreview?.displayName || displayName;
   const identity = userName || userEmail || "Cont ReveNew";
-  const initial = (businessName || userName || userEmail || "R").slice(0, 1).toUpperCase();
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -67,17 +68,16 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
         type="button"
         onClick={() => setOpen((current) => !current)}
         className="focus-ring flex h-10 w-10 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left shadow-sm transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))] md:w-[220px] md:justify-start md:gap-2.5 md:px-2.5"
-        aria-label={`Cont și spațiu de lucru: ${displayName}`}
+        aria-label={`Cont și spațiu de lucru: ${resolvedDisplayName}`}
+        title={`${resolvedDisplayName} · ${identity}`}
         aria-haspopup="dialog"
         aria-controls="workspace-account-menu"
         aria-expanded={open}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-[rgb(var(--brand-50))] text-xs font-bold text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--brand-950))] dark:text-[rgb(var(--brand-300))]">
-          {initial}
-        </span>
+        <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} compact />
         <span className="hidden min-w-0 flex-1 md:block">
-          <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{displayName}</span>
-          <span className="block truncate text-[0.6875rem] text-[rgb(var(--text-muted))]">{identity}</span>
+          <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</span>
+          <span className="block truncate text-[0.6875rem] text-[rgb(var(--text-muted))]" title={identity}>{identity}</span>
         </span>
         <ChevronUpDownIcon className="hidden h-4 w-4 shrink-0 text-[rgb(var(--text-faint))] md:block" aria-hidden="true" />
       </button>
@@ -85,10 +85,9 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
       {open ? (
         <div id="workspace-account-menu" role="dialog" aria-label="Cont și preferințe pentru spațiul de lucru" className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1.5rem))] rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3 shadow-elevated">
           <div className="rounded-control bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Spațiu de lucru activ</p>
-            <p className="mt-1 truncate text-sm font-semibold text-[rgb(var(--foreground))]">{displayName}</p>
-            <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{identity}</p>
-            {userEmail && userName ? <p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{userEmail}</p> : null}
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Compania activă</p>
+            <div className="mt-2 flex min-w-0 items-center gap-2.5"><WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} /><div className="min-w-0"><p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-muted))]" title={identity}>{identity}</p></div></div>
+            {userEmail && userName ? <p className="mt-1.5 truncate text-xs text-[rgb(var(--text-faint))]" title={userEmail}>{userEmail}</p> : null}
           </div>
 
           <div className="mt-3 border-t border-[rgb(var(--border))] pt-3">

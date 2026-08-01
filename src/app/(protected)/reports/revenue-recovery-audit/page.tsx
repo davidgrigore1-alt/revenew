@@ -67,7 +67,7 @@ export default async function RevenueRecoveryAuditPage() {
       title="Audit de recuperare venituri"
       description="Raport executiv bazat pe datele disponibile în spațiul de lucru, cu riscuri comerciale, dovezi și acțiuni sigure."
       breadcrumbs={[{ label: "Rapoarte", href: "/reports" }, { label: "Audit de recuperare venituri" }]}
-      actions={<div className="flex flex-wrap gap-2 print:hidden"><Button href={audit.firstSafeActionHref} size="small">{audit.firstSafeActionLabel}</Button><Button href="/reports/enterprise-pilot-pack" variant="secondary" size="small">Vezi propunerea pilot</Button><PrintAuditButton /></div>}
+      actions={<div className="flex flex-wrap gap-2 print:hidden"><Button href={audit.firstSafeActionHref} size="small">{audit.firstSafeActionLabel}</Button><Button href="/audit/start" variant="secondary" size="small">Pregătește auditul controlat</Button><Button href="/reports/enterprise-pilot-pack" variant="ghost" size="small">Vezi propunerea pilot</Button><PrintAuditButton /></div>}
     >
       <article data-guide-anchor="reports-audit-summary" className="revenue-recovery-audit space-y-5">
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">

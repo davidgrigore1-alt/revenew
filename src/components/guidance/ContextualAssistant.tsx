@@ -33,6 +33,7 @@ const routeLabels: Record<string, string> = {
   "/reports/revenue-recovery-audit": "Audit de recuperare venituri",
   "/reports/enterprise-pilot-pack": "Propunere pilot",
   "/reports/pilot-proof-of-value": "Dovada valorii",
+  "/audit/start": "Începe audit controlat",
   "/demo": "Demo controlat",
   "/demo/feedback": "Concluzii după demo",
   "/help": "Ajutor",

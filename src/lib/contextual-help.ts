@@ -164,14 +164,13 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
   {
     id: "controlled-audit",
     title: "Cum pregătești un audit controlat",
-    aliases: ["Cum pregătesc un audit controlat?", "Cum încep un audit controlat?", "Începe audit controlat", "Care este diferența dintre audit și pilot?", "Unde este raportul de audit?", "Ce date sunt necesare pentru audit?"],
-    keywords: ["audit", "pilot", "raport", "dovada", "anonimizate"],
-    routes: ["/reports/revenue-recovery-audit", "/reports/enterprise-pilot-pack", "/reports/pilot-proof-of-value"],
-    anchor: "reports-audit-summary",
-    primaryActionLabel: "Începe audit controlat",
-    shortAnswer: "Auditul pornește dintr-un eșantion limitat și verifică blocajele, dovezile și acțiunile sigure. Pilotul validează procesul controlat; dovada valorii susține decizia de continuare, ajustare sau oprire.",
-    steps: ["Pregătește 20–50 de cazuri recente.", "Anonimizează datele când este necesar.", "Verifică riscurile și dovezile din audit.", "Definește pilotul și criteriile de succes.", "Evaluează dovada valorii fără promisiuni financiare."],
-    safetyNote: "Primul audit nu necesită acces complet la inbox și nu garantează venit.",
+    aliases: ["Cum pregătesc un audit controlat?", "Cum încep auditul?", "Cum încep un audit controlat?", "Începe audit controlat", "Ce date am nevoie pentru audit?", "Pot anonimiza datele?", "Trebuie acces la inbox?", "Ce înseamnă audit controlat?", "Câte cazuri trebuie să trimit?", "Unde pregătesc auditul?", "Care este diferența dintre audit și pilot?", "Unde este raportul de audit?", "Ce date sunt necesare pentru audit?"],
+    keywords: ["audit", "pilot", "cazuri", "date", "anonimizate", "inbox", "pregatesc"],
+    routes: ["/audit/start", "/reports/revenue-recovery-audit", "/reports/enterprise-pilot-pack", "/reports/pilot-proof-of-value"],
+    primaryActionLabel: "Deschide wizardul de audit",
+    shortAnswer: "Auditul controlat pornește cu 20–50 de cazuri comerciale recente și cu datele minime necesare pentru dovezi verificabile. Datele pot fi anonimizate, iar primul audit nu cere acces complet la inbox.",
+    steps: ["Deschide wizardul de audit.", "Descrie compania și blocajele comerciale.", "Confirmă cele 20–50 de cazuri și câmpurile disponibile.", "Stabilește anonimizarea și obiectivul.", "Revizuiește planul înaintea oricărui transfer de date."],
+    safetyNote: "Nicio comunicare externă nu este trimisă automat. Auditul nu garantează venit, iar deciziile rămân sub control uman.",
     relatedQuestions: ["Ce înseamnă valoare estimată, neconfirmată?", "Cum notez feedbackul după demo?", "Cum funcționează ReveNew?"]
   },
   {
@@ -222,6 +221,19 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     relatedQuestions: ["Cum personalizez identitatea spațiului?", "Cum aleg moneda principală?", "Unde găsesc setările?"]
   },
   {
+    id: "settings-logo",
+    title: "Logo și identitate pentru compania activă",
+    aliases: ["Cum adaug logo?", "Cum adaug logo-ul firmei?", "Unde schimb sigla?", "Cum schimb numele firmei?", "Cum personalizez brandingul?", "Cum revin la inițiale?", "Logo-ul se salvează pentru toți?", "De ce nu se schimbă logo-ul ReveNew?", "Care este diferența dintre logo-ul ReveNew și logo-ul companiei?"],
+    keywords: ["logo", "sigla", "siglă", "brand", "branding", "identitate", "nume firma", "nume companie", "initiale"],
+    routes: ["/settings"],
+    anchor: "settings-identity",
+    primaryActionLabel: "Deschide Identitate",
+    shortAnswer: "În Setări → Identitate poți adăuga opțional logo-ul și numele companiei active. ReveNew rămâne brandul fix al produsului; identitatea companiei este separată și, în această versiune, se salvează numai local în browser.",
+    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Alege un logo PNG, JPG sau WEBP de maximum 300 KB.", "Verifică previzualizarea; fără logo, interfața folosește inițialele."],
+    safetyNote: "Logo-ul nu este încărcat pe server și nu este sincronizat între utilizatori sau dispozitive.",
+    relatedQuestions: ["Cum personalizez identitatea spațiului?", "Cum schimb culoarea accent?", "Unde găsesc setările?"]
+  },
+  {
     id: "settings-identity",
     title: "Identitatea spațiului de lucru",
     aliases: ["Cum personalizez identitatea spațiului?", "Cum schimb numele afișat?", "Unde aleg inițialele?", "Cum aleg moneda principală?", "Cum schimb limba?"],
@@ -229,9 +241,9 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     routes: ["/settings"],
     anchor: "settings-identity",
     primaryActionLabel: "Deschide Identitate",
-    shortAnswer: "Identitatea locală controlează numele afișat, inițialele, industria și preferințele de monedă și limbă din acest browser. Nu suprascrie denumirea legală și nu convertește valori.",
-    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Alege industria și moneda principală.", "Verifică previzualizarea.", "Aplică afișarea locală."],
-    safetyNote: "Interfața rămâne în română, iar monedele istorice rămân separate.",
+    shortAnswer: "Identitatea locală controlează numele afișat, logo-ul sau inițialele, industria și preferințele de monedă și limbă din acest browser. ReveNew rămâne brandul produsului; denumirea legală nu este suprascrisă.",
+    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Adaugă opțional un logo valid.", "Alege industria și moneda principală.", "Verifică previzualizarea și aplică afișarea locală."],
+    safetyNote: "Logo-ul rămâne local în browser, interfața rămâne în română, iar monedele istorice rămân separate.",
     relatedQuestions: ["Cum schimb culoarea accent?", "Cum aleg moneda principală?", "Unde găsesc setările?"]
   },
   {
