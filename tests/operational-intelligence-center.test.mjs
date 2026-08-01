@@ -73,6 +73,16 @@ test("operational intelligence derives at most three evidence-backed recommendat
   assert.equal(result.recommendations[0].actionHref, "/opportunities/opportunity-1");
   assert.match(result.recommendations[0].uncertainty, /verificat de o persoană/);
   assert.match(result.recommendations[0].controlNote, /verifică și aprobă/);
+  assert.equal(result.recommendations[0].entityType, "action");
+  assert.equal(result.recommendations[0].evidenceStrength, "partial");
+  assert.equal(result.recommendations[0].evidenceStrengthLabel, "Dovezi parțiale");
+  assert.equal(result.recommendations[0].humanDecisionRequired, true);
+  assert.equal(result.recommendations[0].noAutomaticExecution, true);
+  assert.equal(result.recommendations[0].confirmedValue, null);
+  assert.equal(result.recommendations[0].safeNextAction.href, "/opportunities/opportunity-1");
+  assert.match(result.recommendations[0].consequenceOfInaction, /oportunitatea/);
+  assert.ok(result.recommendations[0].missingInformation.length > 0);
+  assert.ok(result.recommendations[0].assumptions.some((item) => /venit confirmat/));
   assert.equal(result.estimatedExposedValueByCurrency[0].value, 76000);
   assert.equal("confirmedRevenue" in result, false);
 });

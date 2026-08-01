@@ -50,6 +50,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone={preparation.mode === "ai" ? "info" : prepared ? "neutral" : "warning"}>{preparation.modeLabel}</StatusPill>
+          {prepared ? <StatusPill tone={preparation.evidenceStrength === "sufficient" ? "success" : preparation.evidenceStrength === "partial" ? "info" : "warning"}>{preparation.evidenceStrengthLabel}</StatusPill> : null}
           {action}
         </div>
       </div>
@@ -58,7 +59,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
         <div className="grid gap-4 p-4 sm:p-5">
           <div className="grid gap-px overflow-hidden rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-3">
             <div className="bg-[rgb(var(--surface))] p-3.5">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Problema detectată</p>
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Situație</p>
               <p className="mt-2 text-sm leading-5 text-[rgb(var(--text-secondary))]">{preparation.summary}</p>
             </div>
             <div className="bg-[rgb(var(--surface))] p-3.5">
@@ -66,7 +67,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
               <p className="mt-2 text-sm font-medium leading-5 text-[rgb(var(--foreground))]">{preparation.evidence[0] ?? signal.sourceLabel ?? "Semnal comercial înregistrat"}</p>
             </div>
             <div className="bg-[rgb(var(--surface))] p-3.5">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Informație lipsă</p>
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Ce lipsește</p>
               <p className="mt-2 text-sm leading-5 text-[rgb(var(--text-secondary))]">{preparation.missingInfo[0] ?? "Nu a fost identificată o lipsă critică."}</p>
             </div>
           </div>
@@ -75,6 +76,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Acțiune sigură recomandată</p>
               <p className="mt-1 text-sm font-semibold leading-5">{preparation.recommendedNextAction}</p>
+              <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce acum:</strong> {preparation.whyNow}</p>
               <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Necesită verificare și decizie umană.</p>
             </div>
             {signal.estimatedRecoverableValue !== null && signal.estimatedRecoverableValue !== undefined ? (
@@ -95,6 +97,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
                 <DetailList title="Dovezi din semnal" items={preparation.evidence} empty="Nu există încă dovezi structurate suficiente." />
                 <DetailList title="Riscuri / neclarități" items={preparation.risks} empty="Nu au fost identificate riscuri suplimentare; contextul rămâne de verificat." />
               </div>
+              <div><h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Riscul inacțiunii</h4><p className="mt-2 text-sm leading-5 text-[rgb(var(--text-secondary))]">{preparation.consequenceOfInaction}</p></div>
               <DetailList title="Informații lipsă" items={preparation.missingInfo} empty="Nu au fost identificate lipsuri critice." />
               <div className="rounded-control bg-[rgb(var(--surface-subtle))] p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Notă internă sugerată</h4>
@@ -113,13 +116,14 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
             </div>
             <dl className="grid gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 text-sm sm:grid-cols-2">
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Intenție probabilă</dt><dd className="mt-1 font-semibold">{preparation.intent}</dd></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Încredere</dt><dd className="mt-1 font-semibold capitalize">{preparation.confidence}</dd></div>
+              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Forța dovezilor</dt><dd className="mt-1 font-semibold">{preparation.evidenceStrengthLabel}</dd></div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Înregistrare afectată</dt><dd className="mt-1 font-medium">{preparation.affectedRecord}</dd></div>
               <div><dt className="text-xs text-[rgb(var(--text-muted))]">Termen sugerat</dt><dd className="mt-1 font-medium">{preparation.suggestedActionDueHint}</dd></div>
             </dl>
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Următoarea acțiune recomandată</h4>
               <p className="mt-2 text-sm font-semibold leading-5">{preparation.recommendedNextAction}</p>
+              <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce acum:</strong> {preparation.whyNow}</p>
               <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{preparation.approvalRecommendation}</p>
             </div>
           </div>

@@ -5,6 +5,7 @@ import test from "node:test";
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
 const demo = read("src/app/(protected)/demo/page.tsx");
+const demoModel = read("src/lib/buyer-demo.ts");
 const fixtures = read("scripts/demo/fixtures.mjs");
 const seed = read("scripts/demo/seed-local-demo.mjs");
 const reports = read("src/app/(protected)/reports/page.tsx");
@@ -17,14 +18,19 @@ const decisionQueue = read("src/lib/workspace-decision-queue.ts");
 const auditPrint = read("src/components/reports/PrintAuditButton.tsx");
 const pilotPrint = read("src/components/reports/PrintPilotPackButton.tsx");
 
-test("internal demo uses a five-minute evidence-to-pilot route through existing surfaces", () => {
+test("internal demo uses a controlled evidence-to-proof route through existing surfaces", () => {
   for (const route of [
     "/dashboard",
-    "/opportunities",
+    "/ai",
+    "/inbox",
+    "/today",
+    "/approvals",
+    "/opportunities/de300006-0000-4000-8000-000000000006",
     "/reports/revenue-recovery-audit",
-    "/reports/enterprise-pilot-pack"
+    "/reports/enterprise-pilot-pack",
+    "/reports/pilot-proof-of-value"
   ]) {
-    assert.match(demo, new RegExp(route.replaceAll("/", "\\/")));
+    assert.match(demoModel, new RegExp(route.replaceAll("/", "\\/")));
   }
 
   for (const path of [
@@ -36,12 +42,10 @@ test("internal demo uses a five-minute evidence-to-pilot route through existing 
     assert.equal(existsSync(new URL(`../${path}`, import.meta.url)), true, `${path} must exist`);
   }
 
-  assert.match(demo, /Traseu demonstrație–pilot · 5 minute/);
-  assert.match(demo, /buildWorkspaceDecisionQueue\(\{ opportunities, signals: inbox\.signals \}\)/);
-  assert.match(demo, /decisionQueue\.items\.find\(\(item\) => item\.relatedOpportunityId\)/);
-  assert.match(demo, /demoDecision\.actionHref/);
-  assert.match(demo, /Bazat pe:/);
-  assert.match(demo, /Pilotul validează în 14 zile/);
+  assert.match(demo, /Demo controlat ReveNew/);
+  assert.match(demo, /Zece pași, o singură poveste comercială/);
+  assert.match(demo, /audit controlat pe 20–50 cazuri comerciale recente/i);
+  assert.equal((demoModel.match(/buyerQuestion: "/g) ?? []).length, 10);
 });
 
 test("demo language is executive, cautious and free of outdated recovery hype", () => {
@@ -60,10 +64,10 @@ test("demo language is executive, cautious and free of outdated recovery hype", 
 
   assert.match(demo, /controlat/);
   assert.match(demo, /dovezi/);
-  assert.match(demo, /Valoare estimată/);
+  assert.match(demo, /Valoarea estimată/);
   assert.match(demo, /nu este venit confirmat/);
   assert.match(demo, /Nicio comunicare externă nu este trimisă automat/);
-  assert.match(demo, /oamenii autorizați verifică, aprobă și decid/i);
+  assert.match(demo, /Decizia umană rămâne obligatorie/i);
   assert.doesNotMatch(`${demo}\n${audit}\n${pilot}`, /ROI garantat|venit garantat|succes garantat|recuperare automată/i);
 });
 
@@ -96,7 +100,7 @@ test("demo opportunity keeps safe actions, Romanian priority labels and financia
   assert.match(opportunity, /Prioritate ridicată/);
   assert.doesNotMatch(opportunity, /<option value="(?:low|medium|high)">(?:low|medium|high)<\/option>/);
   assert.match(opportunity, /Trimiterea din aplicație nu este activă/);
-  assert.match(demo, /Documentele sunt pregătite pentru revizuire, nu considerate trimise/);
+  assert.match(demo, /Nicio comunicare externă nu este trimisă automat/);
   assert.match(audit, /Valoare estimată, nu venit confirmat/);
   assert.match(pilot, /Fiecare oportunitate este numărată o singură dată în total/);
   assert.match(pilot, /Valoare estimată, nu venit confirmat; pilotul nu garantează recuperarea ei/);
@@ -112,5 +116,5 @@ test("main buyer journey uses operational Romanian instead of internal ownership
   assert.doesNotMatch(opportunity, /Explorează workflow-ul|începe workflow-ul/i);
   assert.doesNotMatch(reports, /fără proprietar|prin workflow-ul existent/i);
   assert.match(reports, /Spațiu de lucru: \{business\?\.name/);
-  assert.match(demo, /Brief-ul executiv de dimineață/);
+  assert.match(demo, /Inteligența operațională structurează și explică/);
 });

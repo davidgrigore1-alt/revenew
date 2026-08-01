@@ -27,6 +27,7 @@ import { getCommercialResponseSummary } from "@/lib/commercial-response-summary"
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 import { buildExecutiveMorningBrief } from "@/lib/executive-morning-brief";
+import { buildOperationalRecommendation } from "@/lib/operational-intelligence";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
@@ -74,6 +75,9 @@ export default async function DashboardPage() {
     const opportunityById = new Map(summary.opportunities.map((opportunity) => [opportunity.id, opportunity]));
     const decisionQueue = buildWorkspaceDecisionQueue({ opportunities: summary.opportunities, signals: summary.signals });
     const morningBrief = buildExecutiveMorningBrief(decisionQueue);
+    const primaryRecommendation = decisionQueue.items[0]
+      ? buildOperationalRecommendation(decisionQueue.items[0])
+      : null;
 
     const activityItems: ActivityFeedItem[] = summary.events.slice(0, 7).map((event) => ({
       id: event.id,
@@ -110,6 +114,7 @@ export default async function DashboardPage() {
           brief={morningBrief}
           pipelineValueRon={summary.metrics.activePipelineValue}
           confirmedRevenueRon={responseLoop.confirmedRevenueRon}
+          recommendation={primaryRecommendation}
         />
 
         <section aria-label="Indicatori financiari esențiali pentru mobil" className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] shadow-card sm:hidden">
@@ -137,7 +142,10 @@ export default async function DashboardPage() {
           </summary>
           <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
             <AiBusinessAnalyst />
-            <Link href="/ai" className="focus-ring mt-4 inline-flex rounded text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Vezi capabilitățile și limitele AI</Link>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold">
+              <Link href="/ai" className="focus-ring rounded text-[rgb(var(--primary))] hover:underline">Vezi capabilitățile și limitele AI</Link>
+              <Link href="/demo" className="focus-ring rounded text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] hover:underline">Pregătește prezentarea</Link>
+            </div>
           </div>
         </details>
 

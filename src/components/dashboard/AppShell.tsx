@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppHeader } from "@/components/dashboard/AppHeader";
+import { BuyerDemoRail } from "@/components/demo/BuyerDemoRail";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { GuidedProductTour } from "@/components/guidance/GuidedProductTour";
@@ -32,6 +33,7 @@ export function AppShell({
       <Sidebar primaryItems={primaryItems} utilityItems={utilityItems} businessName={businessName} isDemo={isDemo} />
       <div className="min-w-0 lg:pl-[260px]">
         <AppHeader businessName={businessName} userEmail={userEmail} userName={userName} isDemo={isDemo} primaryItems={primaryItems} utilityItems={utilityItems} />
+        <BuyerDemoRail />
         <div id="app-content" tabIndex={-1} className="min-w-0">
           {children}
         </div>

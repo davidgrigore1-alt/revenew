@@ -1,285 +1,88 @@
-import Link from "next/link";
 import { ArrowRightIcon, CheckCircleIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { DataCard } from "@/components/dashboard/DataCard";
-import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { Button } from "@/components/ui/Button";
 import { requirePermission } from "@/lib/authz/require-permission";
-import { getCurrentBusinessForUser } from "@/lib/business/current-business";
-import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
-import { opportunities as demoOpportunities } from "@/lib/mock-data";
-import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/status";
-import type { Opportunity, OpportunityAction, OpportunityDocument } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
-import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
+import { buyerDemoHref, buyerDemoSteps } from "@/lib/buyer-demo";
 
-type WorkflowMetrics = {
-  documents: OpportunityDocument[];
-  actions: OpportunityAction[];
-};
-
-const presenterResponses = [
-  [
-    "Avem deja CRM",
-    "ReveNew nu cere înlocuirea CRM-ului. Face vizibile blocajele dintre semnal, responsabil, acțiune, aprobare și rezultat."
-  ],
-  [
-    "De ce putem avea încredere în concluzie?",
-    "Fiecare prioritate importantă păstrează legătura cu oportunitatea, acțiunea, documentul, aprobarea sau semnalul care o susține."
-  ],
-  [
-    "Ce face sistemul fără utilizator?",
-    "ReveNew pregătește context și recomandări. Oamenii autorizați verifică, aprobă și decid fiecare pas comercial important."
-  ],
-  [
-    "Valoarea afișată este venit?",
-    "Nu. Valoarea oportunității rămâne estimată. Venitul apare separat numai după declararea și confirmarea explicită a rezultatului de către utilizator."
-  ]
-] as const;
-
-async function loadWorkflowMetrics(opportunities: Opportunity[]): Promise<WorkflowMetrics> {
-  if (!isSupabaseConfigured) {
-    return {
-      documents: opportunities.flatMap((opportunity) => opportunity.documents),
-      actions: opportunities.flatMap((opportunity) => opportunity.actions)
-    };
-  }
-
-  const opportunityIds = opportunities.map((opportunity) => opportunity.id);
-  if (opportunityIds.length === 0) return { documents: [], actions: [] };
-
-  const supabase = createSupabaseServerClient();
-  if (!supabase) return { documents: [], actions: [] };
-
-  const [{ data: documentRows, error: documentError }, { data: actionRows, error: actionError }] = await Promise.all([
-    supabase.from("opportunity_documents").select("id,title,document_type,status,created_at,opportunity_id,generation_mode").in("opportunity_id", opportunityIds),
-    supabase.from("opportunity_actions").select("id,title,description,status,due_at,priority,type").in("opportunity_id", opportunityIds)
-  ]);
-
-  if (documentError || actionError) return { documents: [], actions: [] };
-
-  return {
-    documents: (documentRows ?? []).map((document) => ({
-      id: document.id,
-      title: document.title,
-      type: document.document_type,
-      status: document.status,
-      generationMode: document.generation_mode ?? undefined,
-      createdAt: document.created_at ?? undefined
-    })),
-    actions: (actionRows ?? []).map((action) => ({
-      id: action.id,
-      type: action.type,
-      title: action.title,
-      description: action.description ?? "",
-      status: action.status,
-      dueDate: action.due_at ?? "",
-      priority: action.priority ?? "medium"
-    }))
-  };
-}
-
-function statusBadge(isReady: boolean) {
-  return (
-    <span className={`inline-flex w-fit rounded-pill border px-2.5 py-1 text-xs font-semibold ${
-      isReady
-        ? "border-[rgb(var(--success-border))] bg-[rgb(var(--success-background))] text-[rgb(var(--success-text))]"
-        : "border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] text-[rgb(var(--warning-text))]"
-    }`}>
-      {isReady ? "Pregătit" : "Necesită verificare"}
-    </span>
-  );
-}
+const closingPrinciples = [
+  "Primul audit nu necesită acces complet la inbox.",
+  "Datele comerciale pot fi anonimizate înainte de analiză.",
+  "Nicio comunicare externă nu este trimisă automat.",
+  "Valoarea estimată nu este venit confirmat.",
+  "Decizia umană rămâne obligatorie pentru orice pas cu impact comercial."
+];
 
 export default async function DemoPage() {
   await requirePermission("platform.internal_tools.access");
 
-  const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: true });
-  const opportunities = isSupabaseConfigured ? await getOpportunitiesForCurrentBusiness() : demoOpportunities;
-  const inbox = await getCommercialSignalsForCurrentBusiness();
-  const workflow = await loadWorkflowMetrics(opportunities);
-  const decisionQueue = buildWorkspaceDecisionQueue({ opportunities, signals: inbox.signals });
-  const demoDecision = decisionQueue.items.find((item) => item.relatedOpportunityId) ?? decisionQueue.items[0];
-  const demoOpportunityHref = demoDecision?.relatedOpportunityId
-    ? demoDecision.actionHref
-    : opportunities[0]
-      ? `/opportunities/${opportunities[0].id}`
-      : "/opportunities";
-
-  const activeOpportunities = opportunities.filter((opportunity) => !["won", "lost", "ignored"].includes(opportunity.status));
-  const generatedDocuments = workflow.documents.filter((document) => document.status !== "placeholder");
-  const reportsReady = inbox.signals.length > 0 || opportunities.length > 0 || generatedDocuments.length > 0 || workflow.actions.length > 0;
-
-  const journey = [
-    {
-      time: "0:00–0:40",
-      title: "Pornește din Control Center",
-      description: "Brief-ul executiv de dimineață arată problema principală și prima acțiune sigură. Coada deciziilor prioritare explică imediat de ce cazul este prioritar.",
-      href: "/dashboard",
-      action: "Deschide Control Center"
-    },
-    {
-      time: "0:40–1:40",
-      title: "Revizuiește decizia critică",
-      description: demoDecision
-        ? `${demoDecision.title}. Explică impactul comercial și indică dovezile vizibile înainte de a deschide cazul.`
-        : "Folosește prima decizie susținută de date și explică impactul ei comercial înainte de a deschide cazul.",
-      href: "/dashboard",
-      action: "Revizuiește prima decizie"
-    },
-    {
-      time: "1:40–3:00",
-      title: "Deschide oportunitatea susținută de dovezi",
-      description: "Confirmă responsabilul, blocajul, contactul, următoarea acțiune și faptul că valoarea este estimată. Documentele sunt pregătite pentru revizuire, nu considerate trimise.",
-      href: demoOpportunityHref,
-      action: "Deschide oportunitatea"
-    },
-    {
-      time: "3:00–4:00",
-      title: "Prezintă auditul de recuperare venituri",
-      description: "Auditul consolidează riscurile, expunerea estimată deduplicată, dovezile și primele acțiuni controlate într-un raport executiv printabil.",
-      href: "/reports/revenue-recovery-audit",
-      action: "Deschide auditul"
-    },
-    {
-      time: "4:00–5:00",
-      title: "Încheie cu propunerea pilot",
-      description: "Pilotul validează în 14 zile dacă echipa poate închide buclele observate. Nu promite venit și păstrează prima acțiune sub control uman.",
-      href: "/reports/enterprise-pilot-pack",
-      action: "Deschide propunerea pilot"
-    }
-  ] as const;
-
-  const checklist = [
-    { label: "Există o decizie executivă prioritară", ready: Boolean(demoDecision), href: "/dashboard", action: "Verifică Control Center" },
-    { label: "Decizia conduce la o oportunitate sau acțiune sigură", ready: Boolean(demoDecision?.relatedOpportunityId || opportunities[0]), href: demoOpportunityHref, action: "Verifică oportunitatea" },
-    { label: "Decizia are dovezi verificabile", ready: Boolean(demoDecision?.evidence.length), href: demoOpportunityHref, action: "Verifică dovezile" },
-    { label: "Valoarea estimată rămâne separată de venitul confirmat", ready: activeOpportunities.some((opportunity) => opportunity.estimatedValueHigh > 0), href: demoOpportunityHref, action: "Verifică valoarea" },
-    { label: "Auditul și propunerea pilot au date disponibile", ready: reportsReady, href: "/reports", action: "Verifică rapoartele" },
-    { label: "Documentele necesită revizuire și aprobare umană", ready: generatedDocuments.length > 0 && generatedDocuments.every((document) => document.status !== "sent"), href: demoOpportunityHref, action: "Verifică documentele" }
-  ];
-
   return (
     <PageShell
-      eyebrow="Ghid de prezentare"
-      title="Traseu demonstrație–pilot · 5 minute"
-      description="Un parcurs controlat de la risc comercial și dovezi la prima acțiune sigură, audit executiv și propunere pilot pe 14 zile."
-      actions={
-        <div className="flex flex-wrap gap-2">
-          <Button href="/dashboard">Deschide Control Center</Button>
-          <Button href="/reports/revenue-recovery-audit" variant="secondary">Deschide auditul</Button>
-          <Button href="/demo/appointment-control" variant="secondary">Deschide sandbox-ul de programări</Button>
-        </div>
-      }
+      eyebrow="Prezentare controlată"
+      title="Demo controlat ReveNew"
+      description="Un traseu de 7–10 minute de la blocaj comercial și dovadă la acțiune sigură, aprobare umană și validare prin audit și pilot."
+      actions={<Button href={buyerDemoHref("/dashboard")}>Începe demo-ul<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}
     >
       <div className="grid gap-6">
-        {!isSupabaseConfigured ? <DemoNotice /> : null}
-
-        <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="demo-positioning-title">
-          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)] lg:p-8">
+        <section className="overflow-hidden rounded-panel border border-[rgb(var(--gold-500)/0.3)] bg-[linear-gradient(145deg,rgb(var(--surface)),rgb(var(--surface-subtle)))] shadow-card" aria-labelledby="buyer-demo-framing">
+          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] lg:p-8">
             <div>
-              <p className="text-label text-[rgb(var(--primary))]">Poziționare executivă</p>
-              <h2 id="demo-positioning-title" className="mt-2 max-w-3xl font-display text-2xl font-semibold tracking-tight text-[rgb(var(--foreground))] sm:text-3xl">
-                ReveNew arată ce risc comercial nu trebuie uitat și care este următoarea decizie sigură.
-              </h2>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">
-                Produsul conectează semnalul, oportunitatea, responsabilul, termenul, dovezile și aprobarea într-un flux controlat. Interpretarea rămâne verificabilă, iar echipa decide fiecare pas important.
-              </p>
-            </div>
-            <div className="rounded-card border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--primary-muted))] p-5">
-              <div className="flex gap-3">
-                <ShieldCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
-                <div>
-                  <h3 className="font-semibold text-[rgb(var(--foreground))]">Principiul demonstrației</h3>
-                  <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Valoarea rămâne estimată până la un rezultat confirmat de utilizator. Nicio comunicare externă nu este trimisă automat.</p>
-                </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Problema de urmărit</p>
+              <h2 id="buyer-demo-framing" className="mt-3 max-w-3xl text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">Venitul se blochează între semnal, responsabil, termen și decizie.</h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">ReveNew identifică buclele comerciale deschise, le leagă de dovezi și indică următorul pas sigur. Prezentarea urmărește un singur fir: problemă → valoare blocată → recomandare → dovadă → decizie umană → audit și pilot.</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button href={buyerDemoHref("/dashboard")}>Începe cu decizia critică<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+                <Button href="#route" variant="secondary">Vezi traseul complet</Button>
               </div>
             </div>
+            <aside className="rounded-card border border-[rgb(var(--gold-500)/0.24)] bg-[rgb(var(--gold-500)/0.07)] p-5" aria-label="Mesajul central al prezentării">
+              <ShieldCheckIcon className="h-5 w-5 text-[rgb(var(--primary))]" aria-hidden="true" />
+              <h3 className="mt-3 font-semibold">Ce trebuie să înțeleagă un cumpărător</h3>
+              <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Inteligența operațională structurează și explică. Nu trimite automat, nu garantează venit și nu înlocuiește aprobarea umană.</p>
+              <p className="mt-4 border-t border-[rgb(var(--border))] pt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Întrebare de deschidere: unde se pierd astăzi oportunitățile între sisteme și oameni?</p>
+            </aside>
+          </div>
+          <div className="grid grid-cols-5 gap-px border-t border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-10" aria-label="Progresul traseului demo">
+            {buyerDemoSteps.map((step, index) => <div key={step.id} className={`min-w-0 bg-[rgb(var(--surface))] px-2 py-3 text-center ${index === 0 ? "text-[rgb(var(--primary))]" : "text-[rgb(var(--text-faint))]"}`}><span className="block text-xs font-semibold tabular-nums">{String(index + 1).padStart(2, "0")}</span><span className="mt-1 hidden truncate text-[0.625rem] font-medium lg:block">{step.shortTitle}</span></div>)}
           </div>
         </section>
 
-        {demoDecision ? (
-          <DataCard title="Decizia folosită în demonstrație" description="Aceeași prioritate deterministă este disponibilă în coada deciziilor prioritare.">
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-              <div>
-                <p className="text-label text-[rgb(var(--primary))]">{demoDecision.statusLabel}</p>
-                <h3 className="mt-2 text-lg font-semibold text-[rgb(var(--foreground))]">{demoDecision.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{demoDecision.whyItMatters}</p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[rgb(var(--text-muted))]">
-                  {demoDecision.relatedOpportunityTitle ? <span><strong className="text-[rgb(var(--foreground))]">Oportunitate:</strong> {demoDecision.relatedOpportunityTitle}</span> : null}
-                  {demoDecision.estimatedValue !== undefined && demoDecision.currency ? <span><strong className="text-[rgb(var(--foreground))]">Valoare estimată:</strong> {formatCurrency(demoDecision.estimatedValue, demoDecision.currency)} · nu este venit confirmat</span> : null}
+        <section id="route" aria-labelledby="buyer-demo-route">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--primary))]">Traseu de prezentare</p>
+            <h2 id="buyer-demo-route" className="mt-2 text-xl font-semibold tracking-[-0.025em]">Zece pași, o singură poveste comercială</h2>
+            <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Arată numai informația care susține decizia. Întrebarea fiecărui pas mută discuția de la produs la procesul real al cumpărătorului.</p>
+          </div>
+          <ol className="mt-5 grid gap-4 xl:grid-cols-2">
+            {buyerDemoSteps.map((step, index) => (
+              <li key={step.id} className={`flex min-w-0 flex-col rounded-panel border p-4 shadow-card sm:p-5 ${index === 0 ? "border-[rgb(var(--gold-500)/0.42)] bg-[rgb(var(--gold-500)/0.06)]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--gold-500)/0.32)] bg-[rgb(var(--gold-500)/0.1)] text-sm font-semibold text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">{index + 1}</span>
+                  <div className="min-w-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Ce arăți</p><h3 className="mt-1 text-base font-semibold tracking-[-0.01em]">{step.title}</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{step.show}</p></div>
                 </div>
-                <p className="mt-3 text-xs text-[rgb(var(--text-faint))]">Bazat pe: {demoDecision.evidence.map((source) => source.label).join(" · ")}</p>
-              </div>
-              <Button href={demoDecision.actionHref} variant="secondary">{demoDecision.actionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
-            </div>
-          </DataCard>
-        ) : null}
-
-        <DataCard title="Traseul de prezentare" description="Urmează ordinea de mai jos. Nu este necesară prezentarea indicatorilor secundari.">
-          <ol className="grid gap-3">
-            {journey.map((step, index) => (
-              <li key={step.title} className="grid gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[rgb(var(--primary-muted))] text-sm font-semibold text-[rgb(var(--primary))]">{index + 1}</span>
-                <div>
-                  <p className="text-xs font-semibold text-[rgb(var(--primary))]">{step.time}</p>
-                  <h3 className="mt-1 font-semibold text-[rgb(var(--foreground))]">{step.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{step.description}</p>
+                <div className="mt-4 grid gap-3 border-t border-[rgb(var(--border))] pt-4 sm:grid-cols-2">
+                  <div><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Ce trebuie înțeles</p><p className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">{step.understanding}</p></div>
+                  <div><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Întreabă cumpărătorul</p><p className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">{step.buyerQuestion}</p></div>
                 </div>
-                <Button href={step.href} variant="ghost" size="small">{step.action}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+                {step.safetyNote ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Limită de control:</strong> {step.safetyNote}</p> : null}
+                <div className="mt-auto pt-4"><Button href={buyerDemoHref(step.href)} variant={index === 0 ? "secondary" : "ghost"} size="small">{index === 0 ? "Reia introducerea" : `Deschide ${step.shortTitle}`}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></div>
               </li>
             ))}
           </ol>
-        </DataCard>
+        </section>
 
-        <DataCard title="Verificare înainte de prezentare" description={`Starea traseului pentru ${currentBusiness?.business?.name ?? "spațiul demonstrativ"}.`}>
-          <div className="grid gap-3">
-            {checklist.map((item) => (
-              <div key={item.label} className="grid gap-3 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
-                {statusBadge(item.ready)}
-                <p className="text-sm font-semibold text-[rgb(var(--foreground))]">{item.label}</p>
-                <Button href={item.href} variant="ghost" size="small">{item.action}</Button>
-              </div>
-            ))}
-          </div>
-        </DataCard>
-
-        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-          <DataCard title="Mesajul de încheiere" description="Încheiere recomandată după propunerea pilot.">
-            <p className="text-sm leading-7 text-[rgb(var(--text-secondary))]">
-              Auditul arată ce este blocat acum și pe ce dovezi se bazează. Pilotul de 14 zile validează dacă echipa poate clarifica responsabilitatea, următoarele acțiuni, aprobările și rezultatele fără a confunda estimările cu venitul confirmat.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/reports/revenue-recovery-audit" className="focus-ring inline-flex items-center gap-1 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Audit de recuperare venituri<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
-              <Link href="/reports/enterprise-pilot-pack" className="focus-ring inline-flex items-center gap-1 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Propunere pilot pe 14 zile<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+        <section id="next-step" className="rounded-panel border border-[rgb(var(--gold-500)/0.34)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6 lg:p-8" aria-labelledby="controlled-audit-title">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--primary))]">Încheiere recomandată</p>
+              <h2 id="controlled-audit-title" className="mt-2 text-2xl font-semibold tracking-[-0.03em]">Următorul pas: audit controlat pe 20–50 cazuri comerciale recente.</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[rgb(var(--text-secondary))]">Auditul verifică dacă ReveNew poate reduce timpul de căutare, clarifica buclele deschise și prioritiza acțiunile fără acces inutil la date și fără promisiuni de venit.</p>
+              <div className="mt-5 flex flex-wrap gap-2"><Button href="/reports/revenue-recovery-audit">Deschide auditul<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button><Button href="/reports/enterprise-pilot-pack" variant="secondary">Deschide Pilot Pack</Button><Button href="/demo/feedback" variant="ghost">Notează feedbackul după demo</Button></div>
             </div>
-          </DataCard>
-
-          <DataCard title="Limitele afirmațiilor" description="Repere obligatorii pentru o prezentare credibilă.">
-            <ul className="grid gap-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
-              {[
-                "Valorile comerciale afișate sunt estimări bazate pe datele disponibile.",
-                "Venitul confirmat este înregistrat separat, numai după confirmarea explicită a rezultatului.",
-                "Recomandările indică o acțiune pentru revizuire; sistemul nu o execută în locul utilizatorului.",
-                "Analistul business este opțional și limitează interpretarea la dovezile disponibile.",
-                "Auditul și pilotul susțin o decizie prudentă, nu o predicție financiară."
-              ].map((item) => <li key={item} className="flex gap-2"><CheckCircleIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}
+            <ul className="grid gap-3 rounded-card bg-[rgb(var(--surface-subtle))] p-4 text-sm leading-6 text-[rgb(var(--text-muted))] sm:p-5">
+              {closingPrinciples.map((item) => <li key={item} className="flex gap-2"><CheckCircleIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}
             </ul>
-          </DataCard>
-        </div>
-
-        <DataCard title="Întrebări frecvente în discuția comercială" description="Răspunsuri scurte, precise și verificabile.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {presenterResponses.map(([question, answer]) => (
-              <div key={question} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
-                <h3 className="font-semibold text-[rgb(var(--foreground))]">{question}</h3>
-                <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{answer}</p>
-              </div>
-            ))}
           </div>
-        </DataCard>
+        </section>
       </div>
     </PageShell>
   );

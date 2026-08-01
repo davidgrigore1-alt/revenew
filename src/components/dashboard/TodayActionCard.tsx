@@ -20,7 +20,7 @@ export function TodayActionCard({ action, compact = false }: { action: RecoveryA
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         <p><span className="text-[rgb(var(--muted-foreground))]">Valoare estimată, neconfirmată:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatCurrency(action.estimatedValue, action.currency)}</span></p>
-        <p><span className="text-[rgb(var(--muted-foreground))]">Termen:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatDate(action.dueAt)}</span></p>
+        <p><span className="text-[rgb(var(--muted-foreground))]">Dovadă · termen înregistrat:</span> <span className="font-semibold text-[rgb(var(--foreground))]">{formatDate(action.dueAt)}</span></p>
       </div>
       {compact ? null : (
         <details className="mt-3 text-sm text-[rgb(var(--muted-foreground))]">

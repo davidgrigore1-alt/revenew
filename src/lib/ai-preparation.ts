@@ -9,6 +9,10 @@ export type SignalPreparation = {
   summary: string;
   intent: string;
   confidence: string;
+  evidenceStrength: "sufficient" | "partial" | "verify";
+  evidenceStrengthLabel: "Dovezi suficiente" | "Dovezi parțiale" | "Necesită verificare";
+  whyNow: string;
+  consequenceOfInaction: string;
   affectedRecord: string;
   missingInfo: string[];
   recommendedNextAction: string;
@@ -57,6 +61,23 @@ export function buildSignalPreparation(signal: CommercialSignal): SignalPreparat
     signal.duplicateRisk ? "Există un posibil semnal duplicat care trebuie verificat." : null
   ], 6);
   const confidence = signal.confidenceLevel === "high" ? "ridicată" : signal.confidenceLevel === "medium" ? "medie" : "redusă";
+  const evidenceStrength = evidence.length >= 2 && missingInfo.length <= 1
+    ? "sufficient"
+    : evidence.length > 0
+      ? "partial"
+      : "verify";
+  const evidenceStrengthLabel = evidenceStrength === "sufficient"
+    ? "Dovezi suficiente"
+    : evidenceStrength === "partial"
+      ? "Dovezi parțiale"
+      : "Necesită verificare";
+  const whyNow = signal.deadlineClue
+    ? `Există un termen observat în semnal: ${clean(signal.deadlineClue, 220)}.`
+    : signal.suggestedDueDate
+      ? `Semnalul indică un termen propus: ${clean(signal.suggestedDueDate, 120)}.`
+      : "Semnalul este deschis și necesită clasificare înainte ca următorul pas comercial să fie uitat sau duplicat.";
+  const consequenceOfInaction = clean(signal.primaryRecoveryReason || signal.riskNotes?.[0], 420)
+    || "Fără revizuire, semnalul poate rămâne nevalorificat, iar follow-up-ul poate fi întârziat sau duplicat.";
 
   return {
     mode,
@@ -64,6 +85,10 @@ export function buildSignalPreparation(signal: CommercialSignal): SignalPreparat
     summary: clean(signal.analysisExplanation || signal.extractedSummary || signal.rawMessage, 900) || "Semnalul nu are încă un rezumat pregătit.",
     intent: clean(signal.signalTypeLabel || signal.detectedCommercialIntent, 300) || "Intenție de clarificat",
     confidence,
+    evidenceStrength,
+    evidenceStrengthLabel,
+    whyNow,
+    consequenceOfInaction,
     affectedRecord,
     missingInfo,
     recommendedNextAction: clean(signal.recommendedAction, 500) || "Confirmă contextul și stabilește următorul pas intern.",

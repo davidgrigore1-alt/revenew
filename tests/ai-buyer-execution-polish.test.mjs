@@ -35,9 +35,11 @@ test("Inbox places compact operational intelligence before the review forms", ()
   assert.match(inbox, /signal\.analysisStatus === "completed"/);
   assert.match(inbox, /compact/);
   assert.match(panel, /Ce a înțeles ReveNew/);
-  assert.match(panel, /Problema detectată/);
+  assert.match(panel, /Situație/);
   assert.match(panel, /Dovadă/);
-  assert.match(panel, /Informație lipsă/);
+  assert.match(panel, /Ce lipsește/);
+  assert.match(panel, /Forța dovezilor/);
+  assert.match(panel, /De ce acum:/);
   assert.match(panel, /Acțiune sigură recomandată/);
   assert.match(panel, /Valoare estimată, neconfirmată/);
   assert.match(panel, /Detalii de pregătire/);

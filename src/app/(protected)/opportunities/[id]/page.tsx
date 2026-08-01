@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityActionWorkbench } from "@/components/opportunities/OpportunityActionWorkbench";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
+import { RecommendationExplanationCard } from "@/components/intelligence/RecommendationExplanationCard";
 import { CommercialResponsePanel } from "@/components/opportunities/CommercialResponsePanel";
 import { approvalStateForSignal } from "@/lib/approval-center";
 import { getCommercialSignalsForOpportunity } from "@/lib/commercial-inbox";
@@ -16,6 +17,8 @@ import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusin
 import { opportunities } from "@/lib/mock-data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { isOpenAIConfigured } from "@/lib/openai/client";
+import { buildOperationalRecommendation } from "@/lib/operational-intelligence";
+import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
 
 export function generateStaticParams() {
   return opportunities.map((opportunity) => ({ id: opportunity.id }));
@@ -50,6 +53,13 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     risks: Array.from(new Set([...(sourceSignal.riskNotes ?? []), ...sourceSignal.uncertaintyNotes]))
   } : opportunity;
   const assistedPreparation = recommendNextBestAction(opportunity);
+  const opportunityQueue = buildWorkspaceDecisionQueue(
+    { opportunities: [opportunity], signals: linkedSignals },
+    { limit: 1 }
+  );
+  const explainedRecommendation = opportunityQueue.items[0]
+    ? buildOperationalRecommendation(opportunityQueue.items[0])
+    : null;
   const evidenceBackedDescription = sourceSignal?.primaryRecoveryReason
     || sourceSignal?.extractedSummary
     || opportunity.summary;
@@ -63,6 +73,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} />
+        {explainedRecommendation ? <RecommendationExplanationCard recommendation={explainedRecommendation} compact /> : null}
         <OpportunityActionWorkbench opportunity={opportunity} recommendation={assistedPreparation} />
         <div id="action-responsibility" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>

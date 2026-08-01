@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { GuideReplayButton } from "@/components/guidance/GuidedProductTour";
 import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
+import { Button } from "@/components/ui/Button";
 
 const pathways = [
   { step: "01", title: "Configurează contextul comercial", description: "Verifică profilul companiei, serviciile și clienții țintă care susțin prioritizarea.", href: "/settings", action: "Deschide setările" },
@@ -51,7 +52,7 @@ const faqGroups = [
 
 export default function HelpPage() {
   return (
-    <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial." actions={<GuideReplayButton />}>
+    <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial." actions={<div className="flex flex-wrap gap-2"><Button href="/demo" variant="secondary">Traseu demo</Button><Button href="/demo/feedback" variant="ghost">După demo: notează feedbackul</Button><GuideReplayButton /></div>}>
       <div className="grid gap-8">
         <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="start-title">
           <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[0.72fr_1.28fr]">

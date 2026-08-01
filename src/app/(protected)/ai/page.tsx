@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon
 } from "@heroicons/react/24/outline";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { RecommendationExplanationCard } from "@/components/intelligence/RecommendationExplanationCard";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { aiCapabilities, type AiCapabilityDefinition, type AiCapabilityStatus } from "@/lib/ai-capabilities";
@@ -126,6 +127,10 @@ function RecommendationCard({
   recommendation: OperationalIntelligenceRecommendation;
   position: number;
 }) {
+  if (recommendation.id) {
+    return <RecommendationExplanationCard recommendation={recommendation} position={position} />;
+  }
+
   return (
     <article className="marketing-card-lift flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -284,7 +289,7 @@ export default async function AiControlCenterPage() {
           <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Cel mult trei decizii ordonate determinist după severitate, termen și valoare estimată. Nu sunt acțiuni executate.</p>
         </div>
         {intelligence.recommendations.length > 0 ? (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4">
             {intelligence.recommendations.map((recommendation, index) => (
               <RecommendationCard key={recommendation.id} recommendation={recommendation} position={index + 1} />
             ))}

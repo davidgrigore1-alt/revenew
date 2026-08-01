@@ -212,6 +212,7 @@ test("protected demo route is small, explicit and has no persistence or external
   assert.match(client, /Aprobare[\s\S]*Obligatorie/);
   assert.match(engine, /statusLabel: "Propunere neconfirmată"/);
   assert.match(engine, /deliveryStatus: "Nu a fost trimisă nicio confirmare"/);
-  assert.match(demo, /href="\/demo\/appointment-control"/);
-  assert.doesNotMatch(`${page}\n${client}`, /server action|fetch\s*\(|createSupabase|\.from\(|googleapis|twilio|openai|oauth/i);
+  assert.match(demo, /requirePermission\("platform\.internal_tools\.access"\)/);
+  assert.match(demo, /Demo controlat ReveNew/);
+  assert.doesNotMatch(`${page}\n${client}\n${demo}`, /server action|fetch\s*\(|createSupabase|\.from\(|googleapis|twilio|openai|oauth/i);
 });

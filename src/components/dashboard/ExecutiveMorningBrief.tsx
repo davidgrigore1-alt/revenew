@@ -4,6 +4,7 @@ import { PremiumPanel } from "@/components/dashboard/PremiumPanel";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { ExecutiveMorningBrief as ExecutiveMorningBriefModel, ExecutiveMorningBriefStatus } from "@/lib/executive-morning-brief";
+import type { OperationalIntelligenceRecommendation } from "@/lib/operational-intelligence";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const statusTone: Record<ExecutiveMorningBriefStatus, BadgeTone> = {
@@ -25,11 +26,13 @@ const countLabels: Array<[keyof ExecutiveMorningBriefModel["counts"], string]> =
 export function ExecutiveMorningBrief({
   brief,
   pipelineValueRon,
-  confirmedRevenueRon
+  confirmedRevenueRon,
+  recommendation
 }: {
   brief: ExecutiveMorningBriefModel;
   pipelineValueRon: number;
   confirmedRevenueRon: number;
+  recommendation?: OperationalIntelligenceRecommendation | null;
 }) {
   const visibleCounts = countLabels.filter(([key]) => brief.counts[key] > 0).slice(0, 4);
 
@@ -90,6 +93,14 @@ export function ExecutiveMorningBrief({
             <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--primary))]">Prima acțiune sigură</p>
             <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">{brief.primaryRisk}</h2>
             <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{brief.whyItMatters}</p>
+
+            {recommendation ? (
+              <div className="mt-3 grid gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]">
+                <p><strong className="text-[rgb(var(--foreground))]">De ce acum:</strong> {recommendation.whyNow}</p>
+                <p><strong className="text-[rgb(var(--foreground))]">Forța dovezilor:</strong> {recommendation.evidenceStrengthLabel}</p>
+                <p><strong className="text-[rgb(var(--foreground))]">Ce lipsește:</strong> {recommendation.missingInformation[0] ?? "Nu a fost identificată o lipsă critică."}</p>
+              </div>
+            ) : null}
 
             <Button href={brief.firstSafeActionHref} className="mt-4 w-full">{brief.firstSafeActionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
 

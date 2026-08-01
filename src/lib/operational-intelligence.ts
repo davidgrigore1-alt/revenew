@@ -26,15 +26,34 @@ export type EvidenceToDecisionTrace = {
 
 export type OperationalIntelligenceRecommendation = {
   id: string;
+  entityType: "opportunity" | "signal" | "action" | "approval" | "report";
+  entityId: string;
   title: string;
   typeLabel: string;
   severity: WorkspaceDecisionSeverity;
+  situation: string;
+  risk: string;
+  whyNow: string;
   whyItMatters: string;
+  evidenceStrength: "sufficient" | "partial" | "verify";
+  evidenceStrengthLabel: "Dovezi suficiente" | "Dovezi parțiale" | "Necesită verificare";
+  evidence: Array<{ label: string; sourceTypeLabel: string; href: string; observedAt: string | null }>;
   evidenceLabel: string;
   evidenceHref: string;
   evidenceCount: number;
+  missingInformation: string[];
+  assumptions: string[];
   uncertainty: string;
   controlNote: string;
+  humanDecisionRequired: true;
+  noAutomaticExecution: true;
+  safeNextAction: { label: string; href: string };
+  consequenceOfInaction: string;
+  confirmedValue: null;
+  confirmedValueLabel: string;
+  priorityReason: string;
+  recommendedReviewPath: string;
+  sourceTrace: Array<{ sourceTypeLabel: string; label: string; href: string; observedAt: string | null }>;
   actionLabel: string;
   actionHref: string;
   estimatedValue?: number;
@@ -118,6 +137,25 @@ const humanDecisions: Record<WorkspaceDecisionType, string> = {
   high_value_blocked_opportunity: "Revizuiește blocajele și confirmă primul pas sigur."
 };
 
+const consequencesOfInaction: Record<WorkspaceDecisionType, string> = {
+  overdue_follow_up: "Fără revizuire, conversația poate rămâne fără răspuns, iar oportunitatea poate pierde continuitatea comercială.",
+  pending_approval: "Fără o decizie înregistrată, lucrul pregătit rămâne blocat și nu poate avansa în siguranță.",
+  prepared_work_not_advanced: "Documentul pregătit poate rămâne nefolosit, iar următorul pas comercial poate fi uitat.",
+  unresolved_signal: "Semnalul poate rămâne nevalorificat sau poate genera lucru duplicat dacă nu este clasificat.",
+  opportunity_without_next_action: "Oportunitatea poate stagna deoarece echipa nu are un pas și un termen verificabil.",
+  opportunity_without_owner: "Responsabilitatea rămâne ambiguă, iar follow-up-ul poate fi amânat sau duplicat.",
+  company_without_primary_contact: "Echipa poate pregăti un follow-up pentru persoana nepotrivită sau poate întârzia clarificarea.",
+  inactive_active_opportunity: "Lipsa unei decizii poate menține artificial oportunitatea activă și poate ascunde riscul real.",
+  high_value_blocked_opportunity: "Blocajul poate menține expusă valoarea estimată fără să existe progres sau venit confirmat."
+};
+
+function entityTypeFor(item: WorkspaceDecisionItem): OperationalIntelligenceRecommendation["entityType"] {
+  if (item.type === "pending_approval") return "approval";
+  if (item.type === "unresolved_signal") return "signal";
+  if (["overdue_follow_up", "prepared_work_not_advanced"].includes(item.type)) return "action";
+  return "opportunity";
+}
+
 function sourceTypeLabel(evidence: WorkspaceDecisionEvidence) {
   return ({
     opportunity: "Oportunitate",
@@ -183,23 +221,66 @@ function traceFor(
   };
 }
 
-function recommendationFor(item: WorkspaceDecisionItem): OperationalIntelligenceRecommendation {
+export function buildOperationalRecommendation(item: WorkspaceDecisionItem): OperationalIntelligenceRecommendation {
   const primaryEvidence = item.evidence[0];
   const evidenceCount = item.evidence.length;
+  const missingInformation = missingInformationFor(item).filter((gap) => !gap.startsWith("Valoarea"));
+  const evidenceStrength = evidenceCount >= 2 && missingInformation.length <= 1
+    ? "sufficient"
+    : evidenceCount > 0
+      ? "partial"
+      : "verify";
+  const evidenceStrengthLabel = evidenceStrength === "sufficient"
+    ? "Dovezi suficiente"
+    : evidenceStrength === "partial"
+      ? "Dovezi parțiale"
+      : "Necesită verificare";
+  const evidence = item.evidence.map((source) => ({
+    label: source.label,
+    sourceTypeLabel: sourceTypeLabel(source),
+    href: source.href,
+    observedAt: source.sourceTimestamp
+  }));
+  const sourceTrace = evidence.map((source) => ({ ...source }));
+  const situationContext = [item.relatedCompanyName, item.relatedOpportunityTitle].filter(Boolean).join(" · ");
 
   return {
     id: item.id,
+    entityType: entityTypeFor(item),
+    entityId: item.relatedOpportunityId ?? primaryEvidence?.sourceId ?? item.id,
     title: item.title,
     typeLabel: typeLabels[item.type],
     severity: item.severity,
+    situation: `${item.reason}${situationContext ? ` Context: ${situationContext}.` : ""}`,
+    risk: item.whyItMatters,
+    whyNow: `${prioritizationRules[item.type]} Starea observată este „${item.statusLabel}”.`,
     whyItMatters: item.whyItMatters,
+    evidenceStrength,
+    evidenceStrengthLabel,
+    evidence,
     evidenceLabel: primaryEvidence?.label ?? "Dovezi insuficiente pentru această recomandare",
     evidenceHref: primaryEvidence?.href ?? item.actionHref,
     evidenceCount,
+    missingInformation,
+    assumptions: [
+      "Prioritatea reflectă numai datele comerciale disponibile în momentul analizei.",
+      item.estimatedValue
+        ? "Valoarea estimată este folosită pentru prioritizare și nu reprezintă venit confirmat."
+        : "Valoarea comercială nu este disponibilă și nu este presupusă."
+    ],
     uncertainty: evidenceCount > 0
       ? `Prioritizare deterministă bazată pe ${evidenceCount === 1 ? "o dovadă existentă" : `${evidenceCount} dovezi existente`}; contextul trebuie verificat de o persoană.`
       : "Recomandarea nu trebuie aplicată înainte de completarea și verificarea dovezilor.",
     controlNote: "ReveNew recomandă; o persoană verifică și aprobă orice pas cu impact comercial.",
+    humanDecisionRequired: true,
+    noAutomaticExecution: true,
+    safeNextAction: { label: item.actionLabel, href: item.actionHref },
+    consequenceOfInaction: consequencesOfInaction[item.type],
+    confirmedValue: null,
+    confirmedValueLabel: "Nu există venit confirmat asociat acestei recomandări.",
+    priorityReason: prioritizationRules[item.type],
+    recommendedReviewPath: item.actionHref,
+    sourceTrace,
     actionLabel: item.actionLabel,
     actionHref: item.actionHref,
     ...(item.estimatedValue && item.currency ? { estimatedValue: item.estimatedValue, currency: item.currency } : {}),
@@ -212,7 +293,7 @@ function recommendationFor(item: WorkspaceDecisionItem): OperationalIntelligence
 export function buildOperationalIntelligenceCenter(
   queue: WorkspaceDecisionQueue
 ): OperationalIntelligenceCenter {
-  const recommendations = queue.items.slice(0, 3).map(recommendationFor);
+  const recommendations = queue.items.slice(0, 3).map(buildOperationalRecommendation);
   const primary = recommendations[0] ?? null;
   const evidenceCount = recommendations.reduce((total, recommendation) => total + recommendation.evidenceCount, 0);
   const estimatedExposedValueByCurrency = Object.entries(queue.estimatedExposedValueByCurrency)
