@@ -5,6 +5,7 @@ export type ContextualHelpEntry = {
   keywords: string[];
   routes: string[];
   anchor?: string;
+  primaryActionLabel?: string;
   shortAnswer: string;
   steps: string[];
   safetyNote?: string;
@@ -14,6 +15,7 @@ export type ContextualHelpEntry = {
 export type ContextualHelpResult = {
   matched: boolean;
   score: number;
+  confidence: "high" | "guided" | "fallback";
   entry: ContextualHelpEntry | null;
   suggestions: string[];
 };
@@ -76,6 +78,28 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     steps: ["Selectează semnalul.", "Verifică sursa și contextul original.", "Compară interpretarea ReveNew cu dovada.", "Completează responsabilul și următoarea acțiune dacă sunt cunoscute.", "Clasifică, amână, respinge sau arhivează cu motiv."],
     safetyNote: "Clasificarea nu trimite comunicări externe.",
     relatedQuestions: ["Cum amân o acțiune?", "Cum verific o recomandare?", "Unde văd dovezile?"]
+  },
+  {
+    id: "companies-navigation",
+    title: "Unde găsești companiile",
+    aliases: ["Unde este secțiunea de companii?", "Unde sunt firmele?", "Unde găsesc firmele?", "Unde găsesc clienții?", "Unde sunt companiile?", "Cum caut o firmă?"],
+    keywords: ["companie", "companii", "firma", "firme", "client", "clienti", "societate", "societati", "caut"],
+    routes: ["/companies", "/contacts"],
+    primaryActionLabel: "Du-mă la Companii",
+    shortAnswer: "Companiile sunt în meniul Relații → Companii. Acolo poți căuta o firmă și deschide contextul comercial disponibil; pentru o persoană sau un decident folosește secțiunea Contacte.",
+    steps: ["Deschide Companii din meniul Relații.", "Folosește căutarea după denumire sau domeniu.", "Deschide compania pentru oportunități, contacte și dovezi asociate.", "Dacă ai doar numele unei persoane, continuă în Contacte."],
+    relatedQuestions: ["Unde sunt contactele?", "Cum asociez un contact acestei oportunități?", "Unde văd dovezile unei oportunități?"]
+  },
+  {
+    id: "contacts-navigation",
+    title: "Unde găsești contactele",
+    aliases: ["Unde sunt contactele?", "Unde găsesc persoanele de contact?", "Unde caut un decident?"],
+    keywords: ["contact", "contacte", "persoana", "persoane", "decident", "decidenti"],
+    routes: ["/contacts"],
+    primaryActionLabel: "Du-mă la Contacte",
+    shortAnswer: "Contactele sunt în meniul Relații → Contacte. Folosește această secțiune pentru persoane și decidenți; asocierea cu o oportunitate se verifică apoi în detaliul oportunității.",
+    steps: ["Deschide Contacte din meniul Relații.", "Caută persoana după nume sau date profesionale.", "Verifică firma asociată.", "Deschide oportunitatea relevantă înainte de orice comunicare."],
+    relatedQuestions: ["Unde sunt firmele?", "Cum asociez un contact acestei oportunități?", "Ce fac dacă lipsește contactul principal?"]
   },
   {
     id: "opportunity-contact",
@@ -232,12 +256,12 @@ export function suggestedHelpQuestions(pathname: string, limit = 4) {
 
 export function findContextualHelp(question: string, pathname = "/dashboard"): ContextualHelpResult {
   const normalizedQuestion = normalizeHelpText(question);
-  if (!normalizedQuestion) return { matched: false, score: 0, entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
+  if (!normalizedQuestion) return { matched: false, score: 0, confidence: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
 
   const ranked = contextualHelpEntries
     .map((entry, index) => ({ entry, index, score: scoreEntry(entry, normalizedQuestion, pathname) }))
     .sort((left, right) => right.score - left.score || left.index - right.index);
   const best = ranked[0];
-  if (!best || best.score < 5) return { matched: false, score: best?.score ?? 0, entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
-  return { matched: true, score: best.score, entry: best.entry, suggestions: best.entry.relatedQuestions.slice(0, 3) };
+  if (!best || best.score < 5) return { matched: false, score: best?.score ?? 0, confidence: "fallback", entry: null, suggestions: suggestedHelpQuestions(pathname, 3) };
+  return { matched: true, score: best.score, confidence: best.score >= 30 ? "high" : "guided", entry: best.entry, suggestions: best.entry.relatedQuestions.slice(0, 3) };
 }

@@ -20,7 +20,7 @@ export function PageShell({ title, eyebrow, description, children, actions, brea
         {actions}
       </PageHeader>
       <ContextualPageGuide className="mt-4" />
-      {children ? <div className="mt-5">{children}</div> : null}
+      {children ? <div className="app-section-stack mt-8">{children}</div> : null}
     </section>
   );
 }

@@ -26,6 +26,8 @@ const routeLabels: Record<string, string> = {
   "/inbox": "Inbox Comercial",
   "/today": "Activitatea mea",
   "/approvals": "Aprobări",
+  "/companies": "Companii",
+  "/contacts": "Contacte",
   "/opportunities": "Oportunități",
   "/reports": "Rapoarte",
   "/reports/revenue-recovery-audit": "Audit de recuperare venituri",
@@ -189,7 +191,7 @@ export function ContextualAssistant() {
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Ghid intern al produsului</p>
             <h2 id="contextual-assistant-title" className="mt-1 text-xl font-semibold">Asistent ReveNew</h2>
-            <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Întreabă cum folosești produsul, ce verifici prima dată sau unde găsești o secțiune.</p>
+            <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Asistentul răspunde pe baza ghidului intern și te trimite către zona relevantă.</p>
           </div>
           <button type="button" className="focus-ring inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-button text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]" aria-label="Închide Asistent ReveNew" onClick={closeAssistant}><XMarkIcon className="h-5 w-5" aria-hidden="true" /></button>
         </header>
@@ -220,7 +222,7 @@ export function ContextualAssistant() {
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Pași concreți</p>
                 <ol className="mt-3 grid gap-2.5">{entry.steps.map((step, index) => <li key={step} className="flex gap-3 text-sm leading-5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--gold-500)/0.32)] bg-[rgb(var(--gold-500)/0.08)] text-xs font-semibold text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">{index + 1}</span><span className="pt-0.5">{step}</span></li>)}</ol>
                 {entry.safetyNote ? <p className="mt-4 rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Limită de control:</strong> {entry.safetyNote}</p> : null}
-                <div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => navigate(entry)} size="small">Du-mă acolo<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>{entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />Arată-mi zona</Button> : null}</div>
+                <div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => navigate(entry)} size="small">{entry.primaryActionLabel ?? "Du-mă acolo"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>{entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />Arată-mi zona</Button> : null}</div>
                 <div className="mt-4 border-t border-[rgb(var(--border))] pt-4"><p className="text-xs font-semibold text-[rgb(var(--text-muted))]">Destinații relevante</p><div className="mt-2 flex flex-wrap gap-2">{entry.routes.map((route) => <button key={route} type="button" className="focus-ring rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline" onClick={() => { router.push(route); closeAssistant(); }}>{routeLabels[route] ?? route}</button>)}</div></div>
               </div>
             </section>

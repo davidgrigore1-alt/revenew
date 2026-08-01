@@ -5,13 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { searchAppSections } from "@/lib/app-section-search";
 import { cn } from "@/lib/utils";
 import { searchWorkspace, type WorkspaceSearchResult } from "@/lib/search/actions";
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<WorkspaceSearchResult[]>([]);
+  const [workspaceResults, setWorkspaceResults] = useState<WorkspaceSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -41,7 +42,7 @@ export function GlobalSearch() {
   useEffect(() => {
     const normalized = query.trim();
     if (normalized.length < 2) {
-      setResults([]);
+      setWorkspaceResults([]);
       setError("");
       setLoading(false);
       return;
@@ -49,7 +50,7 @@ export function GlobalSearch() {
     setLoading(true);
     const timer = window.setTimeout(async () => {
       const response = await searchWorkspace(normalized);
-      setResults(response.results);
+      setWorkspaceResults(response.results);
       setError(response.error ?? "");
       setLoading(false);
       setActiveIndex(0);
@@ -57,8 +58,10 @@ export function GlobalSearch() {
     return () => window.clearTimeout(timer);
   }, [query]);
 
+  const sectionResults = useMemo(() => searchAppSections(query), [query]);
+  const results = useMemo(() => [...sectionResults, ...workspaceResults], [sectionResults, workspaceResults]);
   const grouped = useMemo(() => {
-    return results.reduce<Record<string, WorkspaceSearchResult[]>>((groups, result) => {
+    return results.reduce<Record<string, typeof results>>((groups, result) => {
       (groups[result.group] ??= []).push(result);
       return groups;
     }, {});
@@ -67,7 +70,7 @@ export function GlobalSearch() {
   function close() {
     setOpen(false);
     setQuery("");
-    setResults([]);
+    setWorkspaceResults([]);
     setError("");
     window.setTimeout(() => triggerRef.current?.focus(), 0);
   }
@@ -105,7 +108,7 @@ export function GlobalSearch() {
                   if (event.key === "Enter" && results[activeIndex]) window.location.assign(results[activeIndex].href);
                 }}
                 className="h-14 min-h-14 min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 text-base shadow-none hover:border-transparent focus-visible:outline-none"
-                placeholder="Companie, contact, oportunitate, activitate sau document"
+                placeholder="Secțiune, companie, contact, oportunitate sau document"
                 aria-label="Termen de căutare"
                 aria-controls="workspace-search-results"
               />
@@ -115,11 +118,11 @@ export function GlobalSearch() {
             </div>
 
             <div id="workspace-search-results" className="app-scrollbar min-h-52 overflow-y-auto p-3" aria-live="polite">
-              {loading ? <SearchSkeleton /> : null}
-              {!loading && error ? <p role="alert" className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
+              {loading ? <SearchSkeleton compact={sectionResults.length > 0} /> : null}
+              {!loading && error ? <p role="alert" className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]">{sectionResults.length > 0 ? "Secțiunile produsului rămân disponibile. Căutarea în înregistrări nu a putut fi finalizată." : error}</p> : null}
               {!loading && !error && query.trim().length < 2 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Introdu cel puțin două caractere. Rezultatele sunt limitate la spațiul de lucru curent.</p> : null}
-              {!loading && !error && query.trim().length >= 2 && results.length === 0 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu am găsit rezultate accesibile. Verifică termenul sau încearcă o denumire mai scurtă.</p> : null}
-              {!loading && !error ? Object.entries(grouped).map(([group, items]) => (
+              {!loading && !error && query.trim().length >= 2 && results.length === 0 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu am găsit o secțiune sau o înregistrare accesibilă. Încearcă un termen precum „companii”, „audit” sau „ajutor”.</p> : null}
+              {!error || sectionResults.length > 0 ? Object.entries(grouped).map(([group, items]) => (
                 <div key={group} className="mb-4 last:mb-0">
                   <p className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">{group}</p>
                   <div className="grid gap-1">
@@ -152,8 +155,8 @@ export function GlobalSearch() {
   );
 }
 
-function SearchSkeleton() {
-  return <div className="grid gap-2 p-2" aria-label="Se caută">
-    {[0, 1, 2].map((item) => <Skeleton key={item} className="h-14" />)}
+function SearchSkeleton({ compact = false }: { compact?: boolean }) {
+  return <div className="grid gap-2 p-2" aria-label="Se caută în înregistrări">
+    {(compact ? [0] : [0, 1, 2]).map((item) => <Skeleton key={item} className="h-14" />)}
   </div>;
 }

@@ -466,7 +466,7 @@ export function CommercialInboxClient({
   );
 
   return (
-    <div className="grid gap-6">
+    <div className="app-section-stack">
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 

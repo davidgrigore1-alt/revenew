@@ -228,6 +228,11 @@ body {
   transition: outline-color 180ms ease, box-shadow 180ms ease;
 }
 
+.app-section-stack {
+  display: grid;
+  gap: clamp(1.75rem, 2.2vw, 2.5rem);
+}
+
 .subtle-grid {
   background-image:
     linear-gradient(rgb(var(--border) / 0.32) 1px, transparent 1px),

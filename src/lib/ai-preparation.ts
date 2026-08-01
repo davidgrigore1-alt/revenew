@@ -81,7 +81,7 @@ export function buildSignalPreparation(signal: CommercialSignal): SignalPreparat
 
   return {
     mode,
-    modeLabel: mode === "ai" ? "AI" : mode === "local_fallback" ? "Fallback local · reguli locale" : "Nepregătit",
+    modeLabel: mode === "ai" ? "AI" : mode === "local_fallback" ? "Reguli interne verificate" : "Nepregătit",
     summary: clean(signal.analysisExplanation || signal.extractedSummary || signal.rawMessage, 900) || "Semnalul nu are încă un rezumat pregătit.",
     intent: clean(signal.signalTypeLabel || signal.detectedCommercialIntent, 300) || "Intenție de clarificat",
     confidence,

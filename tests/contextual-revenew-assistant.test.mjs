@@ -24,8 +24,9 @@ test("flow map uses six stable compact labels while preserving full business mea
 
   for (const label of ["Semnal", "Dovezi", "Recomandare", "Decizie", "Acțiune", "Audit / Pilot"]) assert.match(flow, new RegExp(`label: "${label.replace("/", "\\/")}`));
   for (const full of ["Decizie umană", "Acțiune sigură", "Audit sau pilot controlat"]) assert.match(flow, new RegExp(full));
-  assert.match(flow, /min-w-\[720px\] grid-cols-6/);
-  assert.match(flow, /overflow-x-auto/);
+  assert.match(flow, /grid-cols-2/);
+  assert.match(flow, /sm:grid-cols-3/);
+  assert.doesNotMatch(flow, /min-w-\[720px\]|overflow-x-auto|app-scrollbar/);
   assert.match(flow, /aria-label=\{`\$\{index \+ 1\}\. \$\{step\.full\}`\}/);
   assert.doesNotMatch(flow, /Ã|Â|�/);
 });
@@ -62,7 +63,7 @@ test("contextual guides are dismissible per page and reset only namespaced keys"
 test("knowledge base covers every core operating surface with routes and concrete steps", () => {
   const ids = new Set(help.contextualHelpEntries.map((entry) => entry.id));
   for (const id of [
-    "revenew-core-flow", "dashboard-first-check", "recommendation-evidence", "inbox-signal-review",
+    "revenew-core-flow", "dashboard-first-check", "recommendation-evidence", "inbox-signal-review", "companies-navigation", "contacts-navigation",
     "opportunity-contact", "opportunity-evidence", "today-postpone", "approvals-human-control",
     "estimated-value", "controlled-audit", "demo-controlled", "demo-feedback", "access-settings-help"
   ]) assert.equal(ids.has(id), true, `missing ${id}`);
@@ -78,6 +79,11 @@ test("Romanian matching handles diacritics, synonyms and route context determini
   const cases = [
     ["cum asociez un contact acestei oportunități", "/opportunities/abc", "opportunity-contact"],
     ["cum asociez un contact acestei oportunitati", "/dashboard", "opportunity-contact"],
+    ["unde este secțiunea de companii", "/dashboard", "companies-navigation"],
+    ["unde sunt firmele", "/dashboard", "companies-navigation"],
+    ["unde gasesc clientii", "/dashboard", "companies-navigation"],
+    ["cum caut o firma", "/dashboard", "companies-navigation"],
+    ["unde sunt contactele", "/dashboard", "contacts-navigation"],
     ["unde văd dovezile", "/opportunities/abc", "opportunity-evidence"],
     ["cum aman o actiune", "/today", "today-postpone"],
     ["ce este valoarea estimata", "/reports", "estimated-value"],
