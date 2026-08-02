@@ -87,9 +87,9 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
             ) : null}
           </div>
 
-          <details className="group rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
+          <details open className="group rounded-control border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--surface))]">
             <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control px-3 py-2 text-sm font-semibold marker:hidden">
-              <span>Detalii de pregătire</span>
+              <span><span className="block">Context pentru decizie</span><span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">Dovezi, riscuri și informații lipsă</span></span>
               <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
             </summary>
             <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4">

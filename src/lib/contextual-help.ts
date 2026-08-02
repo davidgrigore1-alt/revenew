@@ -223,14 +223,14 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
   {
     id: "settings-logo",
     title: "Logo și identitate pentru compania activă",
-    aliases: ["Cum adaug logo?", "Cum adaug logo-ul firmei?", "Unde schimb sigla?", "Cum schimb numele firmei?", "Cum personalizez brandingul?", "Cum revin la inițiale?", "Logo-ul se salvează pentru toți?", "De ce nu se schimbă logo-ul ReveNew?", "Care este diferența dintre logo-ul ReveNew și logo-ul companiei?"],
+    aliases: ["Cum adaug logo?", "Cum adaug logo-ul firmei?", "Cum schimb logo-ul firmei?", "Unde schimb sigla?", "Cum schimb numele firmei?", "Cum personalizez brandingul?", "Cum revin la inițiale?", "Ce dimensiune poate avea logo-ul?", "Pot încărca SVG?", "De ce nu se salvează pentru toți?", "Logo-ul se salvează pentru toți?", "De ce nu se schimbă logo-ul ReveNew?", "Care este diferența dintre logo-ul ReveNew și logo-ul companiei?"],
     keywords: ["logo", "sigla", "siglă", "brand", "branding", "identitate", "nume firma", "nume companie", "initiale"],
     routes: ["/settings"],
     anchor: "settings-identity",
     primaryActionLabel: "Deschide Identitate",
-    shortAnswer: "În Setări → Identitate poți adăuga opțional logo-ul și numele companiei active. ReveNew rămâne brandul fix al produsului; identitatea companiei este separată și, în această versiune, se salvează numai local în browser.",
-    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Alege un logo PNG, JPG sau WEBP de maximum 300 KB.", "Verifică previzualizarea; fără logo, interfața folosește inițialele."],
-    safetyNote: "Logo-ul nu este încărcat pe server și nu este sincronizat între utilizatori sau dispozitive.",
+    shortAnswer: "În Setări → Identitate poți adăuga un logo PNG, JPG sau WEBP de maximum 800 KB. SVG nu este acceptat în v1. Logo-ul rămâne numai în acest browser, iar ReveNew rămâne brandul fix al produsului.",
+    steps: ["Deschide Setări → Identitate.", "Completează numele afișat și inițialele.", "Alege un logo PNG, JPG sau WEBP de maximum 800 KB.", "Verifică previzualizarea; fără logo, interfața folosește inițialele."],
+    safetyNote: "Logo-ul nu este încărcat pe server și nu este sincronizat între utilizatori sau dispozitive. Fișierele SVG nu sunt acceptate.",
     relatedQuestions: ["Cum personalizez identitatea spațiului?", "Cum schimb culoarea accent?", "Unde găsesc setările?"]
   },
   {
@@ -261,56 +261,76 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
 export const screenExplanationEntries: ContextualHelpEntry[] = [
   {
     id: "screen-dashboard", title: "Cum folosești Control Center", aliases: ["Explică această pagină"], keywords: [], routes: ["/dashboard"], anchor: "dashboard-critical-decision",
-    shortAnswer: "Ești în Control Center. Începe cu decizia critică, valoarea estimată, venitul confirmat și prima acțiune sigură.",
-    steps: ["Vrei să înțelegi decizia critică?", "Vrei să verifici dovezile?", "Vrei să vezi ce acțiune urmează?"],
+    shortAnswer: "Ești în Control Center, punctul de pornire pentru riscurile și deciziile comerciale care cer atenție.",
+    steps: ["Unde te afli: în Control Center.", "Ce faci aici: identifici prioritatea zilei și dovada asociată.", "De ce contează: vezi rapid ce poate bloca progresul comercial.", "Ce verifici prima dată: decizia critică și separarea dintre valoarea estimată și venitul confirmat.", "Următorul pas sigur: deschide acțiunea recomandată și verific-o înainte de execuție."],
     safetyNote: "Estimările rămân separate de venitul confirmat, iar decizia finală aparține echipei.",
     relatedQuestions: ["Ce verific prima dată pe Dashboard?", "Unde văd dovezile?", "Ce înseamnă valoare estimată, neconfirmată?"]
   },
   {
     id: "screen-ai", title: "Cum folosești Inteligență operațională", aliases: ["Explică această pagină"], keywords: [], routes: ["/ai"], anchor: "ai-recommendation",
-    shortAnswer: "Ești în Inteligență operațională. Aici verifici recomandarea, dovada, informațiile lipsă și acțiunea sigură. ReveNew explică; omul decide.",
-    steps: ["Vrei să înțelegi recomandarea?", "Vrei să verifici dovezile?", "Vrei să înțelegi de ce aprobă omul?"],
+    shortAnswer: "Ești în Inteligență operațională, unde recomandările sunt explicate prin dovezi, lipsuri și limite de control.",
+    steps: ["Unde te afli: în Inteligență operațională.", "Ce faci aici: verifici recomandările și contextul lor.", "De ce contează: o recomandare fără dovadă nu trebuie aplicată.", "Ce verifici prima dată: dovada, informațiile lipsă și riscul.", "Următorul pas sigur: revizuiește recomandarea și păstrează decizia sub control uman."],
     safetyNote: "Asistența nu aplică recomandarea și nu trimite comunicări automat.",
     relatedQuestions: ["Cum verific o recomandare?", "Unde văd dovezile?", "De ce AI-ul nu trimite automat?"]
   },
   {
     id: "screen-inbox", title: "Cum folosești Inbox Comercial", aliases: ["Explică această pagină"], keywords: [], routes: ["/inbox"], anchor: "inbox-signal-intelligence",
-    shortAnswer: "Ești în Inbox Comercial. Aici transformi semnale în decizii verificabile. Începe cu semnalul selectat, apoi verifică dovada, lipsurile și acțiunea sigură.",
-    steps: ["Vrei să înțelegi ce este un semnal?", "Vrei să vezi cum devine oportunitate?", "Vrei să verifici ce a înțeles ReveNew?"],
+    shortAnswer: "Ești în Inbox Comercial, unde un semnal este verificat înainte să devină oportunitate sau acțiune.",
+    steps: ["Unde te afli: în Inbox Comercial.", "Ce faci aici: transformi semnale în decizii verificabile.", "De ce contează: contextul incomplet poate produce duplicate sau acțiuni greșite.", "Ce verifici prima dată: dovada, riscurile și informațiile lipsă din Context pentru decizie.", "Următorul pas sigur: confirmă recomandarea înainte de conversie sau pregătirea unei acțiuni."],
     safetyNote: "Un semnal rămâne de verificat și nu declanșează automat o comunicare.",
     relatedQuestions: ["Ce este un semnal?", "Cum verific un semnal în Inbox?", "Ce înseamnă Ce a înțeles ReveNew?"]
   },
   {
     id: "screen-opportunity", title: "Cum folosești detaliul oportunității", aliases: ["Explică această pagină"], keywords: [], routes: ["/opportunities"], anchor: "opportunity-commercial-facts",
-    shortAnswer: "Ești pe detaliul oportunității. Începe cu valoarea estimată, dovezile, responsabilul, termenul și acțiunea sigură.",
-    steps: ["Vrei să verifici contactul?", "Vrei să deschizi dovezile?", "Vrei să clarifici acțiunea următoare?"],
+    shortAnswer: "Ești pe detaliul oportunității, centrul de control pentru valoarea estimată, dovezi, responsabil și următoarea acțiune comercială.",
+    steps: ["Unde te afli: pe detaliul oportunității.", "Ce faci aici: verifici valoarea estimată, contactul, responsabilul și acțiunile.", "De ce contează: lipsurile și blocajele pot opri progresul sau produce un handoff slab.", "Ce verifici prima dată: dovezile și termenul următoarei acțiuni.", "Următorul pas sigur: completează sau revizuiește acțiunea înainte de execuție."],
     safetyNote: "Valoarea este estimată până la confirmarea explicită a unui rezultat câștigat.",
     relatedQuestions: ["Cum asociez un contact acestei oportunități?", "Unde văd dovezile unei oportunități?", "Ce înseamnă valoare estimată, neconfirmată?"]
   },
   {
     id: "screen-feedback", title: "Cum folosești concluziile după demo", aliases: ["Explică această pagină"], keywords: [], routes: ["/demo/feedback"], anchor: "demo-feedback-fit",
-    shortAnswer: "Ești în feedbackul după demo. Notează durerea, obiecțiile, potrivirea pentru audit și următorul pas.",
-    steps: ["Vrei să notezi durerea comercială?", "Vrei să clarifici obiecțiile?", "Vrei să evaluezi potrivirea pentru audit?"],
+    shortAnswer: "Ești în concluziile după demo, unde observațiile devin o evaluare prudentă și un pas următor.",
+    steps: ["Unde te afli: în concluziile după demo.", "Ce faci aici: notezi durerea, obiecțiile și disponibilitatea datelor.", "De ce contează: decizia de audit trebuie susținută de context real.", "Ce verifici prima dată: problema comercială și datele pe care clientul le poate furniza.", "Următorul pas sigur: revizuiește evaluarea înainte de a propune auditul."],
     relatedQuestions: ["Cum notez feedbackul după demo?", "Cum pregătesc un audit controlat?", "Cum pornesc demo-ul?"]
   },
   {
     id: "screen-demo", title: "Cum folosești traseul demo", aliases: ["Explică această pagină"], keywords: [], routes: ["/demo"],
-    shortAnswer: "Ești în traseul demo. Urmează pașii pentru o prezentare controlată de 7–10 minute și încheie cu auditul pe un eșantion limitat.",
-    steps: ["Vrei să pornești prezentarea?", "Vrei să vezi traseul complet?", "Vrei să începi auditul controlat?"],
+    shortAnswer: "Ești în traseul demo, o prezentare controlată de 7–10 minute de la risc la audit.",
+    steps: ["Unde te afli: în traseul demo.", "Ce faci aici: prezinți problema, dovada, recomandarea și controlul uman.", "De ce contează: cumpărătorul vede valoarea fără promisiuni financiare.", "Ce verifici prima dată: întrebarea cumpărătorului și scopul pasului curent.", "Următorul pas sigur: urmează traseul și încheie cu auditul pe un eșantion limitat."],
     relatedQuestions: ["Cum pornesc demo-ul?", "Cum pregătesc un audit controlat?", "Cum notez feedbackul după demo?"]
   },
   {
     id: "screen-reports", title: "Cum folosești rapoartele", aliases: ["Explică această pagină"], keywords: [], routes: ["/reports"], anchor: "reports-audit-summary",
-    shortAnswer: "Ești în zona de rapoarte. Folosește aceste pagini pentru audit, pilot și dovada valorii. Estimările rămân separate de rezultatele confirmate.",
-    steps: ["Vrei să deschizi auditul?", "Vrei să înțelegi valoarea estimată?", "Vrei să pregătești pilotul?"],
+    shortAnswer: "Ești în Rapoarte, unde pipeline-ul, valoarea expusă și rezultatele confirmate sunt prezentate separat.",
+    steps: ["Unde te afli: în Rapoarte.", "Ce faci aici: pregătești auditul, pilotul și dovada valorii.", "De ce contează: managementul trebuie să distingă estimările de rezultate.", "Ce verifici prima dată: eticheta valorii, moneda și perioada.", "Următorul pas sigur: deschide raportul potrivit și verifică dovezile înainte de prezentare."],
     safetyNote: "Rapoartele nu promit venit recuperat și nu execută acțiuni.",
     relatedQuestions: ["Cum pregătesc un audit controlat?", "Ce înseamnă valoare estimată, neconfirmată?", "Care este diferența dintre audit și pilot?"]
   },
   {
     id: "screen-settings", title: "Cum folosești Setări", aliases: ["Explică această pagină"], keywords: [], routes: ["/settings"], anchor: "settings-appearance",
-    shortAnswer: "Ești în Setări. Aici controlezi aspectul local, identitatea de afișare, accesul și preferințele disponibile rolului tău.",
-    steps: ["Vrei să schimbi accentul?", "Vrei să personalizezi identitatea?", "Vrei să verifici accesul?"],
+    shortAnswer: "Ești în Setări, unde controlezi aspectul local, identitatea afișată și preferințele permise rolului tău.",
+    steps: ["Unde te afli: în Setări.", "Ce faci aici: ajustezi aspectul și identitatea de afișare.", "De ce contează: o identitate clară reduce confuzia între produs și compania activă.", "Ce verifici prima dată: secțiunea pe care vrei să o modifici și limita ei de aplicare.", "Următorul pas sigur: previzualizează schimbarea înainte de aplicare."],
     relatedQuestions: ["Cum schimb culoarea accent?", "Cum personalizez identitatea spațiului?", "Unde găsesc setările?"]
+  },
+  {
+    id: "screen-today", title: "Cum folosești Activitatea mea", aliases: ["Explică această pagină"], keywords: [], routes: ["/today"],
+    shortAnswer: "Ești în Activitatea mea, lista acțiunilor comerciale atribuite ție și ordonate după termen.",
+    steps: ["Unde te afli: în Activitatea mea.", "Ce faci aici: gestionezi acțiunile proprii scadente, restante sau viitoare.", "De ce contează: întârzierile și handoff-urile neclare pot produce pierderi comerciale.", "Ce verifici prima dată: acțiunile restante și dovada asociată.", "Următorul pas sigur: revizuiește acțiunea înainte să o finalizezi sau să o amâni."],
+    safetyNote: "Lista rămâne atribuită utilizatorului curent; excepțiile manageriale sunt tratate separat.",
+    relatedQuestions: ["Cum amân o acțiune?", "Ce verific prima dată pe Dashboard?", "Unde văd dovezile?"]
+  },
+  {
+    id: "screen-audit", title: "Cum folosești Audit controlat", aliases: ["Explică această pagină"], keywords: [], routes: ["/audit/start"],
+    shortAnswer: "Ești în Audit controlat. Ajungi aici din Control Center, Demo sau Rapoarte și pregătești primul audit pe 20–50 de cazuri comerciale recente.",
+    steps: ["Unde te afli: în Audit controlat.", "Ce faci aici: completezi contextul, eșantionul și obiectivul auditului.", "De ce contează: datele limitate și anonimizabile permit o validare prudentă.", "Ce verifici prima dată: compania, blocajele și disponibilitatea celor 20–50 de cazuri.", "Următorul pas sigur: completează pasul curent și revizuiește planul înaintea oricărui transfer de date."],
+    safetyNote: "Primul audit nu cere acces complet la inbox, nu trimite comunicări și nu garantează venit.",
+    relatedQuestions: ["Cum pregătesc un audit controlat?", "Pot anonimiza datele?", "Ce date am nevoie pentru audit?"]
+  },
+  {
+    id: "screen-help", title: "Cum folosești Ajutor", aliases: ["Explică această pagină"], keywords: [], routes: ["/help"],
+    shortAnswer: "Ești în Ajutor, unde găsești explicații despre fluxul ReveNew și limitele de control.",
+    steps: ["Unde te afli: în Ajutor.", "Ce faci aici: cauți explicația unei etape sau a unei reguli comerciale.", "De ce contează: folosirea consecventă păstrează deciziile verificabile.", "Ce verifici prima dată: întrebarea apropiată de problema ta.", "Următorul pas sigur: deschide explicația și revino la ruta indicată."],
+    relatedQuestions: ["Cum funcționează ReveNew?", "Cum pregătesc un audit controlat?", "De ce AI-ul nu trimite automat?"]
   }
 ];
 

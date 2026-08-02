@@ -130,7 +130,10 @@ test("assistant is accessible, local, actionable and keeps the existing tour rep
   assert.match(assistant, /aria-modal="true"/);
   assert.match(assistant, /event\.key === "Escape"/);
   assert.match(assistant, /Întreabă cum folosești ReveNew/);
-  assert.match(assistant, /Du-mă acolo/);
+  assert.doesNotMatch(assistant, /Du-mă acolo/);
+  assert.match(assistant, /Ești deja aici/);
+  assert.match(assistant, /Deschide pagina/);
+  assert.match(assistant, /Arată zona relevantă/);
   assert.match(assistant, /Arată-mi zona/);
   assert.match(assistant, /Revezi turul introductiv/);
   assert.match(assistant, /Resetează ghidurile închise/);

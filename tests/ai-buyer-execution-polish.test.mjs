@@ -42,7 +42,12 @@ test("Inbox places compact operational intelligence before the review forms", ()
   assert.match(panel, /De ce acum:/);
   assert.match(panel, /Acțiune sigură recomandată/);
   assert.match(panel, /Valoare estimată, neconfirmată/);
-  assert.match(panel, /Detalii de pregătire/);
+  assert.match(panel, /<details open/);
+  assert.match(panel, /Context pentru decizie/);
+  assert.match(panel, /Dovezi, riscuri și informații lipsă/);
+  assert.match(panel, /Dovezi din semnal/);
+  assert.match(panel, /Riscuri \/ neclarități/);
+  assert.match(panel, /Informații lipsă/);
   assert.match(panel, /Nimic nu este trimis extern/);
 });
 

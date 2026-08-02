@@ -23,9 +23,19 @@ const search = compileModel("src/lib/app-section-search.ts");
 test("assistant v2 explains key screens with route-specific, human-controlled guidance", () => {
   const assistant = read("src/components/guidance/ContextualAssistant.tsx");
   assert.match(assistant, /Explică această pagină/);
+  assert.match(assistant, />Asistent</);
+  assert.match(assistant, /Asistent ReveNew/);
+  assert.match(assistant, /Ghid intern pentru folosirea produsului\./);
+  assert.match(assistant, /Ești deja aici/);
+  assert.match(assistant, /Orientare pe pagină/);
+  const explainAction = assistant.slice(assistant.indexOf("function explainCurrentScreen"), assistant.indexOf("function submit"));
+  assert.doesNotMatch(explainAction, /setQuestion/);
   const cases = [
     ["/dashboard", "screen-dashboard", "Control Center"],
     ["/inbox", "screen-inbox", "Inbox Comercial"],
+    ["/today", "screen-today", "Activitatea mea"],
+    ["/audit/start", "screen-audit", "20–50"],
+    ["/help", "screen-help", "Ajutor"],
     ["/opportunities/de300006-0000-4000-8000-000000000006", "screen-opportunity", "valoarea estimată"],
     ["/reports", "screen-reports", "rezultatele confirmate"]
   ];
@@ -35,8 +45,17 @@ test("assistant v2 explains key screens with route-specific, human-controlled gu
     assert.equal(result.mode, "clarify");
     assert.equal(result.entry.id, id);
     assert.match(result.entry.shortAnswer, new RegExp(copy, "i"));
+    assert.equal(result.entry.steps.length, 5);
+    assert.match(result.entry.steps[0], /^Unde te afli:/);
+    assert.match(result.entry.steps[4], /^Următorul pas sigur:/);
     assert.ok(result.suggestions.length >= 2);
   }
+});
+
+test("assistant copy remains a bounded product guide", () => {
+  const surfaces = `${read("src/components/guidance/ContextualAssistant.tsx")}\n${read("src/lib/contextual-help.ts")}`;
+  assert.doesNotMatch(surfaces, /Ghid AI|chatbot AI|\bLLM\b|întreabă orice|AI-ul știe|răspuns garantat/i);
+  for (const route of ["src/app/(protected)/audit/start/page.tsx", "src/app/(protected)/settings/page.tsx", "src/app/(protected)/demo/feedback/page.tsx"]) assert.equal(fs.existsSync(path.resolve(route)), true, route);
 });
 
 test("vague guidance requests clarify the current screen instead of falling back", () => {
@@ -45,7 +64,7 @@ test("vague guidance requests clarify the current screen instead of falling back
     assert.equal(result.matched, true, question);
     assert.equal(result.mode, "clarify", question);
     assert.equal(result.entry.id, "screen-inbox", question);
-    assert.equal(result.entry.steps.length, 3, question);
+    assert.equal(result.entry.steps.length, 5, question);
     assert.ok(result.suggestions.length >= 2, question);
   }
 });
@@ -53,6 +72,8 @@ test("vague guidance requests clarify the current screen instead of falling back
 test("existing deterministic answers remain available and unrelated questions fail safely", () => {
   const cases = [
     ["unde sunt firmele", "/dashboard", "companies-navigation"],
+    ["cum adaug logo-ul firmei", "/dashboard", "settings-logo"],
+    ["cum încep auditul", "/dashboard", "controlled-audit"],
     ["cum asociez un contact acestei oportunități", "/opportunities/abc", "opportunity-contact"],
     ["unde văd dovezile", "/opportunities/abc", "opportunity-evidence"],
     ["cum amân o acțiune", "/today", "today-postpone"]
@@ -62,6 +83,18 @@ test("existing deterministic answers remain available and unrelated questions fa
   assert.equal(weather.matched, false);
   assert.equal(weather.mode, "fallback");
   assert.equal(weather.entry, null);
+});
+
+test("assistant drawer uses a short composited transition and preserves keyboard close", () => {
+  const assistant = read("src/components/guidance/ContextualAssistant.tsx");
+  assert.match(assistant, /ASSISTANT_TRANSITION_MS = 160/);
+  assert.match(assistant, /transition-\[transform,opacity\]/);
+  assert.match(assistant, /duration-\[160ms\]/);
+  assert.match(assistant, /motion-reduce:transition-none/);
+  assert.match(assistant, /event\.key === "Escape"/);
+  assert.match(assistant, /returnFocusRef\.current\?\.focus/);
+  assert.match(assistant, /useMemo\(\(\) => suggestedHelpQuestions\(pathname\)/);
+  assert.doesNotMatch(assistant, /backdrop-blur/);
 });
 
 test("section search resolves personalization, currency and controlled audit aliases", () => {

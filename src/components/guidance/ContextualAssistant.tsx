@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 const OPEN_ASSISTANT_EVENT = "revenew:open-contextual-assistant";
 const REPLAY_TOUR_EVENT = "revenew:replay-product-guide";
+const ASSISTANT_TRANSITION_MS = 160;
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Control Center",
@@ -63,6 +64,7 @@ export function ContextualAssistant() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<ContextualHelpResult | null>(null);
   const [notice, setNotice] = useState("");
@@ -70,16 +72,27 @@ export function ContextualAssistant() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
   const suggestions = useMemo(() => suggestedHelpQuestions(pathname), [pathname]);
 
   useEffect(() => {
     function openAssistant() {
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+      if (animationFrameRef.current !== null) window.cancelAnimationFrame(animationFrameRef.current);
       returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setOpen(true);
+      setVisible(false);
       setNotice("");
+      animationFrameRef.current = window.requestAnimationFrame(() => setVisible(true));
     }
     window.addEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
     return () => window.removeEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
+  }, []);
+
+  useEffect(() => () => {
+    if (animationFrameRef.current !== null) window.cancelAnimationFrame(animationFrameRef.current);
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -90,8 +103,7 @@ export function ContextualAssistant() {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setOpen(false);
-        window.setTimeout(() => returnFocusRef.current?.focus(), 0);
+        closeAssistant();
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
@@ -132,8 +144,13 @@ export function ContextualAssistant() {
   }, [notice, open]);
 
   function closeAssistant() {
-    setOpen(false);
-    window.setTimeout(() => returnFocusRef.current?.focus(), 0);
+    setVisible(false);
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => {
+      setOpen(false);
+      returnFocusRef.current?.focus();
+      closeTimerRef.current = null;
+    }, ASSISTANT_TRANSITION_MS);
   }
 
   function answer(value: string) {
@@ -143,7 +160,6 @@ export function ContextualAssistant() {
   }
 
   function explainCurrentScreen() {
-    setQuestion("Explică această pagină");
     setResult(getScreenExplanation(pathname));
     setNotice("");
   }
@@ -184,21 +200,24 @@ export function ContextualAssistant() {
   const entry = result?.entry ?? null;
 
   return (
-    <div className="fixed inset-0 z-[85]" role="presentation">
-      <button type="button" className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" aria-label="Închide Asistent ReveNew" onClick={closeAssistant} />
+    <div className="fixed inset-0 z-[85]" role="presentation" data-state={visible ? "open" : "closed"}>
+      <button type="button" className={cn("absolute inset-0 bg-black/50 transition-opacity duration-[160ms] ease-out motion-reduce:transition-none", visible ? "opacity-100" : "opacity-0")} aria-label="Închide Asistent ReveNew" onClick={closeAssistant} />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contextual-assistant-title"
         aria-describedby="contextual-assistant-description"
-        className="app-scrollbar absolute inset-x-0 bottom-0 flex max-h-[94dvh] flex-col overflow-y-auto rounded-t-panel border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--surface-elevated))] shadow-modal sm:inset-y-0 sm:left-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel"
+        className={cn(
+          "app-scrollbar absolute inset-x-0 bottom-0 flex max-h-[94dvh] flex-col overflow-y-auto rounded-t-panel border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--surface-elevated))] shadow-modal transition-[transform,opacity] duration-[160ms] ease-out will-change-transform motion-reduce:transform-none motion-reduce:transition-none sm:inset-y-0 sm:left-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel",
+          visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-full opacity-0 sm:translate-x-full sm:translate-y-0"
+        )}
       >
-        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated)/0.96)] p-4 backdrop-blur-md sm:p-5">
+        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated)/0.98)] p-4 sm:p-5">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Ghid intern al produsului</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Orientare în produs</p>
             <h2 id="contextual-assistant-title" className="mt-1 text-xl font-semibold">Asistent ReveNew</h2>
-            <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Asistentul răspunde pe baza ghidului intern și te trimite către zona relevantă.</p>
+            <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Ghid intern pentru folosirea produsului.</p>
           </div>
           <button type="button" className="focus-ring inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-button text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]" aria-label="Închide Asistent ReveNew" onClick={closeAssistant}><XMarkIcon className="h-5 w-5" aria-hidden="true" /></button>
         </header>
@@ -228,11 +247,14 @@ export function ContextualAssistant() {
                 <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{entry.shortAnswer}</p>
               </div>
               <div className="p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Pași concreți</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">{result.mode === "clarify" ? "Orientare pe pagină" : "Pași concreți"}</p>
                 <ol className="mt-3 grid gap-2.5">{entry.steps.map((step, index) => <li key={step} className="flex gap-3 text-sm leading-5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[rgb(var(--primary)/0.32)] bg-[rgb(var(--primary-muted))] text-xs font-semibold text-[rgb(var(--primary))]">{index + 1}</span><span className="pt-0.5">{step}</span></li>)}</ol>
                 {entry.safetyNote ? <p className="mt-4 rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Limită de control:</strong> {entry.safetyNote}</p> : null}
-                <div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => navigate(entry)} size="small">{entry.primaryActionLabel ?? "Du-mă acolo"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>{entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />Arată-mi zona</Button> : null}</div>
-                <div className="mt-4 border-t border-[rgb(var(--border))] pt-4"><p className="text-xs font-semibold text-[rgb(var(--text-muted))]">Destinații relevante</p><div className="mt-2 flex flex-wrap gap-2">{entry.routes.map((route) => <button key={route} type="button" className="focus-ring rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline" onClick={() => { router.push(route); closeAssistant(); }}>{routeLabels[route] ?? route}</button>)}</div></div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {destinationFor(entry) === pathname ? <span className="inline-flex min-h-9 items-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 text-xs font-semibold text-[rgb(var(--text-muted))]">Ești deja aici</span> : <Button onClick={() => navigate(entry)} size="small">{entry.primaryActionLabel ?? "Deschide pagina"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}
+                  {entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />{destinationFor(entry) === pathname ? "Arată zona relevantă" : "Arată-mi zona"}</Button> : null}
+                </div>
+                <details className="group mt-4 border-t border-[rgb(var(--border))] pt-3"><summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden">Destinații relevante <span className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary><div className="mt-2 flex flex-wrap gap-2">{entry.routes.map((route) => <button key={route} type="button" className="focus-ring rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline" onClick={() => { router.push(route); closeAssistant(); }}>{routeLabels[route] ?? route}</button>)}</div></details>
               </div>
             </section>
           ) : (
@@ -248,9 +270,8 @@ export function ContextualAssistant() {
           {notice ? <p className="rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]" role="status">{notice}</p> : null}
         </div>
 
-        <footer className="mt-auto grid gap-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:grid-cols-2 sm:p-5">
-          <Button variant="secondary" size="small" onClick={replayTour}><ArrowPathIcon className="h-4 w-4" aria-hidden="true" />Revezi turul introductiv</Button>
-          <Button variant="ghost" size="small" onClick={resetGuides}>Resetează ghidurile închise</Button>
+        <footer className="mt-auto border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3 sm:px-5">
+          <details className="group"><summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden">Opțiuni ghid <span className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary><div className="mt-2 grid gap-2 sm:grid-cols-2"><Button variant="secondary" size="small" onClick={replayTour}><ArrowPathIcon className="h-4 w-4" aria-hidden="true" />Revezi turul introductiv</Button><Button variant="ghost" size="small" onClick={resetGuides}>Resetează ghidurile închise</Button></div></details>
         </footer>
       </div>
     </div>

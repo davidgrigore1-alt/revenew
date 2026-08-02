@@ -1,6 +1,7 @@
 export const WORKSPACE_LOGO_DATA_URL_KEY = "revenew.workspace.logoDataUrl";
 export const WORKSPACE_LOGO_META_KEY = "revenew.workspace.logoMeta";
-export const WORKSPACE_LOGO_MAX_BYTES = 300 * 1024;
+export const WORKSPACE_LOGO_MAX_BYTES = 800 * 1024;
+export const WORKSPACE_LOGO_MAX_DATA_URL_LENGTH = 4 * Math.ceil(WORKSPACE_LOGO_MAX_BYTES / 3) + 64;
 
 export const workspaceLogoMimeTypes = ["image/png", "image/jpeg", "image/webp"] as const;
 export type WorkspaceLogoMimeType = (typeof workspaceLogoMimeTypes)[number];
@@ -19,16 +20,16 @@ const acceptedExtensions = [".png", ".jpg", ".jpeg", ".webp"];
 export function validateWorkspaceLogoFile(file: WorkspaceLogoFile) {
   const extension = file.name.slice(file.name.lastIndexOf(".")).toLocaleLowerCase("ro-RO");
   if (!workspaceLogoMimeTypes.includes(file.type as WorkspaceLogoMimeType) || !acceptedExtensions.includes(extension)) {
-    return { valid: false as const, error: "Alege un fișier PNG, JPG, JPEG sau WEBP. Formatul SVG nu este acceptat." };
+    return { valid: false as const, error: "Acceptăm PNG, JPG sau WEBP. SVG nu este acceptat în v1." };
   }
   if (file.size <= 0 || file.size > WORKSPACE_LOGO_MAX_BYTES) {
-    return { valid: false as const, error: "Logo-ul trebuie să aibă maximum 300 KB." };
+    return { valid: false as const, error: "Logo-ul poate avea maximum 800 KB. Dacă fișierul este prea mare, folosește o versiune comprimată." };
   }
   return { valid: true as const };
 }
 
 export function isSafeWorkspaceLogoDataUrl(value: unknown): value is string {
-  if (typeof value !== "string" || value.length > 420_000) return false;
+  if (typeof value !== "string" || value.length > WORKSPACE_LOGO_MAX_DATA_URL_LENGTH) return false;
   return /^(?:data:image\/png|data:image\/jpeg|data:image\/webp);base64,[a-z0-9+/=]+$/i.test(value);
 }
 

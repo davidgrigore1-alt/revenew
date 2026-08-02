@@ -150,15 +150,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setWorkspaceLogoState(normalized);
         return true;
       } catch {
-        window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
-        window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
+        try {
+          window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
+          window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
+        } catch {
+          // Storage may be unavailable or full; keep the app usable and fall back to initials.
+        }
         return false;
       }
     },
     removeWorkspaceLogo() {
-      window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
-      window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
-      setWorkspaceLogoState(null);
+      try {
+        window.localStorage.removeItem(WORKSPACE_LOGO_DATA_URL_KEY);
+        window.localStorage.removeItem(WORKSPACE_LOGO_META_KEY);
+      } catch {
+        // The visible fallback still works when browser storage is unavailable.
+      } finally {
+        setWorkspaceLogoState(null);
+      }
     }
   }), [accentTheme, identityPreview, personalizationReady, resolvedTheme, theme, workspaceLogo]);
 
