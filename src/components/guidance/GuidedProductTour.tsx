@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
+import { BUYER_DEMO_STARTED_EVENT, BUYER_DEMO_STORAGE_KEY } from "@/lib/buyer-demo";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "revenew.guided-product-understanding.v1";
@@ -60,15 +61,26 @@ export function GuidedProductTour() {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!window.localStorage.getItem(STORAGE_KEY)) setOpen(true);
+    const buyerDemoActive = new URLSearchParams(window.location.search).get("demo") === "buyer"
+      || window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer";
+    if (!buyerDemoActive && !window.localStorage.getItem(STORAGE_KEY)) setOpen(true);
 
     function replayGuide() {
+      if (window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer") return;
       setStep(0);
       setOpen(true);
     }
 
+    function closeForBuyerDemo() {
+      setOpen(false);
+    }
+
     window.addEventListener(REPLAY_EVENT, replayGuide);
-    return () => window.removeEventListener(REPLAY_EVENT, replayGuide);
+    window.addEventListener(BUYER_DEMO_STARTED_EVENT, closeForBuyerDemo);
+    return () => {
+      window.removeEventListener(REPLAY_EVENT, replayGuide);
+      window.removeEventListener(BUYER_DEMO_STARTED_EVENT, closeForBuyerDemo);
+    };
   }, []);
 
   useEffect(() => {

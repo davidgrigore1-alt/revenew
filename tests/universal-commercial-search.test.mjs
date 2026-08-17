@@ -26,9 +26,11 @@ function compileTs(relativePath, aliases = {}) {
 
 const domain = compileTs("src/lib/opportunity-domain.ts");
 const attention = compileTs("src/lib/opportunity-attention.ts", { "@/lib/opportunity-domain": domain });
+const presentation = compileTs("src/lib/ui/domain-state-presentation.ts");
 const search = compileTs("src/lib/commercial-search.ts", {
   "@/lib/opportunity-attention": attention,
-  "@/lib/opportunity-domain": domain
+  "@/lib/opportunity-domain": domain,
+  "@/lib/ui/domain-state-presentation": presentation
 });
 const sections = compileTs("src/lib/app-section-search.ts");
 
@@ -96,6 +98,8 @@ test("structured opportunity results explain the match with source-backed eviden
   assert.ok(response.results[0].evidence.some((item) => /responsabil/i.test(item.label)));
   assert.match(response.results[0].context, /42\.000 RON/);
   assert.match(response.results[0].context, /valoare estimată, neconfirmată/i);
+  assert.match(response.results[0].context, /Etapă: Follow-up/);
+  assert.doesNotMatch(response.results[0].context, /follow_up_needed|Status:/);
 });
 
 test("overdue, inactivity and amount claims stay deterministic", () => {

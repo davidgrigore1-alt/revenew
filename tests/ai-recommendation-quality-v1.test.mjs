@@ -7,18 +7,23 @@ const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8
 
 test("reusable explanation card exposes evidence, uncertainty, safe action and human control", () => {
   const card = read("src/components/intelligence/RecommendationExplanationCard.tsx");
+  const adapter = read("src/lib/revenew-explanation-adapters.ts");
+  const disclosure = read("src/components/intelligence/ExplanationDisclosure.tsx");
+  const explanation = `${card}\n${adapter}\n${disclosure}`;
 
   assert.match(card, /Recomandare explicată/);
   assert.match(card, /De ce contează acum/);
   assert.match(card, /Dovadă/);
   assert.match(card, /Ce lipsește/);
   assert.match(card, /Acțiune sigură/);
-  assert.match(card, /Riscul inacțiunii/);
-  assert.match(card, /Presupuneri declarate/);
+  assert.match(explanation, /consequenceOfInaction/);
+  assert.match(explanation, /assumptions/);
   assert.match(card, /Decizie umană necesară/);
   assert.match(card, /Nu există execuție externă automată/);
   assert.match(card, /Valoare estimată, neconfirmată/);
-  assert.doesNotMatch(card, /ROI garantat|venit garantat|recuperare automată/i);
+  assert.match(explanation, /Interpretare ReveNew/);
+  assert.match(explanation, /Surse/);
+  assert.doesNotMatch(explanation, /ROI garantat|venit garantat|recuperare automată/i);
 });
 
 test("AI center and opportunity detail reuse the explanation component", () => {
@@ -37,7 +42,7 @@ test("dashboard, inbox and today expose decision-quality context without new aut
   const today = read("src/components/dashboard/TodayActionCard.tsx");
 
   assert.match(dashboard, /De ce contează:/);
-  assert.match(dashboard, /Dovezi și fapte de sprijin/);
+  assert.match(dashboard, /De ce este prioritar\?/);
   assert.match(dashboard, /Prima acțiune sigură/);
   assert.match(preparation, /evidenceStrengthLabel/);
   assert.match(preparation, /Riscul inacțiunii/);

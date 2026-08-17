@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ArrowRightIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import {
   formatTimelineDateGroup,
   formatTimelineExactDate,
   type OpportunityTimelineEvent,
   type OpportunityTimelineResult
 } from "@/lib/opportunity-intelligence-timeline";
+import { explanationForTimelineEvent } from "@/lib/revenew-explanation-adapters";
 import { formatCurrency } from "@/lib/utils";
 
 function SnapshotItem({ label, children }: { label: string; children: React.ReactNode }) {
@@ -14,25 +16,6 @@ function SnapshotItem({ label, children }: { label: string; children: React.Reac
       <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-muted))]">{label}</dt>
       <dd className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{children}</dd>
     </div>
-  );
-}
-
-function EvidenceDetails({ event }: { event: OpportunityTimelineEvent }) {
-  return (
-    <details className="group mt-3">
-      <summary className="focus-ring inline-flex min-h-8 cursor-pointer list-none items-center gap-2 rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden hover:text-[rgb(var(--foreground))]">
-        Dovezi și trasabilitate
-        <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
-      </summary>
-      <div className="mt-2 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-secondary))]">
-        <ul className="grid gap-1.5">
-          {event.evidence.map((item) => <li key={item}>• {item}</li>)}
-          {event.statusBefore || event.statusAfter ? (
-            <li>• Tranziție înregistrată: {event.statusBefore ?? "stare anterioară neprecizată"} → {event.statusAfter ?? "stare nouă neprecizată"}</li>
-          ) : null}
-        </ul>
-      </div>
-    </details>
   );
 }
 
@@ -67,7 +50,7 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
             </Link>
           ) : null}
         </div>
-        <EvidenceDetails event={event} />
+        {isDerived ? <ExplanationDisclosure explanation={explanationForTimelineEvent(event)} className="mt-3" /> : null}
       </article>
     </li>
   );

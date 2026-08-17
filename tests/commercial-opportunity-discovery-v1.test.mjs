@@ -105,13 +105,15 @@ test("instruction-like and SQL-like source text remains inert evidence", () => {
 
 test("UI and authorized loader preserve review, state and safety boundaries", () => {
   const ui = read("src/components/intelligence/CommercialDiscoveries.tsx");
+  const disclosure = read("src/components/intelligence/ExplanationDisclosure.tsx");
   const page = read("src/app/(protected)/ai/page.tsx");
   const recovery = read("src/lib/recovery.ts");
   const inbox = read("src/lib/commercial-inbox.ts");
   assert.match(ui, /Descoperiri comerciale/);
   assert.match(ui, /Revizuiește/);
-  assert.match(ui, /De ce apare/);
-  assert.match(ui, /aria-expanded|<details/);
+  assert.match(disclosure, /De ce apare/);
+  assert.match(ui, /ExplanationDisclosure/);
+  assert.match(disclosure, /<details/);
   assert.match(ui, /Nu există semnale noi de verificat/);
   assert.match(ui, /Nu există suficiente date-sursă/);
   assert.match(ui, /Nu am putut verifica semnalele comerciale/);

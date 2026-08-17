@@ -1,6 +1,7 @@
 import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import { isOpenOpportunity } from "@/lib/opportunity-domain";
 import type { Opportunity } from "@/lib/types";
+import { getDomainStatePresentation } from "@/lib/ui/domain-state-presentation";
 
 export type CommercialSearchIntentKind =
   | "entity_search"
@@ -228,7 +229,7 @@ function resultForOpportunity(
     entityType: "opportunity",
     group: "Oportunități",
     title: opportunity.title,
-    context: [companyName, `Status: ${opportunity.status}`, amountContext].filter(Boolean).join(" · "),
+    context: [companyName, `Etapă: ${getDomainStatePresentation("opportunityStatus", opportunity.status).label}`, amountContext].filter(Boolean).join(" · "),
     href: `/opportunities/${opportunity.id}`,
     reason,
     status: opportunity.status,

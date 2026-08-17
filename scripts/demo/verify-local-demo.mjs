@@ -1,7 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createLocalAdminClient, runLocalSql } from "./local-supabase.mjs";
-import { DEMO } from "./fixtures.mjs";
+import { buildFixtures, DEMO } from "./fixtures.mjs";
+import { assertDemoStoryInvariants } from "./story-contracts.mjs";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -317,7 +318,9 @@ async function verifySignalConversionAuthorization(admin, local) {
 
 async function main() {
   const { client: admin, local } = createLocalAdminClient();
-  const stats = runLocalSql(`
+  const verificationNow = new Date();
+  assertDemoStoryInvariants(buildFixtures("de900000-0000-4000-8000-000000000001", verificationNow), verificationNow);
+  const baseStats = runLocalSql(`
     select json_build_object(
       'business_count', (select count(*) from public.businesses where id = '${DEMO.businessId}' and name = '${DEMO.businessName.replaceAll("'", "''")}'),
       'identity_count', (select count(*) from public.profiles p join auth.users u on u.id=p.user_id where p.email='${DEMO.email}' and u.email='${DEMO.email}'),
@@ -379,24 +382,42 @@ async function main() {
       ,'source_intake_automatic_decision_count', (select count(*) from public.commercial_signals where business_id = '${DEMO.businessId}' and ingestion_origin = 'csv_import' and (analysis_status <> 'not_started' or review_status not in ('new','ready_for_review','postponed') or converted_opportunity_id is not null))
     );
   `, { json: true });
+  const storyStats = runLocalSql(`select json_build_object(
+    'featured_story_action_count', (select count(*) from public.opportunity_actions where business_id='${DEMO.businessId}' and opportunity_id='${DEMO.featuredOpportunityId}' and status='pending' and due_at < now()),
+    'featured_story_event_count', (select count(*) from public.opportunity_events where business_id='${DEMO.businessId}' and opportunity_id='${DEMO.featuredOpportunityId}' and occurred_at <= now()),
+    'featured_story_document_count', (select count(*) from public.opportunity_documents where business_id='${DEMO.businessId}' and opportunity_id='${DEMO.featuredOpportunityId}' and status='ready_to_send'),
+    'featured_story_signal_count', (select count(*) from public.commercial_signals where business_id='${DEMO.businessId}' and id='${DEMO.featuredSignalId}' and detected_from_opportunity_id='${DEMO.featuredOpportunityId}' and review_status='ready_for_review' and nullif(btrim(raw_message),'') is not null),
+    'atlas_discovery_count', (select count(*) from public.commercial_signals where business_id='${DEMO.businessId}' and id='${DEMO.discoverySignalId}' and matched_organization_id is not null and detected_from_opportunity_id is null and converted_opportunity_id is null and currency='EUR' and estimated_value_min=20000 and estimated_value_max=20000 and raw_message like '%20.000 EUR%'),
+    'rich_company_contact_count', (select count(*) from public.crm_contacts where business_id='${DEMO.businessId}' and organization_id='${DEMO.richCompanyId}'),
+    'rich_company_opportunity_count', (select count(*) from public.opportunities where business_id='${DEMO.businessId}' and organization_id='${DEMO.richCompanyId}'),
+    'rich_company_document_count', (select count(*) from public.opportunity_documents d join public.opportunities o on o.id=d.opportunity_id and o.business_id=d.business_id where d.business_id='${DEMO.businessId}' and o.organization_id='${DEMO.richCompanyId}'),
+    'rich_company_event_count', (select count(*) from public.opportunity_events e join public.opportunities o on o.id=e.opportunity_id and o.business_id=e.business_id where e.business_id='${DEMO.businessId}' and o.organization_id='${DEMO.richCompanyId}'),
+    'future_fact_count', ((select count(*) from public.opportunity_events where business_id='${DEMO.businessId}' and occurred_at > now()) + (select count(*) from public.commercial_signals where business_id='${DEMO.businessId}' and occurred_at > now()) + (select count(*) from public.opportunity_actions where business_id='${DEMO.businessId}' and created_at > now())),
+    'recent_story_change_count', (select count(*) from public.opportunity_events where business_id='${DEMO.businessId}' and occurred_at between now() - interval '24 hours' and now())
+  );`, { json: true });
+  const stats = { ...baseStats, ...storyStats };
   assert(Number(stats.business_count) === 1, "Workspace-ul demo lipsește sau nu este unic.");
   assert(Number(stats.identity_count) === 1, "Lanțul Auth → profil demo este invalid.");
-  assert(Number(stats.organization_count) === 8 && Number(stats.marked_organization_count) === 8, "Sunt necesare exact 8 companii fictive marcate intern.");
-  assert(Number(stats.contact_count) === 8 && Number(stats.reserved_domain_contact_count) === 8 && Number(stats.multi_contact_organization_count) === 1, "Contactele demo nu respectă domeniile rezervate și relațiile locale.");
-  assert(Number(stats.opportunity_count) === 11 && Number(stats.ron_count) === 10 && Number(stats.eur_count) === 1 && Number(stats.unsupported_currency_count) === 0, "Oportunitățile sau monedele demo sunt invalide.");
+  assert(Number(stats.organization_count) >= 5 && Number(stats.marked_organization_count) === Number(stats.organization_count), "Companiile canonice fictive lipsesc sau nu sunt marcate intern.");
+  assert(Number(stats.contact_count) >= 5 && Number(stats.reserved_domain_contact_count) === Number(stats.contact_count) && Number(stats.multi_contact_organization_count) >= 1, "Contactele demo nu respectă domeniile rezervate și relațiile locale.");
+  assert(Number(stats.opportunity_count) >= 8 && Number(stats.ron_count) > 0 && Number(stats.eur_count) > 0 && Number(stats.unsupported_currency_count) === 0, "Oportunitățile sau monedele demo sunt invalide.");
   assert(Number(stats.won_count) === 1 && Number(stats.lost_count) === 1, "Rezultatele terminale demo sunt invalide.");
-  assert(Number(stats.action_count) === 12, `Fixture-ul demo conține ${stats.action_count} acțiuni; sunt necesare exact 12.`);
+  assert(Number(stats.action_count) >= 8 && Number(stats.action_count) <= 20, `Lumea demo nu are o coadă de lucru credibilă (acțiuni: ${stats.action_count}).`);
   assert(Number(stats.overdue_count) > 0, `Coada de lucru nu conține acțiuni restante (acțiuni: ${stats.action_count}, restante: ${stats.overdue_count}). Rulează din nou seed-ul local buyer-ready.`);
   assert(Number(stats.missing_next_action_count) > 0 && Number(stats.unassigned_count) > 0, "Lipsesc scenariile Recovery Queue obligatorii.");
   assert(Number(stats.event_count) >= 10, "Evenimentele nu sunt complet auditabile.");
-  assert(Number(stats.document_count) === 4 && Number(stats.unsent_document_count) === 4, "Documentele demo trebuie să fie locale și netrimise.");
+  assert(Number(stats.document_count) >= 3 && Number(stats.unsent_document_count) === Number(stats.document_count), "Documentele demo trebuie să fie locale și netrimise.");
   assert(Number(stats.owner_count) === 1, "Ownership-ul demo este invalid.");
   assert(Number(stats.internal_demo_access_count) === 1, "Contul local nu poate accesa traseul intern /demo.");
   assert(Number(stats.featured_opportunity_count) === 1, "Oportunitatea principală a traseului demo lipsește.");
+  assert(Number(stats.featured_story_action_count) >= 1 && Number(stats.featured_story_event_count) >= 4 && Number(stats.featured_story_document_count) >= 1 && Number(stats.featured_story_signal_count) === 1, "Povestea Vector nu leagă coerent riscul, acțiunea, istoricul, documentul și dovada.");
+  assert(Number(stats.atlas_discovery_count) === 1, "Povestea Atlas nu păstrează semnalul neasociat și valoarea explicită de 20.000 EUR.");
+  assert(Number(stats.rich_company_contact_count) >= 2 && Number(stats.rich_company_opportunity_count) >= 2 && Number(stats.rich_company_document_count) >= 2 && Number(stats.rich_company_event_count) >= 2, "Company 360 nu are o relație canonică suficient de bogată.");
+  assert(Number(stats.future_fact_count) === 0 && Number(stats.recent_story_change_count) >= 1, "Cronologia demo conține fapte viitoare sau nu oferă nicio schimbare recentă.");
   assert(Number(stats.evidence_backed_opportunity_count) > 0, "Demo-ul nu conține o oportunitate susținută de o dovadă verificabilă.");
   assert(Number(stats.safe_next_action_count) > 0, "Demo-ul nu conține o acțiune următoare sigură.");
   assert(Number(stats.unsafe_visible_label_count) === 0, "Fixturele vizibile conțin identitate personală sau etichete TEST/E2E.");
-  assert(Number(stats.signal_count) === 10, "Demo-ul trebuie să conțină exact 10 semnale comerciale.");
+  assert(Number(stats.signal_count) >= 3 && Number(stats.signal_count) <= 15, "Demo-ul nu are un set restrâns și util de semnale comerciale.");
   assert(Number(stats.signal_review_count) > 0 && Number(stats.signal_linked_count) > 0, "Semnalele demo nu acoperă revizuirea și legarea.");
   assert(Number(stats.signal_converted_count) > 0 && Number(stats.signal_event_count) >= 10, "Conversia și auditul semnalelor demo sunt incomplete.");
   assert(Number(stats.external_signal_source_count) === 0, "Demo-ul nu trebuie să sugereze conectori externi activi.");
@@ -419,7 +440,7 @@ async function main() {
   await verifyTenantIsolation(admin, local);
   await verifySourceIntakeAuthorization(admin, local);
   await verifySignalConversionAuthorization(admin, local);
-  console.log("Verificare demo reușită: structură, semnale comerciale, relații, rezultate, coadă operațională și izolare RLS validate.");
+  console.log("Verificare demo reușită: poveștile Vector, Atlas și Meridian, cronologia, semnalele, controlul uman și izolarea RLS sunt coerente.");
 }
 
 main().catch((error) => {

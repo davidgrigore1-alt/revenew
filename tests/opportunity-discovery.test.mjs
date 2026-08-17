@@ -159,7 +159,8 @@ test("Company 360 keeps one dominant decision, bounded queues and mandatory huma
 test("existing local demo fixtures already exercise decision and discovery states", () => {
   const fixtures = read("scripts/demo/fixtures.mjs");
   assert.match(fixtures, /owner_profile_id: null/);
-  assert.match(fixtures, /status: index === 0 \? "ready_to_send"/);
+  assert.match(fixtures, /"Ofertă mentenanță Vector Industrial"[\s\S]*"ready_to_send"/);
+  assert.match(fixtures, /matched_organization_id: organizationIds\[3\]/);
   assert.match(fixtures, /matched_organization_id: organizationIds\[0\]/);
   assert.match(fixtures, /ready_for_review/);
 });

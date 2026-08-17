@@ -203,6 +203,8 @@ test("business memory promotes only the highest-signal items and keeps evidence 
   const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [], opportunities: [overdue], signals: [pending] }, { now: new Date("2026-07-22T12:00:00.000Z") });
   assert.ok(snapshot.memory.mustRemember.length <= 5);
   assert.equal(snapshot.memory.mustRemember[0].title, "Follow-up întârziat");
+  assert.match(snapshot.memory.mustRemember[0].description, /10 iul\. 2026/);
+  assert.doesNotMatch(snapshot.memory.mustRemember[0].description, /2026-07-10/);
   assert.ok(snapshot.memory.mustRemember.some((item) => item.title === "Aprobare în așteptare" && item.actionLabel === "Verifică aprobarea"));
   assert.ok(snapshot.memory.recentEvidence.length <= 3);
   const visibleEvidence = [...snapshot.memory.mustRemember, ...snapshot.memory.openLoops].map((item) => `${item.evidence.sourceType}:${item.evidence.sourceId}`);

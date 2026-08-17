@@ -25,6 +25,7 @@ export type ExecutiveBriefPriority = {
   opportunity?: string;
   reason: string;
   whyItMatters: string;
+  derivedReasonAssumption?: string;
   supportingFacts: string[];
   evidence: WorkspaceDecisionEvidence[];
   amount?: number;
@@ -146,7 +147,9 @@ function uniqueEvidence(items: WorkspaceDecisionItem[]) {
 function priorityFromGroup(items: WorkspaceDecisionItem[]): ExecutiveBriefPriority {
   const primary = items[0]!;
   const approvals = primary.type === "pending_approval" && items.length > 1;
-  const facts = items.flatMap((item) => [item.reason, item.statusLabel]).filter((value, index, values) => Boolean(value) && values.indexOf(value) === index).slice(0, 4);
+  const facts = [...items.map((item) => item.reason), ...items.map((item) => item.statusLabel)]
+    .filter((value, index, values) => Boolean(value) && values.indexOf(value) === index)
+    .slice(0, 4);
   return {
     id: approvals ? "brief:pending-approvals" : `brief:${primary.id}`,
     ...itemKind(primary.type),
@@ -157,6 +160,7 @@ function priorityFromGroup(items: WorkspaceDecisionItem[]): ExecutiveBriefPriori
     ...(approvals ? {} : primary.relatedOpportunityTitle ? { opportunity: primary.relatedOpportunityTitle } : {}),
     reason: approvals ? "Mai multe semnale sunt pregătite pentru o decizie umană." : primary.reason,
     whyItMatters: approvals ? "Aprobările pot bloca avansarea controlată a mai multor elemente comerciale." : primary.whyItMatters,
+    derivedReasonAssumption: primary.type === "inactive_active_opportunity" ? "Interpretarea folosește numai activitatea înregistrată în ReveNew." : undefined,
     supportingFacts: facts,
     evidence: uniqueEvidence(items),
     ...(!approvals && primary.estimatedValue !== undefined && primary.currency ? { amount: primary.estimatedValue, currency: primary.currency, valueKind: "estimated_unconfirmed" as const } : {}),

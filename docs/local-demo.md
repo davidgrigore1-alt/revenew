@@ -19,16 +19,27 @@ Contul local primește rolul minim existent `platform_operator` numai pentru a a
 
 Workspace: **Meridian Commercial Operations**. Identitatea operatorului și toate companiile, contactele, adresele și evenimentele sunt fictive.
 
-Povestea principală urmărește proiectul de mentenanță al Vector Industrial: valoare estimată de 76.000 RON, termen depășit, responsabil neatribuit și aprobare umană necesară. Alte cazuri arată follow-up restant, date de contact incomplete, document pregătit dar netrimis și o oportunitate de 12.000 EUR păstrată separat de valorile RON. Valorile estimate nu sunt venit confirmat.
+Lumea demo are patru fire legate prin aceleași înregistrări persistente:
+
+- **Vector Industrial** — proiect de mentenanță de 76.000 RON, termen depășit, responsabil neconfirmat, document pregătit și aprobare umană necesară;
+- **Atlas Fleet** — cerere neasociată de ofertă cu valoare explicită de 20.000 EUR, care trebuie comparată cu activitatea existentă înainte de creare;
+- **Meridian Logistics** — relație activă cu două contacte, două inițiative, documente și activitate recentă pentru Company 360;
+- **controlul uman** — recomandarea poate fi explicată și pregătită, dar nu este aplicată și nu produce contact extern fără decizie explicită.
+
+Datele sunt generate o singură dată, relativ la momentul seed-ului, apoi persistate. Valorile estimate nu sunt venit confirmat, iar monedele nu sunt convertite sau agregate între ele.
 
 ## Traseu de prezentare
 
-1. `/dashboard` — riscul principal, dovada și prima acțiune sigură.
-2. `/demo` — firul narativ de cinci minute.
-3. `/opportunities/de300006-0000-4000-8000-000000000006` — oportunitatea principală.
-4. `/reports` — pipeline estimat, expunere estimată și venit confirmat.
-5. `/reports/revenue-recovery-audit` — auditul verificabil.
-6. `/reports/enterprise-pilot-pack` — validarea controlată pe 14 zile.
+Ruta `/demo` pornește un traseu de opt pași prin produsul real:
+
+1. `/dashboard` — prioritatea Vector și explicația ei.
+2. `/opportunities/de300006-0000-4000-8000-000000000006` — istoricul, dovada și acțiunea sigură.
+3. `/crm/organizations/de100001-0000-4000-8000-000000000001` — memoria relației Meridian Logistics.
+4. `/ai` — Ask ReveNew și descoperirea Atlas Fleet.
+5. `/inbox?signal=de800001-0000-4000-8000-000000000001` — sursa Atlas și revizuirea umană.
+6. `/approvals` — limita de control pentru recomandarea Vector.
+7. `/reports/revenue-recovery-audit` — auditul verificabil și valorile deduplicate.
+8. `/reports/enterprise-pilot-pack` — validarea controlată pe 14 zile și legătura către Proof-of-Value.
 
 În prezentare: explică riscul, deschide dovada, arată responsabilul lipsă și acțiunea sigură, apoi încheie cu auditul și pilotul. ReveNew pregătește decizia; oamenii autorizați verifică, aprobă și execută.
 
@@ -48,4 +59,4 @@ Nu afirma venit garantat, recuperare automată, ROI promis sau trimitere automat
 - `npm run demo:reset` elimină numai workspace-ul local cu identificatorul demo fix; contul Auth local este păstrat.
 - `npm run demo:reset -- --full` resetează toate datele locale și este intenționat distructiv numai pentru stiva locală.
 - Scripturile se opresc înainte de scriere dacă stiva nu este locală, nu afișează chei și nu persistă parola.
-- `npm run demo:verify` verifică identitatea, domeniile rezervate, monedele separate, dovezile, aprobarea, documentele netrimise și izolarea RLS.
+- `npm run demo:verify` verifică identitatea, poveștile Vector/Atlas/Meridian, cronologia relativă, monedele separate, dovezile, aprobarea, documentele netrimise și izolarea RLS. Verificarea folosește relații și praguri semantice, nu un număr arbitrar fix de acțiuni.

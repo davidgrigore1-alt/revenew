@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { ArrowRightIcon, DocumentMagnifyingGlassIcon, ExclamationTriangleIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, ExclamationTriangleIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import type { CommercialOpportunityDiscoveryResult, DiscoveryEvidenceStrength } from "@/lib/commercial-opportunity-discovery";
+import { explanationForDiscovery } from "@/lib/revenew-explanation-adapters";
 import { formatDate } from "@/lib/utils";
 
 const strengthCopy: Record<DiscoveryEvidenceStrength, { label: string; tone: "brand" | "info" | "neutral" }> = {
@@ -77,27 +79,8 @@ export function CommercialDiscoveries({ result, error = false }: { result?: Comm
                   {candidate.occurredAt ? <span>Sursă: {formatDate(candidate.occurredAt)}</span> : <span>Data sursei nu este disponibilă</span>}
                 </div>
 
-                <details className="group mt-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                  <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-control px-3 py-2 text-sm font-semibold marker:hidden">
-                    <span className="flex items-center gap-2"><DocumentMagnifyingGlassIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />De ce apare?</span>
-                    <span className="text-[rgb(var(--primary))] group-open:hidden">+</span>
-                  </summary>
-                  <div className="grid gap-4 border-t border-[rgb(var(--border))] p-3 text-xs leading-5 md:grid-cols-3">
-                    <div>
-                      <p className="font-semibold text-[rgb(var(--foreground))]">Dovezi</p>
-                      <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">{candidate.evidence.slice(0, 5).map((item, evidenceIndex) => <li key={`${candidate.id}-evidence-${evidenceIndex}`}>• {item.label}</li>)}</ul>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[rgb(var(--foreground))]">Ce lipsește</p>
-                      {candidate.missingInformation.length > 0 ? <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">{candidate.missingInformation.slice(0, 4).map((item) => <li key={item}>• {item}</li>)}</ul> : <p className="mt-1 text-[rgb(var(--text-muted))]">Nu există lacune critice identificate în datele disponibile.</p>}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[rgb(var(--foreground))]">Ce poți face</p>
-                      <p className="mt-1 text-[rgb(var(--text-muted))]">{candidate.safeNextAction}</p>
-                      {candidate.possibleExistingOpportunities.map((opportunity) => <Link key={opportunity.id} href={opportunity.href} className="focus-ring mt-2 block rounded-button font-semibold text-[rgb(var(--primary))] hover:underline">Compară: {opportunity.title}</Link>)}
-                    </div>
-                  </div>
-                </details>
+                <ExplanationDisclosure explanation={explanationForDiscovery(candidate)} className="mt-3" />
+                {candidate.possibleExistingOpportunities.length > 0 ? <div className="mt-2 flex flex-wrap gap-3 text-xs">{candidate.possibleExistingOpportunities.map((opportunity) => <Link key={opportunity.id} href={opportunity.href} className="focus-ring rounded-button font-semibold text-[rgb(var(--primary))] hover:underline">Compară cu: {opportunity.title}</Link>)}</div> : null}
               </article>
             );
           })}

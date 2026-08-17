@@ -1,7 +1,9 @@
 import { ArrowRightIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import type { OperationalIntelligenceRecommendation } from "@/lib/operational-intelligence";
+import { explanationForRecommendation } from "@/lib/revenew-explanation-adapters";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const strengthTone: Record<OperationalIntelligenceRecommendation["evidenceStrength"], BadgeTone> = {
@@ -50,7 +52,7 @@ export function RecommendationExplanationCard({ recommendation, compact = false,
         <div>
           <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Acțiune sigură</p>
           <p className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{recommendation.safeNextAction.label}</p>
-          <p className="mt-1 flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Decizia rămâne la echipă. Nu există execuție externă automată.</p>
+          <p className="mt-1 flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Decizie umană necesară. Nu există execuție externă automată.</p>
         </div>
         <div className="flex flex-col gap-2 md:items-end">
           {recommendation.estimatedValue && recommendation.currency ? (
@@ -64,21 +66,7 @@ export function RecommendationExplanationCard({ recommendation, compact = false,
         </div>
       </div>
 
-      <details className="group border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-        <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2.5 text-xs font-semibold marker:hidden sm:px-5">
-          <span>Raționament, presupuneri și trasabilitate</span>
-          <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 text-xs leading-5 sm:grid-cols-2 sm:p-5">
-          <div><p className="font-semibold text-[rgb(var(--foreground))]">Riscul inacțiunii</p><p className="mt-1 text-[rgb(var(--text-muted))]">{recommendation.consequenceOfInaction}</p></div>
-          <div><p className="font-semibold text-[rgb(var(--foreground))]">Decizie umană necesară</p><p className="mt-1 text-[rgb(var(--text-muted))]">{recommendation.trace.humanDecision}</p></div>
-          <div><p className="font-semibold text-[rgb(var(--foreground))]">Presupuneri declarate</p><ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">{recommendation.assumptions.map((item) => <li key={item}>• {item}</li>)}</ul></div>
-          <div>
-            <p className="font-semibold text-[rgb(var(--foreground))]">Surse verificabile</p>
-            {recommendation.sourceTrace.length > 0 ? <ul className="mt-1 grid gap-1 text-[rgb(var(--text-muted))]">{recommendation.sourceTrace.map((source) => <li key={`${source.sourceTypeLabel}-${source.href}`}><a href={source.href} className="focus-ring rounded-sm font-medium text-[rgb(var(--primary))] hover:underline">{source.sourceTypeLabel}: {source.label}</a></li>)}</ul> : <p className="mt-1 text-[rgb(var(--warning-text))]">Nu există încă o sursă suficientă pentru aplicarea recomandării.</p>}
-          </div>
-        </div>
-      </details>
+      <div className="border-t border-[rgb(var(--border))] p-4 sm:p-5"><ExplanationDisclosure explanation={explanationForRecommendation(recommendation)} /></div>
     </article>
   );
 }

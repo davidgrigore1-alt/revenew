@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
+import { BUYER_DEMO_STARTED_EVENT, BUYER_DEMO_STORAGE_KEY } from "@/lib/buyer-demo";
 import { dismissGuide, GUIDE_RESET_EVENT, isGuideDismissed } from "@/lib/guide-persistence";
 import { cn } from "@/lib/utils";
 
@@ -85,12 +86,26 @@ export function ContextualPageGuide({ showFlow = false, className }: { showFlow?
       setVisible(false);
       return;
     }
+    const buyerDemoActive = new URLSearchParams(window.location.search).get("demo") === "buyer"
+      || window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer";
+    if (buyerDemoActive) {
+      setVisible(false);
+      return;
+    }
     setVisible(!isGuideDismissed(guidance.id));
     function resetCurrentGuide() {
+      if (window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer") return;
       setVisible(true);
     }
+    function closeForBuyerDemo() {
+      setVisible(false);
+    }
     window.addEventListener(GUIDE_RESET_EVENT, resetCurrentGuide);
-    return () => window.removeEventListener(GUIDE_RESET_EVENT, resetCurrentGuide);
+    window.addEventListener(BUYER_DEMO_STARTED_EVENT, closeForBuyerDemo);
+    return () => {
+      window.removeEventListener(GUIDE_RESET_EVENT, resetCurrentGuide);
+      window.removeEventListener(BUYER_DEMO_STARTED_EVENT, closeForBuyerDemo);
+    };
   }, [guidance]);
 
   if (!guidance || !visible) return null;

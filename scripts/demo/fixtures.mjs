@@ -4,6 +4,9 @@ export const DEMO = Object.freeze({
   businessId: "de000000-0000-4000-8000-000000000001",
   businessName: "Meridian Commercial Operations",
   featuredOpportunityId: "de300006-0000-4000-8000-000000000006",
+  richCompanyId: "de100001-0000-4000-8000-000000000001",
+  discoverySignalId: "de800001-0000-4000-8000-000000000001",
+  featuredSignalId: "de800005-0000-4000-8000-000000000005",
   marker: "revenew-local-demo-v1"
 });
 
@@ -13,11 +16,20 @@ const ids = (prefix, count) => Array.from({ length: count }, (_, index) =>
 
 export function buildFixtures(profileId, now = new Date()) {
   const day = 86_400_000;
+  const localDateParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Bucharest",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(now).reduce((parts, part) => {
+    if (part.type !== "literal") parts[part.type] = Number(part.value);
+    return parts;
+  }, {});
+  const localDayAtUtc = Date.UTC(localDateParts.year, localDateParts.month - 1, localDateParts.day);
   const iso = (offsetDays, hour = 9) => {
-    const value = new Date(now.getTime() + offsetDays * day);
-    value.setUTCHours(hour, 0, 0, 0);
-    return value.toISOString();
+    return new Date(localDayAtUtc + offsetDays * day + hour * 3_600_000).toISOString();
   };
+  const hoursAgo = (hours) => new Date(now.getTime() - hours * 3_600_000).toISOString();
   const date = (offsetDays) => iso(offsetDays).slice(0, 10);
   const organizationIds = ids("10", 8);
   const contactIds = ids("20", 8);
@@ -39,7 +51,17 @@ export function buildFixtures(profileId, now = new Date()) {
     ["Orizont Hospitality Supply SRL", "Furnizare pentru ospitalitate", "Constanța", "partner"]
   ].map(([name, industry, city, relationship_status], index) => ({
     id: organizationIds[index], business_id: DEMO.businessId, name, normalized_name: name.toLocaleLowerCase("ro-RO"),
-    industry, city, country: "România", relationship_status, notes: "Companie fictivă pentru demonstrația controlată ReveNew."
+    industry, city, country: "România", relationship_status,
+    notes: [
+      "Relație activă pentru servicii logistice și extinderi regionale.",
+      "Prospect cu proces de achiziție coordonat financiar.",
+      "Client activ cu proiecte pentru rețeaua medicală și servicii corporate.",
+      "Prospect care evaluează servicii operaționale pentru flotă.",
+      "Client regional cu reînnoiri și proiecte de optimizare.",
+      "Relație anterioară, păstrată pentru reactivare controlată.",
+      "Prospect industrial cu proiect de mentenanță în evaluare.",
+      "Partener comercial pentru recomandări calificate."
+    ][index]
   }));
 
   const contactSpecs = [
@@ -58,7 +80,8 @@ export function buildFixtures(profileId, now = new Date()) {
     id: contactIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     full_name, normalized_name: full_name.toLocaleLowerCase("ro-RO"), job_title, decision_role,
     email, normalized_email: email,
-    is_active: true, is_primary_for_organization: index < 7, notes: "Contact fictiv pentru demonstrația controlată ReveNew."
+    is_active: true, is_primary_for_organization: index < 7,
+    notes: index === 7 ? "Contact operațional pentru coordonarea flotei." : "Contact confirmat în relația comercială curentă."
     };
   });
 
@@ -89,7 +112,7 @@ export function buildFixtures(profileId, now = new Date()) {
     baseOpportunity(7, 2, "Program servicii corporate · Nova Medical", "contacted", 15500, { commercial_type: "new_business", deadline: date(12) }),
     baseOpportunity(8, 4, "Optimizare operațională regională · Carpathia Distribution", "won", 22500, {
       lifecycle_status: "won", commercial_type: "expansion", actual_outcome_amount: 18500, outcome_date: date(-3), outcome_reason: "expanded",
-      outcome_note: "Valoare confirmată în cadrul scenariului demo local.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-3), deadline: date(-3)
+      outcome_note: "Valoare confirmată explicit pentru extinderea regională.", outcome_recorded_by_profile_id: profileId, outcome_recorded_at: iso(-3), deadline: date(-3)
     }),
     baseOpportunity(9, 5, "Contract pilot locații · Urban Facility Partners", "lost", 12000, {
       lifecycle_status: "lost", commercial_type: "new_business", actual_outcome_amount: null, outcome_date: date(-12), outcome_reason: "timing",
@@ -114,25 +137,39 @@ export function buildFixtures(profileId, now = new Date()) {
   ];
   const actions = actionSpecs.map(([opportunityIndex, title, type, offset, priority, status], index) => ({
     id: actionIds[index], business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex], title, type, priority, status,
-    description: "Pas comercial intern demonstrativ, fără livrare externă.", due_at: iso(offset), assigned_to_profile_id: profileId,
-    completed_at: status === "done" ? iso(offset) : null, cancelled_at: null, created_at: iso(offset - 3)
+    description: "Acțiune internă urmărită; orice contact extern necesită decizia utilizatorului.", due_at: iso(offset), assigned_to_profile_id: profileId,
+    completed_at: status === "done" ? iso(offset) : null, cancelled_at: null, created_at: iso(Math.min(offset - 3, -1))
   }));
 
-  const events = eventIds.map((id, index) => {
-    const opportunityIndex = index % opportunityIds.length;
-    return {
-      id, business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex], actor_profile_id: profileId,
-      event_type: index % 3 === 0 ? "follow_up_scheduled" : index % 3 === 1 ? "stage_changed" : "next_action_created",
-      label: index % 3 === 0 ? "Follow-up planificat" : index % 3 === 1 ? "Etapă comercială actualizată" : "Acțiune următoare creată",
-      description: "Activitate comercială demonstrativă, auditabilă și fără efect extern.", occurred_at: opportunityIndex === 10 ? iso(-40) : iso(-Math.min(index + 1, 14)),
-      metadata: { demo: true, marker: DEMO.marker }
-    };
-  });
+  const eventSpecs = [
+    [5, "commercial_request_recorded", "Cerințe de mentenanță înregistrate", "Clientul a transmis cerințele inițiale pentru proiectul de mentenanță.", iso(-21)],
+    [5, "offer_prepared", "Ofertă tehnico-comercială pregătită", "Oferta de 76.000 RON a fost pregătită pentru revizuire internă.", iso(-18)],
+    [5, "customer_response_recorded", "Clarificare solicitată de client", "Clientul a cerut clarificarea calendarului de intervenție înainte de decizie.", iso(-15)],
+    [5, "follow_up_scheduled", "Follow-up stabilit pentru decizie", "Revenirea a fost programată, dar termenul a fost depășit fără responsabil confirmat.", iso(-8)],
+    [0, "meeting_milestone", "Întâlnire comercială confirmată", "Agenda reactivării contractului logistic a fost confirmată intern.", hoursAgo(5)],
+    [6, "stage_changed", "Extinderea regională a intrat în revizuire", "Echipa verifică segmentul prioritar înainte de următorul contact.", iso(-3)],
+    [2, "offer_prepared", "Ofertă actualizată pentru rețeaua medicală", "Varianta comercială este pregătită și așteaptă revenirea către client.", iso(-5)],
+    [2, "follow_up_scheduled", "Revenire Nova Medical planificată", "Follow-up-ul are termen și responsabil intern confirmat.", iso(-2)],
+    [3, "document_prepared", "Sumar de reînnoire pregătit", "Condițiile operaționale sunt în curs de verificare.", iso(-6)],
+    [4, "stage_changed", "Reactivare readusă în evaluare", "Interesul pentru locațiile regionale trebuie reconfirmat.", iso(-38)],
+    [8, "outcome_recorded", "Rezultat comercial confirmat", "Extinderea Carpathia a fost câștigată și valoarea confirmată a fost înregistrată separat.", iso(-3)],
+    [9, "outcome_recorded", "Rezultat comercial pierdut înregistrat", "Decizia clientului a fost documentată fără valoare confirmată.", iso(-12)],
+    [7, "primary_contact_changed", "Contact operațional confirmat", "Criteriile de achiziție vor fi clarificate cu persoana principală.", iso(-4)]
+  ];
+  const events = eventSpecs.map(([opportunityIndex, event_type, label, description, occurred_at], index) => ({
+    id: eventIds[index], business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex], actor_profile_id: profileId,
+    event_type, label, description, occurred_at, metadata: { demo: true, marker: DEMO.marker }
+  }));
 
-  const documents = [0, 2, 3, 6].map((opportunityIndex, index) => ({
+  const documentSpecs = [
+    [0, "call_script", "Agendă pentru reactivarea contractului logistic", "Puncte de discuție pentru revizuire înaintea întâlnirii.", "draft"],
+    [2, "follow_up_email", "Follow-up ofertă Nova Medical", "Draft de revenire privind oferta de 36.000 RON; necesită revizuire umană.", "draft"],
+    [5, "offer_draft", "Ofertă mentenanță Vector Industrial", "Document pregătit, dar netrimis. Calendarul și responsabilul trebuie confirmate înainte de utilizare.", "ready_to_send"],
+    [6, "call_script", "Plan de clarificare pentru extinderea regională", "Întrebări de calificare pentru următoarea discuție comercială.", "draft"]
+  ];
+  const documents = documentSpecs.map(([opportunityIndex, document_type, title, body, status], index) => ({
     id: documentIds[index], business_id: DEMO.businessId, opportunity_id: opportunityIds[opportunityIndex],
-    document_type: index % 2 ? "follow_up_email" : "call_script", title: "Draft comercial pentru revizuire umană",
-    body: "Document fictiv. Necesită revizuire și aprobare umană înainte de orice utilizare.", status: index === 0 ? "ready_to_send" : "draft",
+    document_type, title, body, status,
     generation_mode: "local_fallback", generation_error: null
   }));
 
@@ -156,7 +193,7 @@ export function buildFixtures(profileId, now = new Date()) {
   const baseSignal = (index, title, source, status, reviewStatus, overrides = {}) => ({
     id: signalIds[index], business_id: DEMO.businessId, title, source, source_label: "Dovadă disponibilă",
     status, review_status: reviewStatus, priority: "medium", analysis_status: "not_started", analysis_mode: null,
-    contact_company: null, contact_name: null, contact_email: null, raw_message: "Semnal comercial demonstrativ, introdus manual și fără integrare externă.",
+    contact_company: null, contact_name: null, contact_email: null, raw_message: "Semnal comercial introdus manual; sursa și contextul necesită verificare.",
     extracted_summary: title, currency: "RON", urgency_score: 50, fit_score: 50, confidence_score: 50,
     recommended_action: recommendedSignalActions[index] ?? "Revizuiește contextul și confirmă următorul pas.", created_by_profile_id: profileId,
     assigned_to_profile_id: profileId, occurred_at: iso(-index - 1), created_at: iso(-index - 1),
@@ -168,11 +205,11 @@ export function buildFixtures(profileId, now = new Date()) {
     ingestion_origin: "manual", ...overrides
   });
   const signals = [
-    baseSignal(0, "Cerere nouă de ofertă pentru flotă", "email", "new", "new", { contact_company: organizations[3].name, contact_name: contacts[3].full_name, contact_email: "achizitii@demo.invalid", raw_message: "Email copiat manual: solicitare de ofertă pentru flotă, cu buget de 20.000 EUR și clarificare în săptămâna viitoare.", currency: "EUR", estimated_value_min: 18000, estimated_value_max: 26000 }),
+    baseSignal(0, "Cerere nouă de ofertă pentru flotă", "email", "new", "new", { source_label: "Email copiat manual", contact_company: organizations[3].name, contact_name: contacts[3].full_name, contact_email: "achizitii@demo.invalid", matched_organization_id: organizationIds[3], raw_message: "Email copiat manual: solicitare de ofertă pentru flotă, cu buget de 20.000 EUR și clarificare în săptămâna viitoare.", currency: "EUR", estimated_value_min: 20000, estimated_value_max: 20000 }),
     baseSignal(1, "Mesaj WhatsApp despre extinderea serviciilor", "whatsapp", "ready_for_review", "ready_for_review", { source_label: "Text WhatsApp copiat manual", contact_company: organizations[0].name, matched_organization_id: organizationIds[0], matched_contact_id: contactIds[0], raw_message: "Mesaj copiat manual: clientul cere o ofertă revizuită pentru încă două locații și dorește răspuns până vineri.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 76, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Cerere de extindere care necesită clarificare", analysis_explanation: "Regulile au detectat o cerere comercială și o companie deja cunoscută.", recommended_action: "Confirmă bugetul și programează o discuție de clarificare cu responsabil și termen.", missing_information: ["valoare și monedă confirmate"], uncertainty_notes: ["SIGNAL_TYPE: quote_request", "SIGNAL_TYPE_LABEL: Cerere de ofertă", "DEADLINE_CLUE: Termen menționat: până vineri", "VALUE_CLUE: Potențial valoric menționat, fără sumă confirmată", "CONTEXT_HINT: Companie existentă identificată în CRM.", "CONTEXT_HINT: Contact existent identificat în CRM.", "DETECTION_REASON: Textul indică o cerere de ofertă, preț sau buget.", "INCERTITUDINE: Conținutul trebuie confirmat de echipă."], estimated_value_min: 9000, estimated_value_max: 14000, estimated_recoverable_value: 14000, suggested_due_date: date(3), analyzed_at: iso(-1) }),
     baseSignal(2, "Follow-up email fără răspuns", "email", "ready_for_review", "ready_for_review", { contact_company: organizations[2].name, matched_organization_id: organizationIds[2], matched_contact_id: contactIds[2], raw_message: "Email copiat manual: oferta de 36.000 RON a fost trimisă, dar nu există răspuns; revenirea este necesară mâine.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 88, confidence_level: "high", urgency_level: "high", primary_recovery_reason: "Ofertă fără răspuns confirmat", analysis_explanation: "Semnalul indică follow-up restant și relație CRM existentă.", missing_information: ["următorul pas confirmat"], uncertainty_notes: ["SIGNAL_TYPE: follow_up", "SIGNAL_TYPE_LABEL: Follow-up comercial", "DEADLINE_CLUE: Termen menționat: mâine", "VALUE_CLUE: Valoare menționată: 36.000 RON", "CONTEXT_HINT: Companie existentă identificată în CRM.", "CONTEXT_HINT: Contact existent identificat în CRM.", "DETECTION_REASON: Textul indică o revenire comercială sau lipsa unui răspuns.", "INCERTITUDINE: Interesul actual nu este confirmat."], estimated_value_min: 24000, estimated_value_max: 36000, estimated_recoverable_value: 36000, suggested_due_date: date(1), analyzed_at: iso(-2) }),
     baseSignal(3, "Notă după apel privind reînnoirea", "phone", "postponed", "postponed", { source_label: "Notă după apel", contact_company: organizations[4].name, matched_organization_id: organizationIds[4], raw_message: "Notă după apel: reînnoirea contractului va fi reluată după aprobarea bugetului intern, spre finalul lunii.", analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 64, confidence_level: "medium", urgency_level: "medium", review_due_at: iso(5), missing_information: ["confirmare buget", "persoană de contact confirmată"], uncertainty_notes: ["SIGNAL_TYPE: renewal", "SIGNAL_TYPE_LABEL: Reînnoire", "DEADLINE_CLUE: Termen menționat: finalul lunii", "CONTEXT_HINT: Companie existentă identificată în CRM.", "DETECTION_REASON: Textul indică o reînnoire sau o prelungire contractuală.", "INCERTITUDINE: Data deciziei este orientativă."], estimated_value_min: 16000, estimated_value_max: 24000, estimated_recoverable_value: 24000, analyzed_at: iso(-3) }),
-    baseSignal(4, "Aprobare comercială blocată intern", "manual", "ready_for_review", "ready_for_review", { contact_company: organizations[6].name, matched_organization_id: organizationIds[6], raw_message: "Notă internă urgentă: clientul este nemulțumit, aprobarea comercială este blocată și oportunitatea nu are responsabil confirmat.", assigned_to_profile_id: null, analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 91, confidence_level: "medium", urgency_level: "critical", primary_recovery_reason: "Blocaj intern fără responsabil", analysis_explanation: "Lipsa responsabilului și termenul depășit cer intervenție umană.", missing_information: ["responsabil comercial", "persoană de contact confirmată"], uncertainty_notes: ["SIGNAL_TYPE: complaint_risk", "SIGNAL_TYPE_LABEL: Risc sau reclamație", "DEADLINE_CLUE: Indiciu de urgență", "CONTEXT_HINT: Companie existentă identificată în CRM.", "DETECTION_REASON: Textul indică un risc, un blocaj sau o nemulțumire care necesită verificare."], estimated_value_min: 60000, estimated_value_max: 85000, estimated_recoverable_value: 85000, suggested_due_date: date(1), analyzed_at: iso(-4) }),
+    baseSignal(4, "Aprobare comercială blocată intern", "manual", "ready_for_review", "ready_for_review", { source_label: "Notă internă verificabilă", contact_company: organizations[6].name, matched_organization_id: organizationIds[6], matched_contact_id: contactIds[6], detected_from_opportunity_id: opportunityIds[5], raw_message: "Notă internă urgentă: clientul așteaptă clarificarea calendarului, aprobarea comercială este blocată și oportunitatea nu are responsabil confirmat.", assigned_to_profile_id: null, analysis_status: "completed", analysis_mode: "deterministic_fallback", recoverability_score: 91, confidence_level: "medium", urgency_level: "critical", primary_recovery_reason: "Blocaj intern fără responsabil", analysis_explanation: "Lipsa responsabilului și termenul depășit cer intervenție umană.", missing_information: ["responsabil comercial", "calendar de intervenție confirmat"], uncertainty_notes: ["SIGNAL_TYPE: complaint_risk", "SIGNAL_TYPE_LABEL: Risc sau reclamație", "DEADLINE_CLUE: Indiciu de urgență", "CONTEXT_HINT: Companie existentă identificată în CRM.", "DETECTION_REASON: Textul indică un risc sau un blocaj care necesită verificare."], estimated_value_min: 53200, estimated_value_max: 76000, estimated_recoverable_value: 76000, suggested_due_date: date(1), analyzed_at: iso(-4) }),
     baseSignal(5, "Motiv de pierdere documentat", "manual", "archived", "dismissed", { contact_company: organizations[5].name, matched_organization_id: organizationIds[5], detected_from_opportunity_id: opportunityIds[9], raw_message: "Notă internă: proiectul a fost amânat din motive de timing; nu se reia acum.", analysis_status: "completed", analysis_mode: "deterministic_fallback", confidence_level: "medium", analysis_explanation: "Regulile locale au pregătit contextul pentru decizia echipei.", dismissal_reason: "Rezultatul pierdut este deja documentat în oportunitate.", analyzed_at: iso(-6), reviewed_at: iso(-5) }),
     baseSignal(6, "Recomandare de la partener", "referral", "new", "new", { contact_company: organizations[7].name, matched_organization_id: organizationIds[7], raw_message: "Recomandare introdusă manual: partenerul sugerează o discuție de calificare cu o companie din rețea." }),
     baseSignal(7, "Lead importat pentru calificare", "csv_import", "new", "new", { source_label: "Import controlat · text în bloc", contact_company: organizations[3].name, matched_organization_id: organizationIds[3], raw_message: "Semnal importat local dintr-un text în bloc: solicitare de informații, fără contact și fără valoare confirmată.", ingestion_origin: "csv_import" }),
@@ -182,7 +219,7 @@ export function buildFixtures(profileId, now = new Date()) {
   const signalEvents = [...signals.map((signal, index) => ({
     id: signalEventIds[index], business_id: DEMO.businessId, signal_id: signal.id,
     event_type: signal.status === "converted" ? "signal_converted" : signal.status === "archived" ? "signal_archived" : signal.analysis_status === "completed" ? "analysis_completed" : "signal_created",
-    description: "Eveniment demonstrativ și auditabil pentru semnalul comercial.",
+    description: "Schimbare de stare păstrată pentru auditul semnalului comercial.",
     metadata: { demo: true, external_action: false }, created_by_profile_id: profileId, created_at: signal.created_at
   })), {
     id: signalEventIds[10], business_id: DEMO.businessId, signal_id: signalIds[1], event_type: "analysis_review_edited",

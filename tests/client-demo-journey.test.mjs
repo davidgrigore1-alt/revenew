@@ -21,16 +21,15 @@ const pilotPrint = read("src/components/reports/PrintPilotPackButton.tsx");
 test("internal demo uses a controlled evidence-to-proof route through existing surfaces", () => {
   for (const route of [
     "/dashboard",
-    "/ai",
-    "/inbox",
-    "/today",
-    "/approvals",
     "/opportunities/de300006-0000-4000-8000-000000000006",
+    "/crm/organizations/de100001-0000-4000-8000-000000000001",
+    "/ai",
+    "/inbox?signal=de800001-0000-4000-8000-000000000001",
+    "/approvals",
     "/reports/revenue-recovery-audit",
-    "/reports/enterprise-pilot-pack",
-    "/reports/pilot-proof-of-value"
+    "/reports/enterprise-pilot-pack"
   ]) {
-    assert.match(demoModel, new RegExp(route.replaceAll("/", "\\/")));
+    assert.ok(demoModel.includes(route), `${route} lipsește din traseu`);
   }
 
   for (const path of [
@@ -43,9 +42,9 @@ test("internal demo uses a controlled evidence-to-proof route through existing s
   }
 
   assert.match(demo, /Demo controlat ReveNew/);
-  assert.match(demo, /Zece pași, o singură poveste comercială/);
+  assert.match(demo, /Opt pași, o singură lume comercială/);
   assert.match(demo, /audit controlat pe 20–50 cazuri comerciale recente/i);
-  assert.equal((demoModel.match(/buyerQuestion: "/g) ?? []).length, 10);
+  assert.equal((demoModel.match(/buyerQuestion: "/g) ?? []).length, 8);
 });
 
 test("demo language is executive, cautious and free of outdated recovery hype", () => {

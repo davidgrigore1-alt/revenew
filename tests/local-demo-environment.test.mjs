@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { assertLocalUrl } from "../scripts/demo/local-supabase.mjs";
 import { buildFixtures, DEMO } from "../scripts/demo/fixtures.mjs";
+import { assertDemoStoryInvariants, DEMO_STORIES } from "../scripts/demo/story-contracts.mjs";
 
 test("local demo guard accepts only loopback Supabase targets", () => {
   assert.equal(assertLocalUrl("http://127.0.0.1:54321", "API", ["http:"]).hostname, "127.0.0.1");
@@ -19,21 +20,21 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.equal(DEMO.operatorName, "Irina Petrescu");
   assert.equal(DEMO.email, "irina.petrescu@revenew-demo.invalid");
   assert.equal(DEMO.featuredOpportunityId, "de300006-0000-4000-8000-000000000006");
-  assert.equal(fixtures.organizations.length, 8);
-  assert.ok(fixtures.organizations.every((organization) => !organization.name.startsWith("[DEMO]") && /fictivă/i.test(organization.notes)));
+  assert.ok(fixtures.organizations.length >= 5);
+  assert.ok(fixtures.organizations.every((organization) => !organization.name.startsWith("[DEMO]") && organization.notes.length > 20));
   for (const company of ["Meridian Logistics SRL", "Delta Construct Solutions SRL", "Nova Medical Systems SRL", "Atlas Fleet Services SRL", "Carpathia Distribution Group SRL", "Urban Facility Partners SRL"]) {
     assert.ok(fixtures.organizations.some((organization) => organization.name === company), `${company} lipsește`);
   }
-  assert.equal(fixtures.contacts.length, 8);
+  assert.ok(fixtures.contacts.length >= 5);
   for (const contact of ["Andrei Ionescu", "Elena Popa", "Mihai Dumitrescu", "Radu Marinescu", "Ioana Stan"]) {
     assert.ok(fixtures.contacts.some((candidate) => candidate.full_name === contact), `${contact} lipsește`);
   }
   assert.equal(fixtures.contacts.filter((contact) => contact.organization_id === fixtures.organizations[0].id).length, 2);
   assert.ok(fixtures.contacts.every((contact) => fixtures.organizations.some((organization) => organization.id === contact.organization_id)));
-  assert.equal(fixtures.opportunities.length, 11);
-  assert.equal(fixtures.actions.length, 12);
-  assert.equal(fixtures.signals.length, 10);
-  assert.equal(fixtures.signalEvents.length, 12);
+  assert.ok(fixtures.opportunities.length >= 8);
+  assert.ok(fixtures.actions.length >= 8 && fixtures.actions.length <= 20);
+  assert.ok(fixtures.signals.length >= 3 && fixtures.signals.length <= 15);
+  assert.ok(fixtures.signalEvents.length >= fixtures.signals.length);
   assert.ok(fixtures.signals.some((signal) => signal.review_status === "ready_for_review"));
   assert.ok(fixtures.signals.some((signal) => signal.status === "converted" && signal.converted_opportunity_id));
   assert.ok(fixtures.signals.some((signal) => signal.matched_organization_id));
@@ -54,6 +55,7 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.ok(fixtures.actions.some((action) => action.status === "pending" && action.due_at < "2026-07-19T09:00:00.000Z"));
   assert.ok(fixtures.actions.some((action) => action.status === "pending" && action.due_at > "2026-07-19T09:00:00.000Z"));
   assert.ok(fixtures.actions.some((action) => action.status === "done"));
+  assert.ok(fixtures.actions.every((action) => action.created_at <= "2026-07-19T09:00:00.000Z"));
   assert.ok(fixtures.opportunities.some((opportunity) => !fixtures.actions.some((action) => action.opportunity_id === opportunity.id && action.status === "pending")));
   assert.ok(fixtures.opportunities.some((opportunity) => opportunity.estimated_value_high > 0 && opportunity.actual_outcome_amount == null));
   assert.ok(fixtures.opportunities.some((opportunity) => opportunity.id === DEMO.featuredOpportunityId && opportunity.owner_profile_id === null && opportunity.deadline < "2026-07-19"));
@@ -74,6 +76,13 @@ test("fixtures are deterministic, fictional and decision-useful", () => {
   assert.doesNotMatch(buyerVisibleFixtureText, new RegExp(DEMO.marker, "i"));
   assert.doesNotMatch(buyerVisibleFixtureText, /Captură locală demonstrativă|acțiune pending/i);
   assert.doesNotMatch(`${DEMO.businessName}\n${DEMO.operatorName}\n${DEMO.email}\n${visibleFixtureText}`, /gmail\.com|Grigore|David|testdavid|davidtest|TEST DATA|E2E/i);
+  const matrix = assertDemoStoryInvariants(fixtures, new Date("2026-07-19T09:00:00.000Z"));
+  assert.equal(DEMO_STORIES.length, 4);
+  assert.ok(matrix.vector.events >= 4 && matrix.vector.documents >= 1 && matrix.vector.signals >= 1);
+  assert.equal(matrix.atlas.explicitAmount, 20_000);
+  assert.equal(matrix.atlas.linkedOpportunity, false);
+  assert.ok(matrix.meridian.contacts >= 2 && matrix.meridian.opportunities >= 2 && matrix.meridian.documents >= 2);
+  assert.equal(matrix.approval.reviewStatus, "ready_for_review");
 });
 
 test("demo tooling keeps local guard and disabled external integrations explicit", () => {

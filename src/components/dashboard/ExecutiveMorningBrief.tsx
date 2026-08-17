@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowRightIcon, ClockIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import type { ExecutiveBriefPriority, ExecutiveDailyBrief } from "@/lib/executive-morning-brief";
+import { explanationForExecutivePriority } from "@/lib/revenew-explanation-adapters";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const severityTone: Record<ExecutiveBriefPriority["severity"], BadgeTone> = {
@@ -11,33 +13,22 @@ const severityTone: Record<ExecutiveBriefPriority["severity"], BadgeTone> = {
   informative: "neutral"
 };
 
-function EvidenceList({ priority }: { priority: ExecutiveBriefPriority }) {
-  if (priority.evidence.length === 0) return <p className="text-xs text-[rgb(var(--text-muted))]">Dovada nu este încă disponibilă. Verifică înregistrarea înainte de decizie.</p>;
-  return (
-    <ul className="grid gap-2">
-      {priority.evidence.map((evidence) => (
-        <li key={`${evidence.sourceType}:${evidence.sourceId}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs leading-5">
-          <Link href={evidence.href} className="focus-ring rounded font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))] hover:underline">{evidence.label}</Link>
-          <span className="text-[rgb(var(--text-faint))]">{evidence.sourceTimestamp ? formatDate(evidence.sourceTimestamp) : "Dată indisponibilă"}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function SecondaryPriority({ priority }: { priority: ExecutiveBriefPriority }) {
   return (
-    <li className="grid gap-3 border-t border-[rgb(var(--border))] py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={severityTone[priority.severity]} size="small">{priority.kindLabel}</Badge>
-          <p className="font-semibold text-[rgb(var(--foreground))]">{priority.title}</p>
+    <li className="border-t border-[rgb(var(--border))] py-3">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={severityTone[priority.severity]} size="small">{priority.kindLabel}</Badge>
+            <p className="font-semibold text-[rgb(var(--foreground))]">{priority.title}</p>
+          </div>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{[priority.company, priority.opportunity, priority.reason].filter(Boolean).join(" · ")}</p>
         </div>
-        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{[priority.company, priority.opportunity, priority.reason].filter(Boolean).join(" · ")}</p>
+        <Link href={priority.safeAction.href} className="focus-ring inline-flex min-h-10 items-center gap-1 rounded-button text-sm font-semibold text-[rgb(var(--primary))] hover:underline">
+          {priority.safeAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </div>
-      <Link href={priority.safeAction.href} className="focus-ring inline-flex min-h-10 items-center gap-1 rounded-button text-sm font-semibold text-[rgb(var(--primary))] hover:underline">
-        {priority.safeAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-      </Link>
+      <ExplanationDisclosure explanation={explanationForExecutivePriority(priority)} controlLabel="De ce este prioritar?" className="mt-3" />
     </li>
   );
 }
@@ -80,16 +71,7 @@ export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveDailyBrief | 
             {primary.amount !== undefined && primary.currency ? (
               <p className="mt-3 text-sm text-[rgb(var(--text-muted))]"><strong className="font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(primary.amount, primary.currency)}</strong> · valoare estimată, neconfirmată</p>
             ) : null}
-            <details className="group mt-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-              <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between rounded-card px-3 py-2 text-sm font-semibold text-[rgb(var(--foreground))] marker:hidden">
-                Dovezi și fapte de sprijin
-                <span className="text-xs font-medium text-[rgb(var(--text-muted))]">{primary.evidence.length} {primary.evidence.length === 1 ? "sursă" : "surse"}</span>
-              </summary>
-              <div className="border-t border-[rgb(var(--border))] px-3 py-3">
-                <EvidenceList priority={primary} />
-                {primary.supportingFacts.length > 1 ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Fapte asociate:</strong> {primary.supportingFacts.join(" · ")}</p> : null}
-              </div>
-            </details>
+            <ExplanationDisclosure explanation={explanationForExecutivePriority(primary)} controlLabel="De ce este prioritar?" className="mt-4" />
           </div>
 
           <aside className="rounded-card border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface-subtle))] p-4" aria-label="Prima acțiune sigură">

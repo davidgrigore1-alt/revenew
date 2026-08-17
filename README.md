@@ -121,7 +121,7 @@ npm run demo:buyer-ready
 npm run demo:dev
 ```
 
-Ruta protejată `/demo` oferă un traseu de prezentare de cinci minute: Control Center → oportunitate și dovezi → audit de recuperare venituri → propunere pilot pe 14 zile. Fallback-ul fără Supabase rămâne util pentru dezvoltarea interfeței, dar nu înlocuiește mediul local izolat pentru o demonstrație comercială.
+Ruta protejată `/demo` oferă un traseu de opt pași prin aceeași lume comercială persistentă: Control Center → oportunitate și istoric → Company 360 → Ask și Descoperiri → Inbox → aprobare umană → audit → pilot pe 14 zile. Fallback-ul fără Supabase rămâne util pentru dezvoltarea interfeței, dar nu înlocuiește mediul local izolat pentru o demonstrație comercială.
 
 ## Primul audit client
 

@@ -151,6 +151,7 @@ test("Romanian date groups respect the application timezone at day boundaries", 
 
 test("empty, limited and error UI states remain distinct and accessible", () => {
   const ui = read("src/components/opportunities/OpportunityIntelligenceTimeline.tsx");
+  const disclosure = read("src/components/intelligence/ExplanationDisclosure.tsx");
   const page = read("src/app/(protected)/opportunities/[id]/page.tsx");
   const workflow = read("src/components/opportunities/OpportunityWorkflow.tsx");
   assert.match(ui, /Istoric comercial/);
@@ -161,7 +162,8 @@ test("empty, limited and error UI states remain distinct and accessible", () => 
   assert.match(ui, /Istoric comercial limitat/);
   assert.match(ui, /Nu am putut încărca istoricul oportunității/);
   assert.match(ui, /<time dateTime=/);
-  assert.match(ui, /<details/);
+  assert.match(ui, /ExplanationDisclosure/);
+  assert.match(disclosure, /<details/);
   assert.match(page, /OpportunityIntelligenceTimeline/);
   assert.doesNotMatch(workflow, /aria-label="Secțiuni oportunitate"/);
   assert.match(read("src/components/opportunities/OpportunityContextNavigation.tsx"), /href: "#opportunity-timeline", label: "Istoric"/);

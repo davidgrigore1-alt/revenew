@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ArrowRightIcon, CheckCircleIcon, ClockIcon, ExclamationTriangleIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { Card } from "@/components/ui/Card";
+import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { CompanyBusinessMemory, CompanyMemoryItem } from "@/lib/company-intelligence";
 import type { ExecutiveDecisionSnapshot } from "@/lib/opportunity-discovery";
+import { explanationForCompanyMemory } from "@/lib/revenew-explanation-adapters";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 function evidenceKey(sourceType: string, sourceId: string) {
@@ -21,6 +23,7 @@ function MemoryRow({ item }: { item: CompanyMemoryItem }) {
     <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.description}</p>
     <EvidenceLine label={item.evidence.label} timestamp={item.occurredAt ?? item.evidence.sourceTimestamp} href={item.evidence.href} />
     {href ? <Link href={href} className="focus-ring mt-1 inline-flex min-h-8 items-center gap-1 rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline">{item.actionLabel}<ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" /></Link> : null}
+    {item.type !== "meaningful_activity" ? <ExplanationDisclosure explanation={explanationForCompanyMemory(item)} className="mt-2" /> : null}
   </article>;
 }
 

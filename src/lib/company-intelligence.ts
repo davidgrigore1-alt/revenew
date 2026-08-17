@@ -183,6 +183,18 @@ export type CompanyIntelligenceSnapshot = {
   timeline: CompanyTimelineItem[];
 };
 
+const companyDateFormatter = new Intl.DateTimeFormat("ro-RO", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/Bucharest"
+});
+
+function formatCompanyDate(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : companyDateFormatter.format(parsed).replace("sept.", "sept");
+}
+
 const DAY_MS = 86_400_000;
 const INACTIVITY_DAYS = 30;
 const severityRank: Record<CompanyAttentionSeverity, number> = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -347,7 +359,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     const href = `/opportunities/${opportunity.id}`;
     const nextAction = selectPrimaryNextAction(opportunity.actions);
     if (nextAction?.status === "pending" && nextAction.dueDate && nextAction.dueDate < now.toISOString()) {
-      attention.push({ id: `overdue:${nextAction.id}`, code: "overdue_next_action", severity: "critical", title: "Follow-up întârziat", description: `${nextAction.title} este scadentă din ${nextAction.dueDate.slice(0, 10)}.`, actionLabel: "Revizuiește oportunitatea", href: `${href}#workflow-actions`, occurredAt: nextAction.dueDate, evidence: evidence("opportunity_action", nextAction.id, nextAction.dueDate, `Acțiunea restantă „${nextAction.title}”`, `${href}#workflow-actions`) });
+      attention.push({ id: `overdue:${nextAction.id}`, code: "overdue_next_action", severity: "critical", title: "Follow-up întârziat", description: `${nextAction.title} este scadentă din ${formatCompanyDate(nextAction.dueDate)}.`, actionLabel: "Revizuiește oportunitatea", href: `${href}#workflow-actions`, occurredAt: nextAction.dueDate, evidence: evidence("opportunity_action", nextAction.id, nextAction.dueDate, `Acțiunea restantă „${nextAction.title}”`, `${href}#workflow-actions`) });
     }
     if (!opportunity.ownerProfileId) {
       attention.push({ id: `owner:${opportunity.id}`, code: "missing_owner", severity: "high", title: "Oportunitate fără responsabil", description: `„${opportunity.title}” nu are un responsabil confirmat.`, actionLabel: "Atribuie responsabil", href, occurredAt: opportunity.updatedAt ?? opportunity.createdAt ?? null, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, href) });

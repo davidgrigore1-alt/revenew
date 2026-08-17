@@ -21,10 +21,10 @@ test("script preserves the required buyer-demo route order", () => {
   const script = read(scriptPath);
   const routes = [
     "/dashboard",
-    "/ai",
-    "/recoverable",
     "/opportunities/de300006-0000-4000-8000-000000000006",
-    "/today",
+    "/crm/organizations/de100001-0000-4000-8000-000000000001",
+    "/ai",
+    "/inbox?signal=de800001-0000-4000-8000-000000000001",
     "/approvals",
     "/reports/revenue-recovery-audit",
     "/reports/enterprise-pilot-pack",
@@ -44,12 +44,11 @@ test("script preserves the required buyer-demo route order", () => {
 
 test("script explains operational intelligence, evidence and human control honestly", () => {
   const script = read(scriptPath);
-  assert.match(script, /nu este un AI autonom/i);
-  assert.match(script, /strat de inteligență operațională/i);
-  assert.match(script, /Vezi de ce/);
-  assert.match(script, /Deschide dovada/);
+  assert.match(script, /nu este un agent autonom/i);
+  assert.match(script, /căutarea, prioritatea și descoperirea folosesc aceeași bază de dovezi/i);
+  assert.match(script, /dovada și informațiile care trebuie confirmate/i);
   assert.match(script, /decizie umană/i);
-  assert.match(script, /o persoană verifică și decide/i);
+  assert.match(script, /persoană autorizată/i);
   assert.match(script, /Nicio comunicare externă.+nu sunt executate autonom/is);
 });
 
@@ -58,7 +57,7 @@ test("script separates estimated value from user-declared confirmed revenue", ()
   assert.match(script, /Valoare estimată în pipeline/);
   assert.match(script, /Valoare estimată expusă/);
   assert.match(script, /Venit confirmat/);
-  assert.match(script, /rezultat câștigat declarat explicit de un utilizator autorizat/i);
+  assert.match(script, /rezultatul câștigat declarat explicit de un utilizator autorizat/i);
   assert.match(script, /deduplicată pe oportunitate/i);
   assert.match(script, /Monedele rămân separate/i);
 });

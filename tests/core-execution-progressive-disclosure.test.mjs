@@ -41,7 +41,7 @@ test("opportunity secondary execution areas use progressive disclosure", async (
   assert.match(workflow, /Documente și drafturi/);
   assert.match(workflow, /<details id="opportunity-source-context"/);
   assert.match(workflow, /window\.location\.hash === "#opportunity-source-context"/);
-  assert.match(timeline, /Dovezi și trasabilitate/);
+  assert.match(timeline, /ExplanationDisclosure/);
 });
 
 test("opportunity actions provide safe review destinations and sanitized feedback", async () => {

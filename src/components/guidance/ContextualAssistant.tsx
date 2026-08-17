@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { BUYER_DEMO_STORAGE_KEY, buyerDemoSteps, demoStepIndexForPath } from "@/lib/buyer-demo";
 import { findContextualHelp, getScreenExplanation, suggestedHelpQuestions, type ContextualHelpEntry, type ContextualHelpResult } from "@/lib/contextual-help";
 import { resetDismissedGuides } from "@/lib/guide-persistence";
 import { highlightGuideAnchor } from "@/lib/guide-navigation";
@@ -72,6 +73,7 @@ export function ContextualAssistant() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<ContextualHelpResult | null>(null);
   const [notice, setNotice] = useState("");
+  const [buyerDemoActive, setBuyerDemoActive] = useState(false);
   const [pendingAnchor, setPendingAnchor] = useState<{ anchor: string; destination: string } | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,12 +81,14 @@ export function ContextualAssistant() {
   const animationFrameRef = useRef<number | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const suggestions = useMemo(() => suggestedHelpQuestions(pathname), [pathname]);
+  const demoStep = buyerDemoActive ? buyerDemoSteps[demoStepIndexForPath(pathname)] : null;
 
   useEffect(() => {
     function openAssistant() {
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
       if (animationFrameRef.current !== null) window.cancelAnimationFrame(animationFrameRef.current);
       returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setBuyerDemoActive(window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer" || new URLSearchParams(window.location.search).get("demo") === "buyer");
       setOpen(true);
       setVisible(false);
       setNotice("");
@@ -227,6 +231,14 @@ export function ContextualAssistant() {
         </header>
 
         <div className="grid gap-5 p-4 sm:p-5">
+          {demoStep ? (
+            <section className="rounded-control border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--gold-500)/0.07)] p-3" aria-labelledby="assistant-demo-step">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Prezentare activă · {demoStep.shortTitle}</p>
+              <h3 id="assistant-demo-step" className="mt-1 text-sm font-semibold">Ce urmărești în acest pas</h3>
+              <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{demoStep.notice}</p>
+            </section>
+          ) : null}
+
           <form onSubmit={submit} className="grid gap-2">
             <label htmlFor="contextual-assistant-question" className="text-sm font-semibold">Întrebarea ta</label>
             <div className="flex gap-2">
@@ -275,7 +287,7 @@ export function ContextualAssistant() {
         </div>
 
         <footer className="mt-auto border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3 sm:px-5">
-          <details className="group"><summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden">Opțiuni ghid <span className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary><div className="mt-2 grid gap-2 sm:grid-cols-2"><Button variant="secondary" size="small" onClick={replayTour}><ArrowPathIcon className="h-4 w-4" aria-hidden="true" />Revezi turul introductiv</Button><Button variant="ghost" size="small" onClick={resetGuides}>Resetează ghidurile închise</Button></div></details>
+          {buyerDemoActive ? <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Traseul cumpărătorului rămâne ghidul principal. Turul introductiv este suspendat până la oprirea prezentării.</p> : <details className="group"><summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden">Opțiuni ghid <span className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary><div className="mt-2 grid gap-2 sm:grid-cols-2"><Button variant="secondary" size="small" onClick={replayTour}><ArrowPathIcon className="h-4 w-4" aria-hidden="true" />Revezi turul introductiv</Button><Button variant="ghost" size="small" onClick={resetGuides}>Resetează ghidurile închise</Button></div></details>}
         </footer>
       </div>
     </div>

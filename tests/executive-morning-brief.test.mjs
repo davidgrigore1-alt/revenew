@@ -101,7 +101,8 @@ test("implementation is server-only, role-scoped in the dashboard and restrained
   assert.match(dashboard, /summary\.viewer\.isManager/);
   assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
   assert.ok(dashboard.indexOf("<ExecutiveMorningBrief") < dashboard.indexOf("<ContextualPageGuide"));
-  assert.match(ui, /Dovezi și fapte de sprijin/);
+  assert.match(ui, /De ce este prioritar\?/);
+  assert.match(ui, /ExplanationDisclosure/);
   assert.match(ui, /valoare estimată, neconfirmată/);
   assert.match(ui, /control uman/);
   assert.match(ui, /Briefingul nu a putut fi încărcat/);

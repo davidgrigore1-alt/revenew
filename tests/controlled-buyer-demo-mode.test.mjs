@@ -11,26 +11,26 @@ test("buyer demo remains protected and presents the complete commercial route", 
 
   assert.match(page, /requirePermission\("platform\.internal_tools\.access"\)/);
   assert.match(page, /Demo controlat ReveNew/);
-  assert.equal((model.match(/id: "/g) ?? []).length, 10);
+  assert.equal((model.match(/id: "/g) ?? []).length, 8);
   for (const route of [
     "/dashboard",
-    "/ai",
-    "/inbox",
     "/opportunities/de300006-0000-4000-8000-000000000006",
-    "/today",
+    "/crm/organizations/de100001-0000-4000-8000-000000000001",
+    "/ai",
+    "/inbox?signal=de800001-0000-4000-8000-000000000001",
     "/approvals",
     "/reports/revenue-recovery-audit",
-    "/reports/enterprise-pilot-pack",
-    "/reports/pilot-proof-of-value"
-  ]) assert.match(model, new RegExp(route.replaceAll("/", "\\/")));
+    "/reports/enterprise-pilot-pack"
+  ]) assert.ok(model.includes(route), `${route} lipsește din traseu`);
 });
 
 test("every demo step contains a buyer question and a concise presentation purpose", () => {
   const model = read("src/lib/buyer-demo.ts");
 
-  assert.equal((model.match(/buyerQuestion: "/g) ?? []).length, 10);
-  assert.equal((model.match(/understanding: "/g) ?? []).length, 10);
-  assert.equal((model.match(/show: "/g) ?? []).length, 10);
+  assert.equal((model.match(/buyerQuestion: "/g) ?? []).length, 8);
+  assert.equal((model.match(/understanding: "/g) ?? []).length, 8);
+  assert.equal((model.match(/notice: "/g) ?? []).length, 8);
+  assert.equal((model.match(/show: "/g) ?? []).length, 8);
   assert.match(model, /Ce trebuie înțeles|understanding/);
 });
 
@@ -57,10 +57,32 @@ test("demo progress is opt-in, hydration-safe and can stop without covering prod
   assert.match(rail, /useEffect/);
   assert.match(rail, /window\.localStorage\.setItem/);
   assert.match(rail, /window\.localStorage\.removeItem/);
+  assert.match(rail, /window\.history\.replaceState\(window\.history\.state, "", pathname\)/);
   assert.match(rail, /Oprește/);
+  assert.match(rail, /Escape/);
+  assert.match(rail, /Înapoi/);
   assert.match(rail, /Următorul:/);
+  assert.match(rail, /Date fictive/);
+  assert.match(rail, /Încheie și notează concluziile/);
+  assert.match(rail, /aria-live="polite"/);
   assert.match(rail, /sticky top-0/);
   assert.doesNotMatch(rail, /fixed|absolute inset|createPortal/);
+});
+
+test("buyer demo suppresses duplicate onboarding guidance and contextualizes the assistant", () => {
+  const tour = read("src/components/guidance/GuidedProductTour.tsx");
+  const pageGuide = read("src/components/guidance/ContextualPageGuide.tsx");
+  const assistant = read("src/components/guidance/ContextualAssistant.tsx");
+  assert.match(tour, /BUYER_DEMO_STORAGE_KEY/);
+  assert.match(tour, /BUYER_DEMO_STARTED_EVENT/);
+  assert.match(tour, /closeForBuyerDemo/);
+  assert.match(tour, /!buyerDemoActive/);
+  assert.match(read("src/components/demo/BuyerDemoRail.tsx"), /dispatchEvent\(new Event\(BUYER_DEMO_STARTED_EVENT\)\)/);
+  assert.match(pageGuide, /BUYER_DEMO_STARTED_EVENT/);
+  assert.match(pageGuide, /BUYER_DEMO_STORAGE_KEY/);
+  assert.match(pageGuide, /buyerDemoActive/);
+  assert.match(assistant, /Prezentare activă/);
+  assert.match(assistant, /Traseul cumpărătorului rămâne ghidul principal/);
 });
 
 test("dashboard and help expose subtle demo entry points while guided understanding remains mounted", () => {

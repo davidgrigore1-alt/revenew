@@ -93,17 +93,16 @@ La 390×844 verifică aceleași rute pentru:
 
 Înainte de apel, repetă fără explicații laterale:
 
-1. Dashboard — risc și prima acțiune sigură.
-2. Inteligență operațională — dovadă și „Vezi de ce”.
-3. Coada de recuperare — ordinea intervențiilor.
-4. Oportunitate — fapte, blocaje, dovadă și control.
-5. Activitatea mea — lucru atribuit.
-6. Aprobări — decizia umană.
-7. Audit — livrabil executiv.
-8. Pilot Pack — validare pe 14 zile.
-9. Proof-of-Value — continuă, ajustează sau oprește.
+1. Dashboard — risc, explicație și prima acțiune sigură.
+2. Oportunitate — fapte, cronologie, document și control.
+3. Company 360 — memoria relației Meridian Logistics.
+4. Ask ReveNew și Descoperiri — căutarea Vector și semnalul Atlas.
+5. Inbox Comercial — sursă, lipsuri și revizuire umană.
+6. Aprobări — decizia umană pentru cazul Vector.
+7. Audit — livrabil executiv și valori deduplicate.
+8. Pilot Pack — validare pe 14 zile și trecere către Proof-of-Value.
 
-Ținta este 8–9 minute. Dacă traseul depășește 10 minute fără întrebări, elimină `/recoverable` și `/today` din prezentarea verbală, dar păstrează-le verificate.
+Ținta este 8–9 minute. `/recoverable`, `/today`, Pipeline și Proof-of-Value rămân verificate, dar nu sunt opriri separate în traseul principal.
 
 ## Starea rutelor
 

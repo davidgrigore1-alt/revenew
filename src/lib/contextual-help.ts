@@ -34,6 +34,17 @@ export function normalizeHelpText(value: string) {
 
 export const contextualHelpEntries: ContextualHelpEntry[] = [
   {
+    id: "explanation-inspector",
+    title: "Cum verifici de ce apare un element",
+    aliases: ["Cum aflu de ce apare asta?", "De ce îmi arată ReveNew asta?", "Cum văd explicația?"],
+    keywords: ["de ce", "apare", "explicatie", "fapte", "interpretare", "surse"],
+    routes: ["/dashboard", "/ai", "/opportunities", "/crm/organizations"],
+    shortAnswer: "Folosește «De ce apare?» sau «De ce este prioritar?» pentru a vedea faptele, interpretarea ReveNew, informațiile lipsă și sursele asociate.",
+    steps: ["Păstrează motivul scurt vizibil în elementul principal.", "Deschide controlul de explicație.", "Separă faptele înregistrate de interpretarea ReveNew.", "Verifică informațiile lipsă și proveniența valorii.", "Deschide sursa și decide apoi acțiunea sigură."],
+    safetyNote: "Asistentul te îndrumă către explicația canonică; nu regenerează și nu modifică explicația.",
+    relatedQuestions: ["Unde văd dovezile?", "Ce înseamnă valoare estimată, neconfirmată?", "Cum verific o recomandare?"]
+  },
+  {
     id: "revenew-core-flow",
     title: "Cum funcționează ReveNew",
     aliases: ["Cum funcționează ReveNew?", "Ce face ReveNew?", "Care este fluxul ReveNew?"],
@@ -53,7 +64,7 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     routes: ["/dashboard"],
     anchor: "dashboard-critical-decision",
     shortAnswer: "Începe cu Brief-ul executiv: prioritatea principală, motivul, dovada și prima acțiune sigură. «Ce s-a schimbat» arată numai fapte comerciale înregistrate în ultimele 24 de ore.",
-    steps: ["Citește prioritatea principală.", "Separă valoarea estimată de venitul confirmat.", "Deschide dovezile și faptele de sprijin.", "Verifică acțiunea sigură indicată.", "Folosește registrul complet doar dacă ai nevoie de detalii suplimentare."],
+    steps: ["Citește prioritatea principală.", "Separă valoarea estimată de venitul confirmat.", "Deschide «De ce este prioritar?» pentru fapte și surse.", "Verifică acțiunea sigură indicată.", "Folosește registrul complet doar dacă ai nevoie de detalii suplimentare."],
     safetyNote: "Prioritatea este calculată din înregistrări existente; faptele recente sunt distincte, iar decizia finală aparține echipei.",
     relatedQuestions: ["Ce înseamnă valoare estimată, neconfirmată?", "Unde văd dovezile?", "Cum verific o recomandare?"]
   },

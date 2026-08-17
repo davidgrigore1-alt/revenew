@@ -75,7 +75,10 @@ export function runLocalSql(sql, { json = false } = {}) {
   const result = spawnSync(docker, ["exec", "-i", names[0], "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-t", "-A"], {
     cwd: process.cwd(), input: sql, encoding: "utf8", windowsHide: true, maxBuffer: 10 * 1024 * 1024
   });
-  if (result.status !== 0) throw new Error(`Operația PostgreSQL locală a eșuat: ${result.stderr.trim().split(/\r?\n/).at(-1) ?? "eroare necunoscută"}`);
+  if (result.status !== 0) {
+    const safeDiagnostic = result.stderr.trim().split(/\r?\n/).slice(-6).join(" ") || "eroare necunoscută";
+    throw new Error(`Operația PostgreSQL locală a eșuat: ${safeDiagnostic}`);
+  }
   return json ? JSON.parse(result.stdout.trim() || "null") : result.stdout.trim();
 }
 
