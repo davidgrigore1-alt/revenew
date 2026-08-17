@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260714234600_data_ingestion_continuous_recovery_v1.sql",
+  "reviewedThrough": "20260719185230_harden_source_intake_validation.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -24,6 +24,12 @@
     "20260714100223_complete_commercial_workflow.sql": "0435837ed8228c6e1fbc9c3e3746fc7e4923fd2155595f85b96cf346a69d820a",
     "20260714143000_recoverable_revenue_engine_v1.sql": "9ccc2a0e61664708578489dc57def53e767899d4db7d971e29e103125dad07d1",
     "20260714234500_fix_recoverable_signal_approval_draft.sql": "5c43d2d5ce09fbd07c8c3db3780ac05a43d6aac92b390e49d241e9655cb2ff25",
-    "20260714234600_data_ingestion_continuous_recovery_v1.sql": "08620212f36323f72cacd4779741dba941b1443fbde26d916848026f51519552"
+    "20260714234600_data_ingestion_continuous_recovery_v1.sql": "08620212f36323f72cacd4779741dba941b1443fbde26d916848026f51519552",
+    "20260716205102_human_approved_email_sending_v1.sql": "56eb290ae394bb80d693d214275b2686e1add9b28808aebfae64a01461d86639",
+    "20260716224633_commercial_response_outcome_loop_v1.sql": "5849d1a5f26e1119dde33adaa4f906219141333222e0764016a5597267219a48",
+    "20260718100927_enterprise_workspace_governance_v1.sql": "6ea28a5d50ff1b7f63decd1caeb0a1c177be8cdd9478cf7b4287b37a478c8467",
+    "20260719143946_commercial_signal_conversion_privileges.sql": "6290f0af8ada08bcd3db1f1d5feade8c53fdff6226cf82299e2020647f3a2e57",
+    "20260719181513_source_intake_external_signals_v1.sql": "8f8090e45c1dd8d4c6222e7295e2869f69ecd114fecc2f54dbd86fc387a46db7",
+    "20260719185230_harden_source_intake_validation.sql": "d35adcc59ce29c0e631c1c898b23c2e607603c689e363fedcbeea39b048c89d2"
   }
 }

@@ -102,7 +102,8 @@ test("Company 360 remains protected and presents empty and populated operating c
   assert.match(loader, /buildCompanyIntelligenceSnapshot/);
   assert.match(route, /Company 360/);
   assert.match(route, /CompanyBusinessMemory/);
-  assert.match(route, /Indicatori comerciali/);
+  assert.match(route, /CompanyContextualAsk/);
+  assert.match(route, /Ce contează acum|snapshot\.memory/);
   assert.match(route, /Nicio persoană asociată/);
   assert.match(route, /Nicio oportunitate asociată/);
   assert.match(route, /CreateOpportunityPanel/);
@@ -134,7 +135,8 @@ test("Company 360 connects each attention item to its evidence-backed source rou
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
   const intelligence = read("src/lib/company-intelligence.ts");
   assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\}/);
-  assert.match(memory, /href=\{item\.href\}/);
+  assert.match(memory, /const href = item\.href \?\? item\.evidence\.href/);
+  assert.match(memory, /<Link href=\{href\}/);
   assert.match(memory, /label=\{item\.evidence\.label\}/);
   assert.match(intelligence, /href: `\/opportunities\/\$\{opportunity\.id\}/);
   assert.match(intelligence, /href: `\/approvals\?signal=\$\{signal\.id\}`/);

@@ -152,7 +152,9 @@ test("AI prompts instruct missing-data handling and hide technical fallback lang
   assert.match(promptSource, /Nu reproduce filler/);
   assert.match(promptSource, /Marchează explicit informațiile care trebuie confirmate/);
   assert.match(promptSource, /Nu menționa providerul AI, fallback-ul, metering-ul/);
-  assert.equal(workflowSource.includes("local_fallback") && workflowSource.includes("isDevelopmentMode"), true);
+  assert.match(workflowSource, /mode: "ai" \| "local_fallback"/);
+  assert.match(workflowSource, /generationMode === "ai" \? "Draft asistat AI" : "Draft standard"/);
+  assert.doesNotMatch(workflowSource, />\s*local_fallback\s*</);
   assert.match(analysisRoute, /Analiză standard pregătită pentru revizuire/);
   assert.match(documentRoute, /Draft standard pregătit pentru revizuire/);
 });

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 import { forbiddenFileReason, secretLabelsForContent } from "../scripts/validation/check-repository-safety.mjs";
@@ -61,8 +62,16 @@ test("package scripts and CI expose the complete safety workflow", async () => {
 
 test("migration integrity baseline covers the complete reviewed history", async () => {
   const baseline = await readJson("../scripts/validation/migration-integrity-baseline.json");
-  const migrations = (await readdir(new URL("../supabase/migrations", import.meta.url))).filter((name) => name.endsWith(".sql")).sort();
+  const migrationsDirectory = new URL("../supabase/migrations/", import.meta.url);
+  const migrations = (await readdir(migrationsDirectory)).filter((name) => name.endsWith(".sql")).sort();
   assert.deepEqual(Object.keys(baseline.files).sort(), migrations);
+  assert.equal(baseline.reviewedThrough, migrations.at(-1));
+
+  for (const migration of migrations) {
+    const sql = await readFile(new URL(migration, migrationsDirectory), "utf8");
+    const digests = [sql, sql.replace(/\r\n?/g, "\n")].map((value) => createHash("sha256").update(value).digest("hex"));
+    assert.ok(digests.includes(baseline.files[migration]), `${migration} changed after review`);
+  }
 });
 
 test("migration gate permits privilege revocation without permitting destructive truncate", () => {

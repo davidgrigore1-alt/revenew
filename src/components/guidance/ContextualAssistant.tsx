@@ -27,8 +27,12 @@ const routeLabels: Record<string, string> = {
   "/inbox": "Inbox Comercial",
   "/today": "Activitatea mea",
   "/approvals": "Aprobări",
+  "/recoverable": "Recuperare venituri",
+  "/pipeline": "Pipeline",
   "/companies": "Companii",
+  "/crm/organizations": "Company 360",
   "/contacts": "Contacte",
+  "/outreach": "Documente",
   "/opportunities": "Oportunități",
   "/reports": "Rapoarte",
   "/reports/revenue-recovery-audit": "Audit de recuperare venituri",
@@ -252,7 +256,7 @@ export function ContextualAssistant() {
                 {entry.safetyNote ? <p className="mt-4 rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Limită de control:</strong> {entry.safetyNote}</p> : null}
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   {destinationFor(entry) === pathname ? <span className="inline-flex min-h-9 items-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 text-xs font-semibold text-[rgb(var(--text-muted))]">Ești deja aici</span> : <Button onClick={() => navigate(entry)} size="small">{entry.primaryActionLabel ?? "Deschide pagina"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}
-                  {entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />{destinationFor(entry) === pathname ? "Arată zona relevantă" : "Arată-mi zona"}</Button> : null}
+                  {entry.anchor ? <Button onClick={() => navigate(entry, true)} variant="secondary" size="small"><MapPinIcon className="h-4 w-4" aria-hidden="true" />{destinationFor(entry) === pathname ? entry.currentActionLabel ?? "Arată zona relevantă" : "Arată-mi zona"}</Button> : null}
                 </div>
                 <details className="group mt-4 border-t border-[rgb(var(--border))] pt-3"><summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button text-xs font-semibold text-[rgb(var(--text-muted))] marker:hidden">Destinații relevante <span className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary><div className="mt-2 flex flex-wrap gap-2">{entry.routes.map((route) => <button key={route} type="button" className="focus-ring rounded-button text-xs font-semibold text-[rgb(var(--primary))] hover:underline" onClick={() => { router.push(route); closeAssistant(); }}>{routeLabels[route] ?? route}</button>)}</div></details>
               </div>

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityActionWorkbench } from "@/components/opportunities/OpportunityActionWorkbench";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
+import { OpportunityContextNavigation } from "@/components/opportunities/OpportunityContextNavigation";
+import { OpportunityIntelligenceTimeline } from "@/components/opportunities/OpportunityIntelligenceTimeline";
 import { RecommendationExplanationCard } from "@/components/intelligence/RecommendationExplanationCard";
 import { CommercialResponsePanel } from "@/components/opportunities/CommercialResponsePanel";
 import { approvalStateForSignal } from "@/lib/approval-center";
@@ -19,6 +21,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { isOpenAIConfigured } from "@/lib/openai/client";
 import { buildOperationalRecommendation } from "@/lib/operational-intelligence";
 import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
+import { buildOpportunityIntelligenceTimeline, type OpportunityTimelineResult } from "@/lib/opportunity-intelligence-timeline";
 
 export function generateStaticParams() {
   return opportunities.map((opportunity) => ({ id: opportunity.id }));
@@ -63,6 +66,12 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
   const evidenceBackedDescription = sourceSignal?.primaryRecoveryReason
     || sourceSignal?.extractedSummary
     || opportunity.summary;
+  let intelligenceTimeline: OpportunityTimelineResult | null = null;
+  try {
+    intelligenceTimeline = buildOpportunityIntelligenceTimeline({ opportunity, linkedSignals });
+  } catch (error) {
+    console.error("opportunity_timeline_build_failed", { reason: error instanceof Error ? error.name : "unknown" });
+  }
   return (
     <PageShell
       eyebrow={getOpportunityTypeLabel(opportunity.type)}
@@ -72,8 +81,10 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <div data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} /></div>
-        {explainedRecommendation ? <div data-guide-anchor="opportunity-evidence"><RecommendationExplanationCard recommendation={explainedRecommendation} compact /></div> : null}
+        <OpportunityContextNavigation showEvidence={Boolean(explainedRecommendation)} />
+        <div id="opportunity-commercial-facts" className="scroll-mt-24" data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} /></div>
+        <OpportunityIntelligenceTimeline result={intelligenceTimeline} />
+        {explainedRecommendation ? <div id="opportunity-evidence" className="scroll-mt-24" data-guide-anchor="opportunity-evidence"><RecommendationExplanationCard recommendation={explainedRecommendation} compact /></div> : null}
         <OpportunityActionWorkbench opportunity={opportunity} recommendation={assistedPreparation} />
         <div id="action-responsibility" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>

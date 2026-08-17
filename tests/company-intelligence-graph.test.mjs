@@ -219,8 +219,8 @@ test("business memory excludes non-critical profile gaps from the primary Compan
 test("Company 360 exposes a bounded executive decision layer instead of raw feeds", () => {
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
-  assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\} executiveDecision=\{snapshot\.executiveDecision\} discoveryCandidates=\{snapshot\.discoveryCandidates\}/);
-  for (const label of ["Decizie executivă", "De revizuit astăzi", "Bucle deschise", "Dovezi recente"]) assert.match(memory, new RegExp(label));
+  assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\} executiveDecision=\{snapshot\.executiveDecision\}/);
+  for (const label of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memory, new RegExp(label));
   assert.match(memory, /Bazat pe:/);
   assert.doesNotMatch(route, /snapshot\.timeline\.map|snapshot\.signals\.slice/);
 });

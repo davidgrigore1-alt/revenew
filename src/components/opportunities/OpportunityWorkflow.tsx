@@ -59,7 +59,6 @@ const actionStatusLabels: Record<string, string> = {
   cancelled: "Anulată"
 };
 
-const isDevelopmentMode = process.env.NODE_ENV === "development";
 
 const documentStatusLabels: Record<OpportunityDocument["status"], string> = {
   placeholder: "Draft",
@@ -167,7 +166,7 @@ export function OpportunityWorkflow({
 
   useEffect(() => {
     function openTargetedSection() {
-      if (window.location.hash === "#opportunity-timeline") setEvidenceOpen(true);
+      if (window.location.hash === "#opportunity-source-context") setEvidenceOpen(true);
       if (window.location.hash === "#opportunity-documents" || window.location.hash === "#documents") setDocumentsOpen(true);
     }
     openTargetedSection();
@@ -540,10 +539,6 @@ export function OpportunityWorkflow({
 
   return (
     <div className="grid gap-6">
-      <nav className="flex gap-2 overflow-x-auto rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-2" aria-label="Secțiuni oportunitate">
-        {[['#action-workbench', 'Acțiuni'], ['#action-contacts', 'Contacte'], ['#opportunity-timeline', 'Dovezi'], ['#opportunity-documents', 'Documente']].map(([href, label]) => <a key={href} href={href} className="focus-ring inline-flex min-h-10 shrink-0 items-center rounded-button px-3 text-sm font-semibold text-[rgb(var(--text-muted))] transition hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
-      </nav>
-
       <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
           <span>Evaluare și date operaționale <span className="font-normal text-[rgb(var(--text-muted))]">· consultă la nevoie</span></span>
@@ -728,15 +723,15 @@ export function OpportunityWorkflow({
         )}
       </DataCard></div>
 
-      <details id="opportunity-timeline" open={evidenceOpen} onToggle={(event) => setEvidenceOpen(event.currentTarget.open)} className="group scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+      <details id="opportunity-source-context" open={evidenceOpen} onToggle={(event) => setEvidenceOpen(event.currentTarget.open)} className="group scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-card px-4 py-3 marker:hidden sm:px-5">
           <span>
-            <span className="block text-sm font-semibold">Dovezi și istoric</span>
-            <span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">{opportunity.timeline.length} evenimente verificabile · contextul original rămâne disponibil</span>
+            <span className="block text-sm font-semibold">Contextul sursă al oportunității</span>
+            <span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">Textul de origine rămâne disponibil pentru verificare, separat de cronologia comercială.</span>
           </span>
           <span aria-hidden="true" className="shrink-0 text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
         </summary>
-      <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="border-t border-[rgb(var(--border))] p-4">
         <DataCard title="Context inițial" description="Textul sursă este păstrat pentru verificare și nu înlocuiește analiza umană.">
           <details className="group rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3">
             <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-1 text-sm font-semibold text-[rgb(var(--foreground))] marker:hidden">
@@ -748,33 +743,6 @@ export function OpportunityWorkflow({
             </p>
           </details>
         </DataCard>
-        <div><DataCard title="Istoric și evenimente" description="Evenimente comerciale verificabile, ordonate în contextul oportunității.">
-          <div className="space-y-4">
-            {opportunity.timeline.length > 0 ? (
-              opportunity.timeline.map((event) => (
-                <div key={event.id} className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="size-2 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" />
-                    <p className="font-semibold text-[rgb(var(--foreground))]">{event.label}</p>
-                    {isDevelopmentMode && event.type ? <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] px-2 py-1 text-xs font-semibold text-[rgb(var(--text-muted))]">{event.type}</span> : null}
-                  </div>
-                  <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.date)}</p>
-                  {event.description ? <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{event.description}</p> : null}
-                </div>
-              ))
-            ) : (
-              <EmptyState title="Nu există evenimente încă" description="Generează un document sau programează un follow-up pentru a începe fluxul de lucru." />
-            )}
-            {status !== opportunity.status ? (
-              <div className="rounded-lg border border-mint-400/20 bg-mint-400/10 p-4">
-                <p className="font-semibold text-mint-400">Status actualizat</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-300">
-                  Statusul oportunității a fost actualizat.
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </DataCard></div>
       </div>
       </details>
 

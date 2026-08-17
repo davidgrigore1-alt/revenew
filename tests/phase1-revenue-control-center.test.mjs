@@ -66,8 +66,9 @@ test("outsiders and removed members cannot reach opportunity, outcome, contact o
   assert.match(data, /getCurrentBusinessForUser/);
 });
 
-test("ordinary dashboard work is assignee scoped while manager exceptions are explicit", () => {
+test("dashboard actions are assignee scoped while owner, admin and manager exceptions are explicit", () => {
   assert.match(workspace, /action\.assignedToProfileId === authorization\.profileId/);
-  assert.match(workspace, /authorization\.businessRole === "business_owner"/);
-  assert.match(workspace, /isManager \? active\.filter/);
+  assert.match(workspace, /const isManager = \["business_owner", "business_admin", "business_manager"\]\.includes\(authorization\.businessRole \?\? ""\)/);
+  assert.match(workspace, /allPersonal: visiblePersonalActions/);
+  assert.match(workspace, /unassigned: isManager \? active\.filter/);
 });

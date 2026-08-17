@@ -161,6 +161,17 @@ export type CompanyIntelligenceSnapshot = {
     href: string;
     evidence: CompanyEvidence;
   }>;
+  documents: Array<{
+    id: string;
+    title: string;
+    type: OpportunityDocument["type"];
+    status: OpportunityDocument["status"];
+    opportunityId: string;
+    opportunityTitle: string;
+    occurredAt: string | null;
+    href: string;
+    evidence: CompanyEvidence;
+  }>;
   signals: CommercialSignal[];
   approvalItems: Array<{ signalId: string; title: string; href: string; evidence: CompanyEvidence }>;
   recommendationFeedback: Array<{ signalId: string; title: string; feedback: RecommendationFeedback; evidence: CompanyEvidence }>;
@@ -306,6 +317,13 @@ function timelineFrom(input: CompanyIntelligenceInput) {
 }
 
 export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput, options: { now?: Date; timelineLimit?: number } = {}): CompanyIntelligenceSnapshot {
+  const authorizedBusinessId = input.organization.businessId;
+  input = {
+    organization: input.organization,
+    contacts: input.contacts.filter((item) => item.businessId === authorizedBusinessId),
+    opportunities: input.opportunities.filter((item) => item.businessId === authorizedBusinessId),
+    signals: input.signals.filter((item) => item.businessId === authorizedBusinessId)
+  };
   const now = options.now ?? new Date();
   const organizationHref = `/crm/organizations/${input.organization.id}`;
   const activeOpportunities = input.opportunities.filter(isOpenOpportunity);
@@ -448,6 +466,11 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     const associations = input.opportunities.flatMap((opportunity) => (opportunity.contacts ?? []).filter((association) => association.contactId === contact.id));
     return { id: contact.id, fullName: contact.fullName, jobTitle: contact.jobTitle ?? null, decisionRole: contact.decisionRole ?? null, isPrimary: Boolean(contact.isPrimaryForOrganization), opportunityRoles: Array.from(new Set(associations.map((association) => association.role).filter((role): role is string => Boolean(role)))), opportunityCount: new Set(associations.map((association) => association.opportunityId)).size, evidence: [evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, "/contacts"), ...associations.map((association) => evidence("opportunity_contact", association.id, association.updatedAt ?? association.createdAt, `Relația cu oportunitatea ${association.opportunityId}`, `/opportunities/${association.opportunityId}`))] };
   });
+  const documents = input.opportunities.flatMap((opportunity) => opportunity.documents.map((document) => {
+    const occurredAt = validTimestamp(document.sentAt) ?? validTimestamp(document.readyAt) ?? validTimestamp(document.editedAt) ?? validTimestamp(document.createdAt);
+    const href = `/opportunities/${opportunity.id}#opportunity-documents`;
+    return { id: document.id, title: document.title, type: document.type, status: document.status, opportunityId: opportunity.id, opportunityTitle: opportunity.title, occurredAt, href, evidence: evidence("opportunity_document", document.id, occurredAt, `Documentul „${document.title}”`, href) };
+  })).sort((left, right) => String(right.occurredAt ?? "").localeCompare(String(left.occurredAt ?? "")) || left.id.localeCompare(right.id)).slice(0, 50);
 
   return {
     organization: input.organization,
@@ -456,6 +479,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     canonicalNextAction,
     contacts: contactRelationships,
     opportunities: input.opportunities.map((opportunity) => { const next = selectPrimaryNextAction(opportunity.actions); return { id: opportunity.id, title: opportunity.title, status: opportunity.status, lifecycleStatus: opportunity.lifecycleStatus, ownerName: opportunity.ownerName ?? null, estimatedValue: opportunity.estimatedValueHigh, currency: opportunity.currency ?? "RON", nextActionTitle: next?.title ?? null, nextActionDueAt: next?.dueDate ?? null, href: `/opportunities/${opportunity.id}`, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, `/opportunities/${opportunity.id}`) }; }),
+    documents,
     signals: input.signals,
     approvalItems: pendingApprovals.map(({ signal }) => ({ signalId: signal.id, title: signal.title, href: `/approvals?signal=${signal.id}`, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, `/approvals?signal=${signal.id}`) })),
     recommendationFeedback: input.signals.map((signal) => ({ signalId: signal.id, title: signal.title, feedback: recommendationFeedbackForSignal(signal), evidence: evidence("recommendation_feedback", signal.id, recommendationFeedbackForSignal(signal).decidedAt ?? signal.updatedAt ?? signal.createdAt, `Feedback pentru recomandarea „${signal.title}”`, `/inbox?signal=${signal.id}`) })).filter((item) => item.feedback.state !== "pending_review").sort((left, right) => String(right.evidence.sourceTimestamp ?? "").localeCompare(String(left.evidence.sourceTimestamp ?? ""))),
@@ -509,7 +533,7 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
 
   const [organizationResult, contactsResult] = await Promise.all([
     supabase.from("crm_organizations").select("id,business_id,name,website,industry,phone,city,county,country,notes,relationship_status,is_archived,created_at,updated_at").eq("id", organizationId).eq("business_id", businessId).eq("is_archived", false).maybeSingle(),
-    supabase.from("crm_contacts").select("id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,is_active,is_primary_for_organization,notes,created_at,updated_at").eq("business_id", businessId).eq("organization_id", organizationId).eq("is_active", true).order("is_primary_for_organization", { ascending: false }).limit(100)
+    supabase.from("crm_contacts").select("id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,is_active,is_primary_for_organization,notes,created_at,updated_at").eq("business_id", businessId).eq("organization_id", organizationId).eq("is_active", true).order("is_primary_for_organization", { ascending: false }).limit(50)
   ]);
   if (organizationResult.error || contactsResult.error) return { ready: false, snapshot: null, error: "Datele companiei nu au putut fi încărcate." };
   if (!organizationResult.data) return { ready: true, snapshot: null };
@@ -520,15 +544,15 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
   const contactIds = directContacts.map((contact) => contact.id);
 
   const [directOpportunitiesResult, linkedOpportunityResult] = await Promise.all([
-    supabase.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,commercial_type,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,city,county,fit_score,urgency_score,money_score,confidence_score,summary,ai_summary,relevance,risks,recommended_action,raw_source_text,created_at,updated_at").eq("business_id", businessId).eq("organization_id", organizationId).order("updated_at", { ascending: false }).limit(100),
-    contactIds.length > 0 ? supabase.from("opportunity_contacts").select("opportunity_id").eq("business_id", businessId).in("contact_id", contactIds).limit(200) : Promise.resolve({ data: [], error: null })
+    supabase.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,commercial_type,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,city,county,fit_score,urgency_score,money_score,confidence_score,summary,ai_summary,relevance,risks,recommended_action,raw_source_text,created_at,updated_at").eq("business_id", businessId).eq("organization_id", organizationId).order("updated_at", { ascending: false }).limit(50),
+    contactIds.length > 0 ? supabase.from("opportunity_contacts").select("opportunity_id").eq("business_id", businessId).in("contact_id", contactIds).limit(100) : Promise.resolve({ data: [], error: null })
   ]);
   if (directOpportunitiesResult.error || linkedOpportunityResult.error) return { ready: false, snapshot: null, error: "Oportunitățile companiei nu au putut fi încărcate." };
   const directRows = (directOpportunitiesResult.data ?? []) as Row[];
   const directIds = new Set(directRows.map((row) => String(row.id)));
   const linkedIds = ((linkedOpportunityResult.data ?? []) as Row[]).map((row) => String(row.opportunity_id)).filter((id) => !directIds.has(id));
   const linkedRowsResult = linkedIds.length > 0
-    ? await supabase.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,commercial_type,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,city,county,fit_score,urgency_score,money_score,confidence_score,summary,ai_summary,relevance,risks,recommended_action,raw_source_text,created_at,updated_at").eq("business_id", businessId).in("id", linkedIds).limit(100)
+    ? await supabase.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,commercial_type,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,city,county,fit_score,urgency_score,money_score,confidence_score,summary,ai_summary,relevance,risks,recommended_action,raw_source_text,created_at,updated_at").eq("business_id", businessId).in("id", linkedIds).limit(50)
     : { data: [], error: null };
   if (linkedRowsResult.error) return { ready: false, snapshot: null, error: "Relațiile comerciale ale companiei nu au putut fi încărcate." };
   const opportunityRows = [...directRows, ...((linkedRowsResult.data ?? []) as Row[])];
@@ -538,10 +562,10 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
   if (opportunityIds.length === 0) return { ready: true, snapshot: buildCompanyIntelligenceSnapshot({ organization, contacts: directContacts, opportunities: [], signals }) };
 
   const [actionsResult, documentsResult, eventsResult, associationsResult, ownersResult] = await Promise.all([
-    supabase.from("opportunity_actions").select("id,business_id,opportunity_id,type,title,description,status,due_at,priority,assigned_to_profile_id,created_at,updated_at,completed_at,cancelled_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("due_at", { ascending: true, nullsFirst: false }).limit(500),
-    supabase.from("opportunity_documents").select("id,business_id,opportunity_id,document_type,title,status,send_status,created_at,edited_at,ready_at,sent_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("created_at", { ascending: false }).limit(300),
-    supabase.from("opportunity_events").select("id,business_id,opportunity_id,event_type,label,description,occurred_at,created_at,actor_profile_id,metadata").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("occurred_at", { ascending: false }).limit(500),
-    supabase.from("opportunity_contacts").select("id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,notes,created_at,updated_at)").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("is_primary", { ascending: false }).limit(300),
+    supabase.from("opportunity_actions").select("id,business_id,opportunity_id,type,title,description,status,due_at,priority,assigned_to_profile_id,created_at,updated_at,completed_at,cancelled_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("due_at", { ascending: true, nullsFirst: false }).limit(100),
+    supabase.from("opportunity_documents").select("id,business_id,opportunity_id,document_type,title,status,send_status,created_at,edited_at,ready_at,sent_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("created_at", { ascending: false }).limit(50),
+    supabase.from("opportunity_events").select("id,business_id,opportunity_id,event_type,label,description,occurred_at,created_at,actor_profile_id,metadata").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("occurred_at", { ascending: false }).limit(50),
+    supabase.from("opportunity_contacts").select("id,business_id,opportunity_id,contact_id,role,is_primary,notes,created_at,updated_at,crm_contacts(id,business_id,organization_id,full_name,job_title,decision_role,email,phone,professional_url,notes,created_at,updated_at)").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("is_primary", { ascending: false }).limit(100),
     supabase.rpc("business_assignable_profiles", { target_business_id: businessId })
   ]);
   const requiredError = actionsResult.error ?? documentsResult.error ?? eventsResult.error ?? associationsResult.error;

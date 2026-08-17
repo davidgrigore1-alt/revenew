@@ -8,11 +8,15 @@ import {
   LockClosedIcon,
   ShieldCheckIcon
 } from "@heroicons/react/24/outline";
+import { isRedirectError } from "next/dist/client/components/redirect";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { AskReveNew } from "@/components/intelligence/AskReveNew";
+import { CommercialDiscoveries } from "@/components/intelligence/CommercialDiscoveries";
 import { RecommendationExplanationCard } from "@/components/intelligence/RecommendationExplanationCard";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { aiCapabilities, type AiCapabilityDefinition, type AiCapabilityStatus } from "@/lib/ai-capabilities";
+import { discoverCommercialOpportunityCandidates, type CommercialOpportunityDiscoveryResult } from "@/lib/commercial-opportunity-discovery";
 import {
   buildOperationalIntelligenceCenter,
   unavailableOperationalIntelligence,
@@ -213,6 +217,7 @@ export default async function AiControlCenterPage() {
   const sandboxCount = aiCapabilities.filter((capability) => capability.status === "sandbox_only").length;
   const blockedCount = aiCapabilities.filter((capability) => capability.status === "blocked_until_security_review").length;
   let intelligence;
+  let discoveries: CommercialOpportunityDiscoveryResult | undefined;
 
   try {
     const summary = await getRecoverySummary();
@@ -221,8 +226,10 @@ export default async function AiControlCenterPage() {
       { limit: 3 }
     );
     intelligence = buildOperationalIntelligenceCenter(queue);
+    discoveries = discoverCommercialOpportunityCandidates({ opportunities: summary.opportunities, signals: summary.signals });
   } catch (error) {
-    console.error("Operational intelligence load error", error);
+    if (isRedirectError(error)) throw error;
+    console.error("operational_intelligence_load_failed", { reason: error instanceof Error ? error.name : "unknown" });
     intelligence = unavailableOperationalIntelligence();
   }
 
@@ -233,21 +240,25 @@ export default async function AiControlCenterPage() {
       description="Riscuri, dovezi și acțiuni sigure derivate din datele comerciale disponibile, cu decizia finală păstrată la oameni."
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
     >
-      <section data-guide-anchor="ai-recommendation" className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6 lg:p-8" aria-labelledby="operational-intelligence-summary">
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
+      <AskReveNew />
+
+      <CommercialDiscoveries result={discoveries} error={!discoveries} />
+
+      <section data-guide-anchor="ai-recommendation" className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6" aria-labelledby="operational-intelligence-summary">
+        <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-card border border-[rgb(var(--brand-500)/0.34)] bg-[rgb(var(--brand-500)/0.08)] text-[rgb(var(--primary))]"><CpuChipIcon className="h-5 w-5" aria-hidden="true" /></div>
               <Badge tone={intelligence.state === "critical" ? "danger" : intelligence.state === "attention" ? "warning" : intelligence.state === "unavailable" ? "neutral" : "info"}>{intelligence.stateLabel}</Badge>
             </div>
-            <h2 id="operational-intelligence-summary" className="mt-5 max-w-3xl text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">{intelligence.headline}</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{intelligence.observation}</p>
+            <h2 id="operational-intelligence-summary" className="mt-4 max-w-3xl text-xl font-semibold tracking-[-0.025em] sm:text-2xl">{intelligence.headline}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{intelligence.observation}</p>
 
-            <div className="ai-evidence-rail mt-6 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 pl-6 sm:p-5 sm:pl-7">
+            <div className="ai-evidence-rail mt-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 pl-6">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Decizia care merită atenție</p>
               <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em]">{intelligence.decisionTitle}</h3>
               <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Dovadă:</strong> {intelligence.evidenceLabel}</span></p>
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button href={intelligence.safeActionHref}>{intelligence.safeActionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
                 {intelligence.evidenceHref ? <Button href={intelligence.evidenceHref} variant="secondary">Verifică dovada</Button> : null}
               </div>

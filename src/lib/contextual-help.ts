@@ -6,6 +6,7 @@ export type ContextualHelpEntry = {
   routes: string[];
   anchor?: string;
   primaryActionLabel?: string;
+  currentActionLabel?: string;
   shortAnswer: string;
   steps: string[];
   safetyNote?: string;
@@ -274,6 +275,12 @@ export const screenExplanationEntries: ContextualHelpEntry[] = [
     relatedQuestions: ["Cum verific o recomandare?", "Unde văd dovezile?", "De ce AI-ul nu trimite automat?"]
   },
   {
+    id: "screen-approvals", title: "Cum folosești Aprobări", aliases: ["Explică această pagină"], keywords: [], routes: ["/approvals"], anchor: "approvals-human-control", currentActionLabel: "Arată aprobările",
+    shortAnswer: "Ești în Aprobări, unde schimbările sensibile sunt verificate de o persoană înainte să producă efecte.",
+    steps: ["Unde te afli: în coada Aprobări.", "Ce găsești aici: cereri, dovezi și efectul exact al deciziei.", "De ce contează: aprobarea previne acțiuni comerciale greșite sau premature.", "Ce verifici prima dată: sursa și înregistrările afectate.", "Următorul pas sigur: aprobă sau respinge motivat numai după verificare."],
+    safetyNote: "Aprobarea nu înseamnă trimitere automată.", relatedQuestions: ["Ce înseamnă aprobarea?", "Unde văd dovezile?", "De ce AI-ul nu trimite automat?"]
+  },
+  {
     id: "screen-inbox", title: "Cum folosești Inbox Comercial", aliases: ["Explică această pagină"], keywords: [], routes: ["/inbox"], anchor: "inbox-signal-intelligence",
     shortAnswer: "Ești în Inbox Comercial, unde un semnal este verificat înainte să devină oportunitate sau acțiune.",
     steps: ["Unde te afli: în Inbox Comercial.", "Ce faci aici: transformi semnale în decizii verificabile.", "De ce contează: contextul incomplet poate produce duplicate sau acțiuni greșite.", "Ce verifici prima dată: dovada, riscurile și informațiile lipsă din Context pentru decizie.", "Următorul pas sigur: confirmă recomandarea înainte de conversie sau pregătirea unei acțiuni."],
@@ -282,10 +289,47 @@ export const screenExplanationEntries: ContextualHelpEntry[] = [
   },
   {
     id: "screen-opportunity", title: "Cum folosești detaliul oportunității", aliases: ["Explică această pagină"], keywords: [], routes: ["/opportunities"], anchor: "opportunity-commercial-facts",
+    currentActionLabel: "Arată rezumatul",
     shortAnswer: "Ești pe detaliul oportunității, centrul de control pentru valoarea estimată, dovezi, responsabil și următoarea acțiune comercială.",
     steps: ["Unde te afli: pe detaliul oportunității.", "Ce faci aici: verifici valoarea estimată, contactul, responsabilul și acțiunile.", "De ce contează: lipsurile și blocajele pot opri progresul sau produce un handoff slab.", "Ce verifici prima dată: dovezile și termenul următoarei acțiuni.", "Următorul pas sigur: completează sau revizuiește acțiunea înainte de execuție."],
     safetyNote: "Valoarea este estimată până la confirmarea explicită a unui rezultat câștigat.",
     relatedQuestions: ["Cum asociez un contact acestei oportunități?", "Unde văd dovezile unei oportunități?", "Ce înseamnă valoare estimată, neconfirmată?"]
+  },
+  {
+    id: "screen-recovery", title: "Cum folosești Recuperare venituri", aliases: ["Explică această pagină"], keywords: [], routes: ["/recoverable"],
+    shortAnswer: "Ești în Recuperare venituri, coada oportunităților unde lipsa unui responsabil, termen sau pas următor poate produce pierderi comerciale.",
+    steps: ["Unde te afli: în coada de recuperare.", "Ce găsești aici: blocaje comerciale ordonate după urgență și impact estimat.", "De ce contează: munca rămasă fără control poate fi uitată.", "Ce verifici prima dată: motivul principal și dovada.", "Următorul pas sigur: deschide oportunitatea și completează controlul lipsă."],
+    safetyNote: "Valoarea este estimată și nu reprezintă venit confirmat.", relatedQuestions: ["Ce este valoarea estimată?", "Cum verific o recomandare?", "Unde văd dovezile?"]
+  },
+  {
+    id: "screen-pipeline", title: "Cum folosești Pipeline", aliases: ["Explică această pagină"], keywords: [], routes: ["/pipeline"],
+    shortAnswer: "Ești în Pipeline, unde urmărești poziția oportunităților în fluxul comercial fără a confunda estimările cu rezultatele confirmate.",
+    steps: ["Unde te afli: în Pipeline.", "Ce găsești aici: oportunități grupate după starea comercială.", "De ce contează: blocajele devin vizibile înainte să fie uitate.", "Ce verifici prima dată: oportunitățile fără pas următor sau responsabil.", "Următorul pas sigur: deschide oportunitatea care cere clarificare."],
+    safetyNote: "Pipeline-ul nu garantează închiderea sau venitul.", relatedQuestions: ["Ce este valoarea estimată?", "Cum verific o recomandare?", "Ce verific prima dată pe Dashboard?"]
+  },
+  {
+    id: "screen-company-360", title: "Cum folosești Company 360", aliases: ["Explică această pagină"], keywords: [], routes: ["/crm/organizations"], anchor: "company-ask", currentActionLabel: "Arată întrebările despre companie",
+    shortAnswer: "Ești în Company 360, unde identitatea, situația curentă și istoricul comercial al unei organizații sunt reunite pe baza relațiilor înregistrate.",
+    steps: ["Unde te afli: în Company 360.", "Ce găsești aici: contextul relației, oportunități, persoane, bucle deschise și dovezi.", "De ce contează: reduci timpul de căutare înaintea unei decizii sau discuții.", "Ce verifici prima dată: ce contează acum și dovada asociată.", "Următorul pas sigur: întreabă despre companie sau deschide acțiunea recomandată."],
+    safetyNote: "ReveNew nu inventează fapte despre companie și nu caută pe web.", relatedQuestions: ["Unde văd dovezile?", "Cum verific o recomandare?", "Unde sunt contactele?"]
+  },
+  {
+    id: "screen-companies", title: "Cum folosești Companii", aliases: ["Explică această pagină"], keywords: [], routes: ["/companies"], anchor: "companies-register", currentActionLabel: "Arată companiile",
+    shortAnswer: "Ești în Companii, registrul organizațiilor comerciale din spațiul de lucru.",
+    steps: ["Unde te afli: în registrul Companii.", "Ce găsești aici: clienți, prospecți și parteneri, cu activitatea și relațiile comerciale disponibile.", "De ce contează: acesta este punctul de intrare către contextul și istoricul unei organizații.", "Ce verifici prima dată: caută organizația relevantă și verifică ultima activitate disponibilă.", "Următorul pas: deschide Company 360 pentru relația selectată."],
+    relatedQuestions: ["Unde sunt contactele?", "Cum caut o firmă?", "Unde văd dovezile?"]
+  },
+  {
+    id: "screen-contacts", title: "Cum folosești Contacte", aliases: ["Explică această pagină"], keywords: [], routes: ["/contacts"],
+    shortAnswer: "Ești în Contacte, registrul persoanelor asociate companiilor și oportunităților comerciale.",
+    steps: ["Unde te afli: în Contacte.", "Ce găsești aici: persoane, roluri profesionale și relații înregistrate.", "De ce contează: continuitatea comercială depinde de o persoană corect identificată.", "Ce verifici prima dată: firma și rolul contactului.", "Următorul pas sigur: deschide oportunitatea asociată înainte de comunicare."],
+    safetyNote: "Rolurile lipsă nu sunt deduse automat.", relatedQuestions: ["Unde sunt firmele?", "Cum asociez un contact acestei oportunități?", "Ce fac dacă lipsește contactul principal?"]
+  },
+  {
+    id: "screen-outreach", title: "Cum folosești Documente", aliases: ["Explică această pagină"], keywords: [], routes: ["/outreach"],
+    shortAnswer: "Ești în Documente, unde drafturile comerciale sunt pregătite, revizuite și păstrate lângă oportunitatea lor.",
+    steps: ["Unde te afli: în Documente.", "Ce găsești aici: drafturi, starea revizuirii și contextul oportunității.", "De ce contează: separi pregătirea internă de utilizarea externă.", "Ce verifici prima dată: sursa, versiunea și aprobarea.", "Următorul pas sigur: revizuiește documentul înainte de orice trimitere."],
+    safetyNote: "Pregătirea unui document nu înseamnă trimitere automată.", relatedQuestions: ["Ce înseamnă aprobarea?", "Unde văd dovezile?", "De ce AI-ul nu trimite automat?"]
   },
   {
     id: "screen-feedback", title: "Cum folosești concluziile după demo", aliases: ["Explică această pagină"], keywords: [], routes: ["/demo/feedback"], anchor: "demo-feedback-fit",

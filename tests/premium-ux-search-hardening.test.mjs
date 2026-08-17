@@ -47,7 +47,7 @@ test("global search combines local sections with existing tenant-scoped records"
 
   assert.match(search, /searchAppSections/);
   assert.match(search, /\[\.\.\.sectionResults, \.\.\.workspaceResults\]/);
-  assert.match(search, /Secțiune, companie, contact, oportunitate sau document/);
+  assert.match(search, /Companie, oportunitate sau întrebare comercială/);
   assert.match(actions, /eq\("business_id", businessId\)/);
   assert.match(actions, /requirePermission\("workspace\.read"\)/);
 });

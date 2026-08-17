@@ -422,9 +422,9 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     { data: owners, error: ownersError }
   ] = await Promise.all([
     supabase.from("opportunities").select("*").eq("id", id).eq("business_id", business.id).single(),
-    supabase.from("opportunity_actions").select("*").eq("opportunity_id", id).order("created_at", { ascending: false }),
-    supabase.from("opportunity_documents").select("*").eq("opportunity_id", id).order("created_at", { ascending: false }),
-    supabase.from("opportunity_events").select("*").eq("opportunity_id", id).order("created_at", { ascending: true }),
+    supabase.from("opportunity_actions").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("created_at", { ascending: false }).limit(200),
+    supabase.from("opportunity_documents").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("opportunity_events").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("occurred_at", { ascending: true }).limit(300),
     supabase
       .from("opportunity_contacts")
       .select(
@@ -433,8 +433,9 @@ export async function getOpportunityForCurrentBusiness(id: string) {
       .eq("opportunity_id", id)
       .eq("business_id", business.id)
       .order("is_primary", { ascending: false })
-      .order("updated_at", { ascending: false }),
-    supabase.from("commercial_responses").select("*").eq("opportunity_id", id).eq("business_id", business.id).order("responded_at", { ascending: false }),
+      .order("updated_at", { ascending: false })
+      .limit(100),
+    supabase.from("commercial_responses").select("*").eq("opportunity_id", id).eq("business_id", business.id).order("responded_at", { ascending: false }).limit(100),
     supabase.rpc("business_assignable_profiles", { target_business_id: business.id })
   ]);
 

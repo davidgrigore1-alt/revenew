@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 export default async function CompaniesPage() {
   const [crm, organizationStats] = await Promise.all([getCrmWorkspaceForCurrentBusiness(), getCrmOrganizationStats()]);
   return <PageShell eyebrow="Relații comerciale" title="Companii" description="Registrul unic pentru clienți, prospecți și organizațiile implicate în recuperarea comercială.">
-    {crm.ready ? <CrmWorkspaceClient organizations={crm.organizations} contacts={crm.contacts} view="companies" organizationStats={organizationStats} /> : <ErrorState title="Companiile nu pot fi încărcate" description={crm.error ?? "Reîncearcă după verificarea conexiunii."} />}
+    <div id="companies-register" className="scroll-mt-24" data-guide-anchor="companies-register">
+      {crm.ready ? <CrmWorkspaceClient organizations={crm.organizations} contacts={crm.contacts} view="companies" organizationStats={organizationStats} /> : <ErrorState title="Companiile nu pot fi încărcate" description={crm.error ?? "Reîncearcă după verificarea conexiunii."} />}
+    </div>
   </PageShell>;
 }

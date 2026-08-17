@@ -6,6 +6,7 @@ const pageUrl = new URL("../src/app/(protected)/opportunities/[id]/page.tsx", im
 const workbenchUrl = new URL("../src/components/opportunities/OpportunityActionWorkbench.tsx", import.meta.url);
 const controlCenterUrl = new URL("../src/components/opportunities/OpportunityControlCenter.tsx", import.meta.url);
 const workflowUrl = new URL("../src/components/opportunities/OpportunityWorkflow.tsx", import.meta.url);
+const intelligenceTimelineUrl = new URL("../src/components/opportunities/OpportunityIntelligenceTimeline.tsx", import.meta.url);
 
 test("opportunity command workspace hides large execution forms by default", async () => {
   const page = await readFile(pageUrl, "utf8");
@@ -31,10 +32,11 @@ test("recommended action and precise safe CTAs remain visible", async () => {
 });
 
 test("the first opportunity screen exposes evidence without opening a raw feed", async () => {
-  const [page, controlCenter, workflow] = await Promise.all([
+  const [page, controlCenter, workflow, intelligenceTimeline] = await Promise.all([
     readFile(pageUrl, "utf8"),
     readFile(controlCenterUrl, "utf8"),
-    readFile(workflowUrl, "utf8")
+    readFile(workflowUrl, "utf8"),
+    readFile(intelligenceTimelineUrl, "utf8")
   ]);
   assert.match(page, /const evidenceBackedDescription = sourceSignal\?\.primaryRecoveryReason/);
   assert.match(page, /description=\{evidenceBackedDescription\}/);
@@ -44,7 +46,11 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
   assert.match(controlCenter, /De ce este prioritară/);
   assert.match(controlCenter, /Blocajele, termenul, responsabilul, dovezile și valoarea estimată explică ordinea de intervenție/);
   assert.match(controlCenter, /Rezultatul rămâne neconfirmat până la decizia unei persoane/);
-  assert.match(workflow, /Dovezi și istoric/);
+  assert.match(intelligenceTimeline, /Istoric comercial/);
+  assert.match(intelligenceTimeline, /Fapte înregistrate și interpretări ReveNew în ordine cronologică/);
+  assert.match(intelligenceTimeline, /Fapt înregistrat/);
+  assert.match(intelligenceTimeline, /Interpretare ReveNew/);
+  assert.match(workflow, /Contextul sursă al oportunității/);
   assert.match(workflow, /Consultă textul sursă/);
   assert.doesNotMatch(workflow, />Text sursă brut</);
 });

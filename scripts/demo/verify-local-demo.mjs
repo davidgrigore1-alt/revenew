@@ -385,7 +385,8 @@ async function main() {
   assert(Number(stats.contact_count) === 8 && Number(stats.reserved_domain_contact_count) === 8 && Number(stats.multi_contact_organization_count) === 1, "Contactele demo nu respectă domeniile rezervate și relațiile locale.");
   assert(Number(stats.opportunity_count) === 11 && Number(stats.ron_count) === 10 && Number(stats.eur_count) === 1 && Number(stats.unsupported_currency_count) === 0, "Oportunitățile sau monedele demo sunt invalide.");
   assert(Number(stats.won_count) === 1 && Number(stats.lost_count) === 1, "Rezultatele terminale demo sunt invalide.");
-  assert(Number(stats.action_count) === 12 && Number(stats.overdue_count) > 0, "Coada de lucru nu conține acțiuni restante.");
+  assert(Number(stats.action_count) === 12, `Fixture-ul demo conține ${stats.action_count} acțiuni; sunt necesare exact 12.`);
+  assert(Number(stats.overdue_count) > 0, `Coada de lucru nu conține acțiuni restante (acțiuni: ${stats.action_count}, restante: ${stats.overdue_count}). Rulează din nou seed-ul local buyer-ready.`);
   assert(Number(stats.missing_next_action_count) > 0 && Number(stats.unassigned_count) > 0, "Lipsesc scenariile Recovery Queue obligatorii.");
   assert(Number(stats.event_count) >= 10, "Evenimentele nu sunt complet auditabile.");
   assert(Number(stats.document_count) === 4 && Number(stats.unsent_document_count) === 4, "Documentele demo trebuie să fie locale și netrimise.");

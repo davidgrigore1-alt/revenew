@@ -25,21 +25,23 @@ test("opportunity detail keeps the executive decision and commercial identity fi
 });
 
 test("opportunity secondary execution areas use progressive disclosure", async () => {
-  const [page, workbench, workflow] = await Promise.all([
+  const [page, workbench, workflow, timeline] = await Promise.all([
     read("../src/app/(protected)/opportunities/[id]/page.tsx"),
     read("../src/components/opportunities/OpportunityActionWorkbench.tsx"),
-    read("../src/components/opportunities/OpportunityWorkflow.tsx")
+    read("../src/components/opportunities/OpportunityWorkflow.tsx"),
+    read("../src/components/opportunities/OpportunityIntelligenceTimeline.tsx")
   ]);
 
   assert.match(workbench, /<details[^>]*>[\s\S]*Alte intervenții controlate/);
   assert.match(page, /<details[^>]*>[\s\S]*Semnale asociate/);
   assert.match(workflow, /Evaluare și date operaționale/);
   assert.match(workflow, /Context comercial complet/);
-  assert.match(workflow, /<details id="opportunity-timeline"/);
+  assert.match(timeline, /<section id="opportunity-timeline"/);
   assert.match(workflow, /<details id="opportunity-documents"/);
   assert.match(workflow, /Documente și drafturi/);
-  assert.match(workflow, /Istoric și evenimente/);
-  assert.match(workflow, /window\.location\.hash === "#opportunity-timeline"/);
+  assert.match(workflow, /<details id="opportunity-source-context"/);
+  assert.match(workflow, /window\.location\.hash === "#opportunity-source-context"/);
+  assert.match(timeline, /Dovezi și trasabilitate/);
 });
 
 test("opportunity actions provide safe review destinations and sanitized feedback", async () => {

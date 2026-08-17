@@ -147,8 +147,9 @@ test("Company 360 keeps one dominant decision, bounded queues and mandatory huma
   const ui = read("src/components/company/CompanyBusinessMemory.tsx");
   const model = read("src/lib/company-intelligence.ts");
   assert.match(ui, /Decizie executivă/);
-  assert.match(ui, /De revizuit astăzi/);
-  assert.match(ui, /discoveryCandidates\.slice\(1, 5\)/);
+  assert.match(ui, /De reținut/);
+  assert.match(ui, /Bucle deschise/);
+  assert.doesNotMatch(ui, /De revizuit astăzi/);
   assert.match(ui, /\.slice\(0, 3\)/);
   assert.match(model, /recentEvidence[\s\S]*\.slice\(0, 3\)/);
   assert.match(model, /Verifică aprobarea/);

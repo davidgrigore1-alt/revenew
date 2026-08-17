@@ -6,13 +6,15 @@ import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { searchAppSections } from "@/lib/app-section-search";
+import type { CommercialSearchResponse, CommercialSearchResult } from "@/lib/commercial-search";
 import { cn } from "@/lib/utils";
-import { searchWorkspace, type WorkspaceSearchResult } from "@/lib/search/actions";
+import { searchWorkspace } from "@/lib/search/actions";
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [workspaceResults, setWorkspaceResults] = useState<WorkspaceSearchResult[]>([]);
+  const [workspaceResults, setWorkspaceResults] = useState<CommercialSearchResult[]>([]);
+  const [searchResponse, setSearchResponse] = useState<CommercialSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,6 +45,7 @@ export function GlobalSearch() {
     const normalized = query.trim();
     if (normalized.length < 2) {
       setWorkspaceResults([]);
+      setSearchResponse(null);
       setError("");
       setLoading(false);
       return;
@@ -51,6 +54,7 @@ export function GlobalSearch() {
     const timer = window.setTimeout(async () => {
       const response = await searchWorkspace(normalized);
       setWorkspaceResults(response.results);
+      setSearchResponse(response);
       setError(response.error ?? "");
       setLoading(false);
       setActiveIndex(0);
@@ -59,7 +63,11 @@ export function GlobalSearch() {
   }, [query]);
 
   const sectionResults = useMemo(() => searchAppSections(query), [query]);
-  const results = useMemo(() => [...sectionResults, ...workspaceResults], [sectionResults, workspaceResults]);
+  const structuredQuery = searchResponse && !["entity_search", "company_context"].includes(searchResponse.intent.kind);
+  const results = useMemo(
+    () => structuredQuery ? [...workspaceResults, ...sectionResults] : [...sectionResults, ...workspaceResults],
+    [sectionResults, structuredQuery, workspaceResults]
+  );
   const grouped = useMemo(() => {
     return results.reduce<Record<string, typeof results>>((groups, result) => {
       (groups[result.group] ??= []).push(result);
@@ -71,6 +79,7 @@ export function GlobalSearch() {
     setOpen(false);
     setQuery("");
     setWorkspaceResults([]);
+    setSearchResponse(null);
     setError("");
     window.setTimeout(() => triggerRef.current?.focus(), 0);
   }
@@ -108,7 +117,7 @@ export function GlobalSearch() {
                   if (event.key === "Enter" && results[activeIndex]) window.location.assign(results[activeIndex].href);
                 }}
                 className="h-14 min-h-14 min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 text-base shadow-none hover:border-transparent focus-visible:outline-none"
-                placeholder="Secțiune, companie, contact, oportunitate sau document"
+                placeholder="Companie, oportunitate sau întrebare comercială"
                 aria-label="Termen de căutare"
                 aria-controls="workspace-search-results"
               />
@@ -122,6 +131,12 @@ export function GlobalSearch() {
               {!loading && error ? <p role="alert" className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]">{sectionResults.length > 0 ? "Secțiunile produsului rămân disponibile. Căutarea în înregistrări nu a putut fi finalizată." : error}</p> : null}
               {!loading && !error && query.trim().length < 2 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Introdu cel puțin două caractere. Rezultatele sunt limitate la spațiul de lucru curent.</p> : null}
               {!loading && !error && query.trim().length >= 2 && results.length === 0 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu am găsit o secțiune sau o înregistrare accesibilă. Încearcă un termen precum „companii”, „audit” sau „ajutor”.</p> : null}
+              {!loading && !error && searchResponse && workspaceResults.length > 0 ? (
+                <div className="mb-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
+                  <p className="text-sm font-medium text-[rgb(var(--foreground))]">{searchResponse.summary}</p>
+                  <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Rezultate bazate pe datele accesibile din spațiul de lucru. Decizia rămâne la utilizator.</p>
+                </div>
+              ) : null}
               {!error || sectionResults.length > 0 ? Object.entries(grouped).map(([group, items]) => (
                 <div key={group} className="mb-4 last:mb-0">
                   <p className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">{group}</p>
@@ -141,6 +156,8 @@ export function GlobalSearch() {
                         >
                           <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{result.title}</span>
                           <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-muted))]">{result.context}</span>
+                          {"reason" in result ? <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce apare:</strong> {result.reason}</span> : null}
+                          {"evidence" in result && result.evidence[0] ? <span className="mt-0.5 block text-xs leading-5 text-[rgb(var(--text-faint))]">Dovadă: {result.evidence[0].label}</span> : null}
                         </Link>
                       );
                     })}
