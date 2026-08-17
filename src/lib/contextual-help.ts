@@ -52,9 +52,9 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
     keywords: ["dashboard", "control center", "prima", "verific", "decizie", "critic"],
     routes: ["/dashboard"],
     anchor: "dashboard-critical-decision",
-    shortAnswer: "Începe cu decizia critică: de ce contează acum, ce valoare este estimată, ce dovadă există și care este prima acțiune sigură.",
-    steps: ["Citește prioritatea principală.", "Separă valoarea estimată de venitul confirmat.", "Verifică dovada și informațiile lipsă.", "Deschide acțiunea sigură indicată."],
-    safetyNote: "Prioritatea este o recomandare explicată; decizia finală aparține echipei.",
+    shortAnswer: "Începe cu Brief-ul executiv: prioritatea principală, motivul, dovada și prima acțiune sigură. «Ce s-a schimbat» arată numai fapte comerciale înregistrate în ultimele 24 de ore.",
+    steps: ["Citește prioritatea principală.", "Separă valoarea estimată de venitul confirmat.", "Deschide dovezile și faptele de sprijin.", "Verifică acțiunea sigură indicată.", "Folosește registrul complet doar dacă ai nevoie de detalii suplimentare."],
+    safetyNote: "Prioritatea este calculată din înregistrări existente; faptele recente sunt distincte, iar decizia finală aparține echipei.",
     relatedQuestions: ["Ce înseamnă valoare estimată, neconfirmată?", "Unde văd dovezile?", "Cum verific o recomandare?"]
   },
   {
@@ -262,8 +262,8 @@ export const contextualHelpEntries: ContextualHelpEntry[] = [
 export const screenExplanationEntries: ContextualHelpEntry[] = [
   {
     id: "screen-dashboard", title: "Cum folosești Control Center", aliases: ["Explică această pagină"], keywords: [], routes: ["/dashboard"], anchor: "dashboard-critical-decision",
-    shortAnswer: "Ești în Control Center, punctul de pornire pentru riscurile și deciziile comerciale care cer atenție.",
-    steps: ["Unde te afli: în Control Center.", "Ce faci aici: identifici prioritatea zilei și dovada asociată.", "De ce contează: vezi rapid ce poate bloca progresul comercial.", "Ce verifici prima dată: decizia critică și separarea dintre valoarea estimată și venitul confirmat.", "Următorul pas sigur: deschide acțiunea recomandată și verific-o înainte de execuție."],
+    shortAnswer: "Ești în Control Center. Brief-ul executiv comprimă prioritățile active, schimbările comerciale din ultimele 24 de ore și activitatea atribuită ție.",
+    steps: ["Unde te afli: în Control Center.", "Ce faci aici: începi cu cel mult trei priorități deduplicate.", "De ce contează: vezi rapid blocajul, dovada și acțiunea sigură.", "Ce verifici prima dată: prioritatea principală și sursa ei; «Ce s-a schimbat» conține fapte înregistrate, nu recomandări.", "Următorul pas sigur: deschide înregistrarea indicată și verific-o înainte de execuție."],
     safetyNote: "Estimările rămân separate de venitul confirmat, iar decizia finală aparține echipei.",
     relatedQuestions: ["Ce verific prima dată pe Dashboard?", "Unde văd dovezile?", "Ce înseamnă valoare estimată, neconfirmată?"]
   },

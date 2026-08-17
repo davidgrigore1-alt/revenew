@@ -1,128 +1,142 @@
 import Link from "next/link";
-import { ArrowRightIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { PremiumPanel } from "@/components/dashboard/PremiumPanel";
+import { ArrowRightIcon, ClockIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import type { ExecutiveMorningBrief as ExecutiveMorningBriefModel, ExecutiveMorningBriefStatus } from "@/lib/executive-morning-brief";
-import type { OperationalIntelligenceRecommendation } from "@/lib/operational-intelligence";
+import type { ExecutiveBriefPriority, ExecutiveDailyBrief } from "@/lib/executive-morning-brief";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
-const statusTone: Record<ExecutiveMorningBriefStatus, BadgeTone> = {
+const severityTone: Record<ExecutiveBriefPriority["severity"], BadgeTone> = {
   critical: "danger",
   attention: "warning",
-  stable: "success",
-  incomplete: "neutral"
+  informative: "neutral"
 };
 
-const countLabels: Array<[keyof ExecutiveMorningBriefModel["counts"], string]> = [
-  ["overdueFollowUps", "follow-up-uri întârziate"],
-  ["pendingApprovals", "aprobări în așteptare"],
-  ["unresolvedSignals", "semnale nerezolvate"],
-  ["missingNextActions", "acțiuni următoare lipsă"],
-  ["missingOwners", "responsabili lipsă"],
-  ["missingPrimaryContacts", "contacte principale lipsă"]
-];
-
-export function ExecutiveMorningBrief({
-  brief,
-  pipelineValueRon,
-  confirmedRevenueRon,
-  recommendation
-}: {
-  brief: ExecutiveMorningBriefModel;
-  pipelineValueRon: number;
-  confirmedRevenueRon: number;
-  recommendation?: OperationalIntelligenceRecommendation | null;
-}) {
-  const visibleCounts = countLabels.filter(([key]) => brief.counts[key] > 0).slice(0, 4);
-
+function EvidenceList({ priority }: { priority: ExecutiveBriefPriority }) {
+  if (priority.evidence.length === 0) return <p className="text-xs text-[rgb(var(--text-muted))]">Dovada nu este încă disponibilă. Verifică înregistrarea înainte de decizie.</p>;
   return (
-    <PremiumPanel tone="emphasis" className="relative overflow-hidden p-5 sm:p-6 lg:p-7" aria-labelledby="executive-morning-brief-title">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[rgb(var(--brand-500)/0.09)] blur-3xl" />
-      <div className="relative">
+    <ul className="grid gap-2">
+      {priority.evidence.map((evidence) => (
+        <li key={`${evidence.sourceType}:${evidence.sourceId}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs leading-5">
+          <Link href={evidence.href} className="focus-ring rounded font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))] hover:underline">{evidence.label}</Link>
+          <span className="text-[rgb(var(--text-faint))]">{evidence.sourceTimestamp ? formatDate(evidence.sourceTimestamp) : "Dată indisponibilă"}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SecondaryPriority({ priority }: { priority: ExecutiveBriefPriority }) {
+  return (
+    <li className="grid gap-3 border-t border-[rgb(var(--border))] py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--brand-300))]">Brief executiv de dimineață</p>
-          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-[rgb(var(--text-faint))]" />
-          <time className="text-xs font-medium text-[rgb(var(--text-muted))]">{brief.dateLabel}</time>
-          <Badge tone={statusTone[brief.status]} size="small" className="sm:ml-auto">{brief.statusLabel}</Badge>
+          <Badge tone={severityTone[priority.severity]} size="small">{priority.kindLabel}</Badge>
+          <p className="font-semibold text-[rgb(var(--foreground))]">{priority.title}</p>
         </div>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{[priority.company, priority.opportunity, priority.reason].filter(Boolean).join(" · ")}</p>
+      </div>
+      <Link href={priority.safeAction.href} className="focus-ring inline-flex min-h-10 items-center gap-1 rounded-button text-sm font-semibold text-[rgb(var(--primary))] hover:underline">
+        {priority.safeAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </li>
+  );
+}
 
-        <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] xl:gap-8">
+export function ExecutiveMorningBrief({ brief }: { brief: ExecutiveDailyBrief | null }) {
+  if (!brief) {
+    return (
+      <section aria-labelledby="executive-brief-title" className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--text-muted))]">Brief executiv zilnic</p>
+        <h1 id="executive-brief-title" className="mt-2 text-xl font-semibold text-[rgb(var(--foreground))]">Briefingul nu a putut fi încărcat</h1>
+        <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Înregistrările comerciale rămân disponibile în paginile operaționale. Reîncarcă pagina înainte de a lua o decizie.</p>
+      </section>
+    );
+  }
+
+  const primary = brief.primaryPriority;
+  return (
+    <section aria-labelledby="executive-brief-title" className="rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgb(var(--border))] pb-4">
+        <div>
+          <p className="text-sm font-semibold text-[rgb(var(--text-secondary))]">{brief.salutation}</p>
+          <h1 id="executive-brief-title" className="mt-1 text-xl font-semibold tracking-[-0.025em] text-[rgb(var(--foreground))] sm:text-2xl">{brief.headline}</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">{brief.summary}</p>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--text-faint))]">
+          <ClockIcon className="h-4 w-4" aria-hidden="true" />{brief.period.label}
+        </div>
+      </header>
+
+      {brief.state === "ready" && primary ? (
+        <div className="grid gap-5 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.34fr)]">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[rgb(var(--text-muted))]">Control Center</p>
-            <h1 id="executive-morning-brief-title" className="mt-1 max-w-4xl text-2xl font-semibold tracking-[-0.03em] text-[rgb(var(--foreground))] sm:text-3xl">{brief.headline}</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))] sm:text-base">{brief.summary}</p>
-
-            {brief.bullets.length > 0 ? (
-              <ol className="mt-5 hidden gap-2.5 2xl:grid 2xl:grid-cols-3" aria-label="Primele decizii ale zilei">
-                {brief.bullets.map((item, index) => (
-                  <li key={item.id} className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.74)] p-3.5">
-                    <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Prioritatea {index + 1}</p>
-                    <p className="mt-1.5 text-sm font-semibold text-[rgb(var(--foreground))]">{item.title}</p>
-                    {item.context ? <p className="mt-1 truncate text-xs font-semibold text-[rgb(var(--text-secondary))]">{item.context}</p> : null}
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.detail}</p>
-                  </li>
-                ))}
-              </ol>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={severityTone[primary.severity]} size="small">{primary.kindLabel}</Badge>
+              <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">{primary.statusLabel}</span>
+            </div>
+            <h2 className="mt-3 text-lg font-semibold tracking-[-0.015em] text-[rgb(var(--foreground))] sm:text-xl">{primary.title}</h2>
+            {(primary.company || primary.opportunity) ? <p className="mt-1 text-sm font-semibold text-[rgb(var(--text-secondary))]">{[primary.company, primary.opportunity].filter(Boolean).join(" · ")}</p> : null}
+            <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce contează:</strong> {primary.whyItMatters}</p>
+            {primary.amount !== undefined && primary.currency ? (
+              <p className="mt-3 text-sm text-[rgb(var(--text-muted))]"><strong className="font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(primary.amount, primary.currency)}</strong> · valoare estimată, neconfirmată</p>
             ) : null}
-
-            {(visibleCounts.length > 0 || brief.estimatedExposedValueByCurrency.length > 0) ? (
-              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[rgb(var(--border))] pt-4 text-xs text-[rgb(var(--text-muted))]">
-                {visibleCounts.map(([key, label]) => <span key={key}><strong className="text-[rgb(var(--foreground))]">{brief.counts[key]}</strong> {label}</span>)}
-                {brief.estimatedExposedValueByCurrency.map(({ currency, value }) => (
-                  <span key={currency}><strong className="text-[rgb(var(--foreground))]">Valoare estimată expusă:</strong> {formatCurrency(value, currency)} · nu este venit confirmat</span>
-                ))}
+            <details className="group mt-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+              <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between rounded-card px-3 py-2 text-sm font-semibold text-[rgb(var(--foreground))] marker:hidden">
+                Dovezi și fapte de sprijin
+                <span className="text-xs font-medium text-[rgb(var(--text-muted))]">{primary.evidence.length} {primary.evidence.length === 1 ? "sursă" : "surse"}</span>
+              </summary>
+              <div className="border-t border-[rgb(var(--border))] px-3 py-3">
+                <EvidenceList priority={primary} />
+                {primary.supportingFacts.length > 1 ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Fapte asociate:</strong> {primary.supportingFacts.join(" · ")}</p> : null}
               </div>
-            ) : null}
-
-            <dl aria-label="Indicatori financiari esențiali" className="mt-4 hidden grid-cols-2 gap-px overflow-hidden rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid">
-              <div className="bg-[rgb(var(--surface)/0.78)] p-3.5">
-                <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-muted))]">Valoare estimată în pipeline · RON</dt>
-                <dd className="mt-1 text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(pipelineValueRon, "RON")}</dd>
-                <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Estimare activă, separată de valoarea expusă.</p>
-              </div>
-              <div className="bg-[rgb(var(--surface)/0.78)] p-3.5">
-                <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--success-text))]">Venit confirmat · RON</dt>
-                <dd className="mt-1 text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(confirmedRevenueRon, "RON")}</dd>
-                <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate declarate explicit.</p>
-              </div>
-            </dl>
+            </details>
           </div>
 
-          <aside className="rounded-card border border-[rgb(var(--brand-500)/0.28)] bg-[rgb(var(--surface)/0.86)] p-4 shadow-card sm:p-5" aria-label="Prima acțiune sigură">
-            <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--primary))]">Prima acțiune sigură</p>
-            <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em] text-[rgb(var(--foreground))]">{brief.primaryRisk}</h2>
-            <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{brief.whyItMatters}</p>
-
-            {recommendation ? (
-              <div className="mt-3 grid gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]">
-                <p><strong className="text-[rgb(var(--foreground))]">De ce acum:</strong> {recommendation.whyNow}</p>
-                <p><strong className="text-[rgb(var(--foreground))]">Forța dovezilor:</strong> {recommendation.evidenceStrengthLabel}</p>
-                <p><strong className="text-[rgb(var(--foreground))]">Ce lipsește:</strong> {recommendation.missingInformation[0] ?? "Nu a fost identificată o lipsă critică."}</p>
-              </div>
-            ) : null}
-
-            <Button href={brief.firstSafeActionHref} className="mt-4 w-full">{brief.firstSafeActionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
-
-            {brief.evidence ? (
-              <div className="mt-4 rounded-card bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]">
-                <p><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {brief.evidence.label}</p>
-                {brief.evidence.sourceTimestamp ? <p className="mt-1">Dovadă datată: {formatDate(brief.evidence.sourceTimestamp)}</p> : null}
-                <Link href={brief.evidence.href} className="focus-ring mt-2 inline-flex items-center gap-1 font-semibold text-[rgb(var(--primary))] hover:underline">Deschide dovada <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" /></Link>
-              </div>
-            ) : null}
-
+          <aside className="rounded-card border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface-subtle))] p-4" aria-label="Prima acțiune sigură">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Prima acțiune sigură</p>
+            <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{primary.reason}</p>
+            <Button href={primary.safeAction.href} className="mt-4 w-full">{primary.safeAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
             <div className="mt-4 flex gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]">
               <ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
-              <p>Aprobarea umană rămâne obligatorie. Nicio comunicare externă nu este trimisă fără acțiune și aprobare umană.</p>
+              <p>Decizia și orice acțiune externă rămân sub control uman.</p>
             </div>
-            <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[rgb(var(--border))] pt-3 text-xs font-semibold text-[rgb(var(--text-muted))]" aria-label="Navigare operațională secundară">
-              <Link href="/companies" className="focus-ring hover:text-[rgb(var(--foreground))]">Vezi companiile</Link>
-              <Link href="/recoverable" className="focus-ring hover:text-[rgb(var(--foreground))]">Vezi coada de recuperare</Link>
-            </nav>
           </aside>
         </div>
+      ) : (
+        <div className="pt-5">
+          <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">{brief.state === "clear" ? "Poți continua cu activitatea planificată sau verifica registrul complet." : "Adaugă sau actualizează oportunitățile și acțiunile pentru o prioritizare utilă."}</p>
+          <Button href={brief.state === "clear" ? "/today" : "/opportunities"} variant="secondary" size="small" className="mt-3">{brief.state === "clear" ? "Vezi activitatea mea" : "Vezi oportunitățile"}</Button>
+        </div>
+      )}
+
+      {brief.secondaryPriorities.length > 0 ? <ol className="mt-4">{brief.secondaryPriorities.map((priority) => <SecondaryPriority key={priority.id} priority={priority} />)}</ol> : null}
+      {(brief.hiddenPriorityCount > 0 || brief.state === "ready") ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--border))] pt-3 text-xs text-[rgb(var(--text-muted))]">
+          <span>{brief.hiddenPriorityCount > 0 ? `${brief.hiddenPriorityCount} priorități suplimentare rămân în registrul complet.` : "Prioritățile sunt deduplicate după oportunitatea comercială."}</span>
+          <Link href={brief.allPrioritiesHref} className="focus-ring rounded font-semibold text-[rgb(var(--primary))] hover:underline">Vezi toate prioritățile</Link>
+        </div>
+      ) : null}
+
+      <div className="mt-5 grid gap-4 border-t border-[rgb(var(--border))] pt-4 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <h2 className="text-sm font-semibold text-[rgb(var(--foreground))]">Ce s-a schimbat</h2>
+          {brief.recentChanges.length > 0 ? (
+            <ul className="mt-2 grid gap-2">
+              {brief.recentChanges.map((change) => (
+                <li key={change.id} className="text-xs leading-5 text-[rgb(var(--text-muted))]">
+                  {change.href ? <Link href={change.href} className="focus-ring rounded font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))] hover:underline">{change.label}</Link> : <strong className="text-[rgb(var(--foreground))]">{change.label}</strong>}
+                  <span> · {change.context} · {formatDate(change.occurredAt)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Nu există schimbări comerciale semnificative înregistrate în ultimele 24 de ore.</p>}
+        </div>
+        <div className="md:text-right">
+          <p className="text-xs font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Activitatea mea</p>
+          <p className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{brief.assignedTodaySummary.dueToday} azi · {brief.assignedTodaySummary.overdue} restante</p>
+          <Link href={brief.assignedTodaySummary.href} className="focus-ring mt-1 inline-flex min-h-8 items-center rounded text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Deschide activitatea mea</Link>
+        </div>
       </div>
-    </PremiumPanel>
+    </section>
   );
 }

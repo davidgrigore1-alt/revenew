@@ -126,8 +126,9 @@ test("dashboard provides direct entries to companies and the recovery queue", ()
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   const morningBrief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
   assert.match(dashboard, /<ExecutiveMorningBrief[\s\S]{0,120}brief=\{morningBrief\}/);
-  assert.match(morningBrief, /href="\/companies"[\s\S]{0,180}Vezi companiile/);
-  assert.match(morningBrief, /href="\/recoverable"[\s\S]{0,180}Vezi coada de recuperare/);
+  assert.match(morningBrief, /allPrioritiesHref/);
+  assert.match(morningBrief, /Vezi toate prioritățile/);
+  assert.match(morningBrief, /safeAction\.href/);
 });
 
 test("Company 360 connects each attention item to its evidence-backed source route", () => {

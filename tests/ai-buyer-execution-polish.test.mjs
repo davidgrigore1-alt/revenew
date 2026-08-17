@@ -5,21 +5,17 @@ import test from "node:test";
 
 const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8");
 
-test("dashboard keeps essential financial values visible and clearly separated", () => {
+test("dashboard keeps financial semantics visible without duplicating them in the executive brief", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   const brief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
 
-  assert.match(dashboard, /Indicatori financiari esențiali/);
-  assert.match(dashboard, /Valoare estimată în pipeline · RON/);
-  assert.match(dashboard, /Venit confirmat · RON/);
+  assert.match(dashboard, /Potențial urmărit · RON/);
+  assert.match(dashboard, /Câștigat confirmat · Luna curentă/);
   assert.match(dashboard, /summary\.metrics\.activePipelineValue/);
   assert.match(dashboard, /responseLoop\.confirmedRevenueRon/);
-  assert.match(dashboard, /pipelineValueRon=\{summary\.metrics\.activePipelineValue\}/);
-  assert.match(dashboard, /confirmedRevenueRon=\{responseLoop\.confirmedRevenueRon\}/);
-  assert.match(brief, /Valoare estimată expusă:/);
-  assert.match(brief, /aria-label="Indicatori financiari esențiali"/);
-  assert.match(brief, /nu este venit confirmat/);
-  assert.match(brief, /2xl:grid 2xl:grid-cols-3/);
+  assert.match(brief, /valoare estimată, neconfirmată/);
+  assert.doesNotMatch(brief, /pipelineValueRon|confirmedRevenueRon/);
+  assert.match(brief, /primaryPriority/);
 });
 
 test("Inbox places compact operational intelligence before the review forms", () => {

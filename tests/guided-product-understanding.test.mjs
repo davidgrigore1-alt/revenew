@@ -66,8 +66,10 @@ test("shared shell exposes first-run and replay guidance without changing server
 
 test("dashboard guidance preserves visible estimated and confirmed financial indicators", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
+  const brief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
   assert.match(dashboard, /<ContextualPageGuide showFlow \/>/);
-  assert.match(dashboard, /Valoare estimată în pipeline/);
-  assert.match(dashboard, /Venit confirmat/);
-  assert.match(dashboard, /separată de valoarea expusă și de venitul confirmat/);
+  assert.match(dashboard, /Potențial urmărit · RON/);
+  assert.match(dashboard, /Câștigat confirmat · Luna curentă/);
+  assert.match(dashboard, /Estimare activă; nu este venit confirmat/);
+  assert.match(brief, /valoare estimată, neconfirmată/);
 });

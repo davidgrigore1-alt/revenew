@@ -8,160 +8,102 @@ import vm from "node:vm";
 
 const nodeRequire = createRequire(import.meta.url);
 const cache = new Map();
-
-function read(relativePath) {
-  return fs.readFileSync(path.resolve(relativePath), "utf8");
-}
+const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8");
 
 function load(relativePath) {
   const filename = path.resolve(relativePath);
   if (cache.has(filename)) return cache.get(filename).exports;
-  const compiled = ts.transpileModule(read(relativePath), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-    fileName: filename
-  }).outputText;
+  const compiled = ts.transpileModule(read(relativePath), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true }, fileName: filename }).outputText;
   const module = { exports: {} };
   cache.set(filename, module);
-  vm.runInNewContext(compiled, {
-    exports: module.exports,
-    module,
-    Date,
-    Intl,
-    Object,
-    require: (id) => {
-      if (id === "server-only") return {};
-      if (id.startsWith("@/")) return load(path.join("src", id.slice(2)) + ".ts");
-      return nodeRequire(id);
-    }
-  }, { filename });
+  vm.runInNewContext(compiled, { exports: module.exports, module, Date, Intl, Object, Set, Map, require: (id) => id === "server-only" ? {} : id.startsWith("@/") ? load(path.join("src", id.slice(2)) + ".ts") : nodeRequire(id) }, { filename });
   return module.exports;
 }
 
 const { buildExecutiveMorningBrief } = load("src/lib/executive-morning-brief.ts");
 const now = new Date("2026-07-23T08:00:00.000Z");
-const decisionTypes = [
-  "overdue_follow_up",
-  "pending_approval",
-  "prepared_work_not_advanced",
-  "unresolved_signal",
-  "opportunity_without_next_action",
-  "opportunity_without_owner",
-  "company_without_primary_contact",
-  "inactive_active_opportunity",
-  "high_value_blocked_opportunity"
-];
-
-function counts(overrides = {}) {
-  return Object.fromEntries(decisionTypes.map((type) => [type, overrides[type] ?? 0]));
-}
-
-function queue(overrides = {}) {
-  return {
-    items: [],
-    totalCandidates: 0,
-    criticalCount: 0,
-    attentionCount: 0,
-    countsByType: counts(),
-    estimatedExposedValueByCurrency: {},
-    sourceState: "opportunities_available",
-    ...overrides
-  };
-}
-
-function item(overrides = {}) {
-  return {
-    id: "decision:overdue:action-1",
-    type: "overdue_follow_up",
-    title: "Follow-up întârziat",
-    reason: "Termen depășit.",
-    whyItMatters: "Oportunitatea poate pierde ritm comercial.",
-    severity: "critical",
-    actionLabel: "Revizuiește oportunitatea",
-    actionHref: "/opportunities/opportunity-1#workflow-actions",
-    evidence: [{ sourceType: "opportunity_action", sourceId: "action-1", sourceTimestamp: "2026-07-22T08:00:00.000Z", label: "Acțiunea restantă «Follow-up»", href: "/opportunities/opportunity-1#workflow-actions" }],
-    occurredAt: "2026-07-22T08:00:00.000Z",
-    statusLabel: "Restant",
-    ...overrides
-  };
-}
-
-test("brief severity and headline follow the decision queue instead of a parallel heuristic", () => {
-  const critical = buildExecutiveMorningBrief(queue({ items: [item()], criticalCount: 1, attentionCount: 3 }), { now });
-  assert.equal(critical.status, "critical");
-  assert.match(critical.headline, /^1 decizie critică poate bloca progresul comercial\.$/);
-
-  const attention = buildExecutiveMorningBrief(queue({ items: [item({ severity: "attention" })], attentionCount: 2 }), { now });
-  assert.equal(attention.status, "attention");
-  assert.match(attention.headline, /^2 priorități comerciale necesită revizuire astăzi\.$/);
-
-  const stable = buildExecutiveMorningBrief(queue(), { now });
-  assert.equal(stable.status, "stable");
-  assert.equal(stable.headline, "Nu există decizii critice acum.");
+const decisionTypes = ["overdue_follow_up", "pending_approval", "prepared_work_not_advanced", "unresolved_signal", "opportunity_without_next_action", "opportunity_without_owner", "company_without_primary_contact", "inactive_active_opportunity", "high_value_blocked_opportunity"];
+const counts = (overrides = {}) => Object.fromEntries(decisionTypes.map((type) => [type, overrides[type] ?? 0]));
+const queue = (overrides = {}) => ({ items: [], totalCandidates: 0, criticalCount: 0, attentionCount: 0, countsByType: counts(), estimatedExposedValueByCurrency: {}, sourceState: "opportunities_available", ...overrides });
+const item = (overrides = {}) => ({
+  id: "decision:overdue:action-1", type: "overdue_follow_up", title: "Follow-up întârziat", reason: "Termen depășit.", whyItMatters: "Oportunitatea poate pierde ritm comercial.", severity: "critical", relatedOpportunityId: "opportunity-1", relatedOpportunityTitle: "Extindere regională", relatedCompanyName: "Meridian", actionLabel: "Revizuiește oportunitatea", actionHref: "/opportunities/opportunity-1#workflow-actions", evidence: [{ sourceType: "opportunity_action", sourceId: "action-1", sourceTimestamp: "2026-07-22T08:00:00.000Z", label: "Acțiunea restantă", href: "/opportunities/opportunity-1#workflow-actions" }], occurredAt: "2026-07-22T08:00:00.000Z", statusLabel: "Restant", estimatedValue: 76000, currency: "RON", ...overrides
 });
 
-test("brief preserves the first safe action and its evidence", () => {
-  const top = item();
-  const brief = buildExecutiveMorningBrief(queue({ items: [top], criticalCount: 1 }), { now });
-  assert.equal(brief.firstSafeActionLabel, top.actionLabel);
-  assert.equal(brief.firstSafeActionHref, top.actionHref);
-  assert.equal(brief.evidence.sourceId, "action-1");
-  assert.equal(brief.topDecisionItemId, top.id);
+test("brief keeps the canonical order, shows at most three priorities and exposes one primary action", () => {
+  const items = Array.from({ length: 5 }, (_, index) => item({ id: `decision-${index}`, relatedOpportunityId: `opportunity-${index}`, title: `Prioritatea ${index + 1}` }));
+  const brief = buildExecutiveMorningBrief(queue({ items, totalCandidates: 5, criticalCount: 5 }), { now, viewerName: "Ana Popescu" });
+  assert.equal(brief.salutation, "Bună dimineața, Ana.");
+  assert.equal(brief.primaryPriority.title, "Prioritatea 1");
+  assert.equal(brief.secondaryPriorities.length, 2);
+  assert.equal(brief.hiddenPriorityCount, 2);
+  assert.equal(brief.primaryPriority.safeAction.href, items[0].actionHref);
 });
 
-test("counts and exposed estimates remain deterministic and currencies stay separate", () => {
-  const brief = buildExecutiveMorningBrief(queue({
-    countsByType: counts({ overdue_follow_up: 2, pending_approval: 3, opportunity_without_next_action: 1 }),
-    estimatedExposedValueByCurrency: { RON: 12500, EUR: 4000 }
-  }), { now });
-  assert.equal(brief.counts.overdueFollowUps, 2);
-  assert.equal(brief.counts.pendingApprovals, 3);
-  assert.equal(brief.counts.missingNextActions, 1);
-  assert.equal(brief.estimatedExposedValueByCurrency.length, 2);
-  assert.equal(brief.estimatedExposedValueByCurrency[0].currency, "EUR");
-  assert.equal(brief.estimatedExposedValueByCurrency[0].value, 4000);
-  assert.equal(brief.estimatedExposedValueByCurrency[1].currency, "RON");
-  assert.equal(brief.estimatedExposedValueByCurrency[1].value, 12500);
-  assert.equal("estimatedExposedValue" in brief, false);
+test("multiple blockers for one opportunity collapse into supporting facts without adding value", () => {
+  const brief = buildExecutiveMorningBrief(queue({ items: [item(), item({ id: "decision:owner:1", type: "opportunity_without_owner", title: "Oportunitate fără responsabil", reason: "Responsabil lipsă.", severity: "attention" })] }), { now });
+  assert.equal(brief.primaryPriority.title, "Follow-up întârziat");
+  assert.equal(brief.secondaryPriorities.length, 0);
+  assert.ok(brief.primaryPriority.supportingFacts.includes("Responsabil lipsă."));
+  assert.equal(brief.primaryPriority.amount, 76000);
+  assert.equal(brief.primaryPriority.currency, "RON");
+  assert.equal(brief.primaryPriority.valueKind, "estimated_unconfirmed");
 });
 
-test("only the top three evidence-backed decisions become executive bullets", () => {
-  const items = Array.from({ length: 5 }, (_, index) => item({
-    id: `decision-${index}`,
-    title: `Prioritatea ${index + 1}`,
-    relatedCompanyName: `Compania ${index + 1}`,
-    relatedOpportunityTitle: `Oportunitatea ${index + 1}`
-  }));
-  const brief = buildExecutiveMorningBrief(queue({ items, criticalCount: 5 }), { now });
-  assert.equal(brief.bullets.length, 3);
-  assert.equal(brief.bullets[0].id, "decision-0");
-  assert.equal(brief.bullets[0].context, "Compania 1 · Oportunitatea 1");
-  assert.equal(brief.bullets[2].id, "decision-2");
+test("pending approvals aggregate into one human decision while separate issues remain separate", () => {
+  const approval = (id) => item({ id, type: "pending_approval", title: "Aprobare în așteptare", relatedOpportunityId: `opportunity-${id}`, actionLabel: "Verifică aprobarea", actionHref: `/approvals?signal=${id}`, estimatedValue: undefined, currency: undefined });
+  const brief = buildExecutiveMorningBrief(queue({ items: [approval("a"), approval("b"), item({ id: "other", relatedOpportunityId: "other" })] }), { now });
+  assert.equal(brief.primaryPriority.title, "2 aprobări așteaptă decizie");
+  assert.equal(brief.primaryPriority.safeAction.href, "/approvals");
+  assert.equal(brief.secondaryPriorities.length, 1);
 });
 
-test("empty and partial workspaces receive honest safe fallbacks", () => {
+test("recent changes are meaningful, bounded to 24 hours and capped at three", () => {
+  const brief = buildExecutiveMorningBrief(queue({ items: [item()] }), {
+    now,
+    events: [
+      { id: "meaningful", type: "stage_changed", label: "Etapă actualizată", date: "2026-07-23T07:00:00.000Z", opportunityId: "opportunity-1" },
+      { id: "noise", type: "record_viewed", label: "Vizualizare", date: "2026-07-23T07:30:00.000Z", opportunityId: "opportunity-1" },
+      { id: "old", type: "stage_changed", label: "Schimbare veche", date: "2026-07-21T07:00:00.000Z", opportunityId: "opportunity-1" },
+      { id: "future", type: "stage_changed", label: "Schimbare viitoare", date: "2026-07-24T07:00:00.000Z", opportunityId: "opportunity-1" }
+    ],
+    actions: [{ id: "done", title: "Apel", description: "", status: "done", priority: "high", opportunityTitle: "Extindere", company: "Meridian", reason: "", estimatedValue: 0, currency: "RON", completedAt: "2026-07-23T06:00:00.000Z", opportunityId: "opportunity-1" }]
+  });
+  assert.equal(brief.recentChanges.length, 2);
+  assert.ok(brief.recentChanges.every((change) => !change.label.includes("Vizualizare") && !change.label.includes("veche") && !change.label.includes("viitoare")));
+});
+
+test("untrusted record text remains inert data and currencies are never combined", () => {
+  const unsafe = `<img src=x onerror=alert(1)>`;
+  const brief = buildExecutiveMorningBrief(queue({ items: [item({ title: unsafe, estimatedValue: 50000, currency: "EUR" })], estimatedExposedValueByCurrency: { EUR: 50000, RON: 76000 } }), { now });
+  assert.equal(brief.primaryPriority.title, unsafe);
+  assert.equal(brief.primaryPriority.amount, 50000);
+  assert.equal(brief.primaryPriority.currency, "EUR");
+  assert.deepEqual(Array.from(brief.estimatedExposedValueByCurrency, (entry) => entry.currency), ["EUR", "RON"]);
+  assert.doesNotMatch(read("src/components/dashboard/ExecutiveMorningBrief.tsx"), /dangerouslySetInnerHTML/);
+});
+
+test("clear, insufficient and compatibility states remain explicit", () => {
+  const clear = buildExecutiveMorningBrief(queue(), { now });
+  assert.equal(clear.state, "clear");
+  assert.equal(clear.status, "stable");
   const empty = buildExecutiveMorningBrief(queue({ sourceState: "empty_workspace" }), { now });
+  assert.equal(empty.state, "insufficient");
   assert.equal(empty.status, "incomplete");
-  assert.equal(empty.firstSafeActionLabel, "Adaugă primul semnal");
   assert.equal(empty.firstSafeActionHref, "/inbox?create=1");
-  assert.equal(empty.evidence, null);
-
-  const partial = buildExecutiveMorningBrief(queue({ sourceState: "signals_only" }), { now });
-  assert.equal(partial.status, "incomplete");
-  assert.equal(partial.firstSafeActionHref, "/inbox");
 });
 
-test("implementation stays server-only, deterministic and directly above the decision queue", () => {
+test("implementation is server-only, role-scoped in the dashboard and restrained in the UI", () => {
   const model = read("src/lib/executive-morning-brief.ts");
   const ui = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   assert.match(model, /import "server-only"/);
-  assert.doesNotMatch(model, /openai|anthropic|llm|fetch\s*\(|createSupabase|\.from\(/i);
-  assert.ok(dashboard.indexOf("<ExecutiveMorningBrief") < dashboard.indexOf("<WorkspaceDecisionQueue queue={decisionQueue} />"));
-  assert.match(ui, /Valoare estimată expusă:/);
-  assert.match(ui, /nu este venit confirmat/);
-  assert.match(ui, /Aprobarea umană rămâne obligatorie/);
-  assert.match(ui, /Bazat pe:/);
-  assert.match(ui, /hidden gap-2\.5 2xl:grid/);
-  assert.ok(ui.indexOf("<Button href={brief.firstSafeActionHref}") < ui.indexOf("{brief.evidence ?"));
-  assert.doesNotMatch(ui, /Continuă|Află mai multe|Explorează/);
+  assert.doesNotMatch(model, /openai|anthropic|llm|fetch\s*\(|createSupabase|supabase\.from\(/i);
+  assert.match(dashboard, /summary\.viewer\.isManager/);
+  assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
+  assert.ok(dashboard.indexOf("<ExecutiveMorningBrief") < dashboard.indexOf("<ContextualPageGuide"));
+  assert.match(ui, /Dovezi și fapte de sprijin/);
+  assert.match(ui, /valoare estimată, neconfirmată/);
+  assert.match(ui, /control uman/);
+  assert.match(ui, /Briefingul nu a putut fi încărcat/);
+  assert.doesNotMatch(ui, /blur-3xl|bg-gradient|Continuă|Află mai multe|Explorează/);
 });

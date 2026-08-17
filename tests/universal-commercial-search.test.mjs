@@ -95,7 +95,7 @@ test("structured opportunity results explain the match with source-backed eviden
   assert.match(response.results[0].reason, /responsabil/i);
   assert.ok(response.results[0].evidence.some((item) => /responsabil/i.test(item.label)));
   assert.match(response.results[0].context, /42\.000 RON/);
-  assert.match(response.results[0].context, /nu este venit confirmat/i);
+  assert.match(response.results[0].context, /valoare estimată, neconfirmată/i);
 });
 
 test("overdue, inactivity and amount claims stay deterministic", () => {
@@ -111,6 +111,47 @@ test("overdue, inactivity and amount claims stay deterministic", () => {
   const amount = search.executeCommercialSearch(search.parseCommercialSearchIntent("oferta 42000 RON"), { opportunities: [item] }, { now });
   assert.equal(amount.results[0].amount, 42000);
   assert.equal(amount.results[0].currency, "RON");
+});
+
+test("amount-only queries normalize Romanian business formats without misclassifying dates or durations", () => {
+  for (const query of ["76000", "76.000", "76 000", "76000 RON", "76.000 RON", "76000 EUR", "76.000 EUR", "oferta 76000", "oferta de 76000", "oportunitate 76000", "valoare 76000"]) {
+    assert.equal(search.parseCommercialSearchIntent(query).kind, "amount", query);
+    assert.equal(search.parseCommercialSearchIntent(query).amount?.value, 76000, query);
+  }
+  const threshold = search.parseCommercialSearchIntent("peste 50.000 RON");
+  assert.equal(threshold.kind, "amount");
+  assert.equal(threshold.amount?.operator, "gte");
+  assert.equal(threshold.amount?.value, 50000);
+  assert.equal(threshold.amount?.currency, "RON");
+
+  const days = search.parseCommercialSearchIntent("14 zile");
+  assert.equal(days.kind, "inactivity");
+  assert.equal(days.inactivityDays, 14);
+  for (const query of ["2026", "14.08.2026", "0722 123 456", "id 76000"]) {
+    assert.notEqual(search.parseCommercialSearchIntent(query).kind, "amount", query);
+  }
+});
+
+test("amount search returns every authorized exact match and keeps currencies explicit", () => {
+  const ron = opportunity({ id: "ron-1", title: "Vector RON", estimatedValueHigh: 76000, currency: "RON" });
+  const ronSecond = opportunity({ id: "ron-2", title: "Altă oportunitate RON", estimatedValueHigh: 76000, currency: "RON" });
+  const eur = opportunity({ id: "eur-1", title: "Vector EUR", estimatedValueHigh: 76000, currency: "EUR" });
+  const all = search.executeCommercialSearch(search.parseCommercialSearchIntent("76000"), { opportunities: [ron, ronSecond, eur] });
+  assert.equal(all.results.length, 3);
+  assert.deepEqual(Array.from(new Set(all.results.map((result) => result.currency))).sort(), ["EUR", "RON"]);
+  assert.ok(all.results.every((result) => /valoare estimată, neconfirmată/i.test(result.context)));
+  assert.ok(all.results.every((result) => /Valoare estimată:/i.test(result.evidence[0].label)));
+
+  const ronOnly = search.executeCommercialSearch(search.parseCommercialSearchIntent("76000 RON"), { opportunities: [ron, eur] });
+  assert.equal(ronOnly.results.length, 1);
+  assert.equal(ronOnly.results[0].currency, "RON");
+});
+
+test("amount search safely falls back when no authorized record matches", () => {
+  const response = search.executeCommercialSearch(search.parseCommercialSearchIntent("99999999"), { opportunities: [opportunity()] });
+  assert.equal(response.results.length, 0);
+  assert.equal(response.insufficientData, true);
+  assert.match(response.summary, /Nu am suficiente date/i);
 });
 
 test("unknown and incomplete data produce an honest response", () => {

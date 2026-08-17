@@ -70,7 +70,7 @@ export function AskReveNew() {
                           <p className="truncate text-sm font-semibold">{result.title}</p>
                           <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">{result.context}</p>
                         </div>
-                        <Link href={result.href} className="focus-ring inline-flex shrink-0 items-center gap-1 rounded-button px-2 py-1 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--surface-muted))]">Deschide <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" /></Link>
+                        <Link href={result.href} className="focus-ring inline-flex shrink-0 items-center gap-1 rounded-button px-2 py-1 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--surface-muted))]">{result.entityType === "opportunity" ? "Deschide oportunitatea" : "Deschide"} <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" /></Link>
                       </div>
                       <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce apare:</strong> {result.reason}</p>
                       <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Dovezi:</strong> {result.evidence[0]?.label ?? "Nu există suficiente dovezi în datele disponibile."}</p>

@@ -7,7 +7,6 @@ import {
   ExclamationTriangleIcon,
   UserCircleIcon
 } from "@heroicons/react/24/outline";
-import { ActivityFeed, type ActivityFeedItem } from "@/components/dashboard/ActivityFeed";
 import { AiBusinessAnalyst } from "@/components/dashboard/AiBusinessAnalyst";
 import { AttentionSummary } from "@/components/dashboard/AttentionSummary";
 import { DashboardSection } from "@/components/dashboard/DashboardSection";
@@ -20,14 +19,13 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { PremiumPanel } from "@/components/dashboard/PremiumPanel";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { WorkspaceDecisionQueue } from "@/components/dashboard/WorkspaceDecisionQueue";
 import { Button } from "@/components/ui/Button";
+import { getCurrentProfile } from "@/lib/auth/profile";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { getCommercialResponseSummary } from "@/lib/commercial-response-summary";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 import { buildExecutiveMorningBrief } from "@/lib/executive-morning-brief";
-import { buildOperationalRecommendation } from "@/lib/operational-intelligence";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import type { Opportunity } from "@/lib/types";
@@ -35,11 +33,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
 
 export const dynamic = "force-dynamic";
-
-function activityDate(value?: string) {
-  if (!value) return "Dată indisponibilă";
-  return new Intl.DateTimeFormat("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-}
 
 function companyForOpportunity(opportunity: Opportunity) {
   return opportunity.contact?.company ?? opportunity.contacts?.[0]?.contact.organization?.name ?? "Companie neconfirmată";
@@ -57,11 +50,12 @@ function compactEmpty(title: string, description: string, href?: string, actionL
 
 export default async function DashboardPage() {
   try {
-    const [summary, ingestion, followUp, responseLoop] = await Promise.all([
+    const [summary, ingestion, followUp, responseLoop, currentProfile] = await Promise.all([
       getRevenueWorkspaceSummary(),
       getCommercialIngestionSummary(),
       getFollowUpWorkspaceSummary(),
-      getCommercialResponseSummary()
+      getCommercialResponseSummary(),
+      getCurrentProfile()
     ]);
 
     const activeSignals = summary.signals.filter((signal) => !signal.convertedOpportunityId && !["converted", "dismissed", "duplicate", "ignored", "archived"].includes(signal.status));
@@ -72,20 +66,36 @@ export default async function DashboardPage() {
     const urgentActionCount = summary.workQueue.overdue.length + summary.workQueue.dueToday.length;
     const attentionCount = summary.warnings.attention.length;
     const highRiskCount = summary.warnings.highValueAtRisk.length;
-    const opportunityById = new Map(summary.opportunities.map((opportunity) => [opportunity.id, opportunity]));
-    const decisionQueue = buildWorkspaceDecisionQueue({ opportunities: summary.opportunities, signals: summary.signals });
-    const morningBrief = buildExecutiveMorningBrief(decisionQueue);
-    const primaryRecommendation = decisionQueue.items[0]
-      ? buildOperationalRecommendation(decisionQueue.items[0])
-      : null;
-
-    const activityItems: ActivityFeedItem[] = summary.events.slice(0, 7).map((event) => ({
-      id: event.id,
-      title: event.label,
-      detail: event.opportunityId ? opportunityById.get(event.opportunityId)?.title ?? "Oportunitate din spațiul de lucru" : "Activitate din spațiul de lucru",
-      timestamp: activityDate(event.date),
-      href: event.opportunityId ? `/opportunities/${event.opportunityId}` : undefined
-    }));
+    const briefOpportunities = summary.viewer.isManager
+      ? summary.opportunities
+      : summary.opportunities.filter((opportunity) => opportunity.ownerProfileId === summary.viewer.profileId);
+    const briefOpportunityIds = new Set(briefOpportunities.map((opportunity) => opportunity.id));
+    const briefSignals = summary.viewer.isManager
+      ? summary.signals
+      : summary.signals.filter((signal) => Boolean(
+        (signal.detectedFromOpportunityId && briefOpportunityIds.has(signal.detectedFromOpportunityId))
+        || (signal.convertedOpportunityId && briefOpportunityIds.has(signal.convertedOpportunityId))
+      ));
+    const briefActions = summary.viewer.isManager
+      ? summary.actions
+      : summary.actions.filter((action) => action.assignedToProfileId === summary.viewer.profileId || Boolean(action.opportunityId && briefOpportunityIds.has(action.opportunityId)));
+    const briefEvents = summary.viewer.isManager
+      ? summary.events
+      : summary.events.filter((event) => Boolean(event.opportunityId && briefOpportunityIds.has(event.opportunityId)));
+    const decisionQueue = buildWorkspaceDecisionQueue({ opportunities: briefOpportunities, signals: briefSignals }, { limit: 20 });
+    let morningBrief = null;
+    try {
+      morningBrief = buildExecutiveMorningBrief(decisionQueue, {
+        viewerName: currentProfile.profile?.full_name,
+        scope: summary.viewer.isManager ? "management" : "individual",
+        actions: briefActions,
+        events: briefEvents,
+        signals: briefSignals,
+        assignedToday: { dueToday: summary.workQueue.dueToday.length, overdue: summary.workQueue.overdue.length }
+      });
+    } catch (briefError) {
+      console.error("Executive daily brief error", briefError);
+    }
 
     const secondaryMetrics = [
       { label: "Câștigat confirmat · Luna curentă", value: formatCurrency(summary.metrics.wonRevenue, "RON"), detail: "Valori efective înregistrate în RON; estimările sunt excluse.", tone: "gold" as const },
@@ -108,31 +118,11 @@ export default async function DashboardPage() {
       <main className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 py-6 pb-24 sm:px-6 sm:py-7 lg:px-8 lg:pb-10">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
 
-        <ContextualPageGuide showFlow />
-
         <div data-guide-anchor="dashboard-critical-decision">
-          <ExecutiveMorningBrief
-            brief={morningBrief}
-            pipelineValueRon={summary.metrics.activePipelineValue}
-            confirmedRevenueRon={responseLoop.confirmedRevenueRon}
-            recommendation={primaryRecommendation}
-          />
+          <ExecutiveMorningBrief brief={morningBrief} />
         </div>
 
-        <section aria-label="Indicatori financiari esențiali pentru mobil" className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] shadow-card sm:hidden">
-          <div className="bg-[rgb(var(--surface))] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--text-muted))]">Valoare estimată în pipeline · RON</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(summary.metrics.activePipelineValue, "RON")}</p>
-            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Oportunități active; estimare separată de valoarea expusă și de venitul confirmat.</p>
-          </div>
-          <div className="bg-[rgb(var(--surface))] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--success-text))]">Venit confirmat · RON</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(responseLoop.confirmedRevenueRon, "RON")}</p>
-            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai rezultate declarate explicit; nu include estimări sau drafturi aprobate.</p>
-          </div>
-        </section>
-
-        <WorkspaceDecisionQueue queue={decisionQueue} />
+        <ContextualPageGuide showFlow />
 
         <details className="group rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
           <summary className="focus-ring flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-button px-1 marker:hidden">
@@ -161,8 +151,13 @@ export default async function DashboardPage() {
         </section>
 
         <div className="grid gap-8 xl:grid-cols-12">
-          <DashboardSection className="xl:col-span-8" title="Oportunități urgente și stale" description="Listă ordonată determinist după severitate, valoare și ultima schimbare." action={<Button href="/opportunities" variant="ghost" size="small">Toate oportunitățile <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
-            <div className="overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
+          <DashboardSection className="xl:col-span-8" title="Registru de excepții" description="Detaliul complet rămâne disponibil fără să repete briefingul executiv." action={<Button href="/opportunities" variant="ghost" size="small">Toate oportunitățile <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}>
+            <details className="group overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
+              <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 marker:hidden">
+                <span className="font-semibold text-[rgb(var(--foreground))]">Vezi oportunitățile care necesită atenție</span>
+                <span className="text-xs font-medium text-[rgb(var(--text-muted))]">{summary.warnings.attention.length} înregistrări</span>
+              </summary>
+              <div className="border-t border-[rgb(var(--border))]">
               {summary.warnings.attention.length > 0 ? (
                 <ul className="divide-y divide-[rgb(var(--border))]">
                   {summary.warnings.attention.slice(0, 7).map(({ opportunity, assessment }) => (
@@ -190,7 +185,8 @@ export default async function DashboardPage() {
               ) : summary.opportunities.length === 0
                 ? compactEmpty("Nicio oportunitate aprobată încă", "Oportunitățile apar după ce un semnal este analizat, revizuit și aprobat de un utilizator.", "/inbox", "Revizuiește semnalele")
                 : compactEmpty("Pipeline fără excepții active", "Nu există oportunități marcate pentru intervenție în datele accesibile.", "/opportunities", "Vezi oportunitățile")}
-            </div>
+              </div>
+            </details>
           </DashboardSection>
 
           <div className="grid gap-8 xl:col-span-4">
@@ -202,12 +198,6 @@ export default async function DashboardPage() {
                   { label: "Fără contact principal", value: summary.warnings.withoutPrimaryContact.length, tone: "neutral", href: "/companies" },
                   { label: "Fără responsabil", value: summary.viewer.isManager ? summary.warnings.unassigned.length : 0, tone: "brand", href: summary.viewer.isManager ? "/pipeline" : undefined }
                 ]} />
-              </PremiumPanel>
-            </DashboardSection>
-
-            <DashboardSection title="Activitate relevantă" description="Evenimente comerciale recente din spațiul de lucru.">
-              <PremiumPanel className="px-4 py-1">
-                <ActivityFeed items={activityItems} empty={compactEmpty("Fără activitate recentă", "Evenimentele comerciale vor apărea aici după actualizarea fluxurilor de lucru.")} />
               </PremiumPanel>
             </DashboardSection>
           </div>

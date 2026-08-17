@@ -86,7 +86,8 @@ function opportunityContext(opportunity: Opportunity) {
 function signalContext(signal: CommercialSignal) {
   return {
     relatedCompanyId: signal.matchedOrganizationId ?? undefined,
-    relatedCompanyName: signal.contactCompany ?? undefined
+    relatedCompanyName: signal.contactCompany ?? undefined,
+    relatedOpportunityId: signal.detectedFromOpportunityId ?? signal.convertedOpportunityId ?? undefined
   };
 }
 

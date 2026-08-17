@@ -117,6 +117,27 @@ function parseAmountValue(value: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function looksLikeCalendarDate(value: string) {
+  return /^(?:\d{1,2}[./-]){2}\d{2,4}$/.test(value) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(value);
+}
+
+function amountCandidateFor(query: string) {
+  const amountLanguage = /\b(valoare|oferta|oferte|oportunitate|oportunitati|proiect|proiecte|peste|minim|cel putin|mai (?:mare|mari)|ron|eur|usd)\b/.test(query);
+  const bareAmount = /^(?:\d{4,8}|\d{1,3}(?:[.]\d{3})+|\d{1,3}(?:\s\d{3})+)(?:\s+(?:ron|eur|usd))?$/.test(query);
+  if (!amountLanguage && !bareAmount) return null;
+  if (/\b(?:zile?|saptamani?|luni?|ani?|telefon|tel|id|cod)\b/.test(query)) return null;
+
+  const match = query.match(/\b\d[\d\s.,]*\b/);
+  if (!match) return null;
+  const token = match[0].trim();
+  const digits = token.replace(/\D/g, "");
+  if (looksLikeCalendarDate(token) || digits.length >= 9) return null;
+  const value = parseAmountValue(token);
+  if (!value || value < 1_000) return null;
+  if (!amountLanguage && /^\d{4}$/.test(token) && value >= 1_900 && value <= 2_100) return null;
+  return value;
+}
+
 function entityTypesFor(query: string): CommercialSearchEntityType[] {
   const types: CommercialSearchEntityType[] = [];
   if (/\b(companie|companii|firma|firme|client|clienti|organizatie|organizatii)\b/.test(query)) types.push("company");
@@ -140,10 +161,9 @@ export function parseCommercialSearchIntent(rawValue: string): CommercialSearchI
   const normalizedQuery = normalizeCommercialQuery(rawQuery);
   const entityTypes = entityTypesFor(normalizedQuery);
   const companyContext = /^ce\s+(?:stim|stii)\s+(?:noi\s+)?despre\b/.test(normalizedQuery);
-  const inactivityMatch = /(?:fara|nu (?:au|a fost))\s+(?:activitate|contact|raspuns|sa fie atins\w*|sa fie contactat\w*)[^0-9]{0,24}(\d{1,3})\s*(?:de\s*)?zile?/.exec(normalizedQuery);
-  const amountLanguage = /\b(valoare|oferta|oportunitate|oportunitati|peste|minim|ron|eur|usd)\b/.test(normalizedQuery);
-  const amountMatch = amountLanguage ? normalizedQuery.match(/\b\d[\d\s.,]*\b/) : null;
-  const amountValue = amountMatch ? parseAmountValue(amountMatch[0]) : null;
+  const inactivityMatch = /(?:fara|nu (?:au|a fost))\s+(?:activitate|contact|raspuns|sa fie atins\w*|sa fie contactat\w*)[^0-9]{0,24}(\d{1,3})\s*(?:de\s*)?zile?/.exec(normalizedQuery)
+    ?? /^(\d{1,3})\s*(?:de\s*)?zile?$/.exec(normalizedQuery);
+  const amountValue = amountCandidateFor(normalizedQuery);
   const currency = normalizedQuery.match(/\b(RON|EUR|USD)\b/i)?.[1]?.toUpperCase();
 
   let kind: CommercialSearchIntentKind = "entity_search";
@@ -201,18 +221,19 @@ function resultForOpportunity(
 ): CommercialSearchResult {
   const currency = opportunity.currency ?? "RON";
   const amount = Number(opportunity.estimatedValueHigh ?? 0);
-  const amountContext = amount > 0 ? ` · ${formatAmount(amount, currency)} · valoare estimată, nu este venit confirmat` : "";
+  const companyName = opportunityCompany(opportunity);
+  const amountContext = amount > 0 ? `${formatAmount(amount, currency)} · valoare estimată, neconfirmată` : "Valoare neconfirmată";
   return {
     id: opportunity.id,
     entityType: "opportunity",
     group: "Oportunități",
     title: opportunity.title,
-    context: `Oportunitate · ${opportunity.status}${amountContext}`,
+    context: [companyName, `Status: ${opportunity.status}`, amountContext].filter(Boolean).join(" · "),
     href: `/opportunities/${opportunity.id}`,
     reason,
     status: opportunity.status,
     ...(amount > 0 ? { amount, currency } : {}),
-    ...(opportunityCompany(opportunity) ? { companyName: opportunityCompany(opportunity) } : {}),
+    ...(companyName ? { companyName } : {}),
     evidence,
     missingInformation: missingInformation(opportunity, hasNextAction)
   };
