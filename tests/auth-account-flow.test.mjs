@@ -12,7 +12,7 @@ function normalizeNewlines(value) {
   return value.replace(/\r\n?/g, "\n");
 }
 
-function loadTsModule(relativePath) {
+function loadTsModule(relativePath, aliases = {}) {
   const filename = path.resolve(relativePath);
   const source = fs.readFileSync(filename, "utf8");
   const compiled = ts.transpileModule(source, {
@@ -32,7 +32,7 @@ function loadTsModule(relativePath) {
       URL,
       exports: module.exports,
       module,
-      require: (id) => nodeRequire(id)
+      require: (id) => aliases[id] ?? nodeRequire(id)
     },
     { filename }
   );
@@ -40,7 +40,8 @@ function loadTsModule(relativePath) {
   return module.exports;
 }
 
-const redirects = loadTsModule("src/lib/auth/redirects.ts");
+const browserOrigin = loadTsModule("src/lib/browser-origin.ts");
+const redirects = loadTsModule("src/lib/auth/redirects.ts", { "@/lib/browser-origin": browserOrigin });
 
 test("auth intents are typed and invalid values fall back safely", () => {
   assert.equal(redirects.sanitizeAuthIntent("audit"), "audit");
@@ -244,11 +245,12 @@ test("account-choice UI uses a real bootstrap link and server-side switch", () =
 test("bootstrap routes authenticated accounts deterministically", () => {
   const source = fs.readFileSync(path.resolve("src/app/auth/bootstrap/route.ts"), "utf8");
 
-  assert.equal(source.includes('new URL("/login", request.url)'), true, "anonymous users still go to login");
+  assert.equal(source.includes('browserSafeRedirectUrl(request.url, "/login")'), true, "anonymous users still go to login through the safe origin boundary");
   assert.equal(source.includes("/auth/recover-session?next=/login?reason=session_expired"), true, "stale sessions still recover");
   assert.equal(source.includes('state.status === "authenticated_profile_no_business"'), true);
-  assert.equal(source.includes('new URL("/onboarding", request.url)'), true);
-  assert.equal(source.includes('safeInternalRedirect(state.safeNextPath, "/dashboard")'), true);
+  assert.equal(source.includes('browserSafeRedirectUrl(request.url, "/onboarding")'), true);
+  assert.equal(source.includes('browserSafeRedirectUrl(request.url, state.safeNextPath, "/dashboard")'), true);
+  assert.equal(/new URL\([^\n]*request\.url/.test(source), false, "bind origins must not flow directly into browser redirects");
   assert.equal(source.includes('"/login?reason=auth_unavailable"'), false, "valid authenticated bootstrap failures must not bounce to login");
   assert.equal(source.includes("/auth/bootstrap/retry"), true, "temporary or unexpected failures use retry state");
 });

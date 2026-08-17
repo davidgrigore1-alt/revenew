@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAuthState } from "@/lib/auth/auth-state";
-import { sanitizeAuthIntent, safeInternalRedirect } from "@/lib/auth/redirects";
+import { browserSafeRedirectUrl, sanitizeAuthIntent } from "@/lib/auth/redirects";
 
 function retryUrl(request: NextRequest, reason: string) {
-  return new URL(`/auth/bootstrap/retry?reason=${encodeURIComponent(reason)}`, request.url);
+  return browserSafeRedirectUrl(request.url, `/auth/bootstrap/retry?reason=${encodeURIComponent(reason)}`);
 }
 
 export async function GET(request: NextRequest) {
@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
   const state = await resolveAuthState({ includeProfile: true, includeBusiness: true, intent });
 
   if (state.status === "anonymous") {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(browserSafeRedirectUrl(request.url, "/login"));
   }
 
   if (state.status === "stale_session") {
-    return NextResponse.redirect(new URL("/auth/recover-session?next=/login?reason=session_expired", request.url));
+    return NextResponse.redirect(browserSafeRedirectUrl(request.url, "/auth/recover-session?next=/login?reason=session_expired"));
   }
 
   if (state.status === "temporary_auth_failure") {
@@ -34,12 +34,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (state.status === "authenticated_unconfirmed") {
-    return NextResponse.redirect(new URL("/verify-email", request.url));
+    return NextResponse.redirect(browserSafeRedirectUrl(request.url, "/verify-email"));
   }
 
   if (state.status === "authenticated_profile_no_business") {
-    return NextResponse.redirect(new URL("/onboarding", request.url));
+    return NextResponse.redirect(browserSafeRedirectUrl(request.url, "/onboarding"));
   }
 
-  return NextResponse.redirect(new URL(safeInternalRedirect(state.safeNextPath, "/dashboard"), request.url));
+  return NextResponse.redirect(browserSafeRedirectUrl(request.url, state.safeNextPath, "/dashboard"));
 }

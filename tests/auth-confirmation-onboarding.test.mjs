@@ -27,7 +27,8 @@ function compileTs(relativePath, aliases = {}) {
   return module.exports;
 }
 
-const redirects = compileTs("src/lib/auth/redirects.ts");
+const browserOrigin = compileTs("src/lib/browser-origin.ts");
+const redirects = compileTs("src/lib/auth/redirects.ts", { "@/lib/browser-origin": browserOrigin });
 const confirmation = compileTs("src/lib/auth/confirmation.ts", { "@/lib/auth/redirects": redirects });
 const searchable = compileTs("src/lib/forms/searchable-options.ts");
 

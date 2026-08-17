@@ -1,3 +1,5 @@
+import { safeBrowserOrigin } from "@/lib/browser-origin";
+
 export const authIntents = ["audit", "create_account", "login", "preview", "select_plan"] as const;
 
 export type AuthIntent = (typeof authIntents)[number];
@@ -8,6 +10,7 @@ const safeRedirectPaths = [
   "/access",
   "/approvals",
   "/auth/bootstrap",
+  "/auth/callback",
   "/auth/logout",
   "/auth/recover-session",
   "/auth/switch-account",
@@ -64,6 +67,10 @@ export function safeInternalRedirect(value: unknown, fallback = "/dashboard") {
   }
 
   return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+}
+
+export function browserSafeRedirectUrl(requestUrl: string, value: unknown, fallback = "/dashboard") {
+  return new URL(safeInternalRedirect(value, fallback), safeBrowserOrigin(requestUrl));
 }
 
 export function destinationForAuthIntent(intent: AuthIntent, postBusinessDestination: string | null) {

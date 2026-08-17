@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { AuthNotice } from "@/components/auth/AuthNotice";
+import { authConfirmationRedirectUrl } from "@/lib/auth/confirmation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 
@@ -24,7 +25,7 @@ export function ForgotPasswordForm() {
 
     if (supabase) {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`
+        redirectTo: authConfirmationRedirectUrl(window.location.origin, "/reset-password")
       });
 
       if (resetError && resetError.status === 429) {

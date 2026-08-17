@@ -1,5 +1,5 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { safeInternalRedirect } from "@/lib/auth/redirects";
+import { browserSafeRedirectUrl, safeInternalRedirect } from "@/lib/auth/redirects";
 
 const supportedEmailOtpTypes = new Set<EmailOtpType>(["email", "email_change", "invite", "magiclink", "recovery", "signup"]);
 
@@ -26,5 +26,5 @@ export function getAuthConfirmationInput(searchParams: URLSearchParams): AuthCon
 
 export function authConfirmationRedirectUrl(origin: string, next = "/onboarding") {
   const safeNext = safeInternalRedirect(next, "/onboarding");
-  return `${origin.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent(safeNext)}`;
+  return browserSafeRedirectUrl(origin, `/auth/callback?next=${encodeURIComponent(safeNext)}`, "/auth/callback").toString();
 }
