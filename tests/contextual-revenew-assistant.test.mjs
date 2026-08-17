@@ -111,14 +111,16 @@ test("unknown questions fail safely without invented answers", () => {
   assert.equal(shortKeywordCollision.matched, false);
   assert.equal(shortKeywordCollision.entry, null);
 
-  const assistant = read("src/components/guidance/ContextualAssistant.tsx");
-  assert.match(assistant, /Nu am găsit încă un răspuns sigur în ghidul produsului\./);
-  assert.match(assistant, /nu completează răspunsul prin presupuneri/i);
-  assert.doesNotMatch(assistant, /întreabă orice/i);
+  const validation = read("src/lib/ai/copilot-validation.ts");
+  const instructions = read("src/lib/ai/copilot-instructions.ts");
+  assert.match(validation, /Nu am suficiente informații în ReveNew pentru a confirma asta\./);
+  assert.match(instructions, /Nu inventezi identificatori, rute, citări sau fapte/);
+  assert.doesNotMatch(instructions, /întreabă orice/i);
 });
 
-test("assistant is accessible, local, actionable and keeps the existing tour replay", () => {
+test("assistant is accessible, evidence-grounded, actionable and keeps the existing tour replay", () => {
   const assistant = read("src/components/guidance/ContextualAssistant.tsx");
+  const conversation = read("src/components/intelligence/CopilotConversation.tsx");
   const shell = read("src/components/dashboard/AppShell.tsx");
   const header = read("src/components/dashboard/AppHeader.tsx");
   const tour = read("src/components/guidance/GuidedProductTour.tsx");
@@ -129,18 +131,15 @@ test("assistant is accessible, local, actionable and keeps the existing tour rep
   assert.match(assistant, /role="dialog"/);
   assert.match(assistant, /aria-modal="true"/);
   assert.match(assistant, /event\.key === "Escape"/);
-  assert.match(assistant, /Întreabă cum folosești ReveNew/);
-  assert.doesNotMatch(assistant, /Du-mă acolo/);
-  assert.match(assistant, /Ești deja aici/);
-  assert.match(assistant, /Deschide pagina/);
-  assert.match(assistant, /Arată zona relevantă/);
-  assert.match(assistant, /Arată-mi zona/);
+  assert.match(conversation, /Întreabă despre datele comerciale disponibile/);
+  assert.match(conversation, /Dovezi ·/);
+  assert.match(conversation, /Ce nu pot confirma/);
   assert.match(assistant, /Revezi turul introductiv/);
   assert.match(assistant, /Resetează ghidurile închise/);
-  assert.match(assistant, /Pagina este deschisă\. Zona nu este disponibilă în starea curentă/);
   assert.doesNotMatch(assistant, /notice \? <p className="sr-only"/);
   assert.match(tour, /revenew:replay-product-guide/);
-  assert.doesNotMatch(assistant, /fetch\(|OpenAI|createClient|supabase|streaming|thinking/i);
+  assert.match(conversation, /fetch\("\/api\/ai\/copilot"/);
+  assert.doesNotMatch(assistant + conversation, /OpenAI|createClient|supabase|streaming|thinking/i);
 });
 
 test("navigation uses explicit stable anchors and a temporary namespaced highlight", () => {

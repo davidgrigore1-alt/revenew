@@ -182,18 +182,21 @@ test("untrusted text remains bounded data and cannot select tables or routes", (
   assert.doesNotMatch(action, /rpc\([^)]*rawQuery|from\(rawQuery|service.role|SUPABASE_SERVICE_ROLE_KEY/i);
 });
 
-test("global search aliases and Ask ReveNew UX remain connected to one engine", () => {
+test("global search remains deterministic while Ask ReveNew can reuse it as an authorized tool", () => {
   assert.equal(sections.searchAppSections("firme")[0]?.href, "/companies");
   assert.equal(sections.searchAppSections("audit controlat")[0]?.href, "/audit/start");
 
   const globalSearch = read("src/components/search/GlobalSearch.tsx");
   const ask = read("src/components/intelligence/AskReveNew.tsx");
+  const tools = read("src/lib/ai/copilot-tools.ts");
+  const conversation = read("src/components/intelligence/CopilotConversation.tsx");
   const aiPage = read("src/app/(protected)/ai/page.tsx");
-  for (const source of [globalSearch, ask]) assert.match(source, /searchWorkspace/);
+  assert.match(globalSearch, /searchWorkspace/);
+  assert.match(tools, /searchWorkspace/);
   assert.match(aiPage, /AskReveNew/);
   assert.match(ask, /Întreabă ReveNew/);
-  assert.match(ask, /suggestedCommercialQueries\.map/);
+  assert.match(ask, /CopilotConversation/);
   assert.match(globalSearch, /De ce apare/);
-  assert.match(ask, /Dovezi/);
-  assert.doesNotMatch(`${globalSearch}\n${ask}`, /Ask anything|ChatGPT|răspuns garantat|ROI garantat/i);
+  assert.match(conversation, /Dovezi/);
+  assert.doesNotMatch(`${globalSearch}\n${ask}\n${conversation}`, /Ask anything|ChatGPT|răspuns garantat|ROI garantat/i);
 });

@@ -65,9 +65,9 @@ export default async function CrmOrganizationDetailPage({ params }: { params: { 
           <p className="mt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Rezumat bazat numai pe relații explicite. Nicio acțiune externă automată.</p>
         </Card>
 
-        <CompanyContextualAsk organizationId={organization.id} companyName={organization.name} suggestions={askSuggestions} />
-
         <CompanyBusinessMemory memory={snapshot.memory} executiveDecision={snapshot.executiveDecision} recoverableValueByCurrency={snapshot.commercial.recoverableValueByCurrency} />
+
+        <CompanyContextualAsk organizationId={organization.id} companyName={organization.name} suggestions={askSuggestions} />
 
         <div className="grid gap-6 xl:grid-cols-12">
           <div id="company-contacts" className="scroll-mt-24 xl:col-span-5">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
 import { BUYER_DEMO_STARTED_EVENT, BUYER_DEMO_STORAGE_KEY } from "@/lib/buyer-demo";
 import { dismissGuide, GUIDE_RESET_EVENT, isGuideDismissed } from "@/lib/guide-persistence";
@@ -117,19 +117,25 @@ export function ContextualPageGuide({ showFlow = false, className }: { showFlow?
   }
 
   return (
-    <aside aria-label="Ghid pentru această pagină" className={cn("relative rounded-card border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--gold-100)/0.14)] p-3.5 pr-12 dark:bg-[rgb(var(--gold-700)/0.06)] sm:p-4 sm:pr-14", className)}>
+    <aside aria-label="Ghid pentru această pagină" className={cn("relative rounded-card border border-[rgb(var(--gold-500)/0.22)] bg-[rgb(var(--gold-100)/0.08)] pr-11 dark:bg-[rgb(var(--gold-700)/0.04)] sm:pr-12", className)}>
       <button type="button" className="focus-ring absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-button text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--gold-500)/0.1)] hover:text-[rgb(var(--foreground))] sm:right-3 sm:top-3" aria-label="Închide ghidul acestei pagini" onClick={closeGuide}><XMarkIcon className="h-4 w-4" aria-hidden="true" /></button>
-      <div className="grid gap-3 2xl:grid-cols-[minmax(12rem,0.72fr)_minmax(0,1.5fr)_minmax(13rem,0.62fr)] 2xl:items-center">
-        <div>
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.11em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Începe aici · etapa {guidance.activeStep + 1}</p>
-          <h2 className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{guidance.title}</h2>
+      <details className="group" data-revenew-disclosure="page-guide">
+        <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-card px-4 py-3 marker:hidden sm:px-5">
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-medium text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Ghid de decizie</span>
+            <span className="mt-0.5 block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{guidance.title}</span>
+          </span>
+          <ChevronDownIcon className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-transform duration-normal group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="grid gap-3 border-t border-[rgb(var(--border))] px-4 py-3 sm:px-5 2xl:grid-cols-[minmax(12rem,0.72fr)_minmax(0,1.5fr)_minmax(13rem,0.62fr)] 2xl:items-center">
+          <p className="text-xs font-medium text-[rgb(var(--text-muted))]">Începe aici · etapa {guidance.activeStep + 1}</p>
+          <ul className="grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))] sm:grid-cols-2 sm:gap-4">
+            {guidance.points.map((point) => <li key={point} className="flex gap-2"><span className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" /><span>{point}</span></li>)}
+          </ul>
+          <p className="border-t border-[rgb(var(--border))] pt-2 text-xs font-semibold leading-5 text-[rgb(var(--foreground))] 2xl:border-l 2xl:border-t-0 2xl:pl-4 2xl:pt-0">{guidance.control}</p>
+          {showFlow ? <div className="border-t border-[rgb(var(--border))] pt-3 2xl:col-span-3"><ReveNewFlowMap activeStep={guidance.activeStep} compact /></div> : null}
         </div>
-        <ul className="grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))] sm:grid-cols-2 sm:gap-4">
-          {guidance.points.map((point) => <li key={point} className="flex gap-2"><span className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" /><span>{point}</span></li>)}
-        </ul>
-        <p className="border-t border-[rgb(var(--border))] pt-2 text-xs font-semibold leading-5 text-[rgb(var(--foreground))] 2xl:border-l 2xl:border-t-0 2xl:pl-4 2xl:pt-0">{guidance.control}</p>
-      </div>
-      {showFlow ? <div className="mt-3 border-t border-[rgb(var(--border))] pt-3"><ReveNewFlowMap activeStep={guidance.activeStep} compact /></div> : null}
+      </details>
     </aside>
   );
 }

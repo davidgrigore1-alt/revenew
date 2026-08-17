@@ -82,7 +82,8 @@ test("buyer demo suppresses duplicate onboarding guidance and contextualizes the
   assert.match(pageGuide, /BUYER_DEMO_STORAGE_KEY/);
   assert.match(pageGuide, /buyerDemoActive/);
   assert.match(assistant, /Prezentare activă/);
-  assert.match(assistant, /Traseul cumpărătorului rămâne ghidul principal/);
+  assert.match(assistant, /demoStep\.notice/);
+  assert.match(assistant, /CopilotConversation autoFocus/);
 });
 
 test("dashboard and help expose subtle demo entry points while guided understanding remains mounted", () => {

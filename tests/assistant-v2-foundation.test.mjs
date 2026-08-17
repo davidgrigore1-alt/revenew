@@ -22,14 +22,13 @@ const search = compileModel("src/lib/app-section-search.ts");
 
 test("assistant v2 explains key screens with route-specific, human-controlled guidance", () => {
   const assistant = read("src/components/guidance/ContextualAssistant.tsx");
-  assert.match(assistant, /Explică această pagină/);
+  const conversation = read("src/components/intelligence/CopilotConversation.tsx");
+  assert.match(conversation, /Explică această pagină/);
   assert.match(assistant, />Asistent</);
   assert.match(assistant, /Asistent ReveNew/);
-  assert.match(assistant, /Ghid intern pentru folosirea produsului\./);
-  assert.match(assistant, /Ești deja aici/);
-  assert.match(assistant, /Orientare pe pagină/);
-  const explainAction = assistant.slice(assistant.indexOf("function explainCurrentScreen"), assistant.indexOf("function submit"));
-  assert.doesNotMatch(explainAction, /setQuestion/);
+  assert.match(assistant, /Răspunde pe baza informațiilor autorizate din ReveNew\./);
+  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(conversation, /Doar informații autorizate/);
   const cases = [
     ["/dashboard", "screen-dashboard", "Control Center"],
     ["/inbox", "screen-inbox", "Inbox Comercial"],
@@ -93,7 +92,8 @@ test("assistant drawer uses a short composited transition and preserves keyboard
   assert.match(assistant, /motion-reduce:transition-none/);
   assert.match(assistant, /event\.key === "Escape"/);
   assert.match(assistant, /returnFocusRef\.current\?\.focus/);
-  assert.match(assistant, /useMemo\(\(\) => suggestedHelpQuestions\(pathname\)/);
+  assert.match(assistant, /textarea:not\(\[disabled\]\)/);
+  assert.match(assistant, /CopilotConversation autoFocus/);
   assert.doesNotMatch(assistant, /backdrop-blur/);
 });
 

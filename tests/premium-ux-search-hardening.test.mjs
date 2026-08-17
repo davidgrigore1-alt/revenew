@@ -52,14 +52,14 @@ test("global search combines local sections with existing tenant-scoped records"
   assert.match(actions, /requirePermission\("workspace\.read"\)/);
 });
 
-test("shared section rhythm separates major modules on AI and Inbox", () => {
+test("shared compact section rhythm separates major modules on AI and Inbox", () => {
   const pageShell = read("src/components/dashboard/PageShell.tsx");
   const globals = read("src/app/globals.css");
   const ai = read("src/app/(protected)/ai/page.tsx");
   const inbox = read("src/components/inbox/CommercialInboxClient.tsx");
 
-  assert.match(pageShell, /app-section-stack mt-8/);
-  assert.match(globals, /\.app-section-stack\s*\{[\s\S]*gap: clamp\(1\.75rem, 2\.2vw, 2\.5rem\)/);
+  assert.match(pageShell, /app-section-stack mt-6/);
+  assert.match(globals, /\.app-section-stack\s*\{[\s\S]*gap: clamp\(1\.5rem, 2vw, 2rem\)/);
   assert.match(ai, /Priorități din datele existente/);
   assert.match(ai, /Registrul complet de capabilități și limite/);
   assert.match(inbox, /<div className="app-section-stack">/);
@@ -71,12 +71,14 @@ test("search and assistant hardening preserve honest product boundaries", () => 
     read("src/lib/app-section-search.ts"),
     read("src/lib/contextual-help.ts"),
     read("src/components/guidance/ContextualAssistant.tsx"),
+    read("src/components/intelligence/CopilotConversation.tsx"),
+    read("src/lib/ai/copilot-instructions.ts"),
     read("src/lib/ai-preparation.ts")
   ].join("\n");
 
   assert.doesNotMatch(sources, /întreabă orice|powered by AI|chatbot AI|LLM|Gmail live|Calendar live|voce live/i);
   assert.doesNotMatch(sources, /Fallback local/i);
   assert.doesNotMatch(sources, /ROI garantat|venit garantat|recuperare garantată/i);
-  assert.match(sources, /ghidului intern/);
-  assert.match(sources, /nu trimite și nu aplică automat|Nicio comunicare externă nu este trimisă automat/i);
+  assert.match(sources, /informațiilor autorizate|ghidului intern/);
+  assert.match(sources, /nu execuți|nu trimite și nu aplică automat|Nicio comunicare externă nu este trimisă automat/i);
 });

@@ -136,15 +136,15 @@ test("server action re-authorizes the company and never turns the question into 
   assert.doesNotMatch(action, /\.from\(|\.rpc\(|service_role|businessId\s*[:=]\s*organizationId/i);
 });
 
-test("Company 360 keeps Ask near the top and only four memory subsections", () => {
+test("Company 360 prioritizes business memory before Ask and keeps only four memory subsections", () => {
   const page = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const ui = read("src/components/company/CompanyContextualAsk.tsx");
   const memoryUi = read("src/components/company/CompanyBusinessMemory.tsx");
-  assert.ok(page.indexOf("<CompanyContextualAsk") < page.indexOf("<CompanyBusinessMemory"));
+  assert.ok(page.indexOf("<CompanyBusinessMemory") < page.indexOf("<CompanyContextualAsk"));
   assert.match(ui, /Întreabă despre \{companyName\}/);
-  assert.match(ui, /Caută în informațiile comerciale asociate acestei companii/);
-  assert.match(ui, /event\.key === "Enter"/);
-  assert.match(ui, /caută numai în informațiile acestei companii și nu produce acțiuni externe/i);
+  assert.match(ui, /limitat la informațiile autorizate ale acestei companii/i);
+  assert.match(ui, /lockedContext=\{\{ pageType: "company", organizationId \}\}/);
+  assert.match(read("src/components/intelligence/CopilotConversation.tsx"), /event\.key === "Enter"/);
   for (const heading of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memoryUi, new RegExp(heading));
   assert.doesNotMatch(memoryUi, /De revizuit astăzi|Relație conectată|activity feed|memory model|\bnode\b|\bedge\b/i);
 });

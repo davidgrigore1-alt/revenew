@@ -78,7 +78,7 @@ export function AppHeader({
             >
               <Bars3Icon className="h-5 w-5" aria-hidden="true" />
             </button>
-            <div className="hidden min-w-0 sm:block">
+            <div className="hidden min-w-0 sm:block lg:hidden">
               <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Context comercial</p>
               <p className="max-w-[18rem] truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p>
             </div>

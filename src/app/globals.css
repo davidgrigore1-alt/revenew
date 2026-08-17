@@ -115,9 +115,14 @@
   --shadow-modal: 0 28px 90px rgba(30, 24, 15, 0.24);
 
   /* Motion and focus */
-  --motion-fast: 120ms;
-  --motion-normal: 180ms;
-  --motion-slow: 240ms;
+  --motion-feedback: 100ms;
+  --motion-reveal: 160ms;
+  --motion-content: 200ms;
+  --motion-panel: 240ms;
+  --motion-page: 160ms;
+  --motion-fast: var(--motion-feedback);
+  --motion-normal: var(--motion-reveal);
+  --motion-slow: var(--motion-panel);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
   --focus-ring: var(--brand-600);
@@ -248,7 +253,16 @@ body {
 
 .app-section-stack {
   display: grid;
-  gap: clamp(1.75rem, 2.2vw, 2.5rem);
+  gap: clamp(1.5rem, 2vw, 2rem);
+}
+
+@keyframes revenew-page-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-page {
+  animation: revenew-page-reveal var(--motion-page) var(--ease-standard) both;
 }
 
 .subtle-grid {

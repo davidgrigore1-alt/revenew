@@ -137,6 +137,8 @@ Pentru primele conversații cu clienți folosește [playbook-ul de outreach](doc
 
 [Roadmap-ul AI și control plane-ul pentru acțiuni sigure](docs/ai-expansion-roadmap.md) separă capabilitățile interne disponibile, sandbox-urile și funcțiile blocate până la revizuirea de securitate. Registrul intern `src/lib/ai-capabilities.ts` descrie riscul, dovezile, aprobarea, auditul și cerințele OAuth pentru fiecare capabilitate, fără a activa Gmail, Google Calendar, telefonie sau alte efecte externe.
 
+[Arhitectura Asistentului ReveNew](docs/real-ai-copilot.md) descrie integrarea Responses API, instrumentele read-only autorizate, validarea dovezilor, minimizarea datelor și fallback-ul determinist. Copilotul este activat numai când `OPENAI_API_KEY` este configurată server-side și nu execută acțiuni comerciale.
+
 ## Ce funcționează cu Supabase
 
 - signup cu Supabase Auth

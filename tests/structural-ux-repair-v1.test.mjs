@@ -38,7 +38,7 @@ test("intelligence hierarchy is Ask then Discover then Decide", () => {
   assert.ok(discoveryIndex > askIndex);
   assert.ok(passiveIndex > discoveryIndex);
   assert.ok(recommendationIndex > passiveIndex);
-  assert.match(read("src/components/intelligence/AskReveNew.tsx"), /Oportunități fără următor pas|oportunități fără următor pas/i);
+  assert.match(read("src/components/intelligence/CopilotConversation.tsx"), /Ce oportunități nu au următor pas/);
   assert.match(read("src/components/intelligence/CommercialDiscoveries.tsx"), /Descoperiri comerciale/);
 });
 
@@ -54,6 +54,6 @@ test("contextual explanations cover the product map and explain Companies specif
   assert.match(help, /punctul de intrare către contextul și istoricul unei organizații/);
   assert.match(help, /currentActionLabel: "Arată companiile"/);
   assert.match(companies, /data-guide-anchor="companies-register"/);
-  assert.match(assistant, /Ești deja aici/);
-  assert.match(assistant, /entry\.currentActionLabel \?\? "Arată zona relevantă"/);
+  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(read("src/lib/ai/copilot-tools.ts"), /get_product_help/);
 });
