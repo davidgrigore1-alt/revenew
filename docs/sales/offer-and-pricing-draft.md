@@ -56,7 +56,9 @@ Intervalul superior este potrivit când există mai multe surse, participanți s
 - domeniu limitat, echipă și responsabil desemnat;
 - urmărirea responsabililor, acțiunilor, termenelor și aprobărilor;
 - cadență de revizuire convenită;
-- rezumat al stării finale și comparație înainte/după numai dacă a fost salvat un baseline la început;
+- contract de măsurare cu lot și criterii stabilite înainte de pornire;
+- baseline imuabil și situație finală confirmată pe aceeași cohortă;
+- comparație verificată, cu clasificarea faptelor observate, derivate, confirmate uman sau necunoscute;
 - sesiune finală cu decizia: continuăm, ajustăm sau oprim.
 
 **Nu include:**
@@ -93,7 +95,7 @@ Abonamentul este justificat numai dacă pilotul arată că revizuirea continuă 
 
 ## Închiderea pilotului prin dovadă
 
-Pilotul nu se încheie cu o promisiune. Folosește raportul `/reports/pilot-proof-of-value` pentru a prezenta progresul înregistrat, blocajele rămase, dovezile și separarea dintre valori estimate și rezultate declarate de utilizatori.
+Pilotul nu se încheie cu o promisiune. Folosește raportul `/reports/pilot-proof-of-value` pentru a prezenta baseline-ul imuabil, situația finală pe aceeași cohortă, criteriile îndeplinite sau neîndeplinite, blocajele rămase, dovezile și separarea dintre valori estimate și rezultate confirmate de utilizatori.
 
 Decizia este una dintre următoarele: continuăm cadența operațională lunară, ajustăm domeniul sau oprim din lipsă de dovezi. Abonamentul lunar este justificat numai dacă echipa vede valoare operațională recurentă în revizuirea responsabilității, follow-up-ului, aprobărilor și rezultatelor.
 

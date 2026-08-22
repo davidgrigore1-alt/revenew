@@ -38,7 +38,7 @@ Regulă: bara laterală răspunde la „unde lucrez?”, antetul răspunde la �
 | `/reports` | imagine executivă asupra rezultatelor și tiparelor | Ce este estimat, expus și confirmat? | cele trei valori distincte și deciziile aferente | indicatori detaliați și export |
 | `/reports/revenue-recovery-audit` | audit executiv | Ce risc comercial este susținut de dovezi? | priorități, valoare estimată deduplicată, acțiune sigură | metodologie și dovezi detaliate |
 | `/reports/enterprise-pilot-pack` | propunere de pilot controlat | Ce validăm în 14 zile și cine decide? | scop, criterii, aport client și primul pas | plan și condiții de continuare |
-| `/reports/pilot-proof-of-value` | dovada de valoare a pilotului | Ce progres poate fi demonstrat fără a inventa rezultate? | baseline curent, dovezi și recomandare continuă/ajustează/oprește | blocaje și registru de verificare |
+| `/reports/pilot-proof-of-value` | configurarea, măsurarea și concluzia pilotului | Ce s-a schimbat în aceeași cohortă, pe definiții înghețate? | contract, baseline imuabil, situație finală, criterii și schimbări verificate | dovezi, limitări și discuția continuă/ajustează/oprește |
 | `/settings` | configurarea produsului și a accesului | Ce poate fi configurat și de cine? | aspect, identitate, companie, echipă și acces | capacitate, confidențialitate și date locale de dezvoltare pliate |
 | `/help` | orientare operațională | Cum folosesc sigur fluxul relevant? | traseu real și întrebări după decizie | audit controlat și ghiduri |
 | `/demo` | poveste de demonstrație controlată | Care este problema și traseul de validare? | problema comercială, lumea demonstrativă și prima decizie | traseul complet, audit și pilot |

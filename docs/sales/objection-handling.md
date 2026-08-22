@@ -52,7 +52,7 @@ Răspunsurile sunt puncte de pornire, nu replici mecanice. Recunoaște întrebar
 
 ## „Ce se întâmplă după 14 zile?”
 
-> Revizuim criteriile, progresul înregistrat, blocajele și dovezile într-o concluzie de pilot. Decizia este continuăm cu o cadență clară, ajustăm domeniul sau oprim. Dacă nu există un baseline persistent, raportul descrie starea curentă și nu pretinde o comparație istorică înainte/după. Nu transformăm automat pilotul într-un abonament și nu declarăm venit recuperat fără un rezultat declarat de utilizator.
+> Revizuim criteriile stabilite înainte de pornire, baseline-ul imuabil, situația finală pe aceeași cohortă, blocajele și dovezile. Decizia este continuăm cu o cadență clară, ajustăm domeniul sau oprim. Schimbările observate nu demonstrează singure cauzalitate, nu transformăm automat pilotul într-un abonament și nu declarăm venit recuperat fără un rezultat confirmat de utilizator.
 
 ## „Nu vrem să partajăm date.”
 

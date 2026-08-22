@@ -414,6 +414,26 @@ body {
     color: #111111;
   }
 
+  [class~="min-h-dvh"] {
+    --background: 255 255 255;
+    --surface: 255 255 255;
+    --surface-subtle: 249 249 247;
+    --surface-muted: 241 241 237;
+    --foreground: 20 20 18;
+    --text-secondary: 48 48 44;
+    --text-muted: 82 82 74;
+    --text-faint: 105 105 96;
+    --border: 214 214 207;
+    --border-strong: 186 186 176;
+    --primary: 122 101 20;
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  .lg\:pl-\[260px\] {
+    padding-left: 0 !important;
+  }
+
   aside,
   header,
   nav,

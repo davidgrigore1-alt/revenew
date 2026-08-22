@@ -72,7 +72,7 @@ La 390×844 verifică aceleași rute pentru:
 - controlul uman și absența trimiterii automate;
 - titlu, dată, spațiu de lucru și expunere deduplicată în Audit;
 - domeniu, participanți și criterii în Pilot Pack;
-- linie de bază curentă și recomandare `continuă / ajustează / oprește` în Proof-of-Value;
+- contract de măsurare, baseline imuabil, aceeași cohortă și concluzie `continuă / ajustează / oprește` în Proof-of-Value;
 - etichetele de sandbox și limitele integrărilor în Appointment Control.
 
 ## Ce nu trebuie să apară

@@ -108,7 +108,7 @@ După audit, propune un pilot controlat de **14 zile**, cu domeniu limitat:
 - validarea clarității comerciale;
 - validarea responsabilității și disciplinei de follow-up;
 - urmărirea aprobărilor și a acțiunilor următoare;
-- un rezumat al stării finale și o comparație înainte/după numai dacă a fost salvată o linie de bază;
+- un baseline confirmat și imuabil, urmat de o comparație pe aceeași cohortă la încheiere;
 - o decizie finală: continuă, ajustează sau oprește.
 
 Pilotul nu garantează recuperarea venitului. Oamenii autorizați păstrează controlul asupra aprobărilor, comunicărilor și confirmării rezultatelor.
@@ -117,4 +117,4 @@ Pilotul nu garantează recuperarea venitului. Oamenii autorizați păstrează co
 
 Încheie pilotul cu `/reports/pilot-proof-of-value`, nu cu o promisiune financiară. Raportul trebuie să arate ce progres este susținut de înregistrările existente, ce blocaje rămân, ce rezultate au fost declarate de utilizatori și ce dovezi pot fi deschise.
 
-Dacă nu a fost salvată o linie de bază la început, concluzia este o evaluare a stării curente, nu o măsurare istorică înainte/după. Decizia finală rămâne `continuă / ajustează / oprește`, iar utilizarea lunară este justificată numai dacă echipa obține vizibilitate operațională recurentă.
+Înainte de activare, clientul verifică lotul, criteriile, politica și limitările, apoi confirmă explicit baseline-ul. Situația finală se îngheață separat, pe aceeași cohortă. Oportunitățile apărute în timpul pilotului sunt raportate distinct și nu modifică artificial comparația. Decizia finală rămâne `continuă / ajustează / oprește`, iar utilizarea lunară este justificată numai dacă echipa obține vizibilitate operațională recurentă.

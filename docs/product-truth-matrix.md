@@ -22,7 +22,7 @@ Stare verificată pentru sprintul comercial buyer-ready. „Disponibil” însea
 | Google Calendar | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Sandbox-ul nu citește disponibilitate și nu creează evenimente reale. |
 | Semnale externe automate | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Semnalele provin din introducere/import controlat, nu din monitorizare web autonomă. |
 | Automatizare workflow | Limitată la pași interni controlați | Da | Nu | Nu | Da | Da | Da | Nu există agent autonom care schimbă stări sau contactează clienți fără aprobare. |
-| Pilot 14 zile | Disponibil ca pachet de validare | Da | Nu este necesar | Nu | Da | Da | Da | Proof-of-Value arată starea curentă; comparația istorică persistată rămâne o etapă separată. |
+| Pilot comercial controlat | Disponibil cu baseline și situație finală imuabile | Da | Nu este necesar | Nu | Obligatorie | Da | Da | Cohorta, criteriile, politica și fusul orar sunt înghețate la baseline; comparația folosește aceeași cohortă și nu atribuie cauzalitate. |
 
 ## Reguli de prezentare
 

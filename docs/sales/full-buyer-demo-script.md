@@ -81,7 +81,7 @@ Arată titlul, data, spațiul de lucru, prima acțiune sigură, prioritățile �
 
 Arată domeniul limitat al pilotului de 14 zile, datele și participanții necesari, criteriile de succes, controlul uman și legătura către Proof-of-Value.
 
-> Pilotul verifică utilitatea operațională. Fără o linie de bază salvată, Proof-of-Value descrie starea curentă și nu inventează o comparație înainte/după. La final, recomandarea este continuă, ajustează sau oprește.
+> Pilotul verifică utilitatea operațională. Înainte de pornire, lotul, criteriile și baseline-ul sunt confirmate și înghețate. La final comparăm aceeași cohortă, arătăm ce este observat sau confirmat de oameni și alegem: continuă, ajustează sau oprește. Schimbarea nu este prezentată ca efect cauzat automat de ReveNew.
 
 Nu transforma criteriile operaționale în ROI și nu garanta recuperarea venitului.
 

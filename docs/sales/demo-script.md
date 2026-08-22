@@ -65,7 +65,7 @@ Deschide `/reports/enterprise-pilot-pack`.
 
 > Dacă auditul confirmă problema, propunem un pilot controlat de 14 zile. Validăm claritatea responsabilității, disciplina de follow-up și traseul aprobărilor pe un domeniu limitat. Clientul stabilește participanții și criteriile. La final, decizia este continuăm, ajustăm sau oprim. Pilotul nu garantează venit recuperat.
 
-Pentru discuția de închidere a pilotului, deschide `/reports/pilot-proof-of-value`. Raportul arată numai progresul demonstrabil din datele existente și precizează dacă linia de bază este doar o stare curentă. Nu prezenta totalurile observate ca diferențe înainte/după în lipsa unui baseline persistent.
+Pentru pornirea și închiderea pilotului, deschide `/reports/pilot-proof-of-value`. Arată contractul stabilit înainte de pornire, baseline-ul imuabil, situația finală pe aceeași cohortă și limitările. Nu prezenta schimbarea observată drept efect cauzat de ReveNew.
 
 ## Întrebarea de închidere
 

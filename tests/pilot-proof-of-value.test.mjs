@@ -250,8 +250,9 @@ test("sales and audit docs close the pilot with an evidence-backed decision", ()
   ].join("\n");
   assert.match(docs, /\/reports\/pilot-proof-of-value/);
   assert.match(docs, /continuăm cadența operațională lunară, ajustăm domeniul sau oprim/i);
-  assert.match(docs, /nu pretinde o comparație istorică înainte\/după/i);
-  assert.match(docs, /rezultat declarat de utilizator/i);
+  assert.match(docs, /baseline imuabil/i);
+  assert.match(docs, /aceeași cohortă/i);
+  assert.match(docs, /rezultat(?:e)? confirmat(?:e)? de utilizator/i);
   assert.match(docs, /valoare operațională recurentă/i);
   const unsafeClaims = docs
     .split("\n")
