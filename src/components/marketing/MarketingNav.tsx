@@ -2,13 +2,30 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, MoonIcon, SunIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { authPath } from "@/lib/auth/redirects";
 import { marketingSections } from "@/lib/marketing/navigation";
 import { cn } from "@/lib/utils";
 
+function MarketingThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]"
+      aria-label={isDark ? "Activează tema luminoasă" : "Activează tema întunecată"}
+      title={isDark ? "Temă luminoasă" : "Temă întunecată"}
+    >
+      {isDark ? <SunIcon className="h-4 w-4" aria-hidden="true" /> : <MoonIcon className="h-4 w-4" aria-hidden="true" />}
+    </button>
+  );
+}
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -85,6 +102,7 @@ export function MarketingNav() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 xl:flex">
+          <MarketingThemeToggle />
           <Button href={authPath("/login", "login")} variant="ghost" className="min-h-10 px-4 text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--foreground))]">Intră în cont</Button>
           <Button href="#preturi" className="min-h-10 px-4">Solicită auditul</Button>
         </div>
@@ -121,6 +139,10 @@ export function MarketingNav() {
               ))}
             </nav>
             <div className="mt-8 grid gap-3">
+              <div className="flex items-center justify-between rounded-button border border-[rgb(var(--border))] px-3 py-2 text-sm font-semibold">
+                <span>Aspect</span>
+                <MarketingThemeToggle />
+              </div>
               <Button href="#preturi" onClick={() => setOpen(false)}>Solicită auditul</Button>
               <Link href={authPath("/login", "login")} className="focus-ring inline-flex min-h-11 items-center justify-center rounded-button border border-[rgb(var(--border))] px-4 text-sm font-semibold text-[rgb(var(--foreground))]">Intră în cont</Link>
             </div>

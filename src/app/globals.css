@@ -567,3 +567,89 @@ body {
     linear-gradient(90deg, rgb(var(--border) / 0.22) 1px, transparent 1px);
   background-size: 48px 48px, 48px 48px;
 }
+
+/* Pass 3B marketing palette: authoritative blue, isolated from app accents. */
+.marketing-canvas {
+  --background: 250 251 253;
+  --background-soft: 244 247 252;
+  --surface-subtle: 247 249 252;
+  --surface-muted: 237 241 247;
+  --border: 220 226 235;
+  --border-strong: 184 195 210;
+  --foreground: 14 19 27;
+  --text-secondary: 55 65 81;
+  --text-muted: 96 108 126;
+  --text-faint: 139 149 164;
+  --rn-accent: 47 100 232;
+  --rn-accent-foreground: 255 255 255;
+  --rn-accent-soft: 219 234 254;
+  --rn-accent-muted: 239 246 255;
+  --rn-accent-border: 147 177 253;
+  --rn-accent-ring: 37 99 235;
+  --rn-accent-glow: 59 130 246;
+  --rn-accent-surface: 239 246 255;
+  --rn-accent-950: 23 37 84;
+  --rn-accent-900: 30 58 138;
+  --rn-accent-800: 30 64 175;
+  --rn-accent-700: 37 71 196;
+  --rn-accent-600: 37 86 218;
+  --rn-accent-500: 47 100 232;
+  --rn-accent-400: 96 139 244;
+  --rn-accent-300: 147 177 253;
+  --rn-accent-100: 219 234 254;
+  --rn-accent-50: 239 246 255;
+  --primary-foreground: 255 255 255;
+}
+
+.dark .marketing-canvas {
+  color-scheme: dark;
+  --background: 9 10 13;
+  --background-soft: 12 14 18;
+  --surface: 16 18 23;
+  --surface-subtle: 20 23 29;
+  --surface-muted: 27 31 39;
+  --surface-elevated: 22 25 32;
+  --border: 42 47 58;
+  --border-strong: 67 75 91;
+  --foreground: 249 250 252;
+  --text-secondary: 211 216 225;
+  --text-muted: 157 166 181;
+  --text-faint: 103 112 128;
+  --primary: 96 139 244;
+  --primary-hover: 147 177 253;
+  --primary-active: 59 130 246;
+  --primary-foreground: 9 10 13;
+  --primary-muted: 23 37 84;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.24);
+  --shadow-elevated: 0 28px 80px rgba(0,0,0,.5);
+}
+
+@keyframes marketing-flow-pulse {
+  0%, 12% { transform: scaleX(0); opacity: 0; }
+  34%, 82% { transform: scaleX(1); opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes marketing-node-active {
+  0%, 18%, 100% { border-color: rgb(var(--border)); box-shadow: none; }
+  32%, 64% { border-color: rgb(var(--primary)); box-shadow: 0 0 0 4px rgb(var(--primary) / .12); }
+}
+
+@keyframes marketing-pipeline-card {
+  0%, 18% { transform: translateX(0); }
+  38%, 72% { transform: translateX(calc(100% + 1rem)); }
+  90%, 100% { transform: translateX(0); }
+}
+
+.marketing-flow-line { position: relative; overflow: hidden; }
+.marketing-flow-line::after {
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--primary));
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: marketing-flow-pulse 6s var(--ease-emphasized) infinite;
+}
+.marketing-flow-node { animation: marketing-node-active 6s var(--ease-standard) infinite; }
+.marketing-pipeline-card { animation: marketing-pipeline-card 8s var(--ease-emphasized) infinite; will-change: transform; }

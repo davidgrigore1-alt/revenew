@@ -15,6 +15,7 @@ import {
   UserGroupIcon
 } from "@heroicons/react/24/outline";
 import { FaqAccordion, type FaqCategory } from "@/components/marketing/FaqAccordion";
+import { ControlledWorkflowSection, LandingStorySections } from "@/components/marketing/LandingStorySections";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { OpportunityExecutionPreview, PortfolioSummaryPreview } from "@/components/marketing/ProductShowcases";
@@ -53,13 +54,7 @@ const painPoints = [
   ["Cerere pierdută în zgomot", "Managementul află târziu unde s-a rupt continuitatea comercială.", EyeIcon]
 ] as const;
 
-const steps = [
-  ["01", "Semnal", "Cazul comercial care riscă să iasă din atenție devine vizibil."],
-  ["02", "Context", "Faptele disponibile și informațiile care lipsesc rămân separate."],
-  ["03", "Responsabilitate", "Proprietarul deciziei și termenul sunt clarificate explicit."],
-  ["04", "Acțiune", "Echipa verifică recomandarea și aprobă pasul potrivit."],
-  ["05", "Rezultat", "Concluzia este înregistrată distinct, fără a transforma estimarea în venit."]
-] as const;
+
 
 const audiences = [
   ["Companii B2B", "Cicluri comerciale cu valoare relevantă per client și follow-up repetat.", BuildingOffice2Icon],
@@ -112,9 +107,9 @@ export default function LandingPage() {
 
       <section id="continut" className="border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
         <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8">
-          <div className="border-x border-[rgb(var(--border))] px-5 pb-12 pt-16 text-center sm:px-10 sm:pb-16 sm:pt-24 lg:px-14 lg:pb-20 lg:pt-28">
+          <div className="border-x border-[rgb(var(--border))] px-5 pb-10 pt-14 text-center sm:px-10 sm:pb-12 sm:pt-16 lg:px-14 lg:pb-14 lg:pt-20">
             <p className="mx-auto inline-flex w-fit items-center gap-2 rounded-pill border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--text-secondary))]"><span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" />Sistem operațional pentru revenue recovery</p>
-            <h1 className="mx-auto mt-8 max-w-[1180px] text-[clamp(3rem,7.7vw,7.25rem)] font-semibold leading-[0.91] tracking-[-0.066em]">
+            <h1 className="mx-auto mt-6 max-w-[1050px] text-[clamp(3rem,6.2vw,5.8rem)] font-semibold leading-[0.91] tracking-[-0.066em]">
               Claritate pentru venitul rămas între pași.
             </h1>
             <p className="mx-auto mt-7 max-w-[760px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-xl sm:leading-8">ReveNew aduce în același loc dovada, responsabilul și următoarea acțiune, înainte ca o oportunitate comercială să iasă din atenție.</p>
@@ -154,23 +149,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="cum-functioneaza" className="scroll-mt-28 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-        <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal><SectionHeading eyebrow="Metoda ReveNew" title="Cinci etape. Un fir operațional.">Semnal, context, responsabilitate, acțiune și rezultat — în ordinea în care echipa trebuie să le poată verifica.</SectionHeading></Reveal>
-          <div className="relative mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <div aria-hidden="true" className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-[rgb(var(--border-strong))] lg:block" />
-            {steps.map(([number, title, description], index) => (
-              <Reveal key={title} delay={index * 80}>
-                <article className="relative h-full border-t border-[rgb(var(--border))] py-5">
-                  <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgb(var(--primary)/0.22)] bg-[rgb(var(--primary))] text-xs font-bold text-[rgb(var(--primary-foreground))]">{number}</span>
-                  <h3 className="mt-5 text-xl font-semibold tracking-[-0.025em]">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{description}</p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ControlledWorkflowSection id="cum-functioneaza" />
 
       <section id="produs-in-actiune" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
         <div className="mx-auto grid max-w-[1280px] items-center gap-9 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.68fr_1.32fr] lg:px-8">
@@ -205,6 +184,8 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
+
+      <LandingStorySections />
 
       <section id="de-ce-revenew" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
