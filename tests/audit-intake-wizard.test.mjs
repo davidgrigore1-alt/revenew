@@ -86,13 +86,13 @@ test("generated plan is actionable, cautious and contains no invented commercial
   assert.doesNotMatch(plan, /ROI|venit garantat|recuperare garantată|probabilitate de conversie/i);
 });
 
-test("dashboard, demo, report, help, assistant and search lead to the audit wizard", () => {
+test("demo, report, help, assistant and search lead to the audit wizard while Home stays sparse", () => {
   for (const file of [
-    "src/app/(protected)/dashboard/page.tsx",
     "src/app/(protected)/demo/page.tsx",
     "src/app/(protected)/reports/revenue-recovery-audit/page.tsx",
     "src/app/(protected)/help/page.tsx"
   ]) assert.match(read(file), /href="\/audit\/start"/, file);
+  assert.doesNotMatch(read("src/app/(protected)/dashboard/page.tsx"), /href="\/(?:audit\/start|reports\/revenue-recovery-audit)"/);
 
   const help = read("src/lib/contextual-help.ts");
   const search = read("src/lib/app-section-search.ts");

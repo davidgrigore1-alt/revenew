@@ -676,31 +676,33 @@ Use these as the target semantic system. Exact Tailwind token implementation can
 
 
 
-\### Dark / ink
+\### Dark / neutral ink
 
 
 
-\* `--dark-background`: `#070A09`
+\* `--dark-background`: `#0C0D0E`
 
-\* `--dark-background-soft`: `#0B0F0D`
+\* `--dark-background-soft`: `#0F1011`
 
-\* `--dark-surface`: `#101513`
+\* `--dark-surface`: `#131415`
 
-\* `--dark-surface-subtle`: `#151B18`
+\* `--dark-surface-subtle`: `#17181A`
 
-\* `--dark-surface-muted`: `#1B231F`
+\* `--dark-surface-muted`: `#1E1F21`
 
-\* `--dark-border`: `#25302A`
+\* `--dark-border`: `#2B2C2F`
 
-\* `--dark-border-strong`: `#344239`
+\* `--dark-border-strong`: `#46474C`
 
-\* `--dark-text`: `#F4F7F3`
+\* `--dark-text`: `#FAFAFA`
 
-\* `--dark-text-secondary`: `#C9D2CA`
+\* `--dark-text-secondary`: `#D8D8DC`
 
-\* `--dark-text-muted`: `#8F9B92`
+\* `--dark-text-muted`: `#A6A6AE`
 
-\* `--dark-text-faint`: `#637067`
+\* `--dark-text-faint`: `#71717A`
+
+The dark foundation is deliberately achromatic. Emerald or a selected workspace accent may identify actions and state, but must never tint the page canvas, sidebar, cards, menus, or selected-row background.
 
 
 
@@ -1198,15 +1200,15 @@ Dark mode:
 
 
 
-\* page background: deep ink;
+\* page background: neutral near-black;
 
 \* cards: dark surface;
 
-\* elevated panels: slightly lighter ink;
+\* elevated panels: a clearly separated neutral charcoal;
 
-\* borders: green-slate / neutral;
+\* borders: crisp neutral gray;
 
-\* avoid pure black except for deep backdrop.
+\* avoid green, teal, brown, or accent casts in structural surfaces.
 
 
 
@@ -1698,7 +1700,7 @@ Sidebar item rules:
 
 \* text: 13–14px;
 
-\* active state: brand-tinted surface + emerald left accent or strong text;
+\* active state: neutral raised surface + a restrained accent edge or icon;
 
 \* hover: subtle;
 

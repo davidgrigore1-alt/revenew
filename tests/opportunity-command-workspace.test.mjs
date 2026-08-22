@@ -8,11 +8,13 @@ const controlCenterUrl = new URL("../src/components/opportunities/OpportunityCon
 const workflowUrl = new URL("../src/components/opportunities/OpportunityWorkflow.tsx", import.meta.url);
 const intelligenceTimelineUrl = new URL("../src/components/opportunities/OpportunityIntelligenceTimeline.tsx", import.meta.url);
 
-test("opportunity command workspace hides large execution forms by default", async () => {
+test("opportunity command workspace renders only the selected semantic panel", async () => {
   const page = await readFile(pageUrl, "utf8");
-  for (const id of ["action-responsibility", "action-outcome", "action-response", "action-schedule"]) {
-    assert.match(page, new RegExp(`id="${id}" className="hidden scroll-mt-24 target:block"`));
-  }
+  assert.match(page, /const activeTab: OpportunityTab/);
+  assert.match(page, /activeTab === "responsibility" \? <section id="action-responsibility"/);
+  assert.match(page, /activeTab === "response" \? <section id="action-response"/);
+  assert.match(page, /activeTab === "schedule" \? <section id="action-schedule"/);
+  assert.doesNotMatch(page, /target:block|className="hidden scroll-mt-24|\border-\d+|flex-row-reverse/);
   assert.match(page, /mode="responsibility"/);
   assert.match(page, /mode="outcome"/);
   assert.match(page, /<CommercialResponsePanel opportunity=\{opportunity\} \/>/);
@@ -41,11 +43,11 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
   assert.match(page, /const evidenceBackedDescription = sourceSignal\?\.primaryRecoveryReason/);
   assert.match(page, /description=\{evidenceBackedDescription\}/);
   assert.match(controlCenter, /Dovezi disponibile/);
-  assert.match(controlCenter, /Verifică dovezile/);
+  assert.match(controlCenter, /Verifică dovada/);
   assert.match(controlCenter, /Lipsește o dovadă verificabilă/);
-  assert.match(controlCenter, /De ce este prioritară/);
-  assert.match(controlCenter, /Blocajele, termenul, responsabilul, dovezile și valoarea estimată explică ordinea de intervenție/);
-  assert.match(controlCenter, /Rezultatul rămâne neconfirmat până la decizia unei persoane/);
+  assert.match(controlCenter, /Necesită verificare:/);
+  assert.match(controlCenter, /attention\.reasons\.slice\(0, 2\)/);
+  assert.match(controlCenter, /Aprobarea umană rămâne obligatorie/);
   assert.match(intelligenceTimeline, /Istoric comercial/);
   assert.match(intelligenceTimeline, /Fapte înregistrate și interpretări ReveNew în ordine cronologică/);
   assert.match(intelligenceTimeline, /Fapt înregistrat/);
@@ -60,7 +62,7 @@ test("estimated opportunity value stays separate from confirmed revenue", async 
   assert.match(controlCenter, /Valoare estimată, nu confirmată/);
   assert.match(controlCenter, /commercialState\.financial\.confirmedRevenue != null/);
   assert.match(controlCenter, /commercialState\.financial\.confirmedRevenueCurrency/);
-  assert.match(controlCenter, /Venit recuperat confirmat/);
+  assert.match(controlCenter, /Venit confirmat de echipă/);
   assert.match(controlCenter, /Separat de valoarea estimată a oportunității/);
 });
 
@@ -78,18 +80,19 @@ test("human approval and existing server actions are not bypassed", async () => 
   assert.match(workflow, /Trimiterea din aplicație nu este activă/);
 });
 
-test("document, workflow and contact hashes remain accessible", async () => {
+test("document, workflow and contact destinations use semantic URL tabs and disclosures", async () => {
   const [workbench, workflow] = await Promise.all([
     readFile(workbenchUrl, "utf8"),
     readFile(workflowUrl, "utf8")
   ]);
-  for (const hash of ["#workflow-actions", "#opportunity-documents", "#action-contacts"]) {
-    assert.match(workbench, new RegExp(hash));
+  for (const destination of ["?tab=workflow#workflow-actions", "?tab=workflow#opportunity-documents", "?tab=workflow#action-contacts"]) {
+    assert.match(workbench, new RegExp(destination.replace(/[?]/g, "\\?")));
   }
-  assert.match(workflow, /id="workflow-actions" className="hidden scroll-mt-24 target:block"/);
+  assert.match(workflow, /<details id="workflow-actions"/);
   assert.match(workflow, /id="opportunity-documents"/);
   assert.match(workflow, /id="documents"/);
   assert.match(workflow, /id="opportunity-contacts"/);
+  assert.doesNotMatch(workflow, /target:block|className="hidden scroll-mt-24/);
 });
 
 test("empty and partial opportunities have explicit operational states", async () => {

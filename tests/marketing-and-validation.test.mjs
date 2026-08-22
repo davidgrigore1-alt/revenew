@@ -70,6 +70,27 @@ test("landing page uses centralized navigation and truthful pricing/copy", () =>
   assert.equal(page.includes("fake"), false);
 });
 
+test("marketing hero keeps a semantic work surface and progressive motion", () => {
+  const page = fs.readFileSync(path.resolve("src/app/(marketing)/page.tsx"), "utf8");
+  const nav = fs.readFileSync(path.resolve("src/components/marketing/MarketingNav.tsx"), "utf8");
+  const preview = fs.readFileSync(path.resolve("src/components/marketing/ProductPreview.tsx"), "utf8");
+  const showcases = fs.readFileSync(path.resolve("src/components/marketing/ProductShowcases.tsx"), "utf8");
+  const reveal = fs.readFileSync(path.resolve("src/components/marketing/Reveal.tsx"), "utf8");
+
+  assert.equal(page.includes("marketing-canvas"), true, "marketing pages must opt into the isolated light token context");
+  assert.equal(preview.includes("data-marketing-product-frame"), true);
+  assert.equal(preview.includes("Context pentru decizie"), true);
+  assert.equal(preview.includes("Aprobare umană"), true);
+  assert.equal(preview.indexOf("Necesită atenție") < preview.indexOf("Context pentru decizie"), true, "queue content must precede its supporting detail in DOM order");
+  assert.equal(nav.includes("menuPanelRef"), true, "the mobile dialog must keep keyboard focus inside its panel");
+  assert.equal(nav.includes('event.key !== "Tab"'), true);
+  assert.equal(reveal.includes("useState(true)"), true, "marketing content must remain visible before enhancement");
+  assert.equal(reveal.includes("prefers-reduced-motion: reduce"), true);
+  assert.equal(reveal.includes("startsInViewport"), true);
+  assert.equal(/(?:Carpathia|Nova Medical|Meridian Logistic|\d{1,3}(?:\.\d{3})+\s+(?:RON|EUR))/.test(showcases), false, "isolated product previews must not claim fabricated customer results");
+  assert.equal(/(?:order-(?:first|last|\d)|flex-(?:row|col)-reverse|:target)/.test(`${page}\n${preview}\n${showcases}`), false, "marketing hierarchy must follow source order");
+});
+
 test("FAQ accordions are grouped and button based", () => {
   const source = fs.readFileSync(path.resolve("src/components/marketing/FaqAccordion.tsx"), "utf8");
 

@@ -1,35 +1,73 @@
 "use client";
 
-import { useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type InfoTooltipProps = {
-  content: React.ReactNode;
+  content: ReactNode;
   className?: string;
+  label?: string;
 };
 
-export function InfoTooltip({ content, className }: InfoTooltipProps) {
+export function InfoTooltip({ content, className, label = "Mai multe informații" }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const tooltipId = useId();
+  const rootRef = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const pointerFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
   return (
     <span
+      ref={rootRef}
       className={cn("relative inline-flex items-center", className)}
       onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
+      onMouseLeave={() => {
+        if (!rootRef.current?.contains(document.activeElement)) setOpen(false);
+      }}
+      onFocusCapture={() => {
+        if (!pointerFocusRef.current) setOpen(true);
+      }}
+      onBlurCapture={(event) => {
+        if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+        setOpen(false);
+      }}
     >
       <button
+        ref={triggerRef}
         type="button"
+        aria-label={label}
         aria-describedby={open ? tooltipId : undefined}
-        aria-expanded={open}
+        onPointerDown={() => { pointerFocusRef.current = true; }}
+        onPointerUp={() => { pointerFocusRef.current = false; }}
+        onPointerCancel={() => { pointerFocusRef.current = false; }}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          pointerFocusRef.current = false;
           setOpen((current) => !current);
         }}
-        className="inline-flex size-5 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-[11px] font-bold leading-none text-zinc-300 outline-none transition hover:border-mint-400/40 hover:text-mint-300 focus:border-mint-400/60 focus:ring-2 focus:ring-mint-400/20"
+        className="focus-ring inline-flex size-5 items-center justify-center rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-[11px] font-bold leading-none text-[rgb(var(--text-muted))] transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]"
       >
         i
       </button>
@@ -37,7 +75,7 @@ export function InfoTooltip({ content, className }: InfoTooltipProps) {
         <span
           id={tooltipId}
           role="tooltip"
-          className="absolute left-1/2 top-7 z-40 w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-white/10 bg-ink-950/95 p-3 text-left text-xs font-normal leading-5 text-zinc-300 shadow-2xl shadow-black/40 backdrop-blur sm:w-72"
+          className="absolute left-1/2 top-7 z-40 w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-3 text-left text-xs font-normal leading-5 text-[rgb(var(--text-secondary))] shadow-elevated sm:w-72"
         >
           {content}
         </span>

@@ -19,8 +19,8 @@ function compileModel(relativePath) {
 
 const themes = compileModel("src/lib/theme-presets.ts");
 
-test("premium accent presets are complete, namespaced and keep Champagne Gold as default", () => {
-  assert.equal(themes.defaultAccentTheme, "champagne");
+test("premium accent presets are complete, namespaced and keep Emerald as the ReveNew default", () => {
+  assert.equal(themes.defaultAccentTheme, "emerald");
   assert.equal(themes.ACCENT_THEME_STORAGE_KEY, "revenew.theme.accent");
   assert.equal(themes.WORKSPACE_IDENTITY_STORAGE_KEY, "revenew.workspace.identityPreview");
   assert.deepEqual(
@@ -38,7 +38,7 @@ test("settings exposes controlled selection, preview, reset and honest local per
   const settings = read("src/app/(protected)/settings/page.tsx");
   const source = `${panel}\n${settings}\n${read("src/lib/theme-presets.ts")}`;
 
-  for (const label of ["Aspect", "Culoare accent", "Champagne Gold", "Executive Blue", "Emerald", "Copper", "Burgundy", "Violet", "Graphite Minimal"]) {
+  for (const label of ["Aspect", "Culoare accent", "Champagne Gold", "Executive Blue", "Emerald", "Oxide Copper", "Burgundy", "Violet", "Graphite Minimal"]) {
     assert.match(source, new RegExp(label));
   }
   assert.match(panel, /type="radio"/);

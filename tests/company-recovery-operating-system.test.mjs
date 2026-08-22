@@ -109,26 +109,28 @@ test("Company 360 remains protected and presents empty and populated operating c
   assert.match(route, /CreateOpportunityPanel/);
 });
 
-test("company wayfinding exposes an explicit detail action and accessible breadcrumbs", () => {
+test("company wayfinding exposes a primary record link and accessible breadcrumbs", () => {
   const client = read("src/components/crm/CrmWorkspaceClient.tsx");
   const companyRoute = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const opportunityRoute = read("src/app/(protected)/opportunities/[id]/page.tsx");
   const breadcrumbs = read("src/components/dashboard/Breadcrumbs.tsx");
 
-  assert.match(client, /href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}[\s\S]{0,180}>Vezi detalii<\/Button>/);
+  assert.match(client, /<Link href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}/);
+  assert.match(client, /<table[\s\S]*?<caption[\s\S]*?<thead[\s\S]*?<tbody/);
+  assert.doesNotMatch(client, /role="row"/);
   assert.match(companyRoute, /breadcrumbs=\{\[\{ label: "Companii", href: "\/companies" \}/);
   assert.match(opportunityRoute, /breadcrumbs=\{\[\{ label: [^,]+, href: "\/opportunities" \}/);
   assert.match(breadcrumbs, /aria-label="Navigare contextual/);
   assert.match(breadcrumbs, /aria-current=\{current \? "page" : undefined\}/);
 });
 
-test("dashboard provides direct entries to companies and the recovery queue", () => {
+test("dashboard stays sparse with direct entries to Today and Opportunities", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
-  const morningBrief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
-  assert.match(dashboard, /<ExecutiveMorningBrief[\s\S]{0,120}brief=\{morningBrief\}/);
-  assert.match(morningBrief, /allPrioritiesHref/);
-  assert.match(morningBrief, /Vezi toate prioritățile/);
-  assert.match(morningBrief, /safeAction\.href/);
+  assert.match(dashboard, /<HomeAskSurface/);
+  assert.match(dashboard, /href="\/today"/);
+  assert.match(dashboard, /href="\/opportunities"/);
+  assert.doesNotMatch(dashboard, /href="\/companies"/);
+  assert.doesNotMatch(dashboard, /href="\/recoverable"/);
 });
 
 test("Company 360 connects each attention item to its evidence-backed source route", () => {

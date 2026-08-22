@@ -70,13 +70,19 @@ export function CopilotConversation({ className, lockedContext, autoFocus = fals
   }
 
   return (
-    <div className={cn("grid min-h-0 gap-4", className)}>
+    <div className={cn("grid min-h-0 gap-3", className)}>
+      <form onSubmit={submit} className="grid gap-2 rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-2.5">
+        <label htmlFor={inputId} className="sr-only">Întrebarea ta</label>
+        <textarea ref={inputRef} data-copilot-input id={inputId} aria-describedby={`${inputId}-trust`} aria-keyshortcuts="Enter" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 3000))} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void ask(question); } }} rows={3} maxLength={3000} placeholder="Întreabă ReveNew…" className="focus-ring min-h-24 w-full resize-none rounded-control border-0 bg-transparent px-2 py-2 text-sm leading-5 outline-none placeholder:text-[rgb(var(--text-faint))]" />
+        <div className="flex items-center justify-between gap-3"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-[0.6875rem] leading-4 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Doar informații autorizate. Decizia și orice acțiune rămân la utilizator.</p><Button type="submit" size="small" loading={loading} disabled={question.trim().length < 2}>Verifică</Button></div>
+      </form>
+
       <div className="grid gap-5" aria-live="polite" aria-busy={loading}>
         {conversation.length === 0 ? (
           <section aria-labelledby="copilot-suggestions-title">
-            <h3 id="copilot-suggestions-title" className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Întrebări utile aici</h3>
-            <div className="mt-2 grid gap-2">
-              {suggestions.slice(0, 3).map((suggestion) => <button key={suggestion} type="button" className="focus-ring min-h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-left text-sm font-medium transition-colors hover:border-[rgb(var(--primary)/0.45)] hover:bg-[rgb(var(--primary-muted))]" onClick={() => void ask(suggestion)}>{suggestion}</button>)}
+            <h3 id="copilot-suggestions-title" className="sr-only">Întrebări utile aici</h3>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.slice(0, 3).map((suggestion) => <button key={suggestion} type="button" disabled={loading} className="focus-ring min-h-8 rounded-control border border-[rgb(var(--border))] bg-transparent px-3 py-1.5 text-left text-xs font-medium text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(suggestion)}>{suggestion}</button>)}
             </div>
           </section>
         ) : conversation.map((item) => (
@@ -98,19 +104,13 @@ export function CopilotConversation({ className, lockedContext, autoFocus = fals
               {item.answer.missingInformation.length > 0 ? <section className="mt-4 border-l-2 border-[rgb(var(--warning-border))] pl-3"><h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Ce nu pot confirma</h4><ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.answer.missingInformation.map((missing) => <li key={missing}>— {missing}</li>)}</ul></section> : null}
               {item.answer.caveats.length > 0 ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.answer.caveats.join(" ")}</p> : null}
               {item.answer.suggestedAction ? <div className="mt-4"><Button href={item.answer.suggestedAction.route} size="small">{item.answer.suggestedAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></div> : null}
-              {item.answer.followUps.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{item.answer.followUps.map((followUp) => <button key={followUp} type="button" className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-left text-xs font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]" onClick={() => void ask(followUp)}>{followUp}</button>)}</div> : null}
+              {item.answer.followUps.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{item.answer.followUps.map((followUp) => <button key={followUp} type="button" disabled={loading} className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-left text-xs font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(followUp)}>{followUp}</button>)}</div> : null}
             </div>
           </article>
         ))}
         {loading ? <p className="flex items-center gap-2 text-sm text-[rgb(var(--text-muted))]" role="status"><span className="h-2 w-2 animate-pulse rounded-full bg-[rgb(var(--primary))] motion-reduce:animate-none" aria-hidden="true" />Verific informațiile disponibile...</p> : null}
-        {error ? <div className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-bg))] p-3" role="alert"><p className="text-sm text-[rgb(var(--danger-text))]">{error}</p><button type="button" className="focus-ring mt-2 rounded-button text-xs font-semibold underline" onClick={() => void ask(question)}>Reîncearcă</button></div> : null}
+        {error ? <div className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-3" role="alert"><p className="text-sm text-[rgb(var(--danger-text))]">{error}</p><button type="button" className="focus-ring mt-2 rounded-button text-xs font-semibold underline" onClick={() => void ask(question)}>Reîncearcă</button></div> : null}
       </div>
-
-      <form onSubmit={submit} className="sticky bottom-0 mt-auto grid gap-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated)/0.98)] pt-3">
-        <label htmlFor={inputId} className="text-sm font-semibold">Întrebarea ta</label>
-        <textarea ref={inputRef} data-copilot-input id={inputId} value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 3000))} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void ask(question); } }} rows={2} maxLength={3000} placeholder="Întreabă despre datele comerciale disponibile…" className="focus-ring min-h-20 w-full resize-none rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-2 text-sm leading-5 outline-none placeholder:text-[rgb(var(--text-faint))]" />
-        <div className="flex items-center justify-between gap-3"><p className="flex items-start gap-1.5 text-[0.6875rem] leading-4 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Doar informații autorizate. Decizia și orice acțiune rămân la utilizator.</p><Button type="submit" size="small" loading={loading} disabled={question.trim().length < 2}>Verifică</Button></div>
-      </form>
     </div>
   );
 }

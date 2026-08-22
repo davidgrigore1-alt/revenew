@@ -47,7 +47,7 @@ export function Button({
 }: ButtonProps) {
   const unavailable = disabled || loading;
   const classes = cn(
-    "focus-ring inline-flex items-center justify-center gap-2 rounded-button font-semibold transition-colors duration-fast ease-standard disabled:cursor-not-allowed disabled:opacity-55",
+    "focus-ring inline-flex items-center justify-center gap-2 rounded-button font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-fast ease-standard active:translate-y-px disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55",
     variants[variant],
     sizes[size],
     unavailable && href && "pointer-events-none opacity-55",
@@ -59,6 +59,7 @@ export function Button({
       <Link
         href={href}
         className={classes}
+        tabIndex={unavailable ? -1 : undefined}
         onClick={unavailable ? undefined : onClick}
         aria-disabled={unavailable || undefined}
         {...accessibilityProps}

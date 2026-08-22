@@ -21,10 +21,10 @@ export function RecommendationExplanationCard({ recommendation, compact = false,
   const primaryGap = recommendation.missingInformation[0] ?? "Nu a fost identificată o lipsă critică în datele disponibile.";
 
   return (
-    <article className="overflow-hidden rounded-panel border border-[rgb(var(--gold-500)/0.3)] bg-[rgb(var(--surface))] shadow-card" aria-labelledby={`recommendation-${recommendation.id}`}>
+    <article className="overflow-hidden rounded-panel border border-[rgb(var(--border-strong)/0.78)] bg-[rgb(var(--surface-elevated))]" aria-labelledby={`recommendation-${recommendation.id}`}>
       <div className={`border-b border-[rgb(var(--border))] ${compact ? "p-4" : "p-5"}`}>
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.11em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Recomandare explicată</p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.11em] text-[rgb(var(--primary))]">Recomandare explicată</p>
           {position ? <span className="text-xs text-[rgb(var(--text-faint))]">Prioritatea {position}</span> : null}
           <Badge tone={strengthTone[recommendation.evidenceStrength]} size="small" className="sm:ml-auto">{recommendation.evidenceStrengthLabel}</Badge>
         </div>

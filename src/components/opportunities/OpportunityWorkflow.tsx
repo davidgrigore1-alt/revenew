@@ -555,8 +555,10 @@ export function OpportunityWorkflow({
         </div>
       </details>
 
-      <div id="workflow-actions" className="hidden scroll-mt-24 target:block">
-        <DataCard title="Pregătește un document" description={workflowDescription} action={<a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a>}>
+      <details id="workflow-actions" className="scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]" open>
+        <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold marker:hidden"><span>Pregătește un document</span><span aria-hidden="true">+</span></summary>
+        <div className="border-t border-[rgb(var(--border))] p-4">
+        <DataCard title="Pregătește un document" description={workflowDescription}>
           <p className="mb-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Alege un rezultat concret, pregătește documentul și revizuiește-l înainte de orice utilizare externă.</p>
           <div className="grid gap-4">
             <div>
@@ -617,7 +619,7 @@ export function OpportunityWorkflow({
               className="mt-3"
               action={
                 pendingLocalDocument ? (
-                  <button type="button" onClick={generateLocalDocument} disabled={Boolean(loading)} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white hover:bg-white/[0.1] disabled:opacity-60">
+                  <button type="button" onClick={generateLocalDocument} disabled={Boolean(loading)} className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] transition-colors hover:bg-[rgb(var(--surface-elevated))] disabled:opacity-60">
                     Pregătește draft standard
                   </button>
                 ) : null
@@ -627,9 +629,10 @@ export function OpportunityWorkflow({
             </StatusNotice>
           ) : null}
         </DataCard>
-      </div>
+        </div>
+      </details>
 
-      <div id="action-contacts" className="hidden scroll-mt-24 target:block has-[:target]:block"><span id="opportunity-contacts" className="scroll-mt-24" /><div className="mb-3 flex justify-end"><a href="#action-workbench" className="focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] px-3 text-sm font-semibold">Închide formularul</a></div><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div>
+      <details id="action-contacts" className="scroll-mt-24 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]"><summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold marker:hidden"><span>Contacte asociate</span><span aria-hidden="true">+</span></summary><div id="opportunity-contacts" className="border-t border-[rgb(var(--border))] p-4"><OpportunityContactsPanel opportunityId={opportunity.id} contacts={opportunity.contacts ?? []} existingContacts={existingContacts} /></div></details>
 
       <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
@@ -763,43 +766,43 @@ export function OpportunityWorkflow({
         }
       >
         {selectedDocument ? (
-          <div className="mb-5 grid gap-4 rounded-lg border border-mint-400/20 bg-mint-400/5 p-4">
+          <div className="mb-5 grid gap-4 rounded-card border border-[rgb(var(--border-strong))] border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface))] p-4">
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentTypeLabel(selectedDocument.type)}</span>
+              <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{documentTypeLabel(selectedDocument.type)}</span>
               {selectedDocument.generationMode ? (
-                <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{selectedDocument.generationMode === "ai" ? "Draft asistat AI" : "Draft standard"}</span>
+                <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{selectedDocument.generationMode === "ai" ? "Draft asistat AI" : "Draft standard"}</span>
               ) : null}
-              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[selectedDocument.status]}</span>
-              <span className="rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">Netrimis automat</span>
+              <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{documentStatusLabels[selectedDocument.status]}</span>
+              <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">Netrimis automat</span>
             </div>
-            <dl className="grid gap-2 text-xs text-zinc-400 sm:grid-cols-3">
+            <dl className="grid gap-2 text-xs text-[rgb(var(--text-muted))] sm:grid-cols-3">
               <div>
-                <dt className="uppercase tracking-[0.14em] text-zinc-500">Creat la</dt>
-                <dd className="mt-1 font-semibold text-zinc-200">{formatDateTimeWithSeconds(selectedDocument.createdAt)}</dd>
+                <dt className="uppercase tracking-[0.14em] text-[rgb(var(--text-faint))]">Creat la</dt>
+                <dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatDateTimeWithSeconds(selectedDocument.createdAt)}</dd>
               </div>
               {selectedDocument.editedAt ? (
                 <div>
-                  <dt className="uppercase tracking-[0.14em] text-zinc-500">Ultima editare</dt>
-                  <dd className="mt-1 font-semibold text-zinc-200">{formatDateTimeWithSeconds(selectedDocument.editedAt)}</dd>
+                  <dt className="uppercase tracking-[0.14em] text-[rgb(var(--text-faint))]">Ultima editare</dt>
+                  <dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatDateTimeWithSeconds(selectedDocument.editedAt)}</dd>
                 </div>
               ) : null}
               {selectedDocument.sentAt ? (
                 <div>
-                  <dt className="uppercase tracking-[0.14em] text-zinc-500">Trimis la</dt>
-                  <dd className="mt-1 font-semibold text-zinc-200">{formatDateTimeWithSeconds(selectedDocument.sentAt)}</dd>
+                  <dt className="uppercase tracking-[0.14em] text-[rgb(var(--text-faint))]">Trimis la</dt>
+                  <dd className="mt-1 font-semibold text-[rgb(var(--foreground))]">{formatDateTimeWithSeconds(selectedDocument.sentAt)}</dd>
                 </div>
               ) : null}
             </dl>
             {selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email" ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <input value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Către" className="h-11 min-w-0 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-                <input value={ccEmail} onChange={(event) => setCcEmail(event.target.value)} placeholder="CC optional" className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-                {!recipientEmail ? <p className="text-xs text-gold-300 sm:col-span-2">Completează destinatarul înainte de trimitere.</p> : null}
+                <input value={recipientEmail} onChange={(event) => setRecipientEmail(event.target.value)} placeholder="Către" className="focus-ring h-11 min-w-0 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]" />
+                <input value={ccEmail} onChange={(event) => setCcEmail(event.target.value)} placeholder="CC optional" className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]" />
+                {!recipientEmail ? <p className="text-xs text-[rgb(var(--warning-text))] sm:col-span-2">Completează destinatarul înainte de trimitere.</p> : null}
               </div>
             ) : null}
-            <input value={editorTitle} onChange={(event) => setEditorTitle(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none" />
-            <textarea value={editorContent} onChange={(event) => setEditorContent(event.target.value)} rows={12} className="w-full min-w-0 resize-y rounded-lg border border-white/10 bg-ink-950/80 px-4 py-3 font-sans text-sm leading-6 text-white outline-none" />
-            <p className={`text-sm font-semibold ${hasUnsavedChanges ? "text-gold-300" : "text-zinc-500"}`}>
+            <input value={editorTitle} onChange={(event) => setEditorTitle(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]" />
+            <textarea value={editorContent} onChange={(event) => setEditorContent(event.target.value)} rows={12} className="focus-ring w-full min-w-0 resize-y rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3 font-sans text-sm leading-6 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]" />
+            <p className={`text-sm font-semibold ${hasUnsavedChanges ? "text-[rgb(var(--warning-text))]" : "text-[rgb(var(--text-faint))]"}`}>
               {hasUnsavedChanges ? "Ai modificări nesalvate." : "Toate modificările sunt salvate."}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -809,55 +812,55 @@ export function OpportunityWorkflow({
                 disabled={!hasUnsavedChanges || Boolean(loading)}
                 className={
                   hasUnsavedChanges
-                    ? "rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-mint-400"
-                    : "cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.035] px-4 py-2 text-sm font-semibold text-zinc-500 opacity-70"
+                    ? "focus-ring rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] hover:bg-[rgb(var(--primary-hover))]"
+                    : "cursor-not-allowed rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-faint))] opacity-70"
                 }
               >
                 Salvează modificările
               </button>
-              <button type="button" onClick={copyDocument} className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white">Copiază</button>
+              <button type="button" onClick={copyDocument} className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-elevated))]">Copiază</button>
               {(selectedDocument.type === "outreach_email" || selectedDocument.type === "follow_up_email") && recipientEmail && ["approved", "ready_to_send"].includes(selectedDocument.status) ? (
                 <a
                   href={`mailto:${encodeURIComponent(recipientEmail)}?cc=${encodeURIComponent(ccEmail)}&subject=${encodeURIComponent(editorTitle)}&body=${encodeURIComponent(editorContent)}`}
                   onClick={preserveScrollAfterUtilityClick}
-                  className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white"
+                  className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-elevated))]"
                 >
                   Deschide în client email
                 </a>
               ) : null}
-              <Link href={`/outreach/${selectedDocument.id}`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-300">Deschide Studio de follow-up</Link>
-              {!['approved', 'ready_to_send'].includes(selectedDocument.status) ? <button type="button" onClick={() => saveDocumentEdits("approved")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Aprobă draftul</button> : null}
-              {selectedDocument.status === "approved" ? <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200">Pregătit pentru utilizare</button> : null}
+              <Link href={`/outreach/${selectedDocument.id}`} className="focus-ring rounded-control border border-[rgb(var(--primary)/0.4)] bg-[rgb(var(--surface-subtle))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary))]">Deschide Studio de follow-up</Link>
+              {!['approved', 'ready_to_send'].includes(selectedDocument.status) ? <button type="button" onClick={() => saveDocumentEdits("approved")} className="focus-ring rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))]">Aprobă draftul</button> : null}
+              {selectedDocument.status === "approved" ? <button type="button" onClick={() => saveDocumentEdits("ready_to_send")} className="focus-ring rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))]">Pregătit pentru utilizare</button> : null}
               <a
                 href={`data:text/plain;charset=utf-8,${encodeURIComponent(`${editorTitle}\n\n${editorContent}`)}`}
                 download={`${editorTitle || "document"}.txt`}
                 onClick={preserveScrollAfterUtilityClick}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white"
+                className="focus-ring rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-elevated))]"
               >
                 Descarcă .txt
               </a>
-              <span className="inline-flex items-center rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-500">Trimiterea din aplicație nu este activă</span>
-              <button type="button" onClick={closeDocumentEditor} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Închide</button>
+              <span className="inline-flex items-center rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-faint))]">Trimiterea din aplicație nu este activă</span>
+              <button type="button" onClick={closeDocumentEditor} className="focus-ring rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-elevated))]">Închide</button>
             </div>
           </div>
         ) : null}
         {allDocuments.length > 0 ? (
           <div className="grid gap-4">
             {allDocuments.map((document) => (
-              <button key={document.id} type="button" onClick={() => openDocument(document)} className={`rounded-lg border bg-ink-900/70 p-4 text-left transition hover:border-mint-400/30 ${selectedDocumentId === document.id ? "border-mint-400/35" : highlightedDocumentId === document.id ? "border-gold-400/40 bg-gold-400/5" : "border-white/10"}`}>
-                <p className="font-semibold text-white">{document.title}</p>
+              <button key={document.id} type="button" onClick={() => openDocument(document)} className={`focus-ring rounded-card border bg-[rgb(var(--surface))] p-4 text-left transition hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))] ${selectedDocumentId === document.id ? "border-[rgb(var(--primary)/0.5)]" : highlightedDocumentId === document.id ? "border-[rgb(var(--warning-border))]" : "border-[rgb(var(--border))]"}`}>
+                <p className="font-semibold text-[rgb(var(--foreground))]">{document.title}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentTypeLabel(document.type)}</span>
-                  <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{document.generationMode === "ai" ? "Draft asistat" : "Draft standard"}</span>
-                  <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">{documentStatusLabels[document.status]}</span>
-                  {document.createdAt ? <span className="inline-flex rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-zinc-300">Creat la: {formatDateTimeWithSeconds(document.createdAt)}</span> : null}
+                  <span className="inline-flex rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{documentTypeLabel(document.type)}</span>
+                  <span className="inline-flex rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{document.generationMode === "ai" ? "Draft asistat" : "Draft standard"}</span>
+                  <span className="inline-flex rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">{documentStatusLabels[document.status]}</span>
+                  {document.createdAt ? <span className="inline-flex rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">Creat la: {formatDateTimeWithSeconds(document.createdAt)}</span> : null}
                 </div>
                 {"content" in document && document.content ? (
-                  <div className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-white/10 bg-ink-950/80 p-4 font-sans text-sm leading-6 text-zinc-300">
+                  <div className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 font-sans text-sm leading-6 text-[rgb(var(--text-secondary))]">
                     {document.content.slice(0, 500)}
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-zinc-400">Draft pregătit pentru revizuire.</p>
+                  <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Draft pregătit pentru revizuire.</p>
                 )}
               </button>
             ))}

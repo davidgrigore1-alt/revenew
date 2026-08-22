@@ -36,14 +36,14 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
         : "În așteptarea unei decizii umane.";
 
   return (
-    <section aria-labelledby={`signal-preparation-${signal.id}`} className="overflow-hidden rounded-card border border-[rgb(var(--gold-500)/0.3)] bg-[linear-gradient(145deg,rgb(var(--surface)),rgb(var(--surface-subtle)))] shadow-card">
+    <section aria-labelledby={`signal-preparation-${signal.id}`} className="overflow-hidden rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] shadow-card">
       <div className="flex flex-col gap-3 border-b border-[rgb(var(--border))] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div className="flex min-w-0 gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-control border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--gold-100)/0.5)] text-[rgb(var(--gold-700))] dark:bg-[rgb(var(--gold-700)/0.12)] dark:text-[rgb(var(--gold-300))]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-[rgb(var(--text-secondary))]">
             <SparklesIcon className="size-4" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Inteligență operațională</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-secondary))]">Inteligență operațională</p>
             <h3 id={`signal-preparation-${signal.id}`} className="mt-1 font-semibold">{compact ? "Ce a înțeles ReveNew" : "Recomandare structurată pentru revizuire"}</h3>
             <p className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">AI pregătește. Omul aprobă. ReveNew aplică numai schimbări interne confirmate.</p>
           </div>
@@ -72,7 +72,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-control border border-[rgb(var(--brand-500)/0.26)] bg-[rgb(var(--brand-50)/0.58)] p-4 dark:bg-[rgb(var(--brand-950)/0.34)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-control border border-[rgb(var(--border-strong))] border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Acțiune sigură recomandată</p>
               <p className="mt-1 text-sm font-semibold leading-5">{preparation.recommendedNextAction}</p>
@@ -148,7 +148,7 @@ export function SignalPreparationPanel({ signal, action, compact = false }: Sign
         </div>
       )}
 
-      <div className="flex flex-col gap-1 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-muted)/0.5)] px-4 py-3 text-xs sm:px-5">
+      <div className="flex flex-col gap-1 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3 text-xs sm:px-5">
         {prepared ? <span className="font-semibold text-[rgb(var(--text-secondary))]">{feedbackMessage}</span> : null}
         <span className="font-medium text-[rgb(var(--text-muted))]">Nu se aplică și nu se trimite nimic fără aprobare. Nimic nu este trimis extern.</span>
       </div>

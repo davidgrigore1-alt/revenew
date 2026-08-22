@@ -36,7 +36,7 @@ function authErrorMessage(error: unknown, fallback: string) {
   const message = error && typeof error === "object" && "message" in error ? String(error.message).toLowerCase() : "";
 
   if (isRateLimitError(error)) return "Au fost prea multe încercări. Așteaptă puțin și încearcă din nou.";
-  if (message.includes("already registered") || message.includes("already exists") || message.includes("user already")) return "Acest email este deja folosit. Intră în cont sau folosește alt email.";
+  if (message.includes("already registered") || message.includes("already exists") || message.includes("user already")) return "Nu am putut finaliza crearea contului. Verifică datele sau intră în cont dacă ai deja acces.";
   if (message.includes("password")) return "Parola nu respectă cerințele minime. Folosește cel puțin 8 caractere.";
   if (message.includes("email not confirmed")) return "Trebuie să confirmi emailul înainte de a continua.";
   if (message.includes("invalid login")) return "Emailul sau parola nu sunt corecte.";
@@ -72,6 +72,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors<SignupField>>({});
   const [confirmationEmail, setConfirmationEmail] = useState("");
+  const [passwordLength, setPasswordLength] = useState(0);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
 
   function focusFirstError(nextErrors: FieldErrors<SignupField>) {
@@ -106,6 +107,23 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
     return { ok: true as const, fullName: fullName.value ?? "", email: email.value ?? "", phone: phone.value ?? "" };
   }
 
+  function validateTouchedField(field: SignupField, form: HTMLFormElement | null) {
+    if (!form) return;
+    let message: string | undefined;
+    if (isSignup) {
+      const result = validateSignup(new FormData(form));
+      message = result.ok ? undefined : result.errors[field];
+    } else if (field === "email") {
+      const result = validateEmail(new FormData(form).get("email"));
+      message = result.ok ? undefined : result.error;
+    }
+    setErrors((current) => {
+      const next = { ...current };
+      if (message) next[field] = message;
+      else delete next[field];
+      return next;
+    });
+  }
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loading) return;
@@ -235,6 +253,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
                 placeholder="Nume Prenume"
                 invalid={Boolean(errors.fullName)}
                 className="mt-2 min-h-11"
+                onBlur={(event) => validateTouchedField("fullName", event.currentTarget.form)}
               />
               <FieldError id="fullName-error" message={errors.fullName} />
             </label>
@@ -258,6 +277,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
                   placeholder="+40 721 000 000"
                   invalid={Boolean(errors.phone)}
                   className="mt-2 min-h-11"
+                  onBlur={(event) => validateTouchedField("phone", event.currentTarget.form)}
                 />
                 <p id="phone-help" className="mt-2 text-xs text-[rgb(var(--text-muted))]">Validăm formatul numărului, nu proprietarul lui.</p>
                 <FieldError id="phone-error" message={errors.phone} />
@@ -279,17 +299,18 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
             placeholder="nume@firma.ro"
             invalid={Boolean(errors.email)}
             className="mt-2 min-h-11"
+            onBlur={(event) => validateTouchedField("email", event.currentTarget.form)}
           />
           <FieldError id="email-error" message={errors.email} />
         </label>
 
-        <PasswordField name="password" label="Parolă" autoComplete={isSignup ? "new-password" : "current-password"} invalid={Boolean(errors.password)} describedBy={errors.password ? "password-error" : undefined} />
+        <PasswordField name="password" label="Parolă" autoComplete={isSignup ? "new-password" : "current-password"} invalid={Boolean(errors.password)} describedBy={errors.password ? "password-error" : isSignup ? "password-requirement" : undefined} onChange={(event) => setPasswordLength(event.currentTarget.value.length)} onBlur={(event) => validateTouchedField("password", event.currentTarget.form)} />
         {errors.password ? <p id="password-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.password}</p> : null}
 
         {isSignup ? (
           <>
-            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Folosește cel puțin 8 caractere și evită parolele utilizate în alte servicii.</p>
-            <PasswordField name="confirmPassword" label="Confirmă parola" autoComplete="new-password" placeholder="Repetă parola" invalid={Boolean(errors.confirmPassword)} describedBy={errors.confirmPassword ? "confirmPassword-error" : undefined} />
+            <p id="password-requirement" className={`text-xs leading-5 ${passwordLength > 0 && passwordLength < 8 ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`} aria-live="polite">{passwordLength > 0 && passwordLength < 8 ? `Mai sunt necesare ${8 - passwordLength} caractere.` : "Folosește cel puțin 8 caractere și evită parolele utilizate în alte servicii."}</p>
+            <PasswordField name="confirmPassword" label="Confirmă parola" autoComplete="new-password" placeholder="Repetă parola" invalid={Boolean(errors.confirmPassword)} describedBy={errors.confirmPassword ? "confirmPassword-error" : undefined} onBlur={(event) => validateTouchedField("confirmPassword", event.currentTarget.form)} />
             {errors.confirmPassword ? <p id="confirmPassword-error" className="text-sm text-[rgb(var(--danger-text))]">{errors.confirmPassword}</p> : null}
             <label className="flex items-start gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] p-3 text-sm leading-6 text-[rgb(var(--text-muted))]">
               <input id="acceptedTerms" required name="acceptedTerms" type="checkbox" aria-invalid={Boolean(errors.acceptedTerms)} aria-describedby={errors.acceptedTerms ? "acceptedTerms-error" : undefined} className="mt-1 h-4 w-4 rounded border-[rgb(var(--border-strong))] bg-transparent accent-[rgb(var(--primary))]" />

@@ -63,9 +63,9 @@ function tokens(scale: {
 export const accentThemePresets: AccentThemePreset[] = [
   {
     id: "champagne",
-    label: "Champagne Gold · implicit ReveNew",
+    label: "Champagne Gold",
     shortLabel: "Champagne Gold",
-    description: "Accent cald și editorial, semnătura vizuală ReveNew.",
+    description: "Auriu editorial pentru contexte formale și prezentări executive.",
     tokens: tokens({ deepest: "39 33 9", deep: "59 49 12", strong: "92 75 17", action: "128 103 24", ring: "171 139 43", accent: "214 183 74", softAccent: "226 201 104", pale: "235 218 155", soft: "249 241 207", surface: "253 250 239" })
   },
   {
@@ -84,9 +84,9 @@ export const accentThemePresets: AccentThemePreset[] = [
   },
   {
     id: "copper",
-    label: "Copper",
-    shortLabel: "Copper",
-    description: "Cupru temperat, potrivit mediilor industriale și de servicii.",
+    label: "Oxide Copper",
+    shortLabel: "Oxide Copper",
+    description: "Cupru oxidat pentru contexte editoriale, dovezi și control uman.",
     tokens: tokens({ deepest: "48 29 18", deep: "71 41 23", strong: "96 55 28", action: "124 71 35", ring: "153 91 48", accent: "181 116 72", softAccent: "204 148 105", pale: "225 184 150", soft: "244 224 207", surface: "251 243 236", foreground: "255 250 246" })
   },
   {
@@ -112,7 +112,7 @@ export const accentThemePresets: AccentThemePreset[] = [
   }
 ];
 
-export const defaultAccentTheme: AccentThemeId = "champagne";
+export const defaultAccentTheme: AccentThemeId = "emerald";
 
 export function isAccentThemeId(value: unknown): value is AccentThemeId {
   return typeof value === "string" && accentThemePresets.some((preset) => preset.id === value);

@@ -158,7 +158,7 @@ test("insufficient data produces an honest intake state without invented recomme
   assert.equal(result.evidenceHref, null);
 });
 
-test("AI page leads with current operational intelligence and keeps the registry secondary", () => {
+test("AI page uses URL tabs with Ask as the default and keeps the registry secondary", () => {
   const page = read("src/app/(protected)/ai/page.tsx");
   const summaryIndex = page.indexOf("operational-intelligence-summary");
   const recommendationsIndex = page.indexOf("operational-recommendations");
@@ -167,6 +167,14 @@ test("AI page leads with current operational intelligence and keeps the registry
   assert.ok(summaryIndex >= 0);
   assert.ok(recommendationsIndex > summaryIndex);
   assert.ok(registryIndex > recommendationsIndex);
+  assert.match(page, /const intelligenceTabs = \[/);
+  assert.match(page, /: "ask";/);
+  assert.match(page, /href=\{`\/ai\?tab=\$\{tab\.id\}`\}/);
+  assert.match(page, /activeTab === "ask" \? <AskReveNew \/>/);
+  assert.match(page, /activeTab === "discoveries" \? <CommercialDiscoveries/);
+  assert.match(page, /activeTab === "recommendations" \?/);
+  assert.match(page, /activeTab === "capabilities" \?/);
+  assert.doesNotMatch(page, /flex-row-reverse|flex-col-reverse|\border-(?:first|last|\d+)/);
   assert.match(page, /getRecoverySummary\(\)/);
   assert.match(page, /export const dynamic = "force-dynamic"/);
   assert.match(page, /buildWorkspaceDecisionQueue/);

@@ -27,9 +27,9 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
         <span className="absolute bottom-[-1.25rem] top-3 w-px bg-[rgb(var(--border))] last:hidden" />
         <span className={`relative mt-1.5 size-2.5 rounded-full border-2 ${isDerived ? "border-[rgb(var(--primary))] bg-[rgb(var(--background))]" : "border-[rgb(var(--foreground))] bg-[rgb(var(--surface))]"}`} />
       </div>
-      <article className={isDerived ? "rounded-control border border-[rgb(var(--gold-500)/0.34)] bg-[rgb(var(--gold-50)/0.22)] px-3 py-3 dark:bg-[rgb(var(--brand-950)/0.28)] sm:px-4" : "min-w-0 py-0.5"}>
+      <article className={isDerived ? "rounded-control border border-[rgb(var(--border-strong))] border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] px-3 py-3 sm:px-4" : "min-w-0 py-0.5"}>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={`rounded-pill border px-2 py-0.5 text-[0.6875rem] font-semibold ${isDerived ? "border-[rgb(var(--gold-500)/0.4)] text-[rgb(var(--primary))]" : "border-[rgb(var(--border))] text-[rgb(var(--text-muted))]"}`}>
+          <span className={`rounded-pill border px-2 py-0.5 text-[0.6875rem] font-semibold ${isDerived ? "border-[rgb(var(--primary)/0.4)] text-[rgb(var(--primary))]" : "border-[rgb(var(--border))] text-[rgb(var(--text-muted))]"}`}>
             {isDerived ? "Interpretare ReveNew" : "Fapt înregistrat"}
           </span>
           <span className="text-[0.6875rem] font-medium text-[rgb(var(--text-muted))]">{event.category}</span>

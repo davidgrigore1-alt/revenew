@@ -142,7 +142,7 @@ test("Company 360 prioritizes business memory before Ask and keeps only four mem
   const memoryUi = read("src/components/company/CompanyBusinessMemory.tsx");
   assert.ok(page.indexOf("<CompanyBusinessMemory") < page.indexOf("<CompanyContextualAsk"));
   assert.match(ui, /Întreabă despre \{companyName\}/);
-  assert.match(ui, /limitat la informațiile autorizate ale acestei companii/i);
+  assert.match(ui, /limitat la datele autorizate ale acestei relații/i);
   assert.match(ui, /lockedContext=\{\{ pageType: "company", organizationId \}\}/);
   assert.match(read("src/components/intelligence/CopilotConversation.tsx"), /event\.key === "Enter"/);
   for (const heading of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memoryUi, new RegExp(heading));

@@ -86,13 +86,14 @@ test("buyer demo suppresses duplicate onboarding guidance and contextualizes the
   assert.match(assistant, /CopilotConversation autoFocus/);
 });
 
-test("dashboard and help expose subtle demo entry points while guided understanding remains mounted", () => {
+test("help exposes the demo entry point while sparse Home and guided understanding remain mounted", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   const help = read("src/app/(protected)/help/page.tsx");
   const shell = read("src/components/dashboard/AppShell.tsx");
   const recommendation = read("src/components/intelligence/RecommendationExplanationCard.tsx");
 
-  assert.match(dashboard, /Pregătește prezentarea/);
+  assert.match(dashboard, /HomeAskSurface/);
+  assert.doesNotMatch(dashboard, /Pregătește prezentarea|GuidedProductTour/);
   assert.match(help, /Traseu demo/);
   assert.match(help, /GuideReplayButton/);
   assert.match(shell, /GuidedProductTour/);

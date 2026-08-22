@@ -47,7 +47,8 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(client, /Companie CRM/);
   assert.match(client, /Oportunitate existentă/);
   assert.match(client, /Aprobă și creează acțiunea/);
-  assert.match(client, /Semnal .*Revizuire .*Decizie .*Oportunitate/);
+  assert.match(client, /xl:grid-cols-\[minmax\(18rem,0\.72fr\)_minmax\(0,1\.55fr\)\]/);
+  assert.match(client, /id="signal-review-panel"/);
   assert.match(client, /Revizuiește semnalul/);
   assert.match(client, /acțiunea internă a fost creată în oportunitatea selectată/);
   assert.match(client, /oportunitatea și prima acțiune internă au fost create/);

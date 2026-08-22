@@ -107,12 +107,10 @@ test("review UI requires human approval and supports all decision paths", async 
   assert.doesNotMatch(source, /sendEmail|send_mail|scheduled_at/);
 });
 
-test("dashboard and reports separate estimated review value from confirmed revenue", async () => {
+test("reports separate estimated review value while Home omits monetary aggregates", async () => {
   const dashboard = await readFile(dashboardPath, "utf8");
   const reports = await readFile(reportsPath, "utf8");
-  assert.match(dashboard, /estimatedRecoverableValue/);
-  assert.match(dashboard, /Estimare activă; nu este venit confirmat/);
-  assert.match(dashboard, /"dismissed", "duplicate"/);
+  assert.doesNotMatch(dashboard, /estimatedRecoverableValue|Estimare activă|"dismissed", "duplicate"|MetricCard/);
   assert.match(reports, /estimatedValueUnderReview/);
   assert.match(reports, /separată de venitul confirmat/);
   assert.match(reports, /dismissedCount/);

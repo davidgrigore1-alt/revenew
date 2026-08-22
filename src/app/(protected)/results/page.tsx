@@ -18,7 +18,7 @@ export default async function ResultsPage() {
     .reduce((sum, opportunity) => sum + opportunity.estimatedValueHigh, 0);
 
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 pb-24 sm:px-6 lg:px-8 xl:pb-8">
+    <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 pb-24 sm:px-6 lg:px-8 xl:pb-8">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Identificate" value={`${summary.opportunities.length}`} detail="Oportunități găsite în workspace." />
         <MetricCard label="Contactate" value={`${contacted.length}`} detail="Oportunități unde echipa a intervenit." tone="mint" />
@@ -57,6 +57,6 @@ export default async function ResultsPage() {
       </DataCard>
 
       <DataCard title="Claritate financiară" description="Valoare estimată înseamnă potențial comercial. Venit confirmat apare doar când există date reale de atribuire." />
-    </main>
+    </div>
   );
 }

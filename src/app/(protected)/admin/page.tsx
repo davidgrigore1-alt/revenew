@@ -33,7 +33,7 @@ export default async function AdminPage({
     : null;
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader
         title="Control operațional"
         description="Venituri, costuri, utilizare și sănătatea platformei."
@@ -182,6 +182,6 @@ export default async function AdminPage({
           </div>
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

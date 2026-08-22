@@ -10,7 +10,7 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 
 const tones: Record<BadgeTone, string> = {
   neutral: "border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-secondary))]",
-  brand: "border-[rgb(var(--brand-300))] bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))] dark:border-[rgb(var(--brand-700))] dark:bg-[rgb(var(--brand-950))] dark:text-[rgb(var(--brand-300))]",
+  brand: "border-[rgb(var(--brand-300))] bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))] dark:border-[rgb(var(--primary)/0.52)] dark:bg-[rgb(var(--surface-elevated))] dark:text-[rgb(var(--brand-300))]",
   success: "border-[rgb(var(--success-border))] bg-[rgb(var(--success-background))] text-[rgb(var(--success-text))]",
   info: "border-[rgb(var(--info-border))] bg-[rgb(var(--info-background))] text-[rgb(var(--info-text))]",
   warning: "border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] text-[rgb(var(--warning-text))]",

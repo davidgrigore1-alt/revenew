@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
-import { PageShell } from "@/components/dashboard/PageShell";
+import { Logo } from "@/components/ui/Logo";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getPostBusinessDestination } from "@/lib/billing/paid-access";
@@ -30,13 +30,10 @@ function OnboardingErrorCard({ message }: { message: string }) {
 
 export default async function OnboardingPage() {
   const pageContent = (children: React.ReactNode) => (
-    <PageShell
-      eyebrow="Onboarding"
-      title="Configurează firma pentru ReveNew"
-      description="Completează contextul comercial ca scorurile, documentele și oportunitățile să fie relevante pentru firma ta."
-    >
-      {children}
-    </PageShell>
+    <main className="min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
+      <header className="flex h-14 items-center justify-center border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))]"><Logo href="/" /></header>
+      <section className="mx-auto w-full max-w-[1320px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10">{children}</section>
+    </main>
   );
 
   let authUser;
@@ -122,6 +119,15 @@ export default async function OnboardingPage() {
     <div className="grid gap-6">
       {!isSupabaseConfigured ? <DemoNotice /> : null}
       <OnboardingForm initialDraft={restoredDraft} initialStep={savedDraft?.current_step ?? 0} initialEntryMode={savedDraft?.entry_mode ?? "manual"} resumed={Boolean(savedDraft)} />
+      <aside className="sr-only" aria-label="Contractul configurării">
+          <div><p className="text-label text-[rgb(var(--primary))]">Contractul configurării</p><h2 className="mt-2 text-lg font-semibold">Context suficient. Nimic inventat.</h2></div>
+          <ol className="grid gap-4 text-sm leading-6">
+            <li><span className="mr-2 font-semibold tabular-nums text-[rgb(var(--primary))]">01</span>Datele descriu activitatea reală.</li>
+            <li><span className="mr-2 font-semibold tabular-nums text-[rgb(var(--primary))]">02</span>Poți reveni la configurare înainte de activare.</li>
+            <li><span className="mr-2 font-semibold tabular-nums text-[rgb(var(--primary))]">03</span>Recomandările rămân sub control uman.</li>
+          </ol>
+          <p className="border-t border-[rgb(var(--border))] pt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">ReveNew folosește acest context pentru prioritizare și documente. Nu declanșează acțiuni comerciale externe în numele tău.</p>
+      </aside>
     </div>
   );
 }

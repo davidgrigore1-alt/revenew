@@ -70,16 +70,17 @@ test("migration is additive, tenant-safe, RLS-enabled and validates contact scop
   assert.doesNotMatch(migration, /disable row level security|businesses\.owner_id|grant all on table public\.commercial_responses to authenticated|drop\s+(?:table|schema|column)|truncate/i);
 });
 
-test("dashboard and reports separate responses, outcomes and confirmed revenue", async () => {
+test("reports separate responses, outcomes and confirmed revenue while Home stays operational", async () => {
   const summary = await readFile(new URL("../src/lib/commercial-response-summary.ts", import.meta.url), "utf8");
   const dashboard = await readFile(new URL("../src/app/(protected)/dashboard/page.tsx", import.meta.url), "utf8");
   const reports = await readFile(new URL("../src/app/(protected)/reports/page.tsx", import.meta.url), "utf8");
   assert.match(summary, /lifecycle_status === "won" && row\.currency === "RON"/);
   assert.match(summary, /actual_outcome_amount/);
   assert.doesNotMatch(summary, /estimated_value|send_attempt_count|test_completed/);
-  for (const source of [dashboard, reports]) {
+  for (const source of [reports]) {
     assert.match(source, /Răspunsuri primite/);
     assert.match(source, /Venit recuperat confirmat/);
     assert.match(source, /Rată de răspuns/);
   }
+  assert.doesNotMatch(dashboard, /Răspunsuri primite|Venit recuperat confirmat|Rată de răspuns/);
 });

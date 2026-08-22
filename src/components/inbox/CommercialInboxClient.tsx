@@ -6,7 +6,6 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { SignalPreparationPanel } from "@/components/signals/SignalPreparationPanel";
 import { Button } from "@/components/ui/Button";
-import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusNotice } from "@/components/ui/StatusNotice";
@@ -187,11 +186,11 @@ function reviewFormFor(signal: CommercialSignal): ReviewForm {
 }
 
 function fieldClasses() {
-  return "min-h-11 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]";
+  return "focus-ring min-h-10 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-3 text-sm text-[rgb(var(--foreground))] transition-colors hover:border-[rgb(var(--border-strong))]";
 }
 
-function Field({ label, required = false, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
-  return <label className="grid gap-2 text-sm font-medium text-[rgb(var(--foreground))]">
+function Field({ label, required = false, hint, className = "", children }: { label: string; required?: boolean; hint?: string; className?: string; children: React.ReactNode }) {
+  return <label className={`grid gap-1.5 text-xs font-semibold text-[rgb(var(--text-secondary))] ${className}`}>
     <span className="flex flex-wrap items-center justify-between gap-2">
       <span>{label}</span>
       <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span>
@@ -278,19 +277,6 @@ export function CommercialInboxClient({
     || Number(b.estimatedRecoverableValue ?? 0) - Number(a.estimatedRecoverableValue ?? 0)
     || new Date(a.lastInteractionAt ?? a.createdAt ?? 0).getTime() - new Date(b.lastInteractionAt ?? b.createdAt ?? 0).getTime()), [confidence, duplicateFilter, initialBatchId, matchFilter, minimumValue, ownerFilter, query, queueFilter, reviewStatus, signals, source, urgency]);
 
-  const awaitingReview = signals.filter((signal) => ["ready_for_review", "postponed"].includes(signal.reviewStatus));
-  const estimatedUnderReviewByCurrency = awaitingReview.reduce<Record<string, number>>((totals, signal) => {
-    const value = Number(signal.estimatedRecoverableValue ?? 0);
-    if (value <= 0) return totals;
-    const currency = signal.currency || "RON";
-    totals[currency] = (totals[currency] ?? 0) + value;
-    return totals;
-  }, {});
-  const estimatedUnderReview = Object.entries(estimatedUnderReviewByCurrency)
-    .sort(([currencyA], [currencyB]) => currencyA.localeCompare(currencyB))
-    .map(([currency, value]) => formatCurrency(value, currency))
-    .join(" · ") || "—";
-  const converted = signals.filter((signal) => signal.reviewStatus === "converted").length;
   const advancedFilterCount = [confidence !== "all", source !== "all", Boolean(minimumValue), matchFilter !== "all", duplicateFilter !== "all" || ownerFilter !== "all"].filter(Boolean).length;
 
   function replaceSignal(signal: CommercialSignal) {
@@ -470,49 +456,29 @@ export function CommercialInboxClient({
       {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
 
-      {selectedSignal ? (
-        <section id="signal-intelligence-spotlight" data-guide-anchor="inbox-signal-intelligence" className="grid gap-3" aria-labelledby="signal-intelligence-title">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Semnal selectat · inteligență operațională</p>
-              <h2 id="signal-intelligence-title" className="mt-1 truncate text-lg font-semibold text-[rgb(var(--foreground))] sm:text-xl">{selectedSignal.title}</h2>
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew structurează problema, dovada și informația lipsă înaintea deciziei echipei.</p>
-            </div>
-            <Button href="#signal-review-panel" variant="secondary" size="small">Revizuiește semnalul</Button>
+      <section aria-label="Comenzi Inbox Comercial" className="border-y border-[rgb(var(--border))]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap" role="group" aria-label="Starea semnalelor">
+            {queueFilters.map((filter) => <button key={filter.id} type="button" onClick={() => setQueueFilter(filter.id)} aria-pressed={queueFilter === filter.id} className={`focus-ring min-h-10 border-b-2 px-3 text-xs font-semibold transition-colors ${queueFilter === filter.id ? "border-[rgb(var(--primary))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]"}`}>{filter.label}</button>)}
           </div>
-          <SignalPreparationPanel
-            signal={selectedSignal}
-            compact
-            action={<Button
-              onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza și acțiunea recomandată sunt pregătite. Verifică faptele, riscurile și termenul, apoi salvează revizuirea.")}
-              disabled={isPending || selectedSignal.status === "converted"}
-              loading={isPending}
-              size="small"
-            >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou" : "Pregătește analiza"}</Button>}
-          />
-        </section>
-      ) : null}
-
-      <div className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 sm:hidden" role="group" aria-label="Fluxul de la semnal la oportunitate">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Flux controlat</p>
-        <p className="mt-2 text-sm font-semibold">Semnal primit <span aria-hidden="true">→</span> Revizuire <span aria-hidden="true">→</span> Decizie umană <span aria-hidden="true">→</span> Oportunitate</p>
-        <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Nimic nu este convertit sau trimis fără confirmarea echipei.</p>
-      </div>
-      <ol className="hidden overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:grid sm:grid-cols-4" aria-label="Fluxul de la semnal la oportunitate">
-        {[['01', 'Semnal primit', 'Date încă neaprobate'], ['02', 'Revizuire', 'Context și estimări verificate'], ['03', 'Decizie umană', 'Aprobă, amână sau ignoră'], ['04', 'Oportunitate', 'Responsabil și acțiune următoare']].map(([number, title, copy], index) => <li key={number} className="relative border-b border-[rgb(var(--border))] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0"><span className="text-xs font-semibold text-[rgb(var(--primary))]">{number}</span><strong className="mt-1 block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{copy}</span>{index < 3 ? <span className="absolute right-[-5px] top-1/2 z-10 hidden size-2.5 -translate-y-1/2 rotate-45 border-r border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] sm:block" aria-hidden="true" /> : null}</li>)}
-      </ol>
-
-      <DataSummaryStrip label="Rezumat Inbox Comercial" items={[
-        { label: "În revizuire", value: awaitingReview.length, note: "Necesită decizia echipei.", tone: "warning" },
-        { label: "Valoare estimată, neconfirmată", value: estimatedUnderReview, note: "Grupată pe monedă; separat de venitul confirmat.", tone: "brand" },
-        { label: "Convertite", value: converted, note: "Aprobate de echipă.", tone: "success" },
-        { label: "Control extern", value: "Manual", note: "Nicio trimitere automată.", tone: "neutral" }
-      ]} />
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-2xl text-sm text-[rgb(var(--muted-foreground))]">ReveNew recomandă. Echipa ta verifică, editează și aprobă înainte de orice acțiune externă.</p>
-        <Button onClick={() => setCreateOpen((open) => !open)}>{createOpen ? "Închide" : "Adaugă semnal"}</Button>
-      </div>
+          <Button size="small" onClick={() => setCreateOpen((open) => !open)}>{createOpen ? "Închide formularul" : "Adaugă semnal"}</Button>
+        </div>
+        <div aria-label="Filtre semnale" className="flex snap-x gap-2 overflow-x-auto border-t border-[rgb(var(--border))] py-2 md:grid md:overflow-visible md:grid-cols-[minmax(14rem,1fr)_11rem_11rem]">
+          <Field label="Caută" className="min-w-[15rem] snap-start md:min-w-0"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className={fieldClasses()} /></Field>
+          <Field label="Revizuire" className="min-w-[10.5rem] snap-start md:min-w-0"><select value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value as CommercialSignalReviewStatus | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+          <Field label="Urgență" className="min-w-[10.5rem] snap-start md:min-w-0"><select value={urgency} onChange={(event) => setUrgency(event.target.value as RecoverabilityUrgency | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(urgencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+        </div>
+        <details className="group border-t border-[rgb(var(--border))] py-1" open={advancedFilterCount > 0}>
+          <summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-secondary))] marker:hidden hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">Filtre avansate {advancedFilterCount ? <span className="ml-2 rounded-full bg-[rgb(var(--primary-muted))] px-2 py-0.5 text-[0.6875rem] text-[rgb(var(--primary))]">{advancedFilterCount} active</span> : null}<span aria-hidden="true" className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span aria-hidden="true" className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></summary>
+          <div className="grid gap-2 border-l-2 border-[rgb(var(--primary)/0.28)] py-2 pl-3 md:grid-cols-3 xl:grid-cols-5">
+            <Field label="Încredere"><select value={confidence} onChange={(event) => setConfidence(event.target.value as RecoverabilityConfidence | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(confidenceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+            <Field label="Sursă"><select value={source} onChange={(event) => setSource(event.target.value as CommercialSignalSource | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+            <Field label="Valoare minimă"><input type="number" min="0" value={minimumValue} onChange={(event) => setMinimumValue(event.target.value)} className={fieldClasses()} /></Field>
+            <Field label="Potrivire"><select value={matchFilter} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)} className={fieldClasses()}><option value="all">Toate</option><option value="matched">Potrivite</option><option value="unmatched">Nepotrivite</option></select></Field>
+            <Field label="Excepții"><select value={`${duplicateFilter}:${ownerFilter}`} onChange={(event) => { const [duplicate, owner] = event.target.value.split(":"); setDuplicateFilter(duplicate as typeof duplicateFilter); setOwnerFilter(owner as typeof ownerFilter); }} className={fieldClasses()}><option value="all:all">Toate</option><option value="risk:all">Risc duplicat</option><option value="all:unassigned">Fără responsabil</option><option value="all:assigned">Cu responsabil</option></select></Field>
+          </div>
+        </details>
+      </section>
 
       {createOpen ? (
         <DataCard title="Adaugă un semnal comercial" description="Copiază mesajul sau nota exact așa cum a fost primită. ReveNew pregătește contextul, iar tu alegi ce se aplică.">
@@ -548,49 +514,28 @@ export function CommercialInboxClient({
         </DataCard>
       ) : null}
 
-      <DataCard title="Semnale de revizuit" description="Filtre simple pentru captură, legare și conversie. Ordinea pune în față urgența și vechimea.">
-        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtre stare semnal">
-          {queueFilters.map((filter) => <Button key={filter.id} variant={queueFilter === filter.id ? "secondary" : "ghost"} size="small" onClick={() => setQueueFilter(filter.id)} aria-pressed={queueFilter === filter.id}>{filter.label}</Button>)}
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Caută"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className={fieldClasses()} /></Field>
-          <Field label="Revizuire"><select value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value as CommercialSignalReviewStatus | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-          <Field label="Urgență"><select value={urgency} onChange={(event) => setUrgency(event.target.value as RecoverabilityUrgency | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(urgencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-        </div>
-        <details className="group mt-4 border-t border-[rgb(var(--border))] pt-3" open={advancedFilterCount > 0}>
-          <summary className="focus-ring inline-flex min-h-10 cursor-pointer list-none items-center rounded-button px-2 text-sm font-semibold text-[rgb(var(--text-secondary))] marker:hidden">Filtre avansate {advancedFilterCount ? <span className="ml-2 rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-xs">{advancedFilterCount} active</span> : null}</summary>
-          <div className="mt-3 grid gap-3 md:grid-cols-3 xl:grid-cols-5">
-            <Field label="Încredere"><select value={confidence} onChange={(event) => setConfidence(event.target.value as RecoverabilityConfidence | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(confidenceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-            <Field label="Sursă"><select value={source} onChange={(event) => setSource(event.target.value as CommercialSignalSource | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(sourceLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
-            <Field label="Valoare minimă"><input type="number" min="0" value={minimumValue} onChange={(event) => setMinimumValue(event.target.value)} className={fieldClasses()} /></Field>
-            <Field label="Potrivire"><select value={matchFilter} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)} className={fieldClasses()}><option value="all">Toate</option><option value="matched">Potrivite</option><option value="unmatched">Nepotrivite</option></select></Field>
-            <Field label="Excepții"><select value={`${duplicateFilter}:${ownerFilter}`} onChange={(event) => { const [duplicate, owner] = event.target.value.split(":"); setDuplicateFilter(duplicate as typeof duplicateFilter); setOwnerFilter(owner as typeof ownerFilter); }} className={fieldClasses()}><option value="all:all">Toate</option><option value="risk:all">Risc duplicat</option><option value="all:unassigned">Fără responsabil</option><option value="all:assigned">Cu responsabil</option></select></Field>
+      <div className="grid min-w-0 border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.55fr)]">
+        <section className="min-w-0 border-t border-[rgb(var(--border))] xl:border-r" aria-labelledby="signal-list-title">
+          <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] px-3 py-2.5">
+            <h2 id="signal-list-title" className="text-sm font-semibold">Semnale <span className="font-normal text-[rgb(var(--text-muted))]">({filteredSignals.length})</span></h2>
+            <span className="text-xs text-[rgb(var(--text-faint))]">Selectează pentru revizuire</span>
           </div>
-        </details>
-      </DataCard>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)]">
-        <DataCard title={`Semnale (${filteredSignals.length})`}>
-          <div className="grid gap-3">
+          <div className="divide-y divide-[rgb(var(--border))]">
             {filteredSignals.map((signal) => (
-              <button key={signal.id} type="button" onClick={() => selectSignal(signal)} className={`focus-ring rounded-lg border p-4 text-left transition ${selectedId === signal.id ? "border-[rgb(var(--primary))] bg-[rgb(var(--muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] hover:border-[rgb(var(--primary))]"}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted-foreground))]">{sourceLabels[signal.source]}</span>
-                  <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(signal.urgencyLevel)}`}>{signal.urgencyLevel ? urgencyLabels[signal.urgencyLevel] : "Neanalizat"}</span>
+              <button key={signal.id} type="button" onClick={() => selectSignal(signal)} aria-current={selectedId === signal.id ? "true" : undefined} className={`focus-ring group relative grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-colors ${selectedId === signal.id ? "border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] shadow-[inset_0_0_0_1px_rgb(var(--border-strong))]" : "border-l-transparent hover:bg-[rgb(var(--surface-elevated))]"}`}>
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0"><span className="block truncate font-semibold text-[rgb(var(--foreground))]">{signal.title}</span><span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-muted))]">{signal.contactCompany || signal.contactName || "Companie neconfirmată"}</span></span>
+                  <span className={`shrink-0 rounded border px-2 py-0.5 text-[0.6875rem] font-semibold ${urgencyClass(signal.urgencyLevel)}`}>{signal.urgencyLevel ? urgencyLabels[signal.urgencyLevel] : "Neanalizat"}</span>
                 </div>
-                <h3 className="mt-3 font-semibold text-[rgb(var(--foreground))]">{signal.title}</h3>
-                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{signal.contactCompany || signal.contactName || "Companie neconfirmată"}</p>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Scor</span><strong>{signal.recoverabilityScore ?? "—"}</strong></div>
-                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Valoare estimată</span><strong>{signal.estimatedRecoverableValue === null || signal.estimatedRecoverableValue === undefined ? "—" : formatCurrency(Number(signal.estimatedRecoverableValue), signal.currency)}</strong></div>
-                  <div><span className="block text-xs text-[rgb(var(--muted-foreground))]">Stare</span><strong>{reviewLabels[signal.reviewStatus]}</strong></div>
+                <p className="line-clamp-2 text-xs leading-5 text-[rgb(var(--text-secondary))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[0.6875rem] text-[rgb(var(--text-faint))]">
+                  <span>{sourceLabels[signal.source]} · {reviewLabels[signal.reviewStatus]}</span>
+                  <span className="font-semibold tabular-nums text-[rgb(var(--foreground))]">{signal.estimatedRecoverableValue === null || signal.estimatedRecoverableValue === undefined ? "Valoare neconfirmată" : formatCurrency(Number(signal.estimatedRecoverableValue), signal.currency)}</span>
                 </div>
-                <p className="mt-3 line-clamp-2 text-sm text-[rgb(var(--muted-foreground))]">{signal.recommendedAction || signal.extractedSummary || signal.rawMessage || "Necesită completarea contextului."}</p>
-                <span className="mt-3 inline-flex text-xs font-semibold text-[rgb(var(--primary))]">{signal.status === "converted" ? "Vezi conversia" : signal.status === "archived" ? "Vezi decizia" : "Revizuiește semnalul"} <span className="ml-1" aria-hidden="true">→</span></span>
               </button>
             ))}
             {filteredSignals.length === 0 ? signals.length === 0 ? (
-              <div className="grid gap-4 rounded-lg border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5">
+              <div className="grid gap-4 p-5">
                 <div>
                   <h3 className="font-semibold text-[rgb(var(--foreground))]">Inbox-ul Comercial este pregătit</h3>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Importă cereri vechi din CSV sau detectează oportunități fără follow-up. Datele devin semnale pentru analiză, nu oportunități aprobate automat.</p>
@@ -600,12 +545,20 @@ export function CommercialInboxClient({
               </div>
             ) : <EmptyState title="Niciun rezultat pentru filtrele curente" description="Modifică filtrele sau căutarea pentru a vedea alte semnale." /> : null}
           </div>
-        </DataCard>
+        </section>
 
-        <div id="signal-review-panel" className="scroll-mt-24">
-        <DataCard title={selectedSignal ? `Revizuire: ${selectedSignal.title}` : "Revizuire semnal"} description={reviewForm.opportunityId ? "Verifică datele și confirmă acțiunea internă pentru oportunitatea existentă. Nu se trimite niciun mesaj." : "Verifică datele și confirmă oportunitatea nouă. Nu se trimite niciun mesaj."}>
+        <section id="signal-review-panel" className="min-w-0 scroll-mt-24 border-t border-[rgb(var(--border))]" aria-labelledby="signal-review-title">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgb(var(--border))] px-4 py-3">
+            <div className="min-w-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Revizuire controlată</p><h2 id="signal-review-title" className="mt-1 truncate text-base font-semibold">{selectedSignal?.title ?? "Revizuire semnal"}</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{reviewForm.opportunityId ? "Confirmă acțiunea internă pentru oportunitatea existentă." : "Confirmă datele înainte de a crea oportunitatea."} Nu se trimite niciun mesaj.</p></div>
+            {selectedSignal ? <Button
+              onClick={() => runAction(() => analyzeCommercialSignal(selectedSignal.id), "Analiza și acțiunea recomandată sunt pregătite. Verifică faptele, riscurile și termenul, apoi salvează revizuirea.")}
+              disabled={isPending || selectedSignal.status === "converted"}
+              loading={isPending}
+              size="small"
+            >{selectedSignal.analysisStatus === "completed" ? "Pregătește din nou" : "Pregătește analiza"}</Button> : null}
+          </div>
           {selectedSignal ? (
-            <div className="grid gap-6">
+            <div className="grid gap-5 p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded border border-[rgb(var(--border))] px-2 py-1 text-xs font-semibold">{reviewLabels[selectedSignal.reviewStatus]}</span>
                 <span className={`rounded border px-2 py-1 text-xs font-semibold ${urgencyClass(selectedSignal.urgencyLevel)}`}>{selectedSignal.urgencyLevel ? urgencyLabels[selectedSignal.urgencyLevel] : "Neanalizat"}</span>
@@ -616,20 +569,22 @@ export function CommercialInboxClient({
                 <span className="text-xs text-[rgb(var(--muted-foreground))]">Primit {formatDateTimeWithSeconds(selectedSignal.createdAt ?? undefined)}</span>
               </div>
 
+              <SignalPreparationPanel signal={selectedSignal} compact />
+
               {selectedSignal.analysisStatus === "completed" ? (
-                <DataSummaryStrip label="Interpretarea semnalului selectat" items={[
-                  { label: "Scor recuperabilitate", value: `${selectedSignal.recoverabilityScore ?? 0}/100`, note: "Prioritate estimată; necesită revizuire.", tone: "brand" },
-                  { label: "Valoare estimată, neconfirmată", value: formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency), note: "Nu reprezintă venit confirmat.", tone: "neutral" },
-                  { label: "Încredere", value: selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută", note: selectedSignal.primaryRecoveryReason ?? "Motiv în curs de confirmare.", tone: "warning" },
-                  { label: "Decizie", value: "Umană", note: reviewForm.opportunityId ? "Aprobarea creează o acțiune internă." : "Aprobarea creează oportunitatea.", tone: "success" }
-                ]} />
+                <dl aria-label="Interpretarea semnalului selectat" className="grid border-y border-[rgb(var(--border))] sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 sm:border-r xl:border-b-0"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Scor recuperabilitate</dt><dd className="mt-1 text-base font-semibold tabular-nums">{selectedSignal.recoverabilityScore ?? 0}/100</dd><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Prioritate estimată.</p></div>
+                  <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 xl:border-b-0 xl:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Valoare estimată, neconfirmată</dt><dd className="mt-1 text-base font-semibold tabular-nums">{formatCurrency(Number(selectedSignal.estimatedRecoverableValue ?? 0), selectedSignal.currency)}</dd><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Nu reprezintă venit confirmat.</p></div>
+                  <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 sm:border-b-0 sm:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Încredere</dt><dd className="mt-1 text-base font-semibold">{selectedSignal.confidenceLevel ? confidenceLabels[selectedSignal.confidenceLevel] : "Necunoscută"}</dd><p className="mt-0.5 line-clamp-1 text-xs text-[rgb(var(--text-muted))]">{selectedSignal.primaryRecoveryReason ?? "Motiv de confirmat."}</p></div>
+                  <div className="px-3 py-2.5"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Decizie</dt><dd className="mt-1 text-base font-semibold">Umană</dd><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Aprobarea aplică schimbarea internă.</p></div>
+                </dl>
               ) : (
                 <StatusNotice tone="neutral">Rulează analiza pentru a obține o prioritate estimată, apoi verifică rezultatul înainte de aprobare.</StatusNotice>
               )}
 
               {selectedSignal.uncertaintyNotes.length > 0 ? <StatusNotice tone="warning">{selectedSignal.uncertaintyNotes.join(" ")}</StatusNotice> : null}
 
-              <section aria-labelledby="signal-essential-title" className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+              <section aria-labelledby="signal-essential-title" className="border-t border-[rgb(var(--border))] pt-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">01 · Date esențiale</p>
                   <h3 id="signal-essential-title" className="mt-1 text-base font-semibold">Confirmă ce s-a întâmplat și unde există valoare</h3>
@@ -643,7 +598,7 @@ export function CommercialInboxClient({
                 </div>
               </section>
 
-              <section aria-labelledby="signal-action-title" className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
+              <section aria-labelledby="signal-action-title" className="border-t border-[rgb(var(--border))] pt-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">02 · Acțiune și responsabil</p>
                   <h3 id="signal-action-title" className="mt-1 text-base font-semibold">Stabilește primul pas sigur</h3>
@@ -656,12 +611,12 @@ export function CommercialInboxClient({
                 </div>
               </section>
 
-              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+              <details className="group border-t border-[rgb(var(--border))] pt-1">
+                <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-2 py-2 text-sm font-semibold marker:hidden hover:bg-[rgb(var(--surface-muted))]">
                   <span>Detalii de contact și context <span className="font-normal text-[rgb(var(--text-muted))]">· consultă numai dacă influențează decizia</span></span>
                   <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2">
+                <div className="mt-1 grid gap-3 border-l-2 border-[rgb(var(--primary)/0.28)] py-3 pl-3 md:grid-cols-2">
                   <Field label="Email"><input type="email" value={reviewForm.email} onChange={(event) => setReviewForm({ ...reviewForm, email: event.target.value })} className={fieldClasses()} /></Field>
                   <Field label="Telefon"><input value={reviewForm.phone} onChange={(event) => setReviewForm({ ...reviewForm, phone: event.target.value })} className={fieldClasses()} /></Field>
                   <Field label="Ultima interacțiune"><input type="datetime-local" value={reviewForm.lastInteractionAt} onChange={(event) => setReviewForm({ ...reviewForm, lastInteractionAt: event.target.value })} className={fieldClasses()} /></Field>
@@ -669,12 +624,12 @@ export function CommercialInboxClient({
                 </div>
               </details>
 
-              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+              <details className="group border-t border-[rgb(var(--border))] pt-1">
+                <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-2 py-2 text-sm font-semibold marker:hidden hover:bg-[rgb(var(--surface-muted))]">
                   <span>03 · Legături CRM <span className="font-normal text-[rgb(var(--text-muted))]">· previn duplicatele și păstrează continuitatea</span></span>
                   <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-1 grid gap-3 border-l-2 border-[rgb(var(--primary)/0.28)] py-3 pl-3 md:grid-cols-2 xl:grid-cols-3">
                   <Field label="Companie CRM"><select value={reviewForm.organizationId} onChange={(event) => setReviewForm({ ...reviewForm, organizationId: event.target.value, contactId: "", opportunityId: "" })} className={fieldClasses()}><option value="">Fără potrivire</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select></Field>
                   <Field label="Contact CRM"><select value={reviewForm.contactId} onChange={(event) => setReviewForm({ ...reviewForm, contactId: event.target.value })} className={fieldClasses()}><option value="">Fără potrivire</option>{contacts.filter((contact) => !reviewForm.organizationId || !contact.organizationId || contact.organizationId === reviewForm.organizationId).map((contact) => <option key={contact.id} value={contact.id}>{contact.fullName}{contact.email ? ` · ${contact.email}` : ""}</option>)}</select></Field>
                   <Field label="Oportunitate existentă"><select value={reviewForm.opportunityId} onChange={(event) => setReviewForm({ ...reviewForm, opportunityId: event.target.value })} className={fieldClasses()}><option value="">Creează oportunitate nouă</option>{opportunities.filter((opportunity) => !reviewForm.organizationId || !opportunity.organizationId || opportunity.organizationId === reviewForm.organizationId).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{opportunity.title}</option>)}</select></Field>
@@ -683,12 +638,12 @@ export function CommercialInboxClient({
                 </div>
               </details>
 
-              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+              <details className="group border-t border-[rgb(var(--border))] pt-1">
+                <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-2 py-2 text-sm font-semibold marker:hidden hover:bg-[rgb(var(--surface-muted))]">
                   <span>04 · Draft recomandat <span className="font-normal text-[rgb(var(--text-muted))]">· opțional, netrimis automat</span></span>
                   <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4">
+                <div className="mt-1 grid gap-3 border-l-2 border-[rgb(var(--primary)/0.28)] py-3 pl-3">
                   <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Poți edita conținutul. ReveNew îl păstrează ca draft intern, iar utilizarea externă necesită revizuire și aprobare umană.</p>
                   <Field label="Subiect"><input maxLength={160} value={reviewForm.draftSubject} onChange={(event) => setReviewForm({ ...reviewForm, draftSubject: event.target.value })} className={fieldClasses()} /></Field>
                   <Field label="Mesaj"><textarea rows={7} maxLength={4000} value={reviewForm.draftBody} onChange={(event) => setReviewForm({ ...reviewForm, draftBody: event.target.value })} placeholder="Draft opțional; necesită revizuire umană." className={`${fieldClasses()} py-3`} /></Field>
@@ -709,12 +664,12 @@ export function CommercialInboxClient({
                 : "La aprobare, ReveNew creează o oportunitate și o acțiune internă din datele revizuite. Nu se trimite niciun mesaj."}</StatusNotice>
 
               {selectedSignal.status !== "converted" ? (
-                <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                  <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+                <details className="group border-t border-[rgb(var(--border))] pt-1">
+                  <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-2 py-2 text-sm font-semibold marker:hidden hover:bg-[rgb(var(--surface-muted))]">
                     <span>Amânare, respingere și arhivare <span className="font-normal text-[rgb(var(--text-muted))]">· decizii secundare</span></span>
                     <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                   </summary>
-                  <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4">
+                  <div className="mt-1 grid gap-4 border-l-2 border-[rgb(var(--primary)/0.28)] py-3 pl-3">
                     <div className="grid gap-4 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 lg:grid-cols-[minmax(0,1fr)_minmax(15rem,0.72fr)]">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Reia revizuirea</p>
@@ -736,17 +691,16 @@ export function CommercialInboxClient({
                 </details>
               ) : null}
 
-              <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
-                <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
+              <details className="group border-t border-[rgb(var(--border))] pt-1">
+                <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-button px-2 py-2 text-sm font-semibold marker:hidden hover:bg-[rgb(var(--surface-muted))]">
                   <span>Istoric verificabil <span className="font-normal text-[rgb(var(--text-muted))]">· {(selectedSignal.events ?? []).length} evenimente</span></span>
                   <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <div className="grid gap-3 border-t border-[rgb(var(--border))] p-4">{(selectedSignal.events ?? []).map((event) => <div key={event.id} className="rounded-lg bg-[rgb(var(--surface-elevated))] p-3"><p className="text-sm font-medium">{event.description || event.eventType}</p><p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{formatDateTimeWithSeconds(event.createdAt)}</p></div>)}{(selectedSignal.events ?? []).length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente înregistrate încă.</p> : null}</div>
+                <div className="mt-1 divide-y divide-[rgb(var(--border))] border-l-2 border-[rgb(var(--primary)/0.28)] pl-3">{(selectedSignal.events ?? []).map((event) => <div key={event.id} className="py-3"><p className="text-sm font-medium">{event.description || event.eventType}</p><p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{formatDateTimeWithSeconds(event.createdAt)}</p></div>)}{(selectedSignal.events ?? []).length === 0 ? <p className="py-3 text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente înregistrate încă.</p> : null}</div>
               </details>
             </div>
-          ) : <EmptyState title="Selectează un semnal" description="Alege un element din coadă pentru analiză și revizuire." />}
-        </DataCard>
-        </div>
+          ) : <div className="p-5"><EmptyState title="Selectează un semnal" description="Alege un element din coadă pentru analiză și revizuire." /></div>}
+        </section>
       </div>
     </div>
   );

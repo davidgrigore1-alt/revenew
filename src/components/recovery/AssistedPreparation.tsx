@@ -20,13 +20,13 @@ export function AssistedPreparation({
   actionLabel = "Revizuiește oportunitatea"
 }: AssistedPreparationProps) {
   return (
-    <Card as="section" variant="subtle" padding="default" aria-labelledby="assisted-preparation-title" className="overflow-hidden border-[rgb(var(--gold-300)/0.5)] dark:border-[rgb(var(--gold-700)/0.45)]">
+    <Card as="section" variant="subtle" padding="default" aria-labelledby="assisted-preparation-title" className="overflow-hidden border-[rgb(var(--border-strong))]">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--gold-100))] text-[rgb(var(--gold-700))] dark:bg-[rgb(var(--gold-700)/0.16)] dark:text-[rgb(var(--gold-300))]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--primary))]">
           <ClipboardDocumentCheckIcon className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Pregătire asistată</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-secondary))]">Pregătire asistată</p>
           <h2 id="assisted-preparation-title" className="mt-1 text-section-title font-semibold tracking-[-0.015em]">Pregătire pentru următoarea acțiune</h2>
           <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{context}</p>
         </div>

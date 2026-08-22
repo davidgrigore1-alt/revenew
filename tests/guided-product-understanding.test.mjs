@@ -64,12 +64,14 @@ test("shared shell exposes first-run and replay guidance without changing server
   assert.doesNotMatch(shell + header + pageShell, /supabase|server action|database/i);
 });
 
-test("dashboard guidance preserves visible estimated and confirmed financial indicators", () => {
+test("dashboard guidance keeps the primary surface sparse while preserving financial semantics in action context", () => {
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   const brief = read("src/components/dashboard/ExecutiveMorningBrief.tsx");
-  assert.match(dashboard, /<ContextualPageGuide showFlow \/>/);
-  assert.match(dashboard, /Potențial urmărit · RON/);
-  assert.match(dashboard, /Câștigat confirmat · Luna curentă/);
-  assert.match(dashboard, /Estimare activă; nu este venit confirmat/);
+  const todayAction = read("src/components/dashboard/TodayActionCard.tsx");
+  assert.match(dashboard, /<HomeAskSurface/);
+  assert.match(dashboard, /home-today-title/);
+  assert.match(dashboard, /home-recent-title/);
+  assert.doesNotMatch(dashboard, /Potențial urmărit · RON|Câștigat confirmat · Luna curentă/);
+  assert.match(todayAction, /Valoare estimată, neconfirmată/);
   assert.match(brief, /valoare estimată, neconfirmată/);
 });

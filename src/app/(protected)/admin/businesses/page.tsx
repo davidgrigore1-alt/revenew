@@ -16,7 +16,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const insights = await loadAdminInsights(range);
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader
         title="Firme"
         description="Analiză business-by-business pentru valoare configurată, cost API, consum și avertismente operaționale."
@@ -28,6 +28,6 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
           <BusinessCostTable businesses={insights.businesses} />
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

@@ -2,7 +2,6 @@ import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { OpportunitiesExplorer } from "@/components/opportunities/OpportunitiesExplorer";
 import { Button } from "@/components/ui/Button";
-import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { OpportunityFilters, type OpportunityFilterState } from "@/components/filters/OpportunityFilters";
@@ -59,15 +58,13 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <DataSummaryStrip label="Rezumat oportunități" items={[
-          { label: "Accesibile", value: allOpportunities.length, note: "Oportunități aprobate în spațiul de lucru", tone: "brand" },
-          { label: "Necesită atenție", value: attentionCount, note: "Cu risc, blocaj sau context incomplet", tone: attentionCount ? "warning" : "neutral" },
-          { label: "Fără responsabil", value: missingOwnerCount, note: "Responsabilul trebuie clarificat", tone: missingOwnerCount ? "danger" : "neutral" },
-          { label: "Scadente / restante", value: dueCount, note: "Cu acțiune în așteptare, scadentă cel târziu astăzi", tone: dueCount ? "warning" : "neutral" }
-        ]} />
-        <OpportunityFilters filters={searchParams} />
-        <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />
-        <p className="text-sm text-[rgb(var(--text-muted))]">
+        <section aria-labelledby="registry-controls-heading" className="grid gap-3 border-y border-[rgb(var(--border))] py-4">
+          <div className="flex items-center justify-between gap-4"><h2 id="registry-controls-heading" className="text-sm font-semibold">Filtre și vizualizări</h2><p className="text-xs text-[rgb(var(--text-muted))]">Restrânge registrul la excepțiile relevante.</p></div>
+          <OpportunityFilters filters={searchParams} />
+          <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />
+        </section>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-[rgb(var(--text-muted))]"><span><strong className="text-[rgb(var(--foreground))]">{allOpportunities.length}</strong> accesibile</span><span><strong className="text-[rgb(var(--warning-text))]">{attentionCount}</strong> necesită atenție</span><span><strong className="text-[rgb(var(--foreground))]">{missingOwnerCount}</strong> fără responsabil</span><span><strong className="text-[rgb(var(--foreground))]">{dueCount}</strong> scadente sau restante</span></div>
+        <p className="border-b border-[rgb(var(--border))] pb-3 text-sm text-[rgb(var(--text-muted))]">
           {filtered.length} {filtered.length === 1 ? "oportunitate" : "oportunități"} în selecția curentă · pagina {page}
         </p>
         <OpportunitiesExplorer

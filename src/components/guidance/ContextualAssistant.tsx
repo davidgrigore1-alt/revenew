@@ -15,7 +15,7 @@ const ASSISTANT_TRANSITION_MS = 160;
 
 export function AssistantButton({ className }: { className?: string }) {
   return (
-    <button type="button" className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--primary)/0.28)] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] shadow-sm transition-colors hover:border-[rgb(var(--primary)/0.5)] hover:bg-[rgb(var(--primary-muted))] sm:px-3", className)} onClick={() => window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT))} aria-label="Deschide Asistent ReveNew">
+    <button type="button" className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] transition-colors hover:bg-[rgb(var(--surface-muted))] sm:px-3", className)} onClick={() => window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT))} aria-label="Deschide Asistent ReveNew">
       <QuestionMarkCircleIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />
       <span className="hidden sm:inline">Asistent</span>
     </button>
@@ -96,8 +96,8 @@ export function ContextualAssistant() {
 
   return (
     <div className="fixed inset-0 z-[85]" role="presentation" data-state={visible ? "open" : "closed"}>
-      <button type="button" className={cn("absolute inset-0 bg-black/50 transition-opacity duration-[160ms] ease-out motion-reduce:transition-none", visible ? "opacity-100" : "opacity-0")} aria-label="Închide Asistent ReveNew" onClick={closeAssistant} />
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contextual-assistant-title" aria-describedby="contextual-assistant-description" className={cn("absolute inset-x-0 bottom-0 flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-panel border border-[rgb(var(--primary)/0.26)] bg-[rgb(var(--surface-elevated))] shadow-modal transition-[transform,opacity] duration-[160ms] ease-out will-change-transform motion-reduce:transform-none motion-reduce:transition-none sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel", visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-full opacity-0 sm:translate-x-full sm:translate-y-0") }>
+      <button type="button" className={cn("absolute inset-0 bg-black/68 transition-opacity duration-[160ms] ease-out motion-reduce:transition-none", visible ? "opacity-100" : "opacity-0")} aria-label="Închide Asistent ReveNew" onClick={closeAssistant} />
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contextual-assistant-title" aria-describedby="contextual-assistant-description" className={cn("absolute inset-x-0 bottom-0 flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-modal transition-[transform,opacity] duration-[160ms] ease-out will-change-transform motion-reduce:transform-none motion-reduce:transition-none sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel", visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-full opacity-0 sm:translate-x-full sm:translate-y-0") }>
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 sm:p-5">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Inteligență comercială controlată</p>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
-import { BuildingOffice2Icon, EnvelopeIcon, MagnifyingGlassIcon, PhoneIcon, PlusIcon, UserIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
-import { DataSummaryStrip } from "@/components/ui/DataSummaryStrip";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
 import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
@@ -52,13 +52,6 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
     return matchesQuery && (relationship === "all" || organization.relationshipStatus === relationship);
   }), [organizations, normalizedQuery, relationship]);
   const filteredContacts = useMemo(() => contacts.filter((contact) => !normalizedQuery || `${contact.fullName} ${contact.email ?? ""} ${contact.phone ?? ""} ${contact.jobTitle ?? ""} ${contact.organization?.name ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery)), [contacts, normalizedQuery]);
-  const activeRelationships = organizations.filter((organization) => organization.relationshipStatus !== "inactive").length;
-  const companiesWithPrimaryContact = organizations.filter((organization) => contacts.some((contact) => contact.organizationId === organization.id && contact.isPrimaryForOrganization)).length;
-  const activeOpportunities = Object.values(organizationStats).reduce((sum, stat) => sum + stat.activeOpportunities, 0);
-  const decisionContacts = contacts.filter((contact) => contact.decisionRole === "decision_maker").length;
-  const primaryContacts = contacts.filter((contact) => contact.isPrimaryForOrganization).length;
-  const completeContacts = contacts.filter((contact) => contact.email && contact.phone).length;
-
   useEffect(() => {
     if (!panel) return;
     panelRef.current?.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea")?.focus();
@@ -113,33 +106,16 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
 
-      {view === "companies" ? (
-        <DataSummaryStrip label="Acoperire relații comerciale" items={[
-          { label: "Companii", value: organizations.length, note: "În spațiul de lucru curent.", tone: "brand" },
-          { label: "Relații active", value: activeRelationships, note: "Prospect, client sau partener.", tone: "neutral" },
-          { label: "Contact principal", value: `${companiesWithPrimaryContact}/${organizations.length}`, note: "Companii cu contact confirmat.", tone: companiesWithPrimaryContact === organizations.length ? "success" : "warning" },
-          { label: "Oportunități active", value: activeOpportunities, note: "Legate de companii.", tone: "neutral" }
-        ]} />
-      ) : null}
-      {view === "contacts" ? (
-        <DataSummaryStrip label="Acoperire contacte comerciale" items={[
-          { label: "Contacte", value: contacts.length, note: "Persoane active în CRM.", tone: "brand" },
-          { label: "Decidenți", value: decisionContacts, note: "Rol de decizie confirmat.", tone: "neutral" },
-          { label: "Contacte principale", value: primaryContacts, note: "Legătura principală a companiei.", tone: "neutral" },
-          { label: "Date complete", value: `${completeContacts}/${contacts.length}`, note: "Email și telefon disponibile.", tone: completeContacts === contacts.length ? "success" : "warning" }
-        ]} />
-      ) : null}
-
       <div className="flex flex-col gap-3 border-b border-[rgb(var(--border))] pb-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
           <label className="grid gap-2 text-sm font-semibold">
             Caută
             <span className="relative">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-3 h-5 w-5 text-[rgb(var(--muted-foreground))]" aria-hidden="true" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={view === "contacts" ? "Nume, companie, email sau telefon" : "Companie, industrie sau oraș"} className="h-11 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] pl-10 pr-3" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={view === "contacts" ? "Nume, companie, email sau telefon" : "Companie, industrie sau oraș"} className="focus-ring h-10 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] pl-10 pr-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]" />
             </span>
           </label>
-          {view !== "contacts" ? <label className="grid gap-2 text-sm font-semibold">Relație<select value={relationship} onChange={(event) => setRelationship(event.target.value)} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3"><option value="all">Toate</option><option value="prospect">Prospect</option><option value="customer">Client</option><option value="partner">Partener</option><option value="inactive">Inactiv</option></select></label> : <span />}
+          {view !== "contacts" ? <label className="grid gap-2 text-sm font-semibold">Relație<select value={relationship} onChange={(event) => setRelationship(event.target.value)} className="focus-ring h-10 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]"><option value="all">Toate</option><option value="prospect">Prospect</option><option value="customer">Client</option><option value="partner">Partener</option><option value="inactive">Inactiv</option></select></label> : <span />}
         </div>
         <div className="flex flex-wrap gap-2">
           {view !== "contacts" ? <Button className="gap-2" onClick={() => { setEditingOrganization(null); setPanel("organization"); }}><PlusIcon className="h-4 w-4" aria-hidden="true" />Adaugă companie</Button> : null}
@@ -291,57 +267,93 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
         </form>
       </section></div> : null}
 
-      {view !== "contacts" ? <section className="grid gap-4">
-        <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Companii</h2>
-        <div className="grid gap-3">
-          {filteredOrganizations.map((organization) => {
-            const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
-            const primary = organizationContacts.find((contact) => contact.isPrimaryForOrganization);
-            return (
-              <article key={organization.id} className="grid gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-[border-color,box-shadow] hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)_auto] lg:items-center">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--brand-100))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--surface-muted))] dark:text-[rgb(var(--brand-300))]"><BuildingOffice2Icon className="h-5 w-5" aria-hidden="true" /></span>
-                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><a href={`/crm/organizations/${organization.id}`} className="focus-ring break-words rounded-button font-semibold text-[rgb(var(--foreground))] hover:text-[rgb(var(--primary))]">{organization.name}</a><span className={`status-pill ${organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand"}`}>{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Relație neclasificată"}</span></div>
-                  <p className="mt-1 text-xs text-[rgb(var(--muted-foreground))]">{[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Industrie și localizare necompletate"}</p></div>
-                </div>
-                <div className="grid gap-1.5 text-xs text-[rgb(var(--text-muted))] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                  <p><span className="text-[rgb(var(--text-faint))]">Contact</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</strong></p>
-                  <p><span className="text-[rgb(var(--text-faint))]">Activitate</span><br /><strong className="font-semibold text-[rgb(var(--foreground))]">{formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</strong></p>
-                  <p className="sm:col-span-2 lg:col-span-1 xl:col-span-2">{organizationContacts.length} contacte · {organizationStats[organization.id]?.activeOpportunities ?? 0} oportunități active</p>
-                </div>
-                <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center lg:justify-end">
-                    <Button href={`/crm/organizations/${organization.id}`} className="w-full sm:w-auto" aria-label={`Vezi detalii pentru ${organization.name}`}>Vezi detalii</Button>
-                    <Button variant="secondary" onClick={() => { setEditingOrganization(organization); setPanel("organization"); }}>Editează</Button>
-                    <Button variant="ghost" onClick={() => runAction(() => archiveCrmOrganization(organization.id))}>Arhivează</Button>
-                </div>
-              </article>
-            );
-          })}
+      {view !== "contacts" ? <section>
+        <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--border))] pb-3">
+          <p className="text-sm font-semibold">{filteredOrganizations.length} companii</p>
+          <p className="hidden text-xs text-[rgb(var(--text-muted))] sm:block">Deschide o înregistrare pentru memorie, activitate și oportunități.</p>
         </div>
-        {organizations.length === 0 ? <div className="grid justify-items-start gap-3 rounded-lg border border-dashed border-[rgb(var(--border))] p-5 text-sm text-[rgb(var(--muted-foreground))]"><p>Nu există companii încă. Adaugă primul client sau prospect pentru a lega contacte și oportunități reale.</p><Button onClick={() => setPanel("organization")}>Adaugă companie</Button></div> : filteredOrganizations.length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Nicio companie nu corespunde filtrelor.</p> : null}
+        <div className="overflow-x-auto border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]" role="region" aria-label="Registru companii" tabIndex={0}>
+          <table className="w-full min-w-[900px] table-fixed border-collapse text-left text-sm">
+            <caption className="sr-only">Companiile accesibile în spațiul de lucru curent</caption>
+            <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
+              <tr className="border-b border-[rgb(var(--border-strong))]">
+                <th scope="col" className="w-[27%] px-3 py-2.5">Companie</th>
+                <th scope="col" className="w-[12%] px-3 py-2.5">Relație</th>
+                <th scope="col" className="w-[22%] px-3 py-2.5">Contact principal</th>
+                <th scope="col" className="w-[12%] px-3 py-2.5">Oportunități</th>
+                <th scope="col" className="w-[17%] px-3 py-2.5">Ultima activitate</th>
+                <th scope="col" className="w-[10%] px-3 py-2.5 text-right"><span className="sr-only">Acțiuni</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[rgb(var(--border))]">
+              {filteredOrganizations.map((organization) => {
+                const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
+                const primary = organizationContacts.find((contact) => contact.isPrimaryForOrganization);
+                return (
+                  <tr key={organization.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
+                    <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--primary))] group-focus-within:border-l-[rgb(var(--primary))]">
+                      <Link href={`/crm/organizations/${organization.id}`} className="focus-ring block min-w-0 rounded-control">
+                        <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--primary))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline">{organization.name}</span>
+                        <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{[organization.industry, organization.city].filter(Boolean).join(" · ") || "Context necompletat"}</span>
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5"><span className={"status-pill " + (organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand")}>{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Neclasificată"}</span></td>
+                    <td className="px-3 py-2.5"><p className="truncate font-medium text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{primary?.jobTitle ?? (organizationContacts.length ? organizationContacts.length + " contacte" : "Fără contact")}</p></td>
+                    <td className="px-3 py-2.5 font-semibold tabular-nums text-[rgb(var(--foreground))]">{organizationStats[organization.id]?.activeOpportunities ?? 0}</td>
+                    <td className="px-3 py-2.5 text-xs text-[rgb(var(--text-muted))]">{formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex justify-end gap-0.5 text-[rgb(var(--text-faint))] opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                        <button type="button" className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-control hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))]" aria-label={`Editează compania ${organization.name}`} title="Editează" onClick={() => { setEditingOrganization(organization); setPanel("organization"); }}><PencilSquareIcon className="h-4 w-4" aria-hidden="true" /></button>
+                        <button type="button" className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-control hover:bg-[rgb(var(--danger-background))] hover:text-[rgb(var(--danger-text))]" aria-label={`Arhivează compania ${organization.name}`} title="Arhivează" disabled={isPending} onClick={() => runAction(() => archiveCrmOrganization(organization.id))}><ArchiveBoxIcon className="h-4 w-4" aria-hidden="true" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {organizations.length === 0 ? <div className="grid justify-items-start gap-3 border-y border-dashed border-[rgb(var(--border))] py-8 text-sm text-[rgb(var(--muted-foreground))]"><p>Nu există companii încă. Adaugă primul client sau prospect pentru a lega contacte și oportunități reale.</p><Button onClick={() => setPanel("organization")}>Adaugă companie</Button></div> : filteredOrganizations.length === 0 ? <p className="border-b border-[rgb(var(--border))] py-8 text-sm text-[rgb(var(--muted-foreground))]">Nicio companie nu corespunde filtrelor.</p> : null}
       </section> : null}
 
-      {view !== "companies" ? <section className="grid gap-4">
-        <h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2>
-        <div className="grid gap-3 xl:grid-cols-2">
-          {filteredContacts.map((contact) => (
-            <article key={contact.id} className="flex min-h-full flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-[border-color,box-shadow] hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))] text-[rgb(var(--text-secondary))]"><UserIcon className="h-5 w-5" aria-hidden="true" /></span>
-                <div className="min-w-0"><h3 className="break-words font-semibold text-[rgb(var(--foreground))]">{contact.fullName}</h3>
-                <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Funcție sau companie neconfirmată"}</p>
-                <div className="mt-2 flex flex-wrap gap-2"><span className="status-pill status-pill-brand">{roleLabels[contact.decisionRole ?? "other"] ?? "Rol neconfirmat"}</span>{contact.isPrimaryForOrganization ? <span className="status-pill status-pill-success">Contact principal</span> : null}</div></div>
-              </div>
-              <dl className="mt-4 grid gap-2 border-t border-[rgb(var(--border))] pt-3 text-sm text-[rgb(var(--muted-foreground))] sm:grid-cols-2">
-                <div className="flex min-w-0 items-center gap-2"><EnvelopeIcon className="h-4 w-4 shrink-0" aria-hidden="true" /><dt className="sr-only">Email</dt><dd className="truncate">{contact.email ?? "Email necompletat"}</dd></div>
-                <div className="flex min-w-0 items-center gap-2"><PhoneIcon className="h-4 w-4 shrink-0" aria-hidden="true" /><dt className="sr-only">Telefon</dt><dd>{contact.phone ?? "Telefon necompletat"}</dd></div>
-              </dl>
-              <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-                  <Button variant="secondary" onClick={() => { setEditingContact(contact); setPanel("contact"); }}>Editează</Button>
-                  <Button variant="ghost" onClick={() => runAction(() => archiveCrmContact(contact.id))}>Arhivează</Button>
-              </div>
-            </article>
-          ))}
+      {view !== "companies" ? <section className="grid gap-3">
+        <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2><p className="text-xs text-[rgb(var(--text-muted))]">{filteredContacts.length} înregistrări</p></div>
+        <div className="overflow-x-auto border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]" role="region" aria-label="Registru contacte" tabIndex={0}>
+          <table className="w-full min-w-[940px] table-fixed border-collapse text-left text-sm">
+            <caption className="sr-only">Contactele comerciale accesibile în spațiul de lucru curent</caption>
+            <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
+              <tr className="border-b border-[rgb(var(--border-strong))]">
+                <th scope="col" className="w-[23%] px-3 py-2.5">Persoană</th>
+                <th scope="col" className="w-[19%] px-3 py-2.5">Companie</th>
+                <th scope="col" className="w-[13%] px-3 py-2.5">Rol</th>
+                <th scope="col" className="w-[25%] px-3 py-2.5">Contact</th>
+                <th scope="col" className="w-[11%] px-3 py-2.5">Statut</th>
+                <th scope="col" className="w-[9%] px-3 py-2.5 text-right"><span className="sr-only">Acțiuni</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[rgb(var(--border))]">
+              {filteredContacts.map((contact) => (
+                <tr key={contact.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
+                  <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--primary))] group-focus-within:border-l-[rgb(var(--primary))]">
+                    <button type="button" className="focus-ring block w-full min-w-0 rounded-control text-left" aria-label={`Editează contactul ${contact.fullName}`} onClick={() => { setEditingContact(contact); setPanel("contact"); }}>
+                      <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--primary))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline">{contact.fullName}</span>
+                      <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{contact.jobTitle ?? "Funcție neconfirmată"}</span>
+                    </button>
+                  </td>
+                  <td className="px-3 py-2.5">{contact.organizationId && contact.organization ? <Link href={`/crm/organizations/${contact.organizationId}?tab=contacts`} className="focus-ring block truncate rounded-control text-[rgb(var(--text-secondary))] decoration-[rgb(var(--primary))] underline-offset-4 hover:text-[rgb(var(--primary))] hover:underline">{contact.organization.name}</Link> : <span className="text-[rgb(var(--text-muted))]">Fără companie</span>}</td>
+                  <td className="px-3 py-2.5 text-xs font-medium text-[rgb(var(--text-secondary))]">{roleLabels[contact.decisionRole ?? "other"] ?? "Neconfirmat"}</td>
+                  <td className="px-3 py-2.5"><p className="truncate text-xs text-[rgb(var(--foreground))]">{contact.email ?? "Email necompletat"}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{contact.phone ?? "Telefon necompletat"}</p></td>
+                  <td className="px-3 py-2.5"><span className={contact.isPrimaryForOrganization ? "status-pill status-pill-success" : "status-pill status-pill-neutral"}>{contact.isPrimaryForOrganization ? "Principal" : "Secundar"}</span></td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex justify-end gap-0.5 text-[rgb(var(--text-faint))] opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                      <button type="button" className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-control hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))]" aria-label={`Editează contactul ${contact.fullName}`} title="Editează" onClick={() => { setEditingContact(contact); setPanel("contact"); }}><PencilSquareIcon className="h-4 w-4" aria-hidden="true" /></button>
+                      <button type="button" className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-control hover:bg-[rgb(var(--danger-background))] hover:text-[rgb(var(--danger-text))]" aria-label={`Arhivează contactul ${contact.fullName}`} title="Arhivează" disabled={isPending} onClick={() => runAction(() => archiveCrmContact(contact.id))}><ArchiveBoxIcon className="h-4 w-4" aria-hidden="true" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         {contacts.length === 0 ? <div className="grid justify-items-start gap-3 rounded-lg border border-dashed border-[rgb(var(--border))] p-5 text-sm text-[rgb(var(--muted-foreground))]"><p>Nu există contacte încă. Adaugă o persoană implicată sau documentează explicit că decidentul nu este cunoscut.</p><Button onClick={() => setPanel("contact")}>Adaugă contact</Button></div> : filteredContacts.length === 0 ? <p className="text-sm text-[rgb(var(--muted-foreground))]">Niciun contact nu corespunde căutării.</p> : null}
       </section> : null}

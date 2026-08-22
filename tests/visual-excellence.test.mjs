@@ -8,11 +8,11 @@ const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8
 test("landing presents an evidence-led and human-controlled commercial path", () => {
   const landing = read("src/app/(marketing)/page.tsx");
 
-  assert.match(landing, /Vezi unde se blochează venitul/);
+  assert.match(landing, /Claritate pentru venitul rămas între pași/);
   assert.match(landing, /Inteligență operațională/);
   assert.match(landing, /Dovezi verificabile/);
-  assert.match(landing, /Aprobare umană/);
-  assert.match(landing, /Valoare estimată, nu venit confirmat/);
+  assert.match(landing, /Control uman/);
+  assert.match(landing, /Estimarea comercială rămâne distinctă de venitul confirmat/);
   assert.match(landing, /Nu trimite mesaje, nu execută acțiuni externe/);
   assert.match(landing, /Audit de recuperare venituri/);
   assert.match(landing, /Pilot controlat · 14 zile/);
@@ -23,12 +23,13 @@ test("landing presents an evidence-led and human-controlled commercial path", ()
   assert.doesNotMatch(landing, /live Gmail|live Google Calendar|voce activă/i);
 });
 
-test("visual system keeps Champagne Gold as the restrained default and an explicit evidence rail", () => {
+test("visual system keeps the Attio-led foundation restrained while using a branded evidence rail", () => {
   const globals = read("src/app/globals.css");
   const aiPage = read("src/app/(protected)/ai/page.tsx");
 
   assert.match(globals, /Controlled accent roles/);
-  assert.match(globals, /--rn-accent-500: 214 183 74/);
+  assert.match(globals, /--rn-accent-500: 76 151 129/);
+  assert.match(globals, /--focus-ring: var\(--rn-accent-ring\)/);
   assert.match(globals, /--brand-500: var\(--rn-accent-500\)/);
   assert.match(globals, /\.ai-evidence-rail/);
   assert.match(aiPage, /ai-evidence-rail/);
@@ -48,7 +49,8 @@ test("access and core buyer surfaces retain safe Romanian copy", () => {
 
   assert.doesNotMatch(access, /Workspace|ownership|pending/i);
   assert.match(access, /Nicio opțiune nu promite rezultate garantate/);
-  assert.match(dashboard, /nu este venit confirmat/i);
+  assert.match(dashboard, /HomeAskSurface/);
+  assert.doesNotMatch(dashboard, /MetricCard|venit confirmat|valoare estimată/i);
   assert.match(reports, /aprobare umană|control uman/i);
   assert.doesNotMatch(reports, /ROI garantat|venit garantat|recuperare automată/i);
 });

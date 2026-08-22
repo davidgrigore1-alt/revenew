@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEventHandler, type FocusEventHandler } from "react";
 
 type PasswordFieldProps = {
   name: string;
@@ -9,9 +9,11 @@ type PasswordFieldProps = {
   placeholder?: string;
   invalid?: boolean;
   describedBy?: string;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 };
 
-export function PasswordField({ name, label, autoComplete, placeholder = "Minim 8 caractere", invalid = false, describedBy }: PasswordFieldProps) {
+export function PasswordField({ name, label, autoComplete, placeholder = "Minim 8 caractere", invalid = false, describedBy, onBlur, onChange }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -28,6 +30,8 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
           autoComplete={autoComplete}
           aria-invalid={invalid}
           aria-describedby={describedBy}
+          onBlur={onBlur}
+          onChange={onChange}
           className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[rgb(var(--foreground))] outline-none placeholder:text-[rgb(var(--text-faint))]"
         />
         <button

@@ -15,8 +15,17 @@ async function findUser(admin, email) {
 }
 
 async function main() {
-  const password = await requireDemoPassword();
   const { client: admin, local } = createLocalAdminClient();
+
+  const immutablePilotSnapshotCount = Number(runLocalSql(
+    `select count(*)::text from public.pilot_snapshots where business_id = '${DEMO.businessId}';`
+  ));
+  if (immutablePilotSnapshotCount > 0) {
+    console.log("Demo local existent păstrat: snapshot-urile pilot sunt imuabile; verificarea completă va confirma coerența datelor.");
+    return;
+  }
+
+  const password = await requireDemoPassword();
 
   let user = await findUser(admin, DEMO.email);
   if (user) {

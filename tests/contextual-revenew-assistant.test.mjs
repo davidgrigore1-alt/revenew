@@ -131,7 +131,7 @@ test("assistant is accessible, evidence-grounded, actionable and keeps the exist
   assert.match(assistant, /role="dialog"/);
   assert.match(assistant, /aria-modal="true"/);
   assert.match(assistant, /event\.key === "Escape"/);
-  assert.match(conversation, /Întreabă despre datele comerciale disponibile/);
+  assert.match(conversation, /Întreabă ReveNew…/);
   assert.match(conversation, /Dovezi ·/);
   assert.match(conversation, /Ce nu pot confirma/);
   assert.match(assistant, /Revezi turul introductiv/);
@@ -146,7 +146,6 @@ test("navigation uses explicit stable anchors and a temporary namespaced highlig
   const navigation = read("src/lib/guide-navigation.ts");
   const assistant = read("src/components/guidance/ContextualAssistant.tsx");
   const sources = [
-    "src/app/(protected)/dashboard/page.tsx",
     "src/app/(protected)/ai/page.tsx",
     "src/components/inbox/CommercialInboxClient.tsx",
     "src/components/dashboard/TodayActionCard.tsx",
@@ -157,9 +156,11 @@ test("navigation uses explicit stable anchors and a temporary namespaced highlig
   ].map(read).join("\n");
 
   for (const anchor of [
-    "dashboard-critical-decision", "ai-recommendation", "inbox-signal-intelligence", "today-action",
+    "ai-recommendation", "today-action",
     "approvals-human-control", "opportunity-commercial-facts", "opportunity-evidence", "reports-audit-summary", "demo-feedback-fit"
   ]) assert.match(sources, new RegExp(`data-guide-anchor="${anchor}"`));
+  assert.match(read("src/app/(protected)/dashboard/page.tsx"), /HomeAskSurface/);
+  assert.match(read("src/components/inbox/CommercialInboxClient.tsx"), /id="signal-review-panel"/);
 
   assert.match(navigation, /data-revenew-guide-highlight/);
   assert.match(navigation, /window\.setTimeout/);

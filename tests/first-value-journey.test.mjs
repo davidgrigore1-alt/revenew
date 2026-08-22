@@ -83,7 +83,8 @@ test("first-value surfaces preserve onboarding and human approval boundaries", (
   const recovery = read("src/app/(protected)/recoverable/page.tsx");
 
   assert.match(onboarding, /router\.push\(`\/activation\?mode=\$\{entryMode\}`\)/);
-  assert.match(dashboard, /deriveFirstValueJourney\(summary\.signals\)/);
+  assert.match(dashboard, /HomeAskSurface/);
+  assert.doesNotMatch(dashboard, /deriveFirstValueJourney|MetricCard/);
   assert.match(inboxPage, /initialCreateOpen=\{searchParams\?\.create === "1"\}/);
   assert.match(inboxClient, /Nicio acțiune externă nu este trimisă/);
   assert.match(approvals, /Aprobă și aplică/);

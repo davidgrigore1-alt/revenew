@@ -19,7 +19,7 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
   const totalUnits = insights.usageEvents.reduce((sum, event) => sum + event.totalTokens + event.units, 0);
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader
         title="Utilizare"
         description="Explorer operațional pentru evenimente metered, fără prompturi, secrete sau răspunsuri provider brute."
@@ -85,6 +85,6 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
           )}
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

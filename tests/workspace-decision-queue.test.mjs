@@ -248,7 +248,7 @@ test("decision aggregation stays server-only and reuses the authorized workspace
   const dashboard = read("src/app/(protected)/dashboard/page.tsx");
   assert.match(model, /import "server-only"/);
   assert.match(dashboard, /getRevenueWorkspaceSummary\(\)/);
-  assert.match(dashboard, /buildWorkspaceDecisionQueue\(\{ opportunities: briefOpportunities, signals: briefSignals \}, \{ limit: 20 \}\)/);
+  assert.match(dashboard, /buildWorkspaceDecisionQueue\([\s\S]*opportunities: scopedOpportunities, signals: scopedSignals[\s\S]*limit: 20/);
   assert.match(dashboard, /summary\.viewer\.isManager/);
   assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
   assert.doesNotMatch(model, /createSupabase|service[_-]?role|\.from\(|fetch\s*\(/i);

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ArrowRightOnRectangleIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from "react";
+import { ArrowRightOnRectangleIcon, ChevronUpDownIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
 import { cn } from "@/lib/utils";
@@ -15,30 +15,40 @@ type WorkspaceMenuProps = {
   userName?: string;
   isDemo?: boolean;
   canViewSettings?: boolean;
+  variant?: "header" | "sidebar";
 };
 
-const themeOptions = [
-  { value: "system", label: "Sistem" },
-  { value: "light", label: "Luminos" },
-  { value: "dark", label: "Întunecat" }
-] as const;
-
-export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = false, canViewSettings = true }: WorkspaceMenuProps) {
+export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = false, canViewSettings = true, variant = "header" }: WorkspaceMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const { theme, setTheme, identityPreview } = useTheme();
+  const initialFocusRef = useRef<"first" | "last">("first");
+  const menuId = useId();
+  const { identityPreview } = useTheme();
   const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
   const resolvedDisplayName = identityPreview?.displayName || displayName;
   const identity = userName || userEmail || "Cont ReveNew";
 
+  function getMenuItems() {
+    return Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])') ?? []);
+  }
+
   useEffect(() => {
+    if (!open) return;
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const items = getMenuItems();
+      const item = initialFocusRef.current === "last" ? items.at(-1) : items[0];
+      item?.focus();
+    });
+
     function handlePointerDown(event: PointerEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpen(false);
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        event.preventDefault();
         setOpen(false);
         triggerRef.current?.focus();
       }
@@ -47,10 +57,41 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
+      window.cancelAnimationFrame(animationFrame);
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [open]);
+
+  function handleTriggerKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    initialFocusRef.current = event.key === "ArrowUp" ? "last" : "first";
+    setOpen(true);
+  }
+
+  function handleMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    const items = getMenuItems();
+    if (items.length === 0) return;
+
+    event.preventDefault();
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    if (event.key === "Home") {
+      items[0]?.focus();
+      return;
+    }
+    if (event.key === "End") {
+      items.at(-1)?.focus();
+      return;
+    }
+
+    const direction = event.key === "ArrowDown" ? 1 : -1;
+    const nextIndex = currentIndex < 0
+      ? (direction === 1 ? 0 : items.length - 1)
+      : (currentIndex + direction + items.length) % items.length;
+    items[nextIndex]?.focus();
+  }
 
   async function logout() {
     if (isSupabaseConfigured) {
@@ -66,61 +107,57 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="focus-ring flex h-10 w-10 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left shadow-sm transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-muted))] md:w-[220px] md:justify-start md:gap-2.5 md:px-2.5"
+        onClick={() => {
+          initialFocusRef.current = "first";
+          setOpen((current) => !current);
+        }}
+        onKeyDown={handleTriggerKeyDown}
+        className={cn(
+          "focus-ring flex h-10 items-center justify-center rounded-control text-left transition-colors duration-fast hover:bg-[rgb(var(--surface-subtle))]",
+          variant === "sidebar"
+            ? "w-full justify-start gap-2.5 px-2"
+            : "w-10 border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-sm hover:border-[rgb(var(--border-strong))] md:w-[220px] md:justify-start md:gap-2.5 md:px-2.5"
+        )}
         aria-label={`Cont și spațiu de lucru: ${resolvedDisplayName}`}
         title={`${resolvedDisplayName} · ${identity}`}
-        aria-haspopup="dialog"
-        aria-controls="workspace-account-menu"
+        aria-haspopup="menu"
+        aria-controls={menuId}
         aria-expanded={open}
       >
         <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} compact />
-        <span className="hidden min-w-0 flex-1 md:block">
+        <span className={cn("min-w-0 flex-1", variant === "header" && "hidden md:block")}>
           <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</span>
           <span className="block truncate text-[0.6875rem] text-[rgb(var(--text-muted))]" title={identity}>{identity}</span>
         </span>
-        <ChevronUpDownIcon className="hidden h-4 w-4 shrink-0 text-[rgb(var(--text-faint))] md:block" aria-hidden="true" />
+        <ChevronUpDownIcon className={cn("h-4 w-4 shrink-0 text-[rgb(var(--text-faint))]", variant === "header" && "hidden md:block")} aria-hidden="true" />
       </button>
 
       {open ? (
-        <div id="workspace-account-menu" role="dialog" aria-label="Cont și preferințe pentru spațiul de lucru" className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-1.5rem))] rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3 shadow-elevated">
-          <div className="rounded-control bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Compania activă</p>
-            <div className="mt-2 flex min-w-0 items-center gap-2.5"><WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} /><div className="min-w-0"><p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-muted))]" title={identity}>{identity}</p></div></div>
-            {userEmail && userName ? <p className="mt-1.5 truncate text-xs text-[rgb(var(--text-faint))]" title={userEmail}>{userEmail}</p> : null}
+        <div
+          id={menuId}
+          role="menu"
+          aria-label="Cont și spațiu de lucru"
+          onKeyDown={handleMenuKeyDown}
+          onBlurCapture={(event) => {
+            if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+            setOpen(false);
+          }}
+          className={cn("absolute top-11 z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-1.5 shadow-modal", variant === "sidebar" ? "left-0" : "right-0")}
+        >
+          <div className="flex min-w-0 items-center gap-2.5 px-2.5 py-2">
+            <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} />
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-secondary))]" title={userEmail || identity}>{userEmail || identity}</p></div>
           </div>
 
-          <div className="mt-3 border-t border-[rgb(var(--border))] pt-3">
-            <p className="px-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Aspect</p>
-            <div className="mt-2 grid grid-cols-3 gap-1 rounded-control bg-[rgb(var(--surface-muted))] p-1">
-              {themeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setTheme(option.value)}
-                  className={cn(
-                    "focus-ring flex min-h-9 items-center justify-center gap-1 rounded-md px-2 text-xs font-semibold transition-colors duration-fast",
-                    theme === option.value
-                      ? "bg-[rgb(var(--surface))] text-[rgb(var(--foreground))] shadow-sm"
-                      : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]"
-                  )}
-                  aria-pressed={theme === option.value}
-                >
-                  {theme === option.value ? <CheckIcon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 grid gap-1 border-t border-[rgb(var(--border))] pt-3">
+          <div className="mt-1 grid gap-0.5 border-t border-[rgb(var(--border))] pt-1.5">
             {canViewSettings ? (
-              <Link href="/settings" onClick={() => setOpen(false)} className="focus-ring rounded-control px-3 py-2.5 text-sm font-medium text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
+              <Link role="menuitem" tabIndex={-1} href="/settings" onClick={() => setOpen(false)} className="focus-ring flex min-h-9 items-center gap-2 rounded-control px-2.5 py-1.5 text-sm font-medium text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
+                <Cog6ToothIcon className="h-4 w-4 shrink-0 text-[rgb(var(--text-faint))]" aria-hidden="true" />
                 Setări spațiu de lucru
               </Link>
             ) : null}
-            <button type="button" onClick={logout} className="focus-ring flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-sm font-medium text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
-              <ArrowRightOnRectangleIcon className="h-4 w-4" aria-hidden="true" />
+            <button role="menuitem" tabIndex={-1} type="button" onClick={logout} className="focus-ring flex min-h-9 w-full items-center gap-2 rounded-control px-2.5 py-1.5 text-left text-sm font-medium text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
+              <ArrowRightOnRectangleIcon className="h-4 w-4 shrink-0 text-[rgb(var(--text-faint))]" aria-hidden="true" />
               Ieșire din cont
             </button>
           </div>

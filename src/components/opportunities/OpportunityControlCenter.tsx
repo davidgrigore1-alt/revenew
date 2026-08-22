@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { Button } from "@/components/ui/Button";
@@ -26,7 +26,7 @@ import { toUserFacingActionError } from "@/lib/user-facing-errors";
 
 type AssignableProfile = { id: string; fullName: string };
 
-const fieldClass = "h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 text-sm text-[rgb(var(--foreground))]";
+const fieldClass = "focus-ring h-10 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] hover:border-[rgb(var(--border-strong))]";
 const stageLabels = { lead: "Lead", qualified: "Calificare", proposal: "Propunere", won: "Câștigat", lost: "Pierdut" };
 const attentionLabels = { on_track: "În grafic", needs_attention: "Necesită atenție", at_risk: "În risc", blocked: "Blocat", closed: "Închis" };
 
@@ -53,6 +53,7 @@ export function OpportunityControlCenter({
   const [notice, setNotice] = useState("");
   const [outcomeStatus, setOutcomeStatus] = useState<OpportunityLifecycleStatus>("won");
   const [pendingOutcome, setPendingOutcome] = useState<FormData | null>(null);
+  const confirmationDialogRef = useRef<HTMLDivElement>(null);
   const lifecycle = lifecycleForOpportunity(opportunity);
   const attention = commercialState.attention;
   const primaryContact = opportunity.contacts?.find((contact) => contact.isPrimary) ?? null;
@@ -64,6 +65,40 @@ export function OpportunityControlCenter({
     return /decision|decident|buyer|approver/.test(value);
   }) ?? null;
   const visibleEvidence = commercialState.evidence.find((item) => item.sourceType !== "opportunity") ?? null;
+
+  useEffect(() => {
+    if (!pendingOutcome) return;
+    const dialog = confirmationDialogRef.current;
+    if (!dialog) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusableSelector = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
+    focusable[0]?.focus();
+
+    function containFocus(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setPendingOutcome(null);
+        return;
+      }
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    dialog.addEventListener("keydown", containFocus);
+    return () => {
+      dialog.removeEventListener("keydown", containFocus);
+      previouslyFocused?.focus();
+    };
+  }, [pendingOutcome]);
 
   function handleResult(result: { ok: boolean; error?: string }, success: string) {
     if (result.ok) {
@@ -97,56 +132,37 @@ export function OpportunityControlCenter({
   return (
     <div className="grid gap-6">
       {mode === "summary" ? <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="execution-brief-title">
-        <div className="grid xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.65fr)]">
-          <div className="border-b border-[rgb(var(--border))] p-5 sm:p-6 xl:border-b-0 xl:border-r xl:p-8">
-            {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
-            {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
-            <div className={notice || error ? "mt-6" : ""}>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold">{stageLabels[commercialState.stage]}</span>
-                <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-3 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
-                <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
-                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Valoare estimată: {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
-                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Dovezi: {evidenceCount}</span>
-                <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Responsabil: {ownerName ?? "Neatribuit"}</span>
-              </div>
-              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.15em] text-[rgb(var(--primary))]">Acțiunea care deblochează progresul</p>
-              <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{commercialState.nextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{commercialState.nextAction?.dueAt ? `Termen: ${formatDate(commercialState.nextAction.dueAt)}. Verifică responsabilul și contextul înainte de execuție.` : "O oportunitate fără acțiune și termen nu poate fi urmărită operațional. Completează pasul următor înainte de follow-up."}</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button href={commercialState.recommendedSafeIntervention.href}>{commercialState.recommendedSafeIntervention.label}</Button>
-                <Button href={visibleEvidence?.href ?? "#opportunity-timeline"} variant="secondary">Verifică dovezile</Button>
-              </div>
-              <p className="mt-4 text-xs text-[rgb(var(--text-muted))]">Aprobarea umană rămâne obligatorie pentru orice comunicare externă sau rezultat comercial.</p>
+        {notice ? <div className="px-4 pt-4 sm:px-5"><StatusNotice tone="success">{notice}</StatusNotice></div> : null}
+        {error ? <div className="px-4 pt-4 sm:px-5"><StatusNotice tone="error">{error}</StatusNotice></div> : null}
+        <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold">{stageLabels[commercialState.stage]}</span>
+              <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
+              <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
             </div>
-
-            <div className="mt-8 border-t border-[rgb(var(--border))] pt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[rgb(var(--text-muted))]">De ce este prioritară</p>
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-[rgb(var(--text-muted))]">Blocajele, termenul, responsabilul, dovezile și valoarea estimată explică ordinea de intervenție. Rezultatul rămâne neconfirmat până la decizia unei persoane.</p>
-              {attention.reasons.length > 0 ? <div aria-label="Motive de atenție" className="mt-3 grid gap-2 sm:grid-cols-2">{attention.reasons.map((reason) => <div key={reason.code} className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3"><p className="text-sm font-semibold text-[rgb(var(--warning-text))]">{reason.label}</p><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{reason.explanation}</p></div>)}</div> : <StatusNotice tone="success">Nu există excepții operaționale determinate din datele disponibile.</StatusNotice>}
-            </div>
+            <p className="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Următoarea acțiune</p>
+            <h2 id="execution-brief-title" className="mt-1 text-section-title font-semibold">{commercialState.nextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
+            <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{commercialState.nextAction?.dueAt ? `Termen ${formatDate(commercialState.nextAction.dueAt)} · verifică responsabilul și dovada înainte de execuție.` : "Completează acțiunea, responsabilul și termenul înainte de follow-up."}</p>
           </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button href={commercialState.recommendedSafeIntervention.href}>{commercialState.recommendedSafeIntervention.label}</Button>
+            <Button href={visibleEvidence?.href ?? "#opportunity-timeline"} variant="secondary">Verifică dovada</Button>
+          </div>
+        </div>
 
-          <aside className="bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 xl:p-8" aria-label="Fapte comerciale">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-muted))]">Fapte comerciale</p>
-            <dl className="mt-5 grid gap-5">
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Companie</dt><dd className="mt-1 text-sm font-semibold">{companyName}</dd></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Valoare estimată, nu confirmată</dt><dd className="mt-1 text-2xl font-semibold tracking-tight">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
-              <div className="grid grid-cols-2 gap-4 border-y border-[rgb(var(--border))] py-5"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 text-sm font-semibold">{ownerName ?? "Neatribuit"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ciclu de viață</dt><dd className="mt-1 text-sm font-semibold">{lifecycleLabels[lifecycle]}</dd></div></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 text-sm font-semibold">{primaryContact?.contact.fullName ?? "Lipsește"}</dd>{primaryContact?.contact.email ? <p className="mt-1 break-all text-xs text-[rgb(var(--text-muted))]">{primaryContact.contact.email}</p> : null}</div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Decident</dt><dd className="mt-1 text-sm font-semibold">{decisionMaker?.contact.fullName ?? "Neconfirmat"}</dd></div>
-              <div className="border-t border-[rgb(var(--border))] pt-5">
-                <dt className="text-xs text-[rgb(var(--text-muted))]">Dovezi disponibile · {evidenceCount}</dt>
-                {visibleEvidence ? (
-                  <>
-                    <dd className="mt-1 text-sm font-semibold"><a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{visibleEvidence.label}</a></dd>
-                    {visibleEvidence.observedAt ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDate(visibleEvidence.observedAt)}</p> : null}
-                  </>
-                ) : <dd className="mt-1 text-sm font-semibold text-[rgb(var(--warning-text))]">Lipsește o dovadă verificabilă</dd>}
-              </div>
-              <div className={`grid gap-4 border-t border-[rgb(var(--border))] pt-5 ${commercialState.financial.confirmedRevenue != null ? "grid-cols-2" : "grid-cols-1"}`}><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ultima activitate importantă</dt><dd className="mt-1 text-sm font-semibold">{commercialState.activity.lastMeaningfulActivityAt ? formatDate(commercialState.activity.lastMeaningfulActivityAt) : "Date insuficiente"}</dd></div>{commercialState.financial.confirmedRevenue != null ? <div><dt className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat</dt><dd className="mt-1 text-sm font-semibold">{formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency ?? "RON")}</dd></div> : null}</div>
-            </dl>
-          </aside>
+        <dl className="grid border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="border-b border-[rgb(var(--border))] px-4 py-3 sm:border-r lg:border-b-0"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Companie</dt><dd className="mt-1 truncate text-sm font-semibold" title={companyName}>{companyName}</dd></div>
+          <div className="border-b border-[rgb(var(--border))] px-4 py-3 lg:border-b-0 lg:border-r"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Valoare estimată, nu confirmată</dt><dd className="mt-1 text-sm font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
+          <div className="border-b border-[rgb(var(--border))] px-4 py-3 sm:border-r lg:border-b-0"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 truncate text-sm font-semibold">{ownerName ?? "Neatribuit"}</dd></div>
+          <div className="border-b border-[rgb(var(--border))] px-4 py-3 lg:border-b-0 lg:border-r"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 truncate text-sm font-semibold">{primaryContact?.contact.fullName ?? "Lipsește"}</dd></div>
+          <div className="border-b border-[rgb(var(--border))] px-4 py-3 sm:border-b-0 sm:border-r"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Decident</dt><dd className="mt-1 truncate text-sm font-semibold">{decisionMaker?.contact.fullName ?? "Neconfirmat"}</dd></div>
+          <div className="px-4 py-3"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Dovezi disponibile</dt><dd className="mt-1 text-sm font-semibold">{visibleEvidence ? <a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{evidenceCount} · {visibleEvidence.label}</a> : "Lipsește o dovadă verificabilă"}</dd></div>
+        </dl>
+
+        <div className="flex flex-col gap-2 px-4 py-3 text-xs leading-5 text-[rgb(var(--text-muted))] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <p>{attention.reasons.length > 0 ? <><strong className="text-[rgb(var(--warning-text))]">Necesită verificare:</strong> {attention.reasons.slice(0, 2).map((reason) => reason.label).join(" · ")}</> : <><strong className="text-[rgb(var(--success-text))]">Fără excepții active.</strong> Datele disponibile nu indică un blocaj operațional.</>} {commercialState.financial.confirmedRevenue != null ? <>Venit confirmat: <strong className="text-[rgb(var(--foreground))]">{formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency ?? "RON")}</strong>.</> : null}</p>
+          <p className="shrink-0">Aprobarea umană rămâne obligatorie pentru comunicare externă și rezultate.</p>
         </div>
       </section> : null}
 
@@ -205,7 +221,7 @@ export function OpportunityControlCenter({
           </div>
         </DataCard>
       ) : null}
-      {mode === "outcome" && pendingOutcome ? <div role="dialog" aria-modal="true" aria-labelledby="outcome-confirmation-title" className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4"><div className="w-full max-w-lg rounded-xl border border-white/15 bg-[rgb(var(--background))] p-6 shadow-2xl"><h2 id="outcome-confirmation-title" className="text-xl font-semibold">Confirmare finală rezultat</h2><p className="mt-3 text-sm text-[rgb(var(--muted-foreground))]">Confirmă explicit rezultatul <strong>{String(pendingOutcome.get("lifecycleStatus")) === "won" ? "câștigat" : "pierdut"}</strong>. Emailul trimis, răspunsul, întâlnirea sau propunerea nu marchează automat această oportunitate ca fiind câștigată.</p>{String(pendingOutcome.get("lifecycleStatus")) === "won" ? <div className="mt-4 rounded-lg border border-emerald-400/25 bg-emerald-400/10 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em]">Venit recuperat confirmat</p><p className="mt-2 text-lg font-semibold">{String(pendingOutcome.get("actualOutcomeAmount"))} {String(pendingOutcome.get("currency"))}</p><p className="mt-1 text-xs">Separat de valoarea estimată a oportunității.</p></div> : <p className="mt-4 rounded-lg border border-amber-400/25 bg-amber-400/10 p-4 text-sm">Un rezultat pierdut nu înregistrează venit confirmat.</p>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="secondary" disabled={isPending} onClick={() => setPendingOutcome(null)}>Renunță</Button><Button disabled={isPending} onClick={confirmOutcome}>{isPending ? "Se confirmă..." : "Confirm explicit rezultatul"}</Button></div></div></div> : null}
+      {mode === "outcome" && pendingOutcome ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" aria-hidden="false"><div ref={confirmationDialogRef} role="dialog" aria-modal="true" aria-labelledby="outcome-confirmation-title" aria-describedby="outcome-confirmation-description" className="w-full max-w-lg rounded-overlay border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-6 shadow-modal"><h2 id="outcome-confirmation-title" className="text-xl font-semibold">Confirmare finală rezultat</h2><p id="outcome-confirmation-description" className="mt-3 text-sm text-[rgb(var(--text-muted))]">Confirmă explicit rezultatul <strong className="text-[rgb(var(--foreground))]">{String(pendingOutcome.get("lifecycleStatus")) === "won" ? "câștigat" : "pierdut"}</strong>. Emailul trimis, răspunsul, întâlnirea sau propunerea nu marchează automat această oportunitate ca fiind câștigată.</p>{String(pendingOutcome.get("lifecycleStatus")) === "won" ? <div className="mt-4 rounded-card border border-[rgb(var(--success-border))] bg-[rgb(var(--success-background))] p-4 text-[rgb(var(--success-text))]"><p className="text-xs font-semibold uppercase tracking-[0.12em]">Venit confirmat de echipă</p><p className="mt-2 text-lg font-semibold">{String(pendingOutcome.get("actualOutcomeAmount"))} {String(pendingOutcome.get("currency"))}</p><p className="mt-1 text-xs">Separat de valoarea estimată a oportunității.</p></div> : <p className="mt-4 rounded-card border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-4 text-sm text-[rgb(var(--warning-text))]">Un rezultat pierdut nu înregistrează venit confirmat.</p>}<div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button variant="secondary" disabled={isPending} onClick={() => setPendingOutcome(null)}>Renunță</Button><Button disabled={isPending} onClick={confirmOutcome}>{isPending ? "Se confirmă..." : "Confirm explicit rezultatul"}</Button></div></div></div> : null}
     </div>
   );
 }

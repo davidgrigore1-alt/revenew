@@ -71,6 +71,18 @@ test("approval and rejection reuse audited server actions and require a rejectio
   assert.match(inbox, /revalidatePath\("\/approvals"\)/);
 });
 
+test("approval center exposes local filters before one semantic master-detail surface", () => {
+  const client = read("src/components/approvals/ApprovalCenterClient.tsx");
+  const filtersIndex = client.indexOf('aria-label="Filtre aprobări"');
+  const listIndex = client.indexOf('id="approval-list-title"');
+  const detailIndex = client.indexOf('id="approval-detail-title"');
+
+  assert.ok(filtersIndex > 0 && filtersIndex < listIndex && listIndex < detailIndex);
+  assert.match(client, /aria-pressed=\{filter === value\}/);
+  assert.match(client, /aria-current=\{signal\.id === selectedId/);
+  assert.doesNotMatch(client, /flex-col-reverse|grid-flow-dense|\border-\d+\b/);
+});
+
 test("approval of an existing opportunity uses the stored tenant-validated link", () => {
   const client = read("src/components/approvals/ApprovalCenterClient.tsx");
   const call = client.slice(client.indexOf("approveCommercialSignal(selectedSignal.id"), client.indexOf("if (!result.ok)", client.indexOf("approveCommercialSignal(selectedSignal.id")));

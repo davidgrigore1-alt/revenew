@@ -17,7 +17,7 @@ export default async function AdminCostsPage({ searchParams }: { searchParams?: 
   const insights = await loadAdminInsights(range);
 
   return (
-    <main className="min-w-0 px-4 py-8 sm:px-6 xl:px-8">
+    <div className="min-w-0 px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader title="Costuri" description="Structură de cost provider, modele, funcții, planuri și forecast simplificat." rangeLabel={range.label} actions={<AdminRangeLinks active={range.key} />} />
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -85,6 +85,6 @@ export default async function AdminCostsPage({ searchParams }: { searchParams?: 
           </div>
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

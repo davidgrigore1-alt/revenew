@@ -15,11 +15,9 @@ import {
   type ApprovalCenterState
 } from "@/lib/approval-center";
 import type { CommercialSignal } from "@/lib/types";
-import { recommendationFeedbackCounts } from "@/lib/recommendation-feedback";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -95,7 +93,13 @@ export function ApprovalCenterClient({
   useEffect(() => setSignals(initialSignals), [initialSignals]);
 
   const items = useMemo(() => approvalCenterSignals(signals, filter), [signals, filter]);
-  const qualityCounts = useMemo(() => recommendationFeedbackCounts(signals), [signals]);
+
+  useEffect(() => {
+    if (items.some((item) => item.signal.id === selectedId)) return;
+    const nextSignal = items[0]?.signal;
+    setSelectedId(nextSignal?.id ?? "");
+    if (nextSignal) setForm(formFor(nextSignal));
+  }, [items, selectedId]);
 
   function selectSignal(signal: CommercialSignal) {
     setSelectedId(signal.id);
@@ -177,33 +181,25 @@ export function ApprovalCenterClient({
   const filteredContacts = contacts.filter((contact) => !form.organizationId || !contact.organizationId || contact.organizationId === form.organizationId);
 
   return (
-    <div data-guide-anchor="approvals-human-control" className="grid gap-6">
-      <Card padding="none" aria-label="Calitatea recomandărilor pregătite">
-        <dl className="grid grid-cols-2 divide-x divide-y divide-[rgb(var(--border))] sm:grid-cols-4 sm:divide-y-0">
-          {([
-            ["De revizuit", qualityCounts.pending],
-            ["Aplicate", qualityCounts.applied],
-            ["Editate", qualityCounts.edited],
-            ["Respinse", qualityCounts.rejected]
-          ] as const).map(([label, value]) => <div key={label} className="px-4 py-3 sm:px-5"><dt className="text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">{label}</dt><dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd></div>)}
-        </dl>
-      </Card>
-
+    <div data-guide-anchor="approvals-human-control" className="grid gap-4">
       {error ? <AlertBanner tone="danger" title="Acțiunea nu a fost aplicată">{error}</AlertBanner> : null}
       {notice ? <AlertBanner tone="success" title="Decizie înregistrată"><span>{notice}</span>{noticeHref ? <Link href={noticeHref} className="focus-ring ml-2 inline-flex rounded font-semibold underline underline-offset-4">Revizuiește oportunitatea</Link> : null}</AlertBanner> : null}
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(19rem,0.78fr)_minmax(0,1.45fr)]">
-        <Card as="section" padding="none" className="min-w-0 overflow-hidden" aria-labelledby="approval-list-title">
-          <div className="border-b border-[rgb(var(--border))] p-4 sm:p-5">
-            <h2 id="approval-list-title" className="font-semibold">Decizii comerciale</h2>
-            <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Selectează o recomandare pentru a vedea efectul exact.</p>
-            <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtre aprobări">
-              {(Object.keys(filterLabels) as Array<ApprovalCenterState | "all">).map((value) => (
-                <Button key={value} variant={filter === value ? "primary" : "secondary"} size="small" onClick={() => setFilter(value)} aria-label={`Filtru ${filterLabels[value]}`}>
-                  {filterLabels[value]}
-                </Button>
-              ))}
-            </div>
+      <section aria-label="Filtre aprobări" className="border-y border-[rgb(var(--border))]">
+        <div className="flex min-w-0 flex-wrap" role="group" aria-label="Starea aprobărilor">
+          {(Object.keys(filterLabels) as Array<ApprovalCenterState | "all">).map((value) => (
+            <button key={value} type="button" onClick={() => setFilter(value)} aria-pressed={filter === value} className={`focus-ring min-h-10 border-b-2 px-3 text-xs font-semibold transition-colors ${filter === value ? "border-[rgb(var(--primary))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]"}`}>
+              {filterLabels[value]}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid min-w-0 border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] xl:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.55fr)]">
+        <section className="min-w-0 border-t border-[rgb(var(--border))] xl:border-r" aria-labelledby="approval-list-title">
+          <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] px-3 py-2.5">
+            <div><h2 id="approval-list-title" className="text-sm font-semibold">Decizii comerciale</h2><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Selectează o recomandare pentru efectul exact.</p></div>
+            <span className="text-xs tabular-nums text-[rgb(var(--text-faint))]">{items.length}</span>
           </div>
           {items.length > 0 ? (
             <div className="divide-y divide-[rgb(var(--border))]">
@@ -213,11 +209,11 @@ export function ApprovalCenterClient({
                   type="button"
                   onClick={() => selectSignal(signal)}
                   aria-current={signal.id === selectedId ? "true" : undefined}
-                  className="focus-ring grid w-full gap-3 p-4 text-left transition-colors hover:bg-[rgb(var(--surface-muted))] aria-[current=true]:bg-[rgb(var(--brand-50))] dark:aria-[current=true]:bg-[rgb(var(--brand-900)/0.2)] sm:p-5"
+                  className="focus-ring group grid w-full gap-2 border-l-2 border-l-transparent px-3 py-3 text-left transition-colors hover:bg-[rgb(var(--surface-elevated))] aria-[current=true]:border-l-[rgb(var(--primary))] aria-[current=true]:bg-[rgb(var(--surface-subtle))] aria-[current=true]:shadow-[inset_0_0_0_1px_rgb(var(--border-strong))]"
                 >
                   <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold">{signal.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{signal.contactCompany || signal.contactName || "Context neconfirmat"}</p></div><StatusPill tone={toneForState(state)}>{approvalCenterStateLabels[state]}</StatusPill></div>
-                  <p className="line-clamp-2 text-sm leading-5 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(signal)}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[rgb(var(--text-muted))]"><span>{signal.sourceLabel ?? signal.source} · {formatDate(signal.createdAt ?? signal.occurredAt ?? undefined)}</span><span className="font-semibold text-[rgb(var(--primary))]">Revizuiește →</span></div>
+                  <p className="line-clamp-2 text-xs leading-5 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(signal)}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[0.6875rem] text-[rgb(var(--text-faint))]"><span>{signal.sourceLabel ?? signal.source}</span><span>{formatDate(signal.createdAt ?? signal.occurredAt ?? undefined)}</span></div>
                 </button>
               ))}
             </div>
@@ -230,26 +226,28 @@ export function ApprovalCenterClient({
               <div><Button href="/inbox" variant="secondary" size="small">Revizuiește semnalele</Button></div>
             </div>
           )}
-        </Card>
+        </section>
 
-        <Card as="section" padding="none" className="min-w-0 overflow-hidden" aria-labelledby="approval-detail-title">
+        <section className="min-w-0 border-t border-[rgb(var(--border))]" aria-labelledby="approval-detail-title">
           {selectedSignal && selectedState ? (
             <>
-              <div className="border-b border-[rgb(var(--border))] p-4 sm:p-5">
+              <div className="border-b border-[rgb(var(--border))] px-4 py-3">
                 <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Revizuire controlată</p><h2 id="approval-detail-title" className="mt-1 text-section-title font-semibold">{selectedSignal.title}</h2><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Creat {formatDateTimeWithSeconds(selectedSignal.createdAt ?? selectedSignal.occurredAt ?? undefined)}</p></div><StatusPill tone={toneForState(selectedState)}>{approvalCenterStateLabels[selectedState]}</StatusPill></div>
               </div>
 
-              <div className="grid gap-5 p-4 sm:p-5">
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4"><h3 className="text-sm font-semibold">Sursa recomandării</h3><dl className="mt-3 grid gap-2 text-sm"><div><dt className="text-xs text-[rgb(var(--text-muted))]">Semnal</dt><dd className="mt-0.5 font-medium">{selectedSignal.sourceLabel ?? selectedSignal.source}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Intenție detectată</dt><dd className="mt-0.5 font-medium">{selectedSignal.signalTypeLabel ?? selectedSignal.detectedCommercialIntent ?? "De clarificat"}</dd></div><div><dt className="text-xs text-[rgb(var(--text-muted))]">Motiv</dt><dd className="mt-0.5 leading-5">{approvalReasonForSignal(selectedSignal)}</dd></div></dl></div>
-                  <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4"><h3 className="text-sm font-semibold">Ce se va schimba</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(selectedSignal)}</p><p className="mt-2 text-xs font-medium text-[rgb(var(--text-muted))]">Nimic nu este trimis extern.</p></div>
-                </div>
+              <div className="grid gap-5 p-4">
+                <dl className="grid border-y border-[rgb(var(--border))] md:grid-cols-3">
+                  <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 md:border-b-0 md:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Semnal</dt><dd className="mt-1 text-sm font-medium">{selectedSignal.sourceLabel ?? selectedSignal.source}</dd></div>
+                  <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 md:border-b-0 md:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Intenție detectată</dt><dd className="mt-1 text-sm font-medium">{selectedSignal.signalTypeLabel ?? selectedSignal.detectedCommercialIntent ?? "De clarificat"}</dd></div>
+                  <div className="px-3 py-2.5"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Motiv</dt><dd className="mt-1 text-sm leading-5">{approvalReasonForSignal(selectedSignal)}</dd></div>
+                </dl>
+                <section aria-labelledby="approval-change-title" className="border-l-2 border-[rgb(var(--primary))] pl-3"><h3 id="approval-change-title" className="text-sm font-semibold">Ce se va schimba</h3><p className="mt-1 text-sm leading-6 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(selectedSignal)}</p><p className="mt-1 text-xs font-medium text-[rgb(var(--text-muted))]">Nimic nu este trimis extern.</p></section>
 
                 <SignalPreparationPanel signal={selectedSignal} compact />
                 <RecommendationFeedbackPanel signal={selectedSignal} auditHref="#approval-audit-trail" />
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div><h3 className="text-sm font-semibold">Înregistrări afectate</h3><div className="mt-2 grid gap-2 text-sm text-[rgb(var(--text-secondary))]"><p><span className="text-[rgb(var(--text-muted))]">Companie:</span> {selectedSignal.contactCompany || "Neconfirmată"}</p><p><span className="text-[rgb(var(--text-muted))]">Contact:</span> {selectedSignal.contactName || selectedSignal.contactEmail || "Neconfirmat"}</p><p><span className="text-[rgb(var(--text-muted))]">Oportunitate:</span> {linkedOpportunity?.title ?? (selectedSignal.detectedFromOpportunityId ? "Oportunitate existentă" : "Va fi creată după aprobare")}</p>{selectedSignal.estimatedRecoverableValue !== null && selectedSignal.estimatedRecoverableValue !== undefined ? <p><span className="text-[rgb(var(--text-muted))]">Valoare estimată:</span> {formatCurrency(selectedSignal.estimatedRecoverableValue, selectedSignal.currency)}</p> : null}</div><div className="mt-3 flex flex-wrap gap-2"><Link href={`/inbox?signal=${selectedSignal.id}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide semnalul</Link>{selectedSignal.matchedOrganizationId ? <Link href={`/crm/organizations/${selectedSignal.matchedOrganizationId}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Vezi compania</Link> : null}{selectedSignal.detectedFromOpportunityId ? <Link href={`/opportunities/${selectedSignal.detectedFromOpportunityId}`} className="focus-ring text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Vezi oportunitatea</Link> : null}</div></div>
+                <div className="grid gap-4 border-t border-[rgb(var(--border))] pt-4 lg:grid-cols-2">
+                  <div className="lg:border-r lg:border-[rgb(var(--border))] lg:pr-4"><h3 className="text-sm font-semibold">Înregistrări afectate</h3><div className="mt-2 grid gap-2 text-sm text-[rgb(var(--text-secondary))]"><p><span className="text-[rgb(var(--text-muted))]">Companie:</span> {selectedSignal.contactCompany || "Neconfirmată"}</p><p><span className="text-[rgb(var(--text-muted))]">Contact:</span> {selectedSignal.contactName || selectedSignal.contactEmail || "Neconfirmat"}</p><p><span className="text-[rgb(var(--text-muted))]">Oportunitate:</span> {linkedOpportunity?.title ?? (selectedSignal.detectedFromOpportunityId ? "Oportunitate existentă" : "Va fi creată după aprobare")}</p>{selectedSignal.estimatedRecoverableValue !== null && selectedSignal.estimatedRecoverableValue !== undefined ? <p><span className="text-[rgb(var(--text-muted))]">Valoare estimată:</span> {formatCurrency(selectedSignal.estimatedRecoverableValue, selectedSignal.currency)}</p> : null}</div><div className="mt-3 flex flex-wrap gap-3"><Link href={`/inbox?signal=${selectedSignal.id}`} className="focus-ring text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Deschide semnalul</Link>{selectedSignal.matchedOrganizationId ? <Link href={`/crm/organizations/${selectedSignal.matchedOrganizationId}`} className="focus-ring text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Vezi compania</Link> : null}{selectedSignal.detectedFromOpportunityId ? <Link href={`/opportunities/${selectedSignal.detectedFromOpportunityId}`} className="focus-ring text-xs font-semibold text-[rgb(var(--primary))] hover:underline">Vezi oportunitatea</Link> : null}</div></div>
                   <div><h3 className="text-sm font-semibold">Informații lipsă</h3>{selectedSignal.missingInformation.length > 0 ? <ul className="mt-2 grid gap-1 text-sm leading-5 text-[rgb(var(--text-secondary))]">{selectedSignal.missingInformation.map((item) => <li key={item}>• {item}</li>)}</ul> : <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Nu au fost identificate lipsuri critice. Datele rămân de confirmat.</p>}</div>
                 </div>
 
@@ -262,7 +260,7 @@ export function ApprovalCenterClient({
                       <label className="grid gap-2 text-sm font-medium">Termen<Input type="date" value={form.dueAt} onChange={(event) => setForm((current) => ({ ...current, dueAt: event.target.value }))} /></label>
                     </div>
                     <label className="grid gap-2 text-sm font-medium">Următorul pas recomandat<Textarea rows={3} value={form.recommendedAction} onChange={(event) => setForm((current) => ({ ...current, recommendedAction: event.target.value }))} /></label>
-                    <div className="grid gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4"><label className="grid gap-2 text-sm font-medium">Motiv pentru respingere<Textarea rows={2} value={form.rejectionReason} onChange={(event) => setForm((current) => ({ ...current, rejectionReason: event.target.value }))} placeholder="Obligatoriu pentru Respinge cu motiv" /></label><div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="danger" onClick={reject} disabled={isPending}>Respinge cu motiv</Button><Button onClick={approve} disabled={isPending} loading={isPending}>Aprobă și aplică</Button></div></div>
+                    <div className="grid gap-3 border-t border-[rgb(var(--border))] pt-4"><label className="grid gap-2 text-sm font-medium">Motiv pentru respingere<Textarea rows={2} value={form.rejectionReason} onChange={(event) => setForm((current) => ({ ...current, rejectionReason: event.target.value }))} placeholder="Obligatoriu pentru Respinge cu motiv" /></label><div className="flex flex-col gap-2 sm:flex-row sm:justify-end"><Button variant="danger" onClick={reject} disabled={isPending}>Respinge cu motiv</Button><Button onClick={approve} disabled={isPending} loading={isPending}>Aprobă și aplică</Button></div></div>
                     <AlertBanner tone="info" title="Control uman">Aprobarea aplică numai schimbările interne descrise. Nimic nu este trimis extern.</AlertBanner>
                   </div>
                 ) : null}
@@ -271,7 +269,7 @@ export function ApprovalCenterClient({
               </div>
             </>
           ) : <div className="p-5"><h2 id="approval-detail-title" className="font-semibold">Revizuirea începe din Inbox Comercial</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">După pregătirea și verificarea unui semnal, aici vei vedea faptele, recomandarea, înregistrările afectate și efectul exact al aprobării.</p><Button href="/inbox" variant="secondary" size="small" className="mt-4">Pregătește o acțiune</Button></div>}
-        </Card>
+        </section>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ export default async function AdminBusinessDetailPage({
   const margin = business.configuredMonthlyValueMicros && contribution !== null ? contribution / business.configuredMonthlyValueMicros : null;
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader
         title={business.name}
         description="Drill-down intern pentru costuri, utilizare, marjă după API și sănătate operațională."
@@ -122,6 +122,6 @@ export default async function AdminBusinessDetailPage({
           ) : <AdminEmptyState title="Nu există evenimente recente" description="Evenimentele apar după activarea metering-ului și primele cereri provider-backed." />}
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

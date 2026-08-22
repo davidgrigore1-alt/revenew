@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
@@ -46,7 +46,8 @@ export function GuideReplayButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className={cn("focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-xs font-semibold text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]", className)}
+      className={cn("focus-ring inline-flex min-h-10 items-center rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] px-3 text-xs font-semibold text-[rgb(var(--text-secondary))] transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]", className)}
+      aria-haspopup="dialog"
       onClick={() => window.dispatchEvent(new Event(REPLAY_EVENT))}
     >
       Ghid rapid
@@ -59,16 +60,29 @@ export function GuidedProductTour() {
   const [step, setStep] = useState(0);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const closeGuide = useCallback((state: "completed" | "dismissed" | "later", restoreFocus = true) => {
+    persistGuideState(state);
+    setOpen(false);
+
+    if (restoreFocus) {
+      window.setTimeout(() => {
+        const returnTarget = returnFocusRef.current;
+        if (returnTarget?.isConnected) returnTarget.focus();
+      }, 0);
+    }
+  }, []);
 
   useEffect(() => {
-    const buyerDemoActive = new URLSearchParams(window.location.search).get("demo") === "buyer"
-      || window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer";
-    if (!buyerDemoActive && !window.localStorage.getItem(STORAGE_KEY)) setOpen(true);
-
     function replayGuide() {
-      if (window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer") return;
-      setStep(0);
-      setOpen(true);
+      const buyerDemoActive = new URLSearchParams(window.location.search).get("demo") === "buyer"
+        || window.localStorage.getItem(BUYER_DEMO_STORAGE_KEY) === "buyer";
+      if (!buyerDemoActive) {
+        returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        setStep(0);
+        setOpen(true);
+      }
     }
 
     function closeForBuyerDemo() {
@@ -91,8 +105,8 @@ export function GuidedProductTour() {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        persistGuideState("later");
-        setOpen(false);
+        event.preventDefault();
+        closeGuide("later");
         return;
       }
 
@@ -115,33 +129,28 @@ export function GuidedProductTour() {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
-
-  function closeWith(state: "completed" | "dismissed" | "later") {
-    persistGuideState(state);
-    setOpen(false);
-  }
+  }, [closeGuide, open]);
 
   if (!open) return null;
   const current = steps[step];
   const lastStep = step === steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[90] grid items-end bg-black/70 p-0 backdrop-blur-[2px] sm:place-items-center sm:p-5" role="presentation">
+    <div className="fixed inset-0 z-[90] grid items-end bg-black/72 p-0 sm:place-items-center sm:p-5" role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="guided-product-tour-title"
         aria-describedby="guided-product-tour-description"
-        className="max-h-[92dvh] w-full overflow-y-auto rounded-t-panel border border-[rgb(var(--gold-500)/0.35)] bg-[rgb(var(--surface-elevated))] shadow-modal sm:max-w-3xl sm:rounded-panel"
+        className="max-h-[92dvh] w-full overflow-y-auto rounded-t-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-modal sm:max-w-3xl sm:rounded-panel"
       >
         <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--border))] px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">ReveNew</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">ReveNew</span>
             <span className="text-xs tabular-nums text-[rgb(var(--text-faint))]">{step + 1} / {steps.length}</span>
           </div>
-          <button ref={closeRef} type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-button text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]" aria-label="Închide ghidul" onClick={() => closeWith("later")}>
+          <button ref={closeRef} type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-button text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]" aria-label="Închide ghidul" onClick={() => closeGuide("later")}>
             <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
@@ -165,13 +174,13 @@ export function GuidedProductTour() {
 
         <div className="flex flex-col gap-3 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex items-center gap-3 text-xs">
-            <button type="button" className="focus-ring min-h-10 rounded-button px-1 font-semibold text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]" onClick={() => closeWith("dismissed")}>Sari peste</button>
-            <button type="button" className="focus-ring min-h-10 rounded-button px-1 font-semibold text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]" onClick={() => closeWith("later")}>Revizuiește mai târziu</button>
+            <button type="button" className="focus-ring min-h-10 rounded-button px-1 font-semibold text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]" onClick={() => closeGuide("dismissed")}>Sari peste</button>
+            <button type="button" className="focus-ring min-h-10 rounded-button px-1 font-semibold text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]" onClick={() => closeGuide("later")}>Revizuiește mai târziu</button>
           </div>
-          <div className="flex flex-col-reverse gap-2 min-[420px]:flex-row min-[420px]:justify-end">
+          <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:justify-end">
             {step > 0 ? <Button variant="secondary" onClick={() => setStep((value) => value - 1)}><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />Înapoi</Button> : null}
             {lastStep ? (
-              <Button href="/dashboard" onClick={() => closeWith("completed")}>Începe în Dashboard<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+              <Button href="/dashboard" onClick={() => closeGuide("completed", false)}>Începe în Dashboard<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
             ) : (
               <Button onClick={() => setStep((value) => value + 1)}>{step === 0 ? "Începe turul" : "Continuă"}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
             )}

@@ -100,7 +100,7 @@ test("implementation is server-only, role-scoped in the dashboard and restrained
   assert.doesNotMatch(model, /openai|anthropic|llm|fetch\s*\(|createSupabase|supabase\.from\(/i);
   assert.match(dashboard, /summary\.viewer\.isManager/);
   assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
-  assert.ok(dashboard.indexOf("<ExecutiveMorningBrief") < dashboard.indexOf("<ContextualPageGuide"));
+  assert.ok(dashboard.indexOf("<HomeAskSurface") < dashboard.indexOf('aria-labelledby="home-today-title"'));
   assert.match(ui, /De ce este prioritar\?/);
   assert.match(ui, /ExplanationDisclosure/);
   assert.match(ui, /valoare estimată, neconfirmată/);

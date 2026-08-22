@@ -151,9 +151,9 @@ test("imports create signals only and stale detection reuses the existing opport
   assert.match(sql, /update public\.opportunities/); assert.match(server, /assessOpportunityAttention/); assert.match(server, /slice\(0, 200\)/);
 });
 
-test("dashboard and reports keep imported estimates separate from confirmed won revenue", async () => {
+test("reports keep imported estimates separate while Home omits financial aggregates", async () => {
   const dashboard = await readFile(new URL("../src/app/(protected)/dashboard/page.tsx", import.meta.url), "utf8");
   const reports = await readFile(new URL("../src/app/(protected)/reports/page.tsx", import.meta.url), "utf8");
-  assert.match(dashboard, /Valoare importată estimată/); assert.match(dashboard, /separată de venitul câștigat confirmat/);
+  assert.doesNotMatch(dashboard, /Valoare importată estimată|venitul câștigat confirmat|estimatedImportedRecoverableValue/);
   assert.match(reports, /Potențial estimat; venitul câștigat rămâne separat/);
 });

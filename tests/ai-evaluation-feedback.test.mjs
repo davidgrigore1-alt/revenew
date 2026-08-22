@@ -109,10 +109,9 @@ test("feedback UI is compact, explicit and makes no autonomous-learning claim", 
   const panel = read("src/components/signals/RecommendationFeedbackPanel.tsx");
   const preparation = read("src/components/signals/SignalPreparationPanel.tsx");
   assert.match(approval, /RecommendationFeedbackPanel/);
-  assert.match(approval, /De revizuit/);
-  assert.match(approval, /Aplicate/);
-  assert.match(approval, /Editate/);
-  assert.match(approval, /Respinse/);
+  assert.match(approval, /De aprobat/);
+  assert.match(approval, /Aplicat/);
+  assert.match(approval, /Respins/);
   assert.match(panel, /Feedback recomandare/);
   assert.match(panel, /Recomandarea a fost modificată înainte de aprobare/);
   assert.match(panel, /nu declanșează învățare sau acțiuni automate/);

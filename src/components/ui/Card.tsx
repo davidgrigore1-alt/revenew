@@ -12,7 +12,7 @@ const variants = {
   subtle: "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]",
   muted: "border-transparent bg-[rgb(var(--surface-muted))]",
   elevated: "border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-elevated",
-  interactive: "border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card transition-[border-color,box-shadow] duration-normal hover:border-[rgb(var(--border-strong))] hover:shadow-elevated"
+  interactive: "border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card transition-[border-color,background-color] duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))]"
 };
 
 const paddings = {

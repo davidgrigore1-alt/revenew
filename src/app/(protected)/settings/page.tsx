@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DataCard } from "@/components/dashboard/DataCard";
+import type { ReactNode } from "react";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -15,9 +15,9 @@ import { getUsageSnapshotForBusiness, resolveUsagePlanId } from "@/lib/usage/res
 
 function DefinitionList({ items }: { items: Array<[string, string]> }) {
   return (
-    <dl className="grid gap-4 text-sm">
+    <dl className="divide-y divide-[rgb(var(--border))] text-sm">
       {items.map(([label, value]) => (
-        <div key={label} className="grid min-w-0 gap-1 border-b border-[rgb(var(--border))] pb-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-4">
+        <div key={label} className="grid min-w-0 gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-4">
           <dt className="text-[rgb(var(--muted-foreground))]">{label}</dt>
           <dd className="min-w-0 break-all font-semibold text-[rgb(var(--foreground))] sm:text-right">{value}</dd>
         </div>
@@ -26,7 +26,34 @@ function DefinitionList({ items }: { items: Array<[string, string]> }) {
   );
 }
 
-export default async function SettingsPage() {
+function SettingsGroup({ title, description, children, id }: { title: string; description?: string; children: ReactNode; id?: string }) {
+  return (
+    <section id={id} className="scroll-mt-28" aria-labelledby={id ? `${id}-title` : undefined}>
+      <div className="mb-4">
+        <h2 id={id ? `${id}-title` : undefined} className="text-lg font-semibold text-[rgb(var(--foreground))]">{title}</h2>
+        {description ? <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p> : null}
+      </div>
+      <div className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">{children}</div>
+    </section>
+  );
+}
+
+function SettingsRow({ label, description, children }: { label: string; description?: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-4 py-4 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:gap-6">
+      <div>
+        <h3 className="text-sm font-semibold text-[rgb(var(--foreground))]">{label}</h3>
+        {description ? <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{description}</p> : null}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+type SettingsTab = "workspace" | "control" | "usage" | "development";
+
+export default async function SettingsPage({ searchParams }: { searchParams?: Promise<{ tab?: string }> }) {
+  const requestedTab = (await searchParams)?.tab;
   const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const paidAccess = await getCurrentPaidAccessContext({ redirectIfMissingBusiness: true });
   const business = currentBusiness?.business;
@@ -36,6 +63,9 @@ export default async function SettingsPage() {
   const openAIConnected = isOpenAIConfigured();
   const isDevelopmentMode = process.env.NODE_ENV === "development";
   const isPreviewMode = paidAccess?.accessMode === "preview";
+  const activeTab: SettingsTab = requestedTab === "control" || requestedTab === "usage" || (requestedTab === "development" && isDevelopmentMode && !isPreviewMode)
+    ? requestedTab
+    : "workspace";
   const usageSnapshot = business
     ? await getUsageSnapshotForBusiness(business.id, resolveUsagePlanId(paidAccess?.previewPlan?.id ?? paidAccess?.subscription?.plan))
     : null;
@@ -58,176 +88,177 @@ export default async function SettingsPage() {
     }
   }
 
+  const navigationGroups: Array<{ label: string; items: Array<[SettingsTab, string]> }> = [
+    { label: "Spațiu de lucru", items: [["workspace", "Aspect și identitate"], ["control", "Acces și recomandări"]] },
+    { label: "Administrare", items: [["usage", "Plan și utilizare"]] },
+    ...(isDevelopmentMode && !isPreviewMode ? [{ label: "Sistem", items: [["development", "Dezvoltare"]] as Array<[SettingsTab, string]> }] : [])
+  ];
+
   return (
     <PageShell
       eyebrow="Administrare"
       title="Setări"
-      description="Configurează spațiul de lucru, accesul, recomandările și capacitatea operațională dintr-un singur punct de control."
+      description="Preferințe, acces și capacitate pentru spațiul de lucru activ."
     >
-      <div className="grid gap-6">
-        {canSeeGovernance ? <div className="grid gap-4 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div><p className="text-label text-[rgb(var(--primary))]">Controlul spațiului de lucru</p><h2 className="mt-1 text-lg font-semibold">Echipă și guvernanță</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--muted-foreground))]">Rolurile, politicile, aprobările, cozile de lucru și auditul au o zonă dedicată, disponibilă numai conform permisiunilor existente.</p></div>
-          <Link href="/settings/governance" className="focus-ring inline-flex min-h-11 items-center justify-center rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))]">Deschide administrarea →</Link>
-        </div> : null}
-        {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <nav className="sticky top-[4.25rem] z-20 flex gap-1 overflow-x-auto rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.94)] p-1 shadow-card backdrop-blur" aria-label="Secțiuni setări">
-          {[["#aspect", "Aspect"], ["#identitate", "Identitate"], ["#companie", "Companie"], ...(canSeeGovernance ? [["/settings/governance#echipa", "Echipă și acces"], ["/settings/governance#guvernanta", "Guvernanță"]] : []), ["#recomandari", "Recomandări"], ["#plan", "Plan și acces"], ...(isDevelopmentMode && !isPreviewMode ? [["#date", "Dezvoltare"]] : [])].map(([href, label]) => <a key={href} href={href} className="focus-ring min-h-10 whitespace-nowrap rounded-button px-3 py-2 text-sm font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">{label}</a>)}
-        </nav>
-
-        <PersonalizationSettingsPanel baselineName={business?.name ?? "Spațiu de lucru"} baselineIndustry={business?.industry ?? ""} />
-
-        <section id="companie" className="scroll-mt-36 grid gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Configurație</p><h2 className="mt-1 text-lg font-semibold">Companie și afișare</h2></div>
-        <div className="grid gap-4 xl:grid-cols-2">
-          <DataCard title="Companie" description="Informațiile folosite în scoruri, mesaje și rapoarte.">
-            <DefinitionList
-              items={[
-                ["Nume", business?.name ?? ""],
-                ["Denumire legală", business?.legalName ?? ""],
-                ["CUI", business?.cui ?? ""],
-                ["Website", business?.website ?? ""],
-                ["Industrie", business?.industry ?? ""],
-                ["Oraș / județ", `${business?.city ?? ""}, ${business?.county ?? ""}`],
-                ["Email notificări", business?.notificationEmail ?? ""]
-              ]}
-            />
-          </DataCard>
-
-          <div id="workspace" className="scroll-mt-36"><DataCard title="Temă și afișare" description="Alege modul de afișare. Preferința rămâne salvată în browser.">
-            <div className="flex flex-wrap items-center gap-3">
-              <ThemeToggle />
-              <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Butonul alternează între lumină, întuneric și tema sistemului.</p>
-            </div>
-          </DataCard></div>
-        </div></section>
-
-        <section id="acces" className="scroll-mt-36 grid gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Control</p><h2 className="mt-1 text-lg font-semibold">Acces și recomandări</h2></div>
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div id="recomandari" className="scroll-mt-36"><DataCard title="Recomandări și AI" description="ReveNew pregătește recomandări. Echipa păstrează controlul deciziilor și trimiterilor.">
-            <DefinitionList
-              items={[
-                ["Analiză AI", openAIConnected ? "Disponibilă când există credit API" : "Reguli interne active"],
-                ["Generare mesaje", openAIConnected ? "Disponibilă pentru documente și follow-up-uri" : "Drafturi standard disponibile"],
-                ["Control uman", "Mesajele nu sunt trimise automat"],
-                ["Chei API", "Rămân doar pe server"]
-              ]}
-            />
-          </DataCard></div>
-
-          <div id="plan" className="scroll-mt-36"><DataCard
-            title="Plan și acces"
-            description={isPreviewMode ? "Accesul de evaluare este permis după selectarea unei opțiuni demonstrative." : "Accesul la Control Center este verificat pe server pe baza abonamentului curent."}
-          >
-            {isPreviewMode ? (
-              <>
-                <DefinitionList
-                  items={[
-                    ["Mod", "Evaluare controlată"],
-                    ["Plan selectat", paidAccess?.previewPlan?.title ?? "Niciun plan selectat"],
-                    ["Acces", "Acces demonstrativ, fără plată"]
-                  ]}
-                />
-                <p className="mt-5 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-                  Opțiunea selectată este folosită numai pentru evaluarea produsului și nu reprezintă o plată sau un abonament activ.
-                </p>
-                <div className="mt-5">
-                  <Link href="/access#planuri" className="focus-ring inline-flex min-h-10 items-center rounded-lg border border-[rgb(var(--border))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--muted))]">
-                    Schimbă planul
-                  </Link>
+      <div className="grid gap-7 lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:items-start">
+        <aside className="lg:sticky lg:top-20">
+          <nav className="grid gap-5" aria-label="Secțiuni setări">
+            {navigationGroups.map((group) => (
+              <div key={group.label}>
+                <p className="px-2 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">{group.label}</p>
+                <div className="mt-1 grid gap-0.5">
+                  {group.items.map(([tab, label]) => (
+                    <Link
+                      key={tab}
+                      href={`/settings?tab=${tab}`}
+                      aria-current={activeTab === tab ? "page" : undefined}
+                      className={`focus-ring flex min-h-9 items-center rounded-control px-2.5 py-2 text-sm font-medium transition-colors ${activeTab === tab ? "bg-[rgb(var(--surface-muted))] text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"}`}
+                    >
+                      {label}
+                    </Link>
+                  ))}
                 </div>
-              </>
-            ) : (
-              <>
-                <DefinitionList
-                  items={[
-                    ["Status acces", paidAccess ? getPaidAccessStatusLabel(paidAccess.accessStatus) : "Necunoscut"],
-                    ["Plan", paidAccess?.subscription?.plan ?? "Fără plan activ"],
-                    ["Status plată", paidAccess?.subscription?.status ?? "Nicio plată activă"],
-                    ["Reînnoire / expirare", paidAccess?.subscription?.currentPeriodEnd ?? "Nu este setată"]
-                  ]}
-                />
-                <div className="mt-5">
-                  <Link href="/billing" className="focus-ring inline-flex min-h-10 items-center rounded-lg border border-[rgb(var(--border))] px-4 text-sm font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--muted))]">
-                    Vezi facturarea
-                  </Link>
-                </div>
-              </>
-            )}
-          </DataCard></div>
-
-          <DataCard title="Date și confidențialitate" description="Claritate despre ce folosește aplicația în acest moment.">
-            <ul className="grid gap-3 text-sm leading-6 text-[rgb(var(--muted-foreground))]">
-              <li>ReveNew folosește cererile comerciale, oportunitățile, acțiunile, documentele și evenimentele din spațiul de lucru.</li>
-              <li>Nu afișăm ID-uri tehnice sau detalii de conexiune în interfața normală.</li>
-              <li>Nu pretindem integrări live precum Gmail sau WhatsApp dacă nu sunt conectate efectiv.</li>
-              <li>Datele sunt folosite pentru recomandări, mesaje pregătite și rapoarte comerciale.</li>
-            </ul>
-          </DataCard>
-        </div></section>
-
-        <section id="utilizare" className="scroll-mt-36 grid gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Capacitate</p><h2 className="mt-1 text-lg font-semibold">Plan și utilizare</h2></div>
-        <div className="grid gap-4 xl:grid-cols-2">
-          <DataCard title="Plan și utilizare" description="Contoare orientate pe operațiuni comerciale, fără expunerea costurilor interne ale furnizorilor.">
-            {usageSnapshot?.unavailable ? (
-              <p className="text-sm leading-6 text-[rgb(var(--muted-foreground))]">Utilizarea va fi afișată după activarea măsurării dedicate. Accesul curent rămâne controlat de modul activ.</p>
-            ) : (
-              <div className="grid gap-4">
-                {usageSnapshot?.features.slice(0, 6).map((feature) => {
-                  const percent = feature.limit ? Math.min(100, Math.round((feature.used / feature.limit) * 100)) : 0;
-                  return (
-                    <div key={feature.featureId}>
-                      <div className="flex items-center justify-between gap-4 text-sm">
-                        <span className="font-medium text-[rgb(var(--foreground))]">{feature.label}</span>
-                        <span className="text-[rgb(var(--muted-foreground))]">{feature.used}{feature.limit === null ? "" : ` / ${feature.limit}`}</span>
-                      </div>
-                      <div className="mt-2 h-2 rounded-full bg-[rgb(var(--muted))]" aria-hidden="true">
-                        <div className="h-2 rounded-full bg-[rgb(var(--primary))]" style={{ width: `${percent}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
-            )}
-          </DataCard>
+            ))}
+          </nav>
+        </aside>
 
-          <DataCard title="Servicii">
-            <ul className="space-y-2 text-sm text-[rgb(var(--muted-foreground))]">
-              {(business?.services ?? []).length > 0 ? (business?.services ?? []).map((service) => <li key={service}>{service}</li>) : <li>Nu există servicii configurate.</li>}
-            </ul>
-          </DataCard>
-          <DataCard title="Clienți și industrii țintă">
-            <ul className="space-y-2 text-sm text-[rgb(var(--muted-foreground))]">
-              {[...(business?.targetIndustries ?? []), ...(business?.targetCustomers ?? [])].slice(0, 12).map((industry) => (
-                <li key={industry}>{industry}</li>
-              ))}
-            </ul>
-          </DataCard>
-        </div></section>
+        <div className="grid min-w-0 max-w-5xl gap-8">
+          {activeTab === "workspace" ? (
+            <>
+              {!isSupabaseConfigured ? <DemoNotice /> : null}
+              <PersonalizationSettingsPanel baselineName={business?.name ?? "Spațiu de lucru"} baselineIndustry={business?.industry ?? ""} />
 
-        {isDevelopmentMode && !isPreviewMode ? (
-          <details id="date" className="scroll-mt-36 rounded-card border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
-            <summary className="focus-ring cursor-pointer list-none rounded-button px-2 py-2 text-sm font-semibold marker:hidden">Date tehnice locale · dezvoltare</summary>
-            <div className="mt-4"><DataCard title="Mod dezvoltare / Debug">
-            <DefinitionList
-              items={[
-                ["Supabase", isSupabaseConfigured ? "Conectat" : "Neconectat"],
-                ["Auth session", currentProfile.authUser ? "Da" : "Nu"],
-                ["Auth user id", currentProfile.authUser?.id ?? "-"],
-                ["Auth user email", currentProfile.authUser?.email ?? "-"],
-                ["Profile id", currentProfile.profile?.id ?? "-"],
-                ["Business source", currentBusiness?.source === "supabase" ? "Supabase" : "Demo"],
-                ["Business activ", business?.name ?? "-"],
-                ["Business id", business?.id ?? "-"],
-                ["Servicii încărcate", String(currentBusiness?.servicesCount ?? business?.services.length ?? 0)],
-                ["Ținte încărcate", String(currentBusiness?.targetsCount ?? 0)],
-                ["Business-uri deținute", String(ownedBusinesses.length)]
-              ]}
-            />
-            </DataCard></div>
-          </details>
-        ) : null}
+              <SettingsGroup id="companie" title="Companie și afișare" description="Datele active ale companiei și preferințele generale de interfață.">
+                <SettingsRow label="Date companie" description="Folosite în scoruri, mesaje și rapoarte.">
+                  <DefinitionList
+                    items={[
+                      ["Nume", business?.name ?? ""],
+                      ["Denumire legală", business?.legalName ?? ""],
+                      ["CUI", business?.cui ?? ""],
+                      ["Website", business?.website ?? ""],
+                      ["Industrie", business?.industry ?? ""],
+                      ["Oraș / județ", `${business?.city ?? ""}, ${business?.county ?? ""}`],
+                      ["Email notificări", business?.notificationEmail ?? ""]
+                    ]}
+                  />
+                </SettingsRow>
+                <SettingsRow label="Temă de interfață" description="Preferința rămâne salvată în browser.">
+                  <div id="workspace" className="scroll-mt-28 flex flex-wrap items-center gap-3">
+                    <ThemeToggle />
+                    <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Comută între lumină, întuneric și tema sistemului.</p>
+                  </div>
+                </SettingsRow>
+                {canSeeGovernance ? (
+                  <SettingsRow label="Echipă și guvernanță" description="Vizibilă numai conform permisiunilor existente.">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">Roluri, politici, aprobări, cozi de lucru și audit.</p>
+                      <Link href="/settings/governance" className="focus-ring shrink-0 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide administrarea →</Link>
+                    </div>
+                  </SettingsRow>
+                ) : null}
+              </SettingsGroup>
+            </>
+          ) : null}
+
+          {activeTab === "control" ? (
+            <SettingsGroup id="acces" title="Acces și recomandări" description="Starea serviciilor, controlul uman și limitele de utilizare a datelor.">
+              <SettingsRow label="Recomandări și AI" description="ReveNew pregătește recomandări; echipa decide și trimite.">
+                <div id="recomandari" className="scroll-mt-28">
+                  <DefinitionList
+                    items={[
+                      ["Analiză AI", openAIConnected ? "Disponibilă când există credit API" : "Reguli interne active"],
+                      ["Generare mesaje", openAIConnected ? "Disponibilă pentru documente și follow-up-uri" : "Drafturi standard disponibile"],
+                      ["Control uman", "Mesajele nu sunt trimise automat"],
+                      ["Chei API", "Rămân doar pe server"]
+                    ]}
+                  />
+                </div>
+              </SettingsRow>
+
+              <SettingsRow
+                label="Plan și acces"
+                description={isPreviewMode ? "Evaluare controlată, fără plată." : "Acces verificat pe server pe baza abonamentului curent."}
+              >
+                <div id="plan" className="scroll-mt-28">
+                  {isPreviewMode ? (
+                    <>
+                      <DefinitionList items={[["Mod", "Evaluare controlată"], ["Plan selectat", paidAccess?.previewPlan?.title ?? "Niciun plan selectat"], ["Acces", "Acces demonstrativ, fără plată"]]} />
+                      <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]">Opțiunea selectată este folosită numai pentru evaluarea produsului și nu reprezintă o plată sau un abonament activ.</p>
+                      <Link href="/access#planuri" className="focus-ring mt-3 inline-flex rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Schimbă planul →</Link>
+                    </>
+                  ) : (
+                    <>
+                      <DefinitionList items={[["Status acces", paidAccess ? getPaidAccessStatusLabel(paidAccess.accessStatus) : "Necunoscut"], ["Plan", paidAccess?.subscription?.plan ?? "Fără plan activ"], ["Status plată", paidAccess?.subscription?.status ?? "Nicio plată activă"], ["Reînnoire / expirare", paidAccess?.subscription?.currentPeriodEnd ?? "Nu este setată"]]} />
+                      <Link href="/billing" className="focus-ring mt-3 inline-flex rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Vezi facturarea →</Link>
+                    </>
+                  )}
+                </div>
+              </SettingsRow>
+
+              <SettingsRow label="Date și confidențialitate" description="Ce folosește aplicația în acest moment.">
+                <ul className="grid gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]">
+                  <li>ReveNew folosește cererile comerciale, oportunitățile, acțiunile, documentele și evenimentele din spațiul de lucru.</li>
+                  <li>Nu afișăm ID-uri tehnice sau detalii de conexiune în interfața normală.</li>
+                  <li>Nu pretindem integrări live precum Gmail sau WhatsApp dacă nu sunt conectate efectiv.</li>
+                  <li>Datele sunt folosite pentru recomandări, mesaje pregătite și rapoarte comerciale.</li>
+                </ul>
+              </SettingsRow>
+            </SettingsGroup>
+          ) : null}
+
+          {activeTab === "usage" ? (
+            <SettingsGroup id="utilizare" title="Plan și utilizare" description="Contoare comerciale și configurația activă a spațiului de lucru.">
+              <SettingsRow label="Utilizare" description="Costurile interne ale furnizorilor nu sunt expuse.">
+                {usageSnapshot?.unavailable ? (
+                  <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">Utilizarea va fi afișată după activarea măsurării dedicate. Accesul curent rămâne controlat de modul activ.</p>
+                ) : (
+                  <dl className="divide-y divide-[rgb(var(--border))]">
+                    {usageSnapshot?.features.slice(0, 6).map((feature) => {
+                      const percent = feature.limit ? Math.min(100, Math.round((feature.used / feature.limit) * 100)) : 0;
+                      return (
+                        <div key={feature.featureId} className="grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-5">
+                          <dt className="text-sm font-medium text-[rgb(var(--foreground))]">{feature.label}</dt>
+                          <dd className="text-sm tabular-nums text-[rgb(var(--text-muted))]">{feature.used}{feature.limit === null ? "" : ` / ${feature.limit}`}</dd>
+                          {feature.limit !== null ? <div className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))] sm:col-span-2" role="progressbar" aria-label={`${feature.label}: ${percent}% utilizat`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><div className="h-full rounded-full bg-[rgb(var(--primary))]" style={{ width: `${percent}%` }} /></div> : null}
+                        </div>
+                      );
+                    })}
+                  </dl>
+                )}
+              </SettingsRow>
+              <SettingsRow label="Servicii" description="Oferta folosită în contextul comercial.">
+                <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">{(business?.services ?? []).length > 0 ? (business?.services ?? []).join(" · ") : "Nu există servicii configurate."}</p>
+              </SettingsRow>
+              <SettingsRow label="Clienți și industrii țintă" description="Segmentele configurate pentru prioritizare.">
+                <p className="text-sm leading-6 text-[rgb(var(--text-muted))]">{[...(business?.targetIndustries ?? []), ...(business?.targetCustomers ?? [])].slice(0, 12).join(" · ") || "Nu există segmente configurate."}</p>
+              </SettingsRow>
+            </SettingsGroup>
+          ) : null}
+
+          {activeTab === "development" && isDevelopmentMode && !isPreviewMode ? (
+            <details id="date" className="scroll-mt-28 border-y border-dashed border-[rgb(var(--border))] py-2">
+              <summary className="focus-ring flex min-h-10 cursor-pointer list-none items-center rounded-control px-2 text-sm font-semibold marker:hidden">Date tehnice locale · dezvoltare</summary>
+              <div className="px-2 pb-4 pt-3">
+                <DefinitionList
+                  items={[
+                    ["Supabase", isSupabaseConfigured ? "Conectat" : "Neconectat"],
+                    ["Auth session", currentProfile.authUser ? "Da" : "Nu"],
+                    ["Auth user id", currentProfile.authUser?.id ?? "-"],
+                    ["Auth user email", currentProfile.authUser?.email ?? "-"],
+                    ["Profile id", currentProfile.profile?.id ?? "-"],
+                    ["Business source", currentBusiness?.source === "supabase" ? "Supabase" : "Demo"],
+                    ["Business activ", business?.name ?? "-"],
+                    ["Business id", business?.id ?? "-"],
+                    ["Servicii încărcate", String(currentBusiness?.servicesCount ?? business?.services.length ?? 0)],
+                    ["Ținte încărcate", String(currentBusiness?.targetsCount ?? 0)],
+                    ["Business-uri deținute", String(ownedBusinesses.length)]
+                  ]}
+                />
+              </div>
+            </details>
+          ) : null}
+        </div>
       </div>
     </PageShell>
   );

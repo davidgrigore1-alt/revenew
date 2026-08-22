@@ -29,7 +29,7 @@ test("shared page hierarchy is compact and contextual guidance uses progressive 
   const guide = read("src/components/guidance/ContextualPageGuide.tsx");
 
   assert.match(pageShell, /className="app-page/);
-  assert.match(pageShell, /app-section-stack mt-6/);
+  assert.match(pageShell, /app-section-stack mt-5/);
   assert.doesNotMatch(pageHeader, /uppercase tracking-\[0\.12em\]/);
   assert.match(guide, /<details className="group" data-revenew-disclosure="page-guide">/);
   assert.match(guide, /Ghid de decizie/);
@@ -42,10 +42,27 @@ test("desktop shell avoids repeating workspace context while mobile retains it",
   const sidebar = read("src/components/dashboard/Sidebar.tsx");
 
   assert.match(header, /hidden min-w-0 sm:block lg:hidden/);
-  assert.match(header, /Context comercial/);
-  assert.match(sidebar, /Compania activă/);
+  assert.match(header, /Spațiu de lucru/);
+  assert.doesNotMatch(header, /getActiveNavigationHref|activeItem/);
+  assert.match(sidebar, /WorkspaceMenu/);
+  assert.doesNotMatch(sidebar, /WorkspaceIdentityDisplay/);
+  assert.match(sidebar, /GlobalSearch/);
+  assert.doesNotMatch(sidebar, /Compania activă/);
 });
 
+test("important redesigned surfaces keep semantic DOM order aligned with presentation", () => {
+  const companyPage = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const conversation = read("src/components/intelligence/CopilotConversation.tsx");
+  const settings = read("src/app/(protected)/settings/page.tsx");
+  const onboarding = read("src/components/onboarding/OnboardingForm.tsx");
+  const sources = [companyPage, conversation, settings, onboarding].join("\n");
+
+  assert.doesNotMatch(sources, /\b(?:order-(?:first|last|none|\d+)|flex-(?:row|col)-reverse|grid-flow-dense)\b/);
+  assert.ok(companyPage.indexOf("<CompanyBusinessMemory") < companyPage.indexOf("<CompanyContextualAsk"));
+  assert.ok(conversation.indexOf("<form onSubmit={submit}") < conversation.indexOf('aria-live="polite"'));
+  assert.ok(settings.indexOf("<nav") < settings.indexOf("<PersonalizationSettingsPanel"));
+  assert.ok(onboarding.indexOf('<section className="rounded-panel') < onboarding.indexOf('<aside className="min-h-[34rem]'));
+});
 test("semantic motion remains restrained and reduced-motion safe", () => {
   const css = read("src/app/globals.css");
 

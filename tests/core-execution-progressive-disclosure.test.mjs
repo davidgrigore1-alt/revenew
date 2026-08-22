@@ -17,7 +17,7 @@ test("opportunity detail keeps the executive decision and commercial identity fi
   assert.match(control, />Companie</);
   assert.match(control, /Valoare estimată, nu confirmată/);
   assert.match(control, /Dovezi disponibile/);
-  assert.match(control, /Acțiunea care deblochează progresul/);
+  assert.match(control, /Următoarea acțiune/);
   assert.match(control, /Responsabil/);
   assert.match(control, /Aprobarea umană rămâne obligatorie/);
   assert.match(workbench, /Recomandat acum/);
@@ -62,20 +62,19 @@ test("opportunity actions provide safe review destinations and sanitized feedbac
   assert.match(workbench, /Nicio comunicare externă/);
 });
 
-test("inbox presents the controlled signal decision flow before detailed review", async () => {
+test("inbox presents compact filters and master-detail before detailed review", async () => {
   const [page, client] = await Promise.all([
     read("../src/app/(protected)/inbox/page.tsx"),
     read("../src/components/inbox/CommercialInboxClient.tsx")
   ]);
 
-  assert.match(client, /Semnal primit[\s\S]*Revizuire[\s\S]*Decizie umană[\s\S]*Oportunitate/);
+  assert.match(client, /aria-label="Comenzi Inbox Comercial"[\s\S]*id="signal-list-title"[\s\S]*id="signal-review-panel"/);
   assert.match(client, /Valoare estimată, neconfirmată/);
-  assert.match(client, /Nicio trimitere automată/);
+  assert.match(client, /Netrimis automat/);
   assert.match(client, /01 · Date esențiale/);
   assert.match(client, /02 · Acțiune și responsabil/);
-  assert.match(page, /Datele pot fi anonimizate pentru audit/);
-  assert.match(page, /Obligatoriu/);
-  assert.match(page, /Opțional, dar util/);
+  assert.match(page, /Revizuiește semnalele înainte de a le transforma în oportunități/);
+  assert.doesNotMatch(page, /Obligatoriu:|Opțional, dar util:/);
 });
 
 test("inbox review groups optional and advanced data behind disclosures", async () => {
@@ -90,7 +89,7 @@ test("inbox review groups optional and advanced data behind disclosures", async 
   ]) {
     assert.match(client, new RegExp(label.replace(/[·]/g, "\\·")));
   }
-  assert.match(client, /<details className="group rounded-card/);
+  assert.match(client, /<details className="group border-t/);
   assert.match(client, /signal-review-panel/);
   assert.match(client, /max-width: 1279px/);
   assert.match(client, /Obligatoriu/);

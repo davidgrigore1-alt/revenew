@@ -117,12 +117,12 @@ export function ContextualPageGuide({ showFlow = false, className }: { showFlow?
   }
 
   return (
-    <aside aria-label="Ghid pentru această pagină" className={cn("relative rounded-card border border-[rgb(var(--gold-500)/0.22)] bg-[rgb(var(--gold-100)/0.08)] pr-11 dark:bg-[rgb(var(--gold-700)/0.04)] sm:pr-12", className)}>
-      <button type="button" className="focus-ring absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-button text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--gold-500)/0.1)] hover:text-[rgb(var(--foreground))] sm:right-3 sm:top-3" aria-label="Închide ghidul acestei pagini" onClick={closeGuide}><XMarkIcon className="h-4 w-4" aria-hidden="true" /></button>
+    <aside aria-label="Ghid pentru această pagină" className={cn("relative rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] pr-11 sm:pr-12", className)}>
+      <button type="button" className="focus-ring absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-button text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))] sm:right-3 sm:top-3" aria-label="Închide ghidul acestei pagini" onClick={closeGuide}><XMarkIcon className="h-4 w-4" aria-hidden="true" /></button>
       <details className="group" data-revenew-disclosure="page-guide">
         <summary className="focus-ring flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-card px-4 py-3 marker:hidden sm:px-5">
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-medium text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Ghid de decizie</span>
+            <span className="block text-xs font-medium text-[rgb(var(--primary))]">Ghid de decizie</span>
             <span className="mt-0.5 block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{guidance.title}</span>
           </span>
           <ChevronDownIcon className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))] transition-transform duration-normal group-open:rotate-180" aria-hidden="true" />

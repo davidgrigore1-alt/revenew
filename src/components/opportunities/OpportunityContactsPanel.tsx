@@ -68,10 +68,10 @@ function ContactLine({ label, value, href }: { label: string; value?: string | n
 
   return (
     <div>
-      <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">{label}</dt>
-      <dd className="mt-1 break-words text-sm text-zinc-200">
+      <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--text-faint))]">{label}</dt>
+      <dd className="mt-1 break-words text-sm text-[rgb(var(--text-secondary))]">
         {href ? (
-          <a href={href} className="text-mint-300 hover:text-mint-200">
+          <a href={href} className="focus-ring rounded-button text-[rgb(var(--primary))] hover:underline">
             {value}
           </a>
         ) : (
@@ -166,18 +166,18 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
     const phoneHref = item.contact.phone ? `tel:${item.contact.phone.replace(/\s+/g, "")}` : undefined;
 
     return (
-      <article className={`rounded-lg border p-4 ${featured ? "border-mint-400/30 bg-mint-400/5" : "border-white/10 bg-ink-900/70"}`}>
+      <article className={`rounded-card border p-4 ${featured ? "border-[rgb(var(--border-strong))] border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-semibold text-white">{item.contact.fullName}</h3>
+              <h3 className="text-base font-semibold text-[rgb(var(--foreground))]">{item.contact.fullName}</h3>
               {item.isPrimary ? (
-                <span className="rounded-lg border border-mint-400/25 bg-mint-400/10 px-2.5 py-1 text-xs font-semibold text-mint-300">
+                <span className="status-pill status-pill-success">
                   Principal
                 </span>
               ) : null}
             </div>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">
               {[item.contact.jobTitle, item.role, item.contact.organization?.name].filter(Boolean).join(" · ") || "Contact comercial"}
             </p>
           </div>
@@ -187,7 +187,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
                 type="button"
                 onClick={() => setPrimary(item.id)}
                 disabled={isPending}
-                className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-200 hover:text-white disabled:opacity-60"
+                className="focus-ring rounded-control border border-[rgb(var(--border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-60"
               >
                 Setează principal
               </button>
@@ -196,7 +196,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
               type="button"
               onClick={() => editContact(item)}
               disabled={isPending}
-              className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-200 hover:text-white disabled:opacity-60"
+              className="focus-ring rounded-control border border-[rgb(var(--border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-60"
             >
               Editează
             </button>
@@ -204,7 +204,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
               type="button"
               onClick={() => removeContact(item.id)}
               disabled={isPending}
-              className="rounded-lg border border-red-400/20 px-3 py-2 text-xs font-semibold text-red-200 hover:text-red-100 disabled:opacity-60"
+              className="focus-ring rounded-control border border-[rgb(var(--danger-border))] px-3 py-2 text-xs font-semibold text-[rgb(var(--danger-text))] transition-colors hover:bg-[rgb(var(--danger-background))] disabled:opacity-60"
             >
               Elimină
             </button>
@@ -217,11 +217,11 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
           <ContactLine label="Profil" value={item.contact.professionalUrl} href={professionalHref} />
         </dl>
         {item.notes || item.contact.notes ? (
-          <p className="mt-4 rounded-lg border border-white/10 bg-ink-950/60 p-3 text-sm leading-6 text-zinc-300">
+          <p className="mt-4 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
             {item.notes ?? item.contact.notes}
           </p>
         ) : null}
-        <p className="mt-3 text-xs text-zinc-500">
+        <p className="mt-3 text-xs text-[rgb(var(--text-faint))]">
           Actualizat: {formatDateTimeWithSeconds(item.updatedAt ?? item.contact.updatedAt ?? item.createdAt ?? undefined)}
         </p>
       </article>
@@ -236,7 +236,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
         <button
           type="button"
           onClick={resetForm}
-          className="rounded-lg border border-mint-400/25 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-300 hover:bg-mint-400/15"
+          className="focus-ring rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition-colors hover:bg-[rgb(var(--primary-hover))]"
         >
           Adaugă contact
         </button>
@@ -264,16 +264,16 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
         ) : null}
 
         {existingContacts.length > 0 ? (
-          <form action={submitExistingContact} className="grid gap-3 rounded-lg border border-white/10 bg-ink-900/70 p-4 md:grid-cols-[1fr_auto]">
+          <form action={submitExistingContact} className="grid gap-3 rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] p-4 md:grid-cols-[1fr_auto]">
             <input type="hidden" name="useExistingContact" value="1" />
             <input type="hidden" name="associationId" value="" />
             <input type="hidden" name="fullName" value={existingContacts[0]?.fullName ?? ""} />
             <input type="hidden" name="organizationName" value="" />
-            <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+            <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
               Asociază un contact existent
               <select
                 name="contactId"
-                className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 onChange={(event) => {
                   const selected = existingContacts.find((contact) => contact.id === event.currentTarget.value);
                   const form = event.currentTarget.form;
@@ -288,18 +288,18 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
                 ))}
               </select>
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+            <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
               Rol
-              <select name="role" defaultValue="decision_maker" className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50">
+              <select name="role" defaultValue="decision_maker" className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]">
                 <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
               </select>
             </label>
-            <label className="flex items-center gap-3 text-sm font-semibold text-zinc-200 md:col-span-2">
-              <input name="isPrimary" type="checkbox" defaultChecked={contacts.length === 0} className="size-4 rounded border-white/20 bg-ink-950 text-mint-400" />
+            <label className="flex items-center gap-3 text-sm font-semibold text-[rgb(var(--foreground))] md:col-span-2">
+              <input name="isPrimary" type="checkbox" defaultChecked={contacts.length === 0} className="focus-ring size-4 rounded border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] text-[rgb(var(--primary))]" />
               Contact principal pentru această oportunitate
             </label>
             <div className="md:col-span-2">
-              <button type="submit" disabled={isPending} className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-mint-400 disabled:opacity-60">
+              <button type="submit" disabled={isPending} className="focus-ring rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition-colors hover:bg-[rgb(var(--primary-hover))] disabled:opacity-60">
                 Asociază contactul
               </button>
             </div>
@@ -307,90 +307,90 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
         ) : null}
 
         {showForm ? (
-          <form action={submitContact} className="grid gap-4 rounded-lg border border-white/10 bg-ink-900/70 p-4">
+          <form action={submitContact} className="grid gap-4 rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] p-4">
             <input type="hidden" name="associationId" value={editing.associationId} />
             <input type="hidden" name="contactId" value={editing.contactId} />
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Nume contact
                 <input
                   name="fullName"
                   required
                   defaultValue={editing.fullName}
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Rol în companie
                 <input
                   name="jobTitle"
                   defaultValue={editing.jobTitle}
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Companie prospect
                 <input
                   name="organizationName"
                   defaultValue={editing.organizationName}
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Rol în oportunitate
                 <select
                   name="role"
                   defaultValue={editing.role}
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 >
                   {editing.role && !["decision_maker", "economic_buyer", "champion", "influencer", "approver", "other"].includes(editing.role) ? <option value={editing.role}>Rol legacy: {editing.role}</option> : null}
                   <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
                 </select>
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Email
                 <input
                   name="email"
                   type="email"
                   defaultValue={editing.email}
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Telefon
                 <input
                   name="phone"
                   defaultValue={editing.phone}
                   placeholder="+407..."
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200 md:col-span-2">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))] md:col-span-2">
                 Profil profesional
                 <input
                   name="professionalUrl"
                   type="url"
                   defaultValue={editing.professionalUrl}
                   placeholder="https://www.linkedin.com/in/..."
-                  className="h-11 rounded-lg border border-white/10 bg-ink-950/80 px-4 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-zinc-200 md:col-span-2">
+              <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))] md:col-span-2">
                 Note
                 <textarea
                   name="notes"
                   rows={4}
                   defaultValue={editing.notes}
-                  className="rounded-lg border border-white/10 bg-ink-950/80 px-4 py-3 text-white outline-none focus:border-mint-400/50"
+                  className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 />
               </label>
             </div>
-            <label className="flex items-center gap-3 text-sm font-semibold text-zinc-200">
+            <label className="flex items-center gap-3 text-sm font-semibold text-[rgb(var(--foreground))]">
               <input
                 name="isPrimary"
                 type="checkbox"
                 defaultChecked={editing.isPrimary || contacts.length === 0}
-                className="size-4 rounded border-white/20 bg-ink-950 text-mint-400"
+                className="focus-ring size-4 rounded border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] text-[rgb(var(--primary))]"
               />
               Contact principal pentru această oportunitate
             </label>
@@ -398,7 +398,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 hover:bg-mint-400 disabled:opacity-60"
+                className="focus-ring rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition-colors hover:bg-[rgb(var(--primary-hover))] disabled:opacity-60"
               >
                 {isPending ? "Se salvează..." : editing.associationId ? "Salvează modificările" : "Salvează contact"}
               </button>
@@ -406,7 +406,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
                 type="button"
                 onClick={() => setShowForm(false)}
                 disabled={isPending}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-200 hover:text-white disabled:opacity-60"
+                className="focus-ring rounded-control border border-[rgb(var(--border))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text-secondary))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-60"
               >
                 Închide
               </button>

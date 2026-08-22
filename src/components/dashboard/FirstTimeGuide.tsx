@@ -6,11 +6,11 @@ export function FirstTimeGuide({ journey }: { journey: FirstValueJourney }) {
   return (
     <section
       aria-labelledby="first-value-journey-title"
-      className="overflow-hidden rounded-panel border border-[rgb(var(--gold-500)/0.3)] bg-[linear-gradient(135deg,rgb(var(--surface-elevated)),rgb(var(--gold-100)/0.24))] shadow-card dark:bg-[linear-gradient(135deg,rgb(var(--surface-elevated)),rgb(var(--gold-700)/0.08))]"
+      className="overflow-hidden rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-card"
     >
       <div className="flex flex-col gap-4 border-b border-[rgb(var(--border))] p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Primul flux de valoare</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Primul flux de valoare</p>
           <h2 id="first-value-journey-title" className="mt-2 font-display text-2xl font-semibold tracking-tight text-[rgb(var(--foreground))]">
             De la un semnal comercial la o decizie controlată
           </h2>
@@ -31,7 +31,7 @@ export function FirstTimeGuide({ journey }: { journey: FirstValueJourney }) {
               {step.state === "complete" ? (
                 <CheckCircleIcon className="h-5 w-5 shrink-0 text-[rgb(var(--success-text))]" aria-label="Confirmat din datele spațiului de lucru" />
               ) : (
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold ${step.state === "current" ? "border-[rgb(var(--gold-500))] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]" : "border-[rgb(var(--border-strong))] text-[rgb(var(--text-faint))]"}`} aria-hidden="true">
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold ${step.state === "current" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))] text-[rgb(var(--primary))]" : "border-[rgb(var(--border-strong))] text-[rgb(var(--text-faint))]"}`} aria-hidden="true">
                   {index + 1}
                 </span>
               )}

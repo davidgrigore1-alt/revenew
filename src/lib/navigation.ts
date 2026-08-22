@@ -25,7 +25,7 @@ export type NavigationItem = {
   shortName?: string;
 };
 
-export type NavigationGroupId = "control" | "commercial-flow" | "intelligence" | "relationships" | "execution" | "management" | "utility";
+export type NavigationGroupId = "home" | "records" | "commercial" | "intelligence" | "management" | "utility";
 
 export type NavigationGroup = {
   id: NavigationGroupId;
@@ -66,11 +66,10 @@ export const advancedNavigation = [
 export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, ...advancedNavigation] satisfies NavigationItem[];
 
 const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
-  { id: "control", label: "Control", hrefs: ["/dashboard", "/today"] },
-  { id: "commercial-flow", label: "Flux comercial", hrefs: ["/inbox", "/approvals", "/opportunities", "/recoverable", "/pipeline"] },
+  { id: "home", label: "Acasă", hrefs: ["/dashboard", "/today", "/inbox", "/approvals"] },
+  { id: "records", label: "Înregistrări", hrefs: ["/companies", "/contacts", "/opportunities"] },
+  { id: "commercial", label: "Comercial", hrefs: ["/recoverable", "/pipeline", "/outreach"] },
   { id: "intelligence", label: "Inteligență", hrefs: ["/ai"] },
-  { id: "relationships", label: "Relații", hrefs: ["/companies", "/contacts"] },
-  { id: "execution", label: "Execuție", hrefs: ["/outreach"] },
   { id: "management", label: "Management", hrefs: ["/reports"] },
   { id: "utility", label: "Utilitare", hrefs: ["/settings", "/help"] }
 ];

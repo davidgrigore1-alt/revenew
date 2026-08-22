@@ -30,29 +30,31 @@ function OpportunityCard({ opportunity, columnId, isPending, onStatusChange }: {
     .filter((action) => action.status === "pending")
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
   const hasPrimaryContact = opportunity.contacts?.some((contact) => contact.isPrimary);
+  const isOpen = isOpenOpportunity(opportunity);
+  const isWon = columnId === "won";
 
   return (
-    <article className="group min-w-0 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 transition-[border-color,box-shadow,transform] duration-fast hover:-translate-y-px hover:border-[rgb(var(--border-strong))] hover:shadow-card">
-      <div className="flex flex-wrap items-center gap-2">
+    <article className="group min-w-0 rounded-control border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] p-2.5 transition-colors duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))]">
+      <Link href={`/opportunities/${opportunity.id}`} className="focus-ring block rounded-button text-sm font-semibold leading-5 text-[rgb(var(--foreground))] group-hover:text-[rgb(var(--primary))]">
+        {opportunity.title}
+      </Link>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <StatusBadge status={opportunity.status} />
         {!opportunity.ownerProfileId ? <span className="status-pill status-pill-warning">Fără responsabil</span> : null}
         {!hasPrimaryContact ? <span className="status-pill status-pill-neutral">Fără contact principal</span> : null}
       </div>
-      <Link href={`/opportunities/${opportunity.id}`} className="focus-ring mt-3 block rounded-button text-sm font-semibold leading-6 text-[rgb(var(--foreground))] group-hover:text-[rgb(var(--primary))]">
-        {opportunity.title}
-      </Link>
-      <dl className="mt-4 grid gap-2.5 text-xs">
-        <div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">Valoare</dt><dd className="text-right font-semibold text-[rgb(var(--foreground))]">{formatCurrency(columnId === "won" ? opportunity.actualOutcomeAmount ?? 0 : opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
+      <dl className="mt-2.5 grid gap-1.5 text-xs">
+        <div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">{isWon ? "Venit confirmat" : "Valoare estimată"}</dt><dd className="text-right font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(isWon ? opportunity.actualOutcomeAmount ?? 0 : opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="truncate text-right font-semibold text-[rgb(var(--foreground))]">{opportunity.ownerName ?? (opportunity.ownerProfileId ? "Atribuit" : "Neatribuit")}</dd></div>
         <div className="flex justify-between gap-3"><dt className="text-[rgb(var(--text-muted))]">Termen oportunitate</dt><dd className="text-right font-semibold text-[rgb(var(--foreground))]">{formatDate(opportunity.deadline)}</dd></div>
       </dl>
-      <div className={`mt-4 rounded-lg border p-3 ${nextAction ? "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]" : "border-dashed border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-bg))]"}`}>
-        <p className="text-label text-[rgb(var(--text-faint))]">Următoarea acțiune</p>
-        <p className="mt-1 text-xs font-semibold leading-5 text-[rgb(var(--foreground))]">{nextAction?.title ?? "Acțiune neplanificată"}</p>
-        {nextAction?.dueDate ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Scadentă {formatDate(nextAction.dueDate)}</p> : null}
-      </div>
-      <div className="mt-3">
-        {isOpenOpportunity(opportunity) ? (
+      {isOpen ? <div className={`mt-2.5 border-l-2 bg-[rgb(var(--surface-subtle))] p-2 ${nextAction ? "border-[rgb(var(--border-strong))]" : "border-[rgb(var(--warning-border))]"}`}>
+          <p className={`text-[0.6875rem] font-medium ${nextAction ? "text-[rgb(var(--text-faint))]" : "text-[rgb(var(--warning-text))]"}`}>Următoarea acțiune</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-[rgb(var(--foreground))]">{nextAction?.title ?? "Acțiune neplanificată"}</p>
+          {nextAction?.dueDate ? <p className="mt-1 text-[0.6875rem] text-[rgb(var(--text-muted))]">Scadentă {formatDate(nextAction.dueDate)}</p> : null}
+        </div> : null}
+      <div className="mt-2.5">
+        {isOpen ? (
           <Select aria-label={`Schimbă etapa pentru ${opportunity.title}`} disabled={isPending} value={opportunity.status} onChange={(event) => onStatusChange(opportunity.id, event.target.value as OpportunityStatus)}>
             <option value="reviewed">Lead verificat</option>
             <option value="contacted">Calificat/contactat</option>
@@ -69,8 +71,6 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
   const [isPending, startTransition] = useTransition();
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const occupiedColumns = columns.filter((column) => column.count > 0);
-  const emptyColumns = columns.filter((column) => column.count === 0);
 
   function changeStatus(opportunityId: string, status: OpportunityStatus, lossReason = "") {
     const formData = new FormData();
@@ -90,30 +90,28 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
   }
 
   return (
-    <section className="grid gap-4" aria-labelledby="pipeline-work-title">
+    <section className="grid gap-3" aria-labelledby="pipeline-work-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><p className="text-label text-[rgb(var(--primary))]">Execuție pe etape</p><h2 id="pipeline-work-title" className="mt-1 text-lg font-semibold">Oportunități în lucru</h2></div>
-        <p className="text-xs text-[rgb(var(--text-muted))]">Schimbările de etapă rămân explicite și auditabile.</p>
+        <div><h2 id="pipeline-work-title" className="text-sm font-semibold">Etape comerciale</h2><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Schimbările rămân explicite și auditabile.</p></div>
+        <p className="text-xs text-[rgb(var(--text-muted))]">Derulează orizontal pentru toate etapele.</p>
       </div>
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
-      <div className="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-        {occupiedColumns.map((column) => (
-          <section key={column.id} className="min-w-0 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card">
-            <header className="flex items-start justify-between gap-3 border-b border-[rgb(var(--border))] pb-4">
-              <div><h3 className="text-sm font-semibold">{column.label}</h3><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{column.count} oportunități</p></div>
-              <p className="text-right text-xs font-semibold text-[rgb(var(--foreground))]">{formatCurrency(column.totalValue, "RON")}</p>
-            </header>
-            <div className="mt-4 grid gap-3">{column.opportunities.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} columnId={column.id} isPending={isPending} onStatusChange={changeStatus} />)}</div>
-          </section>
-        ))}
-      </div>
-      {emptyColumns.length ? (
-        <div className="rounded-card border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4">
-          <p className="text-label text-[rgb(var(--text-faint))]">Etape fără înregistrări</p>
-          <div className="mt-3 flex flex-wrap gap-2">{emptyColumns.map((column) => <span key={column.id} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--text-muted))]">{column.label}</span>)}</div>
+      <div className="focus-ring -mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" role="region" aria-label="Pipeline pe etape" tabIndex={0}>
+        <div className="flex min-w-max items-start gap-2 2xl:min-w-0">
+          {columns.map((column) => (
+            <section key={column.id} className="w-[252px] min-w-[252px] border border-[rgb(var(--border))] border-t-2 border-t-[rgb(var(--border-strong))] bg-[rgb(var(--background-soft))] 2xl:min-w-0 2xl:flex-1">
+              <header className="flex min-h-12 items-center justify-between gap-3 border-b border-[rgb(var(--border-strong)/0.68)] bg-[rgb(var(--surface-subtle))] px-2.5">
+                <div><h3 className="text-xs font-semibold">{column.label}</h3><p className="mt-0.5 text-[0.6875rem] text-[rgb(var(--text-muted))]">{column.count} oportunități</p></div>
+                <p className="text-right text-xs font-semibold tabular-nums" title={column.id === "won" ? "Venit confirmat în RON" : "Valoare estimată în RON"}>{formatCurrency(column.totalValue, "RON")}</p>
+              </header>
+              <div className="grid gap-1.5 p-1.5">
+                {column.opportunities.length ? column.opportunities.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} columnId={column.id} isPending={isPending} onStatusChange={changeStatus} />) : <p className="px-2 py-8 text-center text-xs text-[rgb(var(--text-faint))]">Nicio înregistrare în această etapă.</p>}
+              </div>
+            </section>
+          ))}
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }

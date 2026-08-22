@@ -8,6 +8,7 @@ import {
   LockClosedIcon,
   ShieldCheckIcon
 } from "@heroicons/react/24/outline";
+import Link from "next/link";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { AskReveNew } from "@/components/intelligence/AskReveNew";
@@ -91,7 +92,7 @@ function CapabilityCard({ capability }: { capability: AiCapabilityDefinition }) 
   const route = routeFor(capability);
 
   return (
-    <article className="flex min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card">
+    <article className="flex min-w-0 flex-col rounded-card border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface-elevated))] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <Badge tone={status.tone} size="small"><StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />{status.label}</Badge>
         <span className="text-xs font-medium text-[rgb(var(--text-muted))]">{riskLabel(capability)}</span>
@@ -136,7 +137,7 @@ function RecommendationCard({
   }
 
   return (
-    <article className="marketing-card-lift flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
+    <article className="flex min-w-0 flex-col border-b border-[rgb(var(--border))] py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Badge tone={recommendationTone(recommendation)} size="small">{recommendation.typeLabel}</Badge>
         <span className="text-xs font-semibold text-[rgb(var(--text-faint))]">Prioritatea {position}</span>
@@ -148,7 +149,7 @@ function RecommendationCard({
       <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">{recommendation.whyItMatters}</p>
 
       {recommendation.estimatedValue && recommendation.currency ? (
-        <div className="mt-4 rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3">
+        <div className="mt-4 p-3">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Valoare estimată, neconfirmată</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(recommendation.estimatedValue, recommendation.currency)}</p>
           <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Nu reprezintă venit confirmat.</p>
@@ -196,7 +197,7 @@ function RecommendationCard({
               ))}
             </ul>
           </div>
-          <div className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3">
+          <div className="p-3">
             <p className="font-semibold text-[rgb(var(--warning-text))]">Decizie umană necesară</p>
             <p className="mt-1 text-[rgb(var(--text-muted))]">{recommendation.trace.humanDecision}</p>
             <p className="mt-2 text-[rgb(var(--text-muted))]">{recommendation.trace.outcomeLabel}</p>
@@ -212,7 +213,15 @@ function RecommendationCard({
   );
 }
 
-export default async function AiControlCenterPage() {
+const intelligenceTabs = [
+  { id: "ask", label: "Întreabă" },
+  { id: "discoveries", label: "Descoperiri" },
+  { id: "recommendations", label: "Recomandări" },
+  { id: "capabilities", label: "Capabilități" }
+] as const;
+type IntelligenceTab = typeof intelligenceTabs[number]["id"];
+
+export default async function AiControlCenterPage({ searchParams }: { searchParams?: { tab?: string } }) {
   const activeCount = aiCapabilities.filter((capability) => capability.status === "available_internal").length;
   const sandboxCount = aiCapabilities.filter((capability) => capability.status === "sandbox_only").length;
   const blockedCount = aiCapabilities.filter((capability) => capability.status === "blocked_until_security_review").length;
@@ -233,6 +242,8 @@ export default async function AiControlCenterPage() {
     intelligence = unavailableOperationalIntelligence();
   }
 
+  const requestedTab = searchParams?.tab;
+  const activeTab: IntelligenceTab = intelligenceTabs.some((tab) => tab.id === requestedTab) ? requestedTab as IntelligenceTab : "ask";
   return (
     <PageShell
       eyebrow="Inteligență controlată"
@@ -240,21 +251,34 @@ export default async function AiControlCenterPage() {
       description="Riscuri, dovezi și acțiuni sigure derivate din datele comerciale disponibile, cu decizia finală păstrată la oameni."
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
     >
-      <AskReveNew />
+      <nav aria-label="Secțiunile inteligenței operaționale" className="flex gap-1 overflow-x-auto border-b border-[rgb(var(--border))]">
+        {intelligenceTabs.map((tab) => (
+          <Link
+            key={tab.id}
+            href={`/ai?tab=${tab.id}`}
+            aria-current={activeTab === tab.id ? "page" : undefined}
+            {...(tab.id === "recommendations" && activeTab !== "recommendations" ? { "data-guide-anchor": "ai-recommendation" } : {})}
+            className="focus-ring whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--primary))] aria-[current=page]:text-[rgb(var(--foreground))]"
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
 
-      <CommercialDiscoveries result={discoveries} error={!discoveries} />
+      {activeTab === "ask" ? <AskReveNew /> : null}
+      {activeTab === "discoveries" ? <CommercialDiscoveries result={discoveries} error={!discoveries} /> : null}
 
-      <section data-guide-anchor="ai-recommendation" className="ai-command-grid relative overflow-hidden rounded-panel border border-[rgb(var(--brand-500)/0.24)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6" aria-labelledby="operational-intelligence-summary">
+      {activeTab === "recommendations" ? <><section data-guide-anchor="ai-recommendation" className="relative border-y border-[rgb(var(--border-strong)/0.72)] py-5 sm:py-6" aria-labelledby="operational-intelligence-summary">
         <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-card border border-[rgb(var(--brand-500)/0.34)] bg-[rgb(var(--brand-500)/0.08)] text-[rgb(var(--primary))]"><CpuChipIcon className="h-5 w-5" aria-hidden="true" /></div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))]"><CpuChipIcon className="h-4 w-4" aria-hidden="true" /></div>
               <Badge tone={intelligence.state === "critical" ? "danger" : intelligence.state === "attention" ? "warning" : intelligence.state === "unavailable" ? "neutral" : "info"}>{intelligence.stateLabel}</Badge>
             </div>
             <h2 id="operational-intelligence-summary" className="mt-4 max-w-3xl text-xl font-semibold tracking-[-0.025em] sm:text-2xl">{intelligence.headline}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{intelligence.observation}</p>
 
-            <div className="ai-evidence-rail mt-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 pl-6">
+            <div className="ai-evidence-rail mt-4 rounded-card border border-[rgb(var(--border-strong)/0.78)] bg-[rgb(var(--surface-elevated))] p-4 pl-6">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Decizia care merită atenție</p>
               <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em]">{intelligence.decisionTitle}</h3>
               <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Dovadă:</strong> {intelligence.evidenceLabel}</span></p>
@@ -265,13 +289,13 @@ export default async function AiControlCenterPage() {
             </div>
           </div>
 
-          <aside className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.88)] p-4 sm:p-5" aria-label="Starea inteligenței operaționale">
+          <aside className="border-t border-[rgb(var(--border))] pt-5 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0" aria-label="Starea inteligenței operaționale">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">Ce observă ReveNew acum?</p>
-            <dl className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Decizii identificate</dt><dd className="mt-1 text-2xl font-semibold">{intelligence.totalCandidates}</dd></div>
-              <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Dovezi în recomandări</dt><dd className="mt-1 text-2xl font-semibold">{intelligence.evidenceCount}</dd></div>
-              <div className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Critice</dt><dd className="mt-1 text-2xl font-semibold text-[rgb(var(--danger-text))]">{intelligence.criticalCount}</dd></div>
-              <div className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Necesită atenție</dt><dd className="mt-1 text-2xl font-semibold text-[rgb(var(--warning-text))]">{intelligence.attentionCount}</dd></div>
+            <dl className="mt-4 grid grid-cols-2 overflow-hidden border-y border-[rgb(var(--border))]">
+              <div className="border-b border-r border-[rgb(var(--border))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Decizii identificate</dt><dd className="mt-1 text-2xl font-semibold">{intelligence.totalCandidates}</dd></div>
+              <div className="border-b border-r border-[rgb(var(--border))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Dovezi în recomandări</dt><dd className="mt-1 text-2xl font-semibold">{intelligence.evidenceCount}</dd></div>
+              <div className="border-r border-[rgb(var(--border))] p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Critice</dt><dd className="mt-1 text-2xl font-semibold text-[rgb(var(--danger-text))]">{intelligence.criticalCount}</dd></div>
+              <div className="p-3"><dt className="text-xs text-[rgb(var(--text-muted))]">Necesită atenție</dt><dd className="mt-1 text-2xl font-semibold text-[rgb(var(--warning-text))]">{intelligence.attentionCount}</dd></div>
             </dl>
 
             {intelligence.estimatedExposedValueByCurrency.length > 0 ? (
@@ -313,21 +337,21 @@ export default async function AiControlCenterPage() {
             <Button href={intelligence.safeActionHref} variant="secondary" size="small" className="mt-4">{intelligence.safeActionLabel}</Button>
           </div>
         )}
-      </section>
+      </section></> : null}
 
-      <details className="group rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card">
+      {activeTab === "capabilities" ? <><details className="group rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))]" open>
         <summary className="focus-ring flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 rounded-panel px-5 py-4 marker:hidden sm:px-6">
           <span>
             <span className="block font-semibold">Registrul complet de capabilități și limite</span>
-            <span className="mt-1 block text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">Secundar recomandărilor curente · {aiCapabilities.length} capabilități documentate</span>
+            <span className="mt-1 block text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">{aiCapabilities.length} capabilități documentate, cu limite și efecte externe explicite</span>
           </span>
           <span className="shrink-0 rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold text-[rgb(var(--text-muted))] group-open:hidden">Deschide registrul</span>
         </summary>
         <div className="grid gap-8 border-t border-[rgb(var(--border))] p-5 sm:p-6">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-control border border-[rgb(var(--success-border))] bg-[rgb(var(--success-background))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Disponibile intern</p><p className="mt-1 text-xl font-semibold">{activeCount}</p></div>
-            <div className="rounded-control border border-[rgb(var(--info-border))] bg-[rgb(var(--info-background))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Medii demonstrative</p><p className="mt-1 text-xl font-semibold">{sandboxCount}</p></div>
-            <div className="rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Blocate</p><p className="mt-1 text-xl font-semibold">{blockedCount}</p></div>
+            <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Disponibile intern</p><p className="mt-1 text-xl font-semibold text-[rgb(var(--success-text))]">{activeCount}</p></div>
+            <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Medii demonstrative</p><p className="mt-1 text-xl font-semibold text-[rgb(var(--info-text))]">{sandboxCount}</p></div>
+            <div className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3"><p className="text-xs text-[rgb(var(--text-muted))]">Blocate</p><p className="mt-1 text-xl font-semibold">{blockedCount}</p></div>
           </div>
 
           {registryGroups.map((group) => {
@@ -351,7 +375,7 @@ export default async function AiControlCenterPage() {
         </div>
       </details>
 
-      <section className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 sm:p-6" aria-labelledby="ai-governance-title">
+      <section className="border-y border-[rgb(var(--border))] py-5 sm:py-6" aria-labelledby="ai-governance-title">
         <div className="flex items-start gap-3">
           <ShieldCheckIcon className="mt-0.5 h-6 w-6 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
           <div>
@@ -359,7 +383,7 @@ export default async function AiControlCenterPage() {
             <p className="mt-2 max-w-4xl text-sm leading-6 text-[rgb(var(--text-muted))]">Gmail nu este conectat. Google Calendar nu este conectat. Telefonia și vocea nu sunt active. Capabilitățile cu efect extern rămân blocate până la autorizare minimă, stocare sigură, revocare, audit și aprobare umană verificabilă. Statutul afișat nu promite disponibilitate viitoare.</p>
           </div>
         </div>
-      </section>
+      </section></> : null}
     </PageShell>
   );
 }

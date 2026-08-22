@@ -5,25 +5,25 @@ import test from "node:test";
 
 const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8");
 
-test("opportunity exposes compact contextual navigation and a discoverable commercial history", () => {
+test("opportunity exposes semantic URL tabs and renders only the active panel", () => {
   const page = read("src/app/(protected)/opportunities/[id]/page.tsx");
-  const navigation = read("src/components/opportunities/OpportunityContextNavigation.tsx");
   const timeline = read("src/components/opportunities/OpportunityIntelligenceTimeline.tsx");
   const workflow = read("src/components/opportunities/OpportunityWorkflow.tsx");
   const sidebar = read("src/lib/navigation.ts");
 
-  assert.match(page, /OpportunityContextNavigation showEvidence=/);
-  for (const destination of ["Rezumat", "Acțiune", "Istoric", "Documente", "Contacte"]) {
-    assert.match(navigation, new RegExp(destination));
+  for (const destination of ["Context", "Responsabilitate", "Răspuns", "Programează", "Istoric", "Flux"]) {
+    assert.match(page, new RegExp(destination));
   }
-  assert.match(navigation, /href: "#opportunity-timeline", label: "Istoric"/);
+  assert.match(page, /href=\{`\?tab=\$\{tab\.id\}`\}/);
+  assert.match(page, /activeTab === "context"/);
+  assert.match(page, /activeTab === "history"/);
+  assert.match(page, /activeTab === "workflow"/);
+  assert.doesNotMatch(page, /target:block|className="hidden scroll-mt-24|\border-\d+|flex-row-reverse/);
   assert.match(timeline, /id="opportunity-timeline"/);
   assert.match(timeline, /Istoric comercial/);
   assert.match(timeline, /Fapte înregistrate și interpretări ReveNew în ordine cronologică/);
   assert.match(timeline, /tabIndex=\{-1\}/);
-  assert.match(navigation, /target\.focus\(\{ preventScroll: true \}\)/);
-  assert.match(navigation, /prefers-reduced-motion: reduce/);
-  assert.doesNotMatch(workflow, /aria-label="Secțiuni oportunitate"/);
+  assert.match(page, /aria-label="Secțiunile oportunității"/);
   assert.doesNotMatch(sidebar, /name: "(?:Timeline|Istoric comercial|Memorie companie|Ask Company)"/);
 });
 
@@ -56,4 +56,24 @@ test("contextual explanations cover the product map and explain Companies specif
   assert.match(companies, /data-guide-anchor="companies-register"/);
   assert.match(assistant, /CopilotConversation autoFocus/);
   assert.match(read("src/lib/ai/copilot-tools.ts"), /get_product_help/);
+});
+
+test("core record registries use native tables and compact operational disclosures", () => {
+  const crm = read("src/components/crm/CrmWorkspaceClient.tsx");
+  const opportunities = read("src/components/opportunities/OpportunitiesExplorer.tsx");
+  const filters = read("src/components/filters/OpportunityFilters.tsx");
+  const savedViews = read("src/components/filters/SavedViewControls.tsx");
+
+  for (const registry of [crm, opportunities]) {
+    assert.match(registry, /<table[\s\S]*?<caption[\s\S]*?<thead[\s\S]*?<tbody/);
+    assert.match(registry, /<th scope="col"/);
+    assert.doesNotMatch(registry, /role="row"/);
+  }
+
+  assert.match(crm, /<Link href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}/);
+  assert.match(opportunities, /<Link href=\{"\/opportunities\/" \+ opportunity\.id\}/);
+  assert.match(filters, /<form method="get"/);
+  assert.match(filters, /<details[\s\S]*Filtre avansate/);
+  assert.match(savedViews, /return <details[\s\S]*Vizualizări private/);
+  assert.doesNotMatch(filters + savedViews, /\border-\d+|flex-row-reverse|target:block/);
 });

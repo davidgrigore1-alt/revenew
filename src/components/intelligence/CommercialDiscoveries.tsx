@@ -27,7 +27,7 @@ function EmptyDiscoveryState({ state }: { state: "clean" | "insufficient_data" }
 export function CommercialDiscoveries({ result, error = false }: { result?: CommercialOpportunityDiscoveryResult; error?: boolean }) {
   if (error || !result) {
     return (
-      <section className="rounded-panel border border-[rgb(var(--danger-border))] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6" aria-labelledby="commercial-discoveries-title">
+      <section className="rounded-panel border border-[rgb(var(--danger-border))] bg-[rgb(var(--surface-elevated))] p-5 sm:p-6" aria-labelledby="commercial-discoveries-title">
         <ExclamationTriangleIcon className="h-6 w-6 text-[rgb(var(--danger-text))]" aria-hidden="true" />
         <h2 id="commercial-discoveries-title" className="mt-3 text-xl font-semibold">Nu am putut verifica semnalele comerciale</h2>
         <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Datele nu au fost interpretate ca zero rezultate. Reîncearcă verificarea în siguranță.</p>
@@ -37,7 +37,7 @@ export function CommercialDiscoveries({ result, error = false }: { result?: Comm
   }
 
   return (
-    <section id="commercial-discoveries" className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6" aria-labelledby="commercial-discoveries-title">
+    <section id="commercial-discoveries" className="rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface-elevated))] p-5 sm:p-6" aria-labelledby="commercial-discoveries-title">
       <div className="flex flex-col gap-4 border-b border-[rgb(var(--border))] pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Observă · verifică · decide</p>

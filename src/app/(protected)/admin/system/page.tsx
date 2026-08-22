@@ -15,7 +15,7 @@ export default async function AdminSystemPage() {
   const insights = await loadAdminInsights(resolveAdminDateRange("30d"));
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader title="Sistem" description="Status tehnic și operațional, afișat ca stare verificabilă sau configurare neverificată. Nu sunt expuse secrete." />
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <AdminSection title="Status platformă">
@@ -41,6 +41,6 @@ export default async function AdminSystemPage() {
           </div>
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

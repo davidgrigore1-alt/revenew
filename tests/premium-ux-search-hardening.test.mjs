@@ -58,12 +58,12 @@ test("shared compact section rhythm separates major modules on AI and Inbox", ()
   const ai = read("src/app/(protected)/ai/page.tsx");
   const inbox = read("src/components/inbox/CommercialInboxClient.tsx");
 
-  assert.match(pageShell, /app-section-stack mt-6/);
+  assert.match(pageShell, /app-section-stack mt-5/);
   assert.match(globals, /\.app-section-stack\s*\{[\s\S]*gap: clamp\(1\.5rem, 2vw, 2rem\)/);
   assert.match(ai, /Priorități din datele existente/);
   assert.match(ai, /Registrul complet de capabilități și limite/);
-  assert.match(inbox, /<div className="app-section-stack">/);
-  assert.match(inbox, /Semnal selectat · inteligență operațională/);
+  assert.match(inbox, /xl:grid-cols-\[minmax\(18rem,0\.72fr\)_minmax\(0,1\.55fr\)\]/);
+  assert.match(inbox, /id="signal-review-panel"/);
 });
 
 test("search and assistant hardening preserve honest product boundaries", () => {

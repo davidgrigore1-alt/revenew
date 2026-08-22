@@ -12,11 +12,9 @@ import {
   LockClosedIcon,
   MagnifyingGlassIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   UserGroupIcon
 } from "@heroicons/react/24/outline";
 import { FaqAccordion, type FaqCategory } from "@/components/marketing/FaqAccordion";
-import { MarketingMetrics } from "@/components/marketing/MarketingMetrics";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { OpportunityExecutionPreview, PortfolioSummaryPreview } from "@/components/marketing/ProductShowcases";
@@ -56,12 +54,11 @@ const painPoints = [
 ] as const;
 
 const steps = [
-  ["01", "Semnal", "Identifici cazul comercial care riscă să iasă din atenție."],
-  ["02", "Dovezi", "Vezi faptele disponibile și informațiile care lipsesc."],
-  ["03", "Recomandare", "Primești o prioritate explicată, nu o concluzie opacă."],
-  ["04", "Decizie umană", "O persoană verifică și aprobă pasul potrivit."],
-  ["05", "Acțiune sigură", "Responsabilul și următorul pas devin explicite."],
-  ["06", "Audit și pilot", "Rezultatele susțin continuarea, ajustarea sau oprirea."]
+  ["01", "Semnal", "Cazul comercial care riscă să iasă din atenție devine vizibil."],
+  ["02", "Context", "Faptele disponibile și informațiile care lipsesc rămân separate."],
+  ["03", "Responsabilitate", "Proprietarul deciziei și termenul sunt clarificate explicit."],
+  ["04", "Acțiune", "Echipa verifică recomandarea și aprobă pasul potrivit."],
+  ["05", "Rezultat", "Concluzia este înregistrată distinct, fără a transforma estimarea în venit."]
 ] as const;
 
 const audiences = [
@@ -109,35 +106,28 @@ export default function LandingPage() {
   const accessMode = getReveNewAccessMode();
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
+    <main className="marketing-canvas min-h-screen overflow-x-clip bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
       <a href="#continut" className="focus-ring sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-button focus:bg-[rgb(var(--surface))] focus:px-4 focus:py-3 focus:text-sm focus:font-semibold">Sari la conținut</a>
       <MarketingNav />
 
-      <section id="continut" className="marketing-hero-shell relative isolate border-b border-[rgb(var(--border))]">
-        <div aria-hidden="true" className="marketing-grid pointer-events-none absolute inset-0 -z-20 opacity-35" />
-        <div aria-hidden="true" className="marketing-noise pointer-events-none absolute inset-0 -z-20 opacity-[0.07]" />
-        <div aria-hidden="true" className="marketing-ambient pointer-events-none absolute left-[8%] top-24 -z-10 h-64 w-64 rounded-full bg-[rgb(var(--brand-300)/0.14)] blur-[110px] dark:bg-[rgb(var(--brand-700)/0.10)]" />
-        <div className="mx-auto grid min-h-[calc(100svh-64px)] w-full max-w-[1280px] items-center gap-12 px-4 py-14 sm:px-6 md:py-20 lg:grid-cols-12 lg:px-8 xl:gap-16">
-          <Reveal className="lg:col-span-6">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--brand-500)/0.42)] bg-[rgb(var(--brand-50)/0.78)] px-3.5 py-2 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--brand-800))] shadow-card dark:bg-[rgb(var(--brand-950)/0.62)] dark:text-[rgb(var(--brand-300))]">
-              <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Inteligență operațională · sub control uman
-            </p>
-            <h1 className="mt-7 max-w-[700px] text-[clamp(2.75rem,5.5vw,4.5rem)] font-semibold leading-[1.01] tracking-[-0.052em]">
-              Vezi unde se blochează venitul. <span className="text-[rgb(var(--brand-400))]">Înainte să se piardă.</span>
+      <section id="continut" className="border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
+        <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8">
+          <div className="border-x border-[rgb(var(--border))] px-5 pb-12 pt-16 text-center sm:px-10 sm:pb-16 sm:pt-24 lg:px-14 lg:pb-20 lg:pt-28">
+            <p className="mx-auto inline-flex w-fit items-center gap-2 rounded-pill border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--text-secondary))]"><span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" />Sistem operațional pentru revenue recovery</p>
+            <h1 className="mx-auto mt-8 max-w-[1180px] text-[clamp(3rem,7.7vw,7.25rem)] font-semibold leading-[0.91] tracking-[-0.066em]">
+              Claritate pentru venitul rămas între pași.
             </h1>
-            <p className="mt-6 max-w-[620px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-lg sm:leading-8">
-              Pentru echipe B2B care vor să identifice oportunitățile rămase în urmă, să clarifice responsabilul și să decidă următoarea acțiune pe baza dovezilor.
-            </p>
-            <p className="mt-4 max-w-[650px] text-sm font-semibold leading-6 text-[rgb(var(--foreground))]">ReveNew recomandă, iar echipa ta decide. Nu este recuperare de creanțe: urmărește oportunități comerciale, nu datorii.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button href="#preturi" size="large" className="group shadow-[0_16px_38px_rgb(var(--brand-700)/0.14)]">Solicită auditul controlat <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /></Button>
-              <Button href="#cum-functioneaza" variant="secondary" size="large">Vezi cum funcționează</Button>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-[rgb(var(--text-muted))]">
-              {["Dovezi verificabile", "Aprobare umană", "Valoare estimată, nu venit confirmat"].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" aria-hidden="true" />{item}</span>)}
-            </div>
-          </Reveal>
-          <Reveal delay={120} className="pb-7 lg:col-span-6 lg:pb-0"><ProductPreview /></Reveal>
+            <p className="mx-auto mt-7 max-w-[760px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-xl sm:leading-8">ReveNew aduce în același loc dovada, responsabilul și următoarea acțiune, înainte ca o oportunitate comercială să iasă din atenție.</p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Button href="#preturi" size="large">Solicită un audit controlat <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button><Button href="#produs-in-actiune" variant="secondary" size="large">Explorează produsul</Button></div>
+          </div>
+          <div className="border-x border-b border-[rgb(var(--border))] px-2 pb-10 sm:px-5 sm:pb-14 lg:px-8 lg:pb-16"><ProductPreview /></div>
+          <aside className="grid border-x border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left md:grid-cols-3" aria-label="Principii ReveNew">
+            {[
+              ["Dovezi verificabile", "Nu este recuperare de creanțe: ReveNew urmărește oportunități comerciale, nu datorii."],
+              ["Control uman", "ReveNew recomandă, iar echipa ta decide. O persoană verifică și aprobă."],
+              ["Valori prudente", "Estimarea comercială rămâne distinctă de venitul confirmat."]
+            ].map(([title, description], index) => <div key={title} className="border-b border-[rgb(var(--border))] p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">0{index + 1}</p><p className="mt-3 text-sm font-semibold">{title}</p><p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{description}</p></div>)}
+          </aside>
         </div>
       </section>
 
@@ -155,8 +145,8 @@ export default function LandingPage() {
         <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {painPoints.map(([title, description, Icon], index) => (
             <Reveal key={title} delay={index * 70}>
-              <article className="marketing-card-lift flex h-full items-start gap-4 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--surface-muted))] dark:text-[rgb(var(--brand-300))]"><Icon className="h-4 w-4" aria-hidden="true" /></span>
+              <article className="flex h-full items-start gap-4 border-t border-[rgb(var(--border))] py-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-card bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))]"><Icon className="h-4 w-4" aria-hidden="true" /></span>
                 <div><h3 className="font-semibold tracking-[-0.01em]">{title}</h3><p className="mt-1.5 text-xs leading-5 text-[rgb(var(--muted-foreground))]">{description}</p></div>
               </article>
             </Reveal>
@@ -166,13 +156,13 @@ export default function LandingPage() {
 
       <section id="cum-functioneaza" className="scroll-mt-28 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal><SectionHeading eyebrow="Metoda ReveNew" title="Patru etape. Un fir operațional.">De la semnal la rezultat, fără rupturi de context.</SectionHeading></Reveal>
-          <div className="relative mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div aria-hidden="true" className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-[linear-gradient(90deg,transparent,rgb(var(--brand-500)/0.55),transparent)] lg:block" />
+          <Reveal><SectionHeading eyebrow="Metoda ReveNew" title="Cinci etape. Un fir operațional.">Semnal, context, responsabilitate, acțiune și rezultat — în ordinea în care echipa trebuie să le poată verifica.</SectionHeading></Reveal>
+          <div className="relative mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div aria-hidden="true" className="absolute left-[12%] right-[12%] top-7 hidden h-px bg-[rgb(var(--border-strong))] lg:block" />
             {steps.map(([number, title, description], index) => (
               <Reveal key={title} delay={index * 80}>
-                <article className="relative h-full rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
-                  <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgb(var(--brand-500)/0.5)] bg-[rgb(var(--brand-950))] text-xs font-bold text-[rgb(var(--brand-300))]">{number}</span>
+                <article className="relative h-full border-t border-[rgb(var(--border))] py-5">
+                  <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgb(var(--primary)/0.22)] bg-[rgb(var(--primary))] text-xs font-bold text-[rgb(var(--primary-foreground))]">{number}</span>
                   <h3 className="mt-5 text-xl font-semibold tracking-[-0.025em]">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{description}</p>
                 </article>
@@ -200,8 +190,19 @@ export default function LandingPage() {
 
       <section id="ce-urmareste" className="scroll-mt-24 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <Reveal><SectionHeading eyebrow="Ce urmărește ReveNew" title="Valoare, responsabilitate și disciplină de execuție.">Un singur tablou pentru ce contează și ce blochează progresul.</SectionHeading></Reveal>
-          <Reveal delay={90} className="mt-9"><MarketingMetrics /></Reveal>
+          <Reveal><SectionHeading eyebrow="Ce urmărește ReveNew" title="Valoare, responsabilitate și disciplină de execuție.">Nu afișăm rezultate inventate. Produsul păstrează separat ceea ce este estimat, ceea ce cere decizie și ceea ce a fost confirmat.</SectionHeading></Reveal>
+          <Reveal delay={90} className="mt-9">
+            <div className="grid overflow-hidden rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] md:grid-cols-3">
+              {[
+                [EyeIcon, "Expunere estimată", "Ajută la prioritizare și rămâne distinctă de venitul confirmat."],
+                [UserGroupIcon, "Responsabilitate", "Fiecare oportunitate importantă are un proprietar și un termen verificabil."],
+                [DocumentCheckIcon, "Decizie auditată", "Recomandarea, aprobarea și rezultatul păstrează un traseu explicit."]
+              ].map(([Icon, title, description], index) => {
+                const LensIcon = Icon as typeof EyeIcon;
+                return <article key={String(title)} className={`p-6 ${index < 2 ? "border-b border-[rgb(var(--border))] md:border-b-0 md:border-r" : ""}`}><LensIcon className="h-5 w-5 text-[rgb(var(--primary))]" aria-hidden="true" /><h3 className="mt-8 text-lg font-semibold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{String(description)}</p></article>;
+              })}
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -220,7 +221,7 @@ export default function LandingPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {audiences.map(([title, description, Icon], index) => (
             <Reveal key={title} delay={index * 60}>
-              <article className={`marketing-card-lift flex h-full gap-4 rounded-panel border p-5 shadow-card ${index === 0 ? "border-[rgb(var(--brand-500)/0.42)] bg-[linear-gradient(135deg,rgb(var(--brand-50)),rgb(var(--surface)))] dark:bg-[linear-gradient(135deg,rgb(var(--brand-950)/0.5),rgb(var(--surface)))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
+              <article className={`flex h-full gap-4 border-t py-5 ${index === 0 ? "border-[rgb(var(--brand-500)/0.42)] bg-[rgb(var(--surface))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
                 <Icon className="h-6 w-6 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
                 <div><h3 className="text-lg font-semibold">{title}</h3><p className="mt-1.5 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{description}</p></div>
               </article>
@@ -233,7 +234,7 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.72fr_1.28fr] lg:px-8">
           <Reveal>
             <SectionHeading eyebrow="Inteligență operațională" title="O recomandare bună îți arată și de ce.">ReveNew ordonează riscurile din datele disponibile și păstrează traseul de la dovadă la acțiunea sigură.</SectionHeading>
-            <div className="mt-6 rounded-panel border border-[rgb(var(--brand-500)/0.4)] bg-[rgb(var(--brand-50))] p-4 dark:bg-[rgb(var(--brand-950)/0.55)]">
+            <div className="mt-6 rounded-panel border border-[rgb(var(--brand-500)/0.4)] bg-[rgb(var(--brand-50))] p-4">
               <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Limita este vizibilă</p>
               <p className="mt-2 text-sm leading-6 text-[rgb(var(--muted-foreground))]">Inteligența asistă decizia. Nu trimite mesaje, nu execută acțiuni externe și nu transformă estimările în venit confirmat.</p>
             </div>
@@ -249,7 +250,7 @@ export default function LandingPage() {
                   ["Dovadă", "Termen depășit și ultima acțiune înregistrată."],
                   ["De ce contează", "Continuitatea comercială poate fi pierdută."],
                   ["Acțiune sigură", "Revizuiește oportunitatea înainte de orice trimitere."]
-                ].map(([title, description]) => <div key={title}><p className="text-xs font-bold uppercase tracking-[0.12em] text-[rgb(var(--brand-600))] dark:text-[rgb(var(--brand-300))]">{title}</p><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{description}</p></div>)}
+                ].map(([title, description]) => <div key={title}><p className="text-xs font-bold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">{title}</p><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{description}</p></div>)}
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--border))] pt-4">
                 <p className="text-xs text-[rgb(var(--text-muted))]">Decizia finală și aprobarea rămân la echipă.</p>
@@ -276,14 +277,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="control" className="scroll-mt-28 relative isolate overflow-hidden border-y border-white/5 bg-[#292722] text-[#f4efe5] dark:bg-[rgb(var(--surface-subtle))]">
-        <div aria-hidden="true" className="marketing-grid pointer-events-none absolute inset-0 -z-10 opacity-[0.08]" />
-        <div aria-hidden="true" className="absolute -right-32 top-12 -z-10 h-96 w-96 rounded-full bg-[rgb(var(--brand-500)/0.08)] blur-[120px]" />
+      <section id="control" className="scroll-mt-28 border-y border-slate-800 bg-slate-950 text-slate-50">
         <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
           <Reveal>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[rgb(var(--brand-300))]">Control și siguranță</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-300">Control și siguranță</p>
             <h2 className="mt-4 text-[clamp(2rem,4.7vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.035em]">Asistență pentru decizie. Nu autonomie riscantă.</h2>
-            <p className="mt-4 max-w-xl text-base leading-7 text-[#c9c0b1]">ReveNew pregătește context și drafturi. Utilizatorii autorizați verifică, aprobă și decid fiecare pas important.</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">ReveNew pregătește context și drafturi. Utilizatorii autorizați verifică, aprobă și decid fiecare pas important.</p>
           </Reveal>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
@@ -293,7 +292,7 @@ export default function LandingPage() {
               [MagnifyingGlassIcon, "Context verificabil", "Sursa, estimarea și motivul recomandării rămân vizibile."]
             ].map(([Icon, title, description], index) => {
               const ControlIcon = Icon as typeof ShieldCheckIcon;
-              return <Reveal key={String(title)} delay={index * 70}><article className="h-full rounded-panel border border-white/[0.09] bg-white/[0.035] p-4"><ControlIcon className="h-5 w-5 text-[rgb(var(--brand-300))]" aria-hidden="true" /><h3 className="mt-4 text-base font-semibold">{String(title)}</h3><p className="mt-1.5 text-sm leading-6 text-[#bdb4a5]">{String(description)}</p></article></Reveal>;
+              return <Reveal key={String(title)} delay={index * 70}><article className="h-full border-t border-white/10 py-4"><ControlIcon className="h-5 w-5 text-teal-300" aria-hidden="true" /><h3 className="mt-4 text-base font-semibold">{String(title)}</h3><p className="mt-1.5 text-sm leading-6 text-slate-400">{String(description)}</p></article></Reveal>;
             })}
           </div>
         </div>
@@ -301,7 +300,7 @@ export default function LandingPage() {
 
       <section id="preturi" className="scroll-mt-28 mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
         <Reveal className="grid items-end gap-6 lg:grid-cols-[0.8fr_1.2fr]"><SectionHeading eyebrow="Investiție clară" title="Începe cu intervenția potrivită." /><p className="max-w-2xl text-base leading-7 text-[rgb(var(--muted-foreground))] lg:justify-self-end">Fiecare opțiune clarifică ce include și ce urmează, fără garanții artificiale sau urgență inventată.</p></Reveal>
-        {accessMode === "preview" ? <p className="mt-6 max-w-3xl rounded-card border border-[rgb(var(--brand-500)/0.32)] bg-[rgb(var(--brand-50))] p-3.5 text-sm leading-6 dark:bg-[rgb(var(--surface-muted))]">Mod de testare: selecția de mai jos nu creează o plată sau un abonament activ.</p> : null}
+        {accessMode === "preview" ? <p className="mt-6 max-w-3xl rounded-card border border-[rgb(var(--brand-500)/0.32)] bg-[rgb(var(--brand-50))] p-3.5 text-sm leading-6">Mod de testare: selecția de mai jos nu creează o plată sau un abonament activ.</p> : null}
         <div className="mt-8 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
           {commercialPricingPlans.map((plan, index) => {
             const featured = plan.title === "ReveNew Managed";
@@ -309,7 +308,7 @@ export default function LandingPage() {
             const custom = plan.title === "Custom Implementation";
             return (
               <Reveal key={plan.title} delay={index * 80} className={custom ? "md:col-span-2 xl:col-span-1" : ""}>
-                <article className={`marketing-card-lift relative flex h-full overflow-hidden rounded-[1.15rem] border p-5 shadow-card ${featured ? "border-[rgb(var(--brand-500)/0.48)] bg-[linear-gradient(180deg,rgb(var(--brand-50)),rgb(var(--surface))_38%)] dark:bg-[linear-gradient(180deg,rgb(var(--surface-muted)),rgb(var(--surface))_40%)]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
+                <article className={`marketing-card-lift relative flex h-full overflow-hidden rounded-[1.15rem] border p-5 shadow-card ${featured ? "border-[rgb(var(--brand-500)/0.48)] bg-[rgb(var(--brand-50))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}>
                   {featured ? <span className="absolute right-5 top-5 rounded-full bg-[rgb(var(--brand-950))] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[rgb(var(--brand-300))]">Operare continuă</span> : null}
                   <div className="flex w-full flex-col">
                     <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">{custom ? "Implementare enterprise" : plan.label}</p>
@@ -336,9 +335,8 @@ export default function LandingPage() {
       </section>
 
       <section className="px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-        <Reveal className="relative mx-auto max-w-[1120px] overflow-hidden rounded-[1.5rem] border border-[rgb(var(--brand-400)/0.38)] bg-[rgb(var(--surface-elevated))] px-6 py-11 text-center text-[rgb(var(--foreground))] shadow-elevated sm:px-12 md:py-14">
-          <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgb(var(--brand-100)/0.72),transparent_54%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgb(var(--brand-900)/0.16),transparent_54%)]" />
-          <div className="relative">
+        <Reveal className="mx-auto max-w-[1120px] overflow-hidden border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-6 py-11 text-center text-[rgb(var(--foreground))] sm:px-12 md:py-14">
+          <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[rgb(var(--primary))]">Înainte să iasă din atenție</p>
             <h2 className="mx-auto mt-4 max-w-4xl text-[clamp(2.1rem,4.6vw,3.8rem)] font-semibold leading-[1.04] tracking-[-0.045em]">Vezi unde se blochează venitul. Clarifică următoarea acțiune.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[rgb(var(--text-secondary))]">Începe cu oportunitățile existente și construiește un proces verificabil de responsabilitate, follow-up și decizie.</p>

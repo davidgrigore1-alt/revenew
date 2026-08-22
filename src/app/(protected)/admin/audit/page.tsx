@@ -16,7 +16,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams?: 
   const insights = await loadAdminInsights(range);
 
   return (
-    <main className="px-4 py-8 sm:px-6 xl:px-8">
+    <div className="px-4 py-8 sm:px-6 xl:px-8">
       <AdminHeader title="Audit" description="Evenimente interne de securitate și roluri platformă. Fără secrete, token-uri sau conținut comercial brut." rangeLabel={range.label} actions={<AdminRangeLinks active={range.key} />} />
       <div className="mt-6">
         <AdminSection title="Audit roluri platformă" description="Istoric scris de triggerul bazei de date, nu de browser.">
@@ -43,6 +43,6 @@ export default async function AdminAuditPage({ searchParams }: { searchParams?: 
           )}
         </AdminSection>
       </div>
-    </main>
+    </div>
   );
 }

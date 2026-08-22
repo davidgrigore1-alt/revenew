@@ -180,8 +180,8 @@ test("QA-polished operational copy remains accurate and uses shared primitives",
   const analyze = read("src/app/(protected)/opportunities/analyze/page.tsx");
   const reportActions = read("src/components/reports/ReportActions.tsx");
 
-  assert.match(dashboard, /oportunități sunt evaluate cu risc ridicat/);
-  assert.doesNotMatch(dashboard, /oportunități cu valoare mare sunt evaluate/);
+  assert.match(dashboard, /HomeAskSurface/);
+  assert.doesNotMatch(dashboard, /oportunități sunt evaluate cu risc ridicat|oportunități cu valoare mare sunt evaluate|MetricCard/);
   assert.match(opportunities, /filtered\.length === 1 \? "oportunitate" : "oportunități"/);
   assert.match(analyze, /Analizează o oportunitate nouă/);
   assert.match(reportActions, /import \{ Button \} from "@\/components\/ui\/Button"/);

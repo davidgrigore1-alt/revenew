@@ -32,44 +32,15 @@ export default async function PipelinePage() {
       }
     >
       <div className="grid gap-5">
-        <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="pipeline-overview-title">
-          <div className="grid gap-6 p-5 sm:p-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <div>
-              <p className="text-label text-[rgb(var(--primary))]">Poziția comercială activă</p>
-              <h2 id="pipeline-overview-title" className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-[rgb(var(--foreground))]">
-                {formatCurrency(activeValue, "RON")}
-              </h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-[rgb(var(--text-muted))]">
-                Valoare estimată în pipeline pentru oportunitățile active în RON. Nu este venit confirmat; rezultatele câștigate sunt raportate separat și nu sunt incluse aici.
-              </p>
-              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-                <div><dt className="text-label text-[rgb(var(--text-faint))]">Active</dt><dd className="mt-1 text-xl font-semibold">{activeOpportunities.length}</dd></div>
-                <div><dt className="text-label text-[rgb(var(--text-faint))]">Cu responsabil</dt><dd className="mt-1 text-xl font-semibold">{withOwner}/{activeOpportunities.length}</dd></div>
-                <div><dt className="text-label text-[rgb(var(--text-faint))]">Cu acțiune următoare</dt><dd className="mt-1 text-xl font-semibold">{withNextAction}/{activeOpportunities.length}</dd></div>
-                <div><dt className="text-label text-[rgb(var(--text-faint))]">Câștigat · RON</dt><dd className="mt-1 text-xl font-semibold text-[rgb(var(--success-text))]">{formatCurrency(wonValue, "RON")}</dd></div>
-              </dl>
-            </div>
-            <div className="rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-4">
-                <h3 className="text-sm font-semibold">Distribuție pe etape</h3>
-                <span className="text-xs text-[rgb(var(--text-muted))]">{opportunities.length} total</span>
-              </div>
-              <div className="mt-5 grid gap-3">
-                {columns.map((column) => {
-                  const share = opportunities.length ? Math.round((column.count / opportunities.length) * 100) : 0;
-                  return (
-                    <div key={column.id} className="grid grid-cols-[minmax(5rem,0.7fr)_2fr_auto] items-center gap-3 text-xs">
-                      <span className="truncate font-medium text-[rgb(var(--text-muted))]">{column.label}</span>
-                      <span className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]">
-                        <span className="block h-full rounded-full bg-[rgb(var(--primary))]" style={{ width: `${share}%` }} />
-                      </span>
-                      <span className="w-6 text-right font-semibold text-[rgb(var(--foreground))]">{column.count}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+        <section className="border-y border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface-subtle))] px-3 py-3" aria-label="Rezumat pipeline">
+          <dl className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-xs">
+            <div className="flex items-baseline gap-1.5"><dt className="text-[rgb(var(--text-muted))]">Valoare estimată în pipeline · RON</dt><dd className="text-sm font-semibold tabular-nums">{formatCurrency(activeValue, "RON")}</dd></div>
+            <div className="flex items-baseline gap-1.5"><dt className="text-[rgb(var(--text-muted))]">Active</dt><dd className="font-semibold tabular-nums">{activeOpportunities.length}</dd></div>
+            <div className="flex items-baseline gap-1.5"><dt className="text-[rgb(var(--text-muted))]">Cu responsabil</dt><dd className="font-semibold tabular-nums">{withOwner}/{activeOpportunities.length}</dd></div>
+            <div className="flex items-baseline gap-1.5"><dt className="text-[rgb(var(--text-muted))]">Cu acțiune următoare</dt><dd className="font-semibold tabular-nums">{withNextAction}/{activeOpportunities.length}</dd></div>
+            <div className="flex items-baseline gap-1.5 xl:ml-auto"><dt className="text-[rgb(var(--text-muted))]">Câștigat confirmat · RON</dt><dd className="font-semibold tabular-nums text-[rgb(var(--success-text))]">{formatCurrency(wonValue, "RON")}</dd></div>
+          </dl>
+          <p className="mt-1.5 text-[0.6875rem] text-[rgb(var(--text-faint))]">Estimările active sunt orientative. Nu este venit confirmat. Totalurile agregate includ numai valorile în RON.</p>
         </section>
 
         {opportunities.length === 0 ? (

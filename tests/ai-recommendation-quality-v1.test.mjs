@@ -41,9 +41,9 @@ test("dashboard, inbox and today expose decision-quality context without new aut
   const preparation = read("src/components/signals/SignalPreparationPanel.tsx");
   const today = read("src/components/dashboard/TodayActionCard.tsx");
 
-  assert.match(dashboard, /De ce contează:/);
+  assert.match(dashboard, /Costul întârzierii:/);
   assert.match(dashboard, /De ce este prioritar\?/);
-  assert.match(dashboard, /Prima acțiune sigură/);
+  assert.match(dashboard, /aria-label="Prima acțiune sigură"/);
   assert.match(preparation, /evidenceStrengthLabel/);
   assert.match(preparation, /Riscul inacțiunii/);
   assert.match(preparation, /Necesită verificare și decizie umană/);

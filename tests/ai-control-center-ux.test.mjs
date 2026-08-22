@@ -67,9 +67,9 @@ test("input guidance distinguishes required context from optional execution data
   const inboxClient = read("src/components/inbox/CommercialInboxClient.tsx");
   const importPage = read("src/app/(protected)/inbox/import/page.tsx");
 
-  assert.match(inbox, /Obligatoriu:/);
-  assert.match(inbox, /Opțional, dar util:/);
-  assert.match(inbox, /păstrează dovada/);
+  assert.match(inbox, /<CommercialInboxClient/);
+  assert.match(inboxClient, /required \? "Obligatoriu" : "Opțional"/);
+  assert.match(inboxClient, /Păstrează proveniența dovezii/);
   assert.doesNotMatch(inboxClient, /ownership/i);
   assert.match(importPage, /Opțional, dar util:/);
   assert.match(importPage, /importul nu aprobă oportunități/);

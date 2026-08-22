@@ -226,7 +226,7 @@ test("partial signal-only workspaces report only supported approval work", () =>
   assert.equal(audit.estimatedExposedValueByCurrency.length, 0);
 });
 
-test("reports and Control Center expose discreet audit routes", () => {
+test("reports exposes the audit route while Control Center stays sparse", () => {
   assert.match(read("src/app/(protected)/reports/page.tsx"), /href="\/reports\/revenue-recovery-audit"/);
-  assert.match(read("src/app/(protected)/dashboard/page.tsx"), /href="\/reports\/revenue-recovery-audit"/);
+  assert.doesNotMatch(read("src/app/(protected)/dashboard/page.tsx"), /href="\/reports\/revenue-recovery-audit"/);
 });

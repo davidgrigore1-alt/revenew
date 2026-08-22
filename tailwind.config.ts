@@ -65,14 +65,15 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {
         metadata: ["0.75rem", { lineHeight: "1rem" }],
         body: ["0.875rem", { lineHeight: "1.375rem" }],
         "card-title": ["1rem", { lineHeight: "1.5rem" }],
         "section-title": ["1.25rem", { lineHeight: "1.75rem" }],
-        "page-title": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.02em" }]
+        "page-title": ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "-0.025em" }]
       },
       borderRadius: {
         control: "var(--radius-control)",
