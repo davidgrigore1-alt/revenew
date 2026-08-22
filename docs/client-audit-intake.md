@@ -59,10 +59,10 @@ Folosește [revenew-client-audit-template.csv](samples/revenew-client-audit-temp
 
 Șablonul are două categorii de coloane:
 
-- coloane recunoscute de importul de semnale: titlu, companie, contact, email, sursă, rezumat, valoare estimată, monedă, status, responsabil, ultima acțiune și termen;
-- coloane de lucru pentru audit: rolul contactului, data cererii, următoarea acțiune, stările de aprobare/propunere/rezultat și note.
+- câmpuri comerciale de bază: titlu, companie, contact, email, sursă, rezumat, valoare estimată, monedă, status, responsabil, ultima interacțiune și termen;
+- context operațional pentru audit: rolul contactului, data cererii, ultima acțiune, următoarea acțiune declarată, stările de aprobare/propunere/rezultat și notele operatorului.
 
-Coloanele de lucru care nu sunt mapate rămân informații pentru normalizare și revizuire. Nu presupune că au fost persistate. Include informația materială în `request_summary` sau completeaz-o manual în oportunitate după aprobarea semnalului.
+Coloanele operaționale mapate sunt păstrate în dovada textuală a semnalului sub marcajul „de verificat”. Ele nu devin automat responsabil, acțiune, aprobare, trimitere sau rezultat confirmat. Coloanele nemapate nu sunt importate; informația materială trebuie mapată sau inclusă în `request_summary`.
 
 ## Fluxul operatorului
 

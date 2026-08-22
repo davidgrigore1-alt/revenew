@@ -8,7 +8,8 @@ const scriptDirectory = path.dirname(currentFile);
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
 const ownPath = "scripts/validation/check-repository-safety.mjs";
 const allowedDocumentedCsvFiles = new Set([
-  "docs/samples/revenew-client-audit-template.csv"
+  "docs/samples/revenew-client-audit-template.csv",
+  "public/samples/revenew-client-audit-template.csv"
 ]);
 
 export function forbiddenFileReason(fileName) {

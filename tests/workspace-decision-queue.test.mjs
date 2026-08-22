@@ -39,6 +39,7 @@ function load(relativePath) {
 }
 
 const { buildWorkspaceDecisionQueue } = load("src/lib/workspace-decision-queue.ts");
+const { buildOpportunityCommercialState } = load("src/lib/opportunity-commercial-state.ts");
 const now = new Date("2026-07-23T12:00:00.000Z");
 
 function contact(overrides = {}) {
@@ -122,6 +123,35 @@ test("workspace queue ranks overdue work before pending approval and retains evi
   assert.equal(queue.items[0].type, "overdue_follow_up");
   assert.equal(queue.items[1].type, "pending_approval");
   assert.ok(queue.items.every((item) => item.evidence.every((evidence) => evidence.sourceId && evidence.label && evidence.href)));
+});
+
+test("canonical commercial state explains blockers, evidence and the next safe intervention", () => {
+  const blocked = opportunity({
+    ownerProfileId: null,
+    ownerName: null,
+    contacts: [],
+    actions: [{ id: "overdue", title: "Confirmă decizia", description: "", status: "pending", dueDate: "2026-07-20T09:00:00.000Z", createdAt: "2026-07-19T09:00:00.000Z" }],
+    documents: [{ id: "prepared", title: "Ofertă revizuită", status: "approved", sendStatus: "not_sent", readyAt: "2026-07-22T10:00:00.000Z" }]
+  });
+  const state = buildOpportunityCommercialState(blocked, { now, linkedSignals: [signal({ detectedFromOpportunityId: blocked.id })] });
+  assert.equal(state.ownership.validity, "missing");
+  assert.equal(state.flags.nextActionOverdue, true);
+  assert.equal(state.approval.state, "pending");
+  assert.equal(state.document.state, "prepared");
+  assert.equal(state.recommendedSafeIntervention.label, "Revizuiește acțiunea restantă");
+  assert.ok(state.exceptions.some((item) => item.code === "pending_approval" && item.evidenceIds.includes("approval:signal-1")));
+  assert.ok(state.exceptions.some((item) => item.code === "prepared_document_not_advanced"));
+  assert.ok(state.missingInformation.includes("Responsabilul comercial nu este atribuit."));
+  assert.ok(state.evidence.every((item) => item.sourceId && item.label && item.href));
+});
+
+test("canonical state never turns an estimate into confirmed revenue", () => {
+  const open = buildOpportunityCommercialState(opportunity({ estimatedValueHigh: 185300, actualOutcomeAmount: 99000 }), { now });
+  assert.equal(open.financial.estimatedValue, 185300);
+  assert.equal(open.financial.confirmedRevenue, null);
+  const won = buildOpportunityCommercialState(opportunity({ lifecycleStatus: "won", actualOutcomeAmount: 99000, outcomeRecordedAt: "2026-07-23T10:00:00.000Z", outcomeRecordedByProfileId: "profile-1" }), { now });
+  assert.equal(won.financial.confirmedRevenue, 99000);
+  assert.equal(won.outcome.confirmedByHuman, true);
 });
 
 test("same-severity overdue items use due date before value", () => {
@@ -223,4 +253,11 @@ test("decision aggregation stays server-only and reuses the authorized workspace
   assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
   assert.doesNotMatch(model, /createSupabase|service[_-]?role|\.from\(|fetch\s*\(/i);
   assert.doesNotMatch(model, /businesses\.owner_id|disable row level security/i);
+});
+
+test("queue, opportunity detail and copilot consume the same canonical state", () => {
+  assert.match(read("src/lib/workspace-decision-queue.ts"), /buildOpportunityCommercialState/);
+  assert.match(read("src/app/(protected)/opportunities/[id]/page.tsx"), /buildOpportunityCommercialState/);
+  assert.match(read("src/components/opportunities/OpportunityControlCenter.tsx"), /commercialState/);
+  assert.match(read("src/lib/ai/copilot-tools.ts"), /buildOpportunityCommercialState/);
 });

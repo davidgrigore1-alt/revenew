@@ -4,9 +4,11 @@ import type { Tool } from "openai/resources/responses/responses";
 import type { CopilotEvidence, CopilotPageContext, CopilotToolName, CopilotToolResult } from "@/lib/ai/copilot-types";
 import { getCompanyIntelligenceSnapshot } from "@/lib/company-intelligence";
 import { discoverCommercialOpportunityCandidates } from "@/lib/commercial-opportunity-discovery";
+import { getCommercialSignalsForOpportunity } from "@/lib/commercial-inbox";
 import { findContextualHelp } from "@/lib/contextual-help";
 import { buildExecutiveMorningBrief } from "@/lib/executive-morning-brief";
 import { buildOpportunityIntelligenceTimeline } from "@/lib/opportunity-intelligence-timeline";
+import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import { searchWorkspace } from "@/lib/search/actions";
 import { getOpportunityForCurrentBusiness } from "@/lib/supabase/data";
@@ -169,17 +171,20 @@ async function companyTool(args: Record<string, unknown>, context: ToolExecution
 async function opportunityTool(args: Record<string, unknown>, context: ToolExecutionContext): Promise<CopilotToolResult> {
   const opportunityId = safeId(args.opportunityId) || context.page.opportunityId || "";
   if (!opportunityId) return empty("get_opportunity_context", ["Oportunitatea autorizată la care se referă întrebarea"]);
-  const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
+  const [opportunity, linkedSignals] = await Promise.all([
+    getOpportunityForCurrentBusiness(opportunityId),
+    getCommercialSignalsForOpportunity(opportunityId)
+  ]);
   if (!opportunity) return empty("get_opportunity_context", ["Oportunitatea nu este disponibilă în spațiul de lucru autorizat."]);
-  const timeline = buildOpportunityIntelligenceTimeline({ opportunity }, { limit: 16 });
-  const primaryAction = opportunity.actions.find((action) => action.status === "pending") ?? null;
+  const state = buildOpportunityCommercialState(opportunity, { linkedSignals });
+  const timeline = buildOpportunityIntelligenceTimeline({ opportunity, linkedSignals }, { limit: 16 });
   const baseRoute = `/opportunities/${opportunity.id}`;
   const sources: CopilotEvidence[] = [source({
     sourceId: `opportunity:${opportunity.id}`,
     label: opportunity.title,
     sourceType: "Oportunitate",
     route: baseRoute,
-    fact: `Stare ${timeline.currentState.status}. Valoare estimată ${opportunity.estimatedValueHigh} ${opportunity.currency ?? "RON"}, nu venit confirmat. Responsabil: ${opportunity.ownerName ?? "neconfirmat"}.`
+    fact: `Stare ${timeline.currentState.status}. Valoare estimată ${state.financial.estimatedValue ?? "necunoscută"} ${state.financial.currency}, nu venit confirmat. Responsabil: ${state.ownership.ownerName ?? "neconfirmat"}.`
   })];
   for (const event of timeline.events.slice(0, 10)) {
     sources.push(source({ sourceId: `opportunity:${opportunity.id}:timeline:${event.id}`, label: event.title, sourceType: "Istoric comercial", route: event.source.href ?? `${baseRoute}#opportunity-evidence`, fact: `${event.title}. ${event.summary}` }));
@@ -188,15 +193,16 @@ async function opportunityTool(args: Record<string, unknown>, context: ToolExecu
     toolName: "get_opportunity_context",
     state: "ready",
     data: {
-      opportunity: { id: opportunity.id, title: opportunity.title, status: timeline.currentState.status, ownerName: opportunity.ownerName ?? null, estimatedValue: opportunity.estimatedValueHigh, currency: opportunity.currency ?? "RON", valueIsEstimatedAndUnconfirmed: true, summary: opportunity.summary, risks: opportunity.risks.slice(0, 6), recommendedAction: opportunity.recommendedAction },
+      opportunity: { id: opportunity.id, title: opportunity.title, status: timeline.currentState.status, ownerName: state.ownership.ownerName, estimatedValue: state.financial.estimatedValue, currency: state.financial.currency, valueIsEstimatedAndUnconfirmed: true, summary: opportunity.summary, risks: opportunity.risks.slice(0, 6), recommendedAction: state.recommendedSafeIntervention.label },
       currentState: timeline.currentState,
-      nextAction: primaryAction ? { id: primaryAction.id, title: primaryAction.title, dueAt: primaryAction.dueDate, status: primaryAction.status } : null,
-      contact: opportunity.contacts?.find((contact) => contact.isPrimary)?.contact.fullName ?? opportunity.contacts?.[0]?.contact.fullName ?? null,
+      commercialState: { stage: state.stage, lifecycle: state.lifecycle, flags: state.flags, approval: state.approval, document: state.document, outreach: state.outreach, response: state.response, outcome: state.outcome },
+      nextAction: state.nextAction,
+      contact: state.primaryContact?.name ?? null,
       events: timeline.events.slice(0, 10).map((event) => ({ occurredAt: event.occurredAt, title: event.title, summary: event.summary, nature: event.nature, sourceId: `opportunity:${opportunity.id}:timeline:${event.id}` }))
     },
     sources,
-    missingInformation: [!opportunity.ownerName ? "Responsabil confirmat" : "", !primaryAction ? "Următoare acțiune confirmată" : "", !(opportunity.contacts?.length) ? "Contact asociat" : ""].filter(Boolean),
-    suggestedAction: { label: "Revizuiește oportunitatea", route: baseRoute }
+    missingInformation: state.missingInformation,
+    suggestedAction: { label: state.recommendedSafeIntervention.label, route: state.recommendedSafeIntervention.href }
   };
 }
 

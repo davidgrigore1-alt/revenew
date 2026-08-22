@@ -8,8 +8,8 @@ import type {
   OpportunityStatus
 } from "@/lib/types";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
-import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import { applicationDateKey, isOpenOpportunity, lifecycleForOpportunity, stageForLegacyStatus, stageForOpportunity } from "@/lib/opportunity-domain";
+import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import { getRecoverySummary, type RecoveryAction } from "@/lib/recovery";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { isMissingRelationError } from "@/lib/supabase/database-errors";
@@ -76,12 +76,17 @@ export async function getRevenueWorkspaceSummary() {
   const dueToday = visiblePersonalActions.filter((action) => action.status === "pending" && sameDay(action.dueAt, today));
   const isManager = ["business_owner", "business_admin", "business_manager"].includes(authorization.businessRole ?? "");
   const operationallyVisible = isManager ? active : active.filter((opportunity) => Boolean(opportunity.ownerProfileId));
-  const withoutPrimaryContact = operationallyVisible.filter((opportunity) => !getPrimaryContact(opportunity));
-  const withoutNextAction = operationallyVisible.filter((opportunity) => !hasScheduledNextAction(opportunity));
+  const commercialStates = new Map(operationallyVisible.map((opportunity) => [
+    opportunity.id,
+    buildOpportunityCommercialState(opportunity, { linkedSignals: summary.signals })
+  ]));
+  const withoutPrimaryContact = operationallyVisible.filter((opportunity) => !commercialStates.get(opportunity.id)?.primaryContact);
+  const withoutNextAction = operationallyVisible.filter((opportunity) => commercialStates.get(opportunity.id)?.flags.nextActionMissing);
   const ageTotal = active.reduce((sum, opportunity) => sum + opportunityAgeDays(opportunity), 0);
   const attention = operationallyVisible.map((opportunity) => ({
     opportunity,
-    assessment: assessOpportunityAttention(opportunity)
+    state: commercialStates.get(opportunity.id)!,
+    assessment: commercialStates.get(opportunity.id)!.attention
   })).sort((left, right) => {
     const rank = { at_risk: 3, blocked: 3, needs_attention: 2, on_track: 1, closed: 0 };
     return rank[right.assessment.state] - rank[left.assessment.state]

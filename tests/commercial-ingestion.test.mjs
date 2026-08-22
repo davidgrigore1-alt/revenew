@@ -48,6 +48,9 @@ test("field mapping suggests unique Romanian and English aliases but leaves ambi
   assert.equal(sampleMapping.company, sampleHeader.indexOf("company_name"));
   assert.equal(sampleMapping.context, sampleHeader.indexOf("request_summary"));
   assert.equal(sampleMapping.due_date, sampleHeader.indexOf("next_action_due_date"));
+  for (const key of ["request_date", "contact_role", "last_action_summary", "next_action", "approval_required", "approval_status", "proposal_prepared", "proposal_sent", "outcome_confirmed", "operator_notes"]) {
+    assert.equal(sampleMapping[key], sampleHeader.indexOf(key), `${key} must be mapped from the official audit template`);
+  }
 });
 
 test("row validation accepts good input, rejects invalid rows and detects same-file duplicates", async () => {
@@ -65,6 +68,66 @@ test("spreadsheet formula prefixes are neutralized before preview and persistenc
   const result = core.validateCommercialImportRows([{ title: "=HYPERLINK(\"bad\")", company: "+SUM(A1:A2)", currency: "RON" }]);
   assert.equal(result.accepted[0].title.startsWith("'="), true);
   assert.equal(result.accepted[0].company.startsWith("'+"), true);
+});
+
+test("20–50 record audit intake preserves operational context without confirming it", async () => {
+  const core = await loadTypeScriptModule("../src/lib/commercial-ingestion-core.ts");
+  const rows = Array.from({ length: 25 }, (_, index) => ({
+    title: `Oportunitate audit ${index + 1}`,
+    company: `Compania ${index + 1}`,
+    contact: `Contact ${index + 1}`,
+    email: `contact-${index + 1}@example.invalid`,
+    source: "CRM export controlat",
+    source_reference: `AUDIT-${index + 1}`,
+    context: "Cerere comercială disponibilă ca dovadă.",
+    estimated_value: String(10000 + index),
+    currency: index % 2 ? "EUR" : "RON",
+    status: "Follow-up de verificat",
+    owner: "Consultant comercial",
+    request_date: "2026-06-04",
+    last_interaction: "2026-06-18",
+    last_action_summary: "Ofertă prezentată",
+    next_action: "Confirmă starea deciziei",
+    due_date: "2026-07-02",
+    contact_role: "Decident operațional",
+    approval_required: "da",
+    approval_status: "În așteptare",
+    proposal_prepared: "da",
+    proposal_sent: "nu",
+    outcome_confirmed: "nu",
+    operator_notes: "Valoare estimată; nu este venit confirmat."
+  }));
+  const result = core.validateCommercialImportRows(rows);
+  assert.equal(result.accepted.length, 25);
+  assert.equal(result.rejected.length, 0);
+  assert.ok(result.accepted.every((row) => row.audit_completeness === "strong"));
+  assert.ok(result.accepted.every((row) => row.context.includes("Context operațional importat, de verificat:")));
+  assert.ok(result.accepted.every((row) => row.context.includes("Stare aprobare: În așteptare")));
+  assert.ok(result.accepted.every((row) => row.context.includes("Rezultat declarat: nu")));
+  assert.ok(result.accepted.every((row) => !row.context.includes("venit confirmat: da")));
+});
+
+test("operational gaps are explicit but do not block safe signal intake", async () => {
+  const core = await loadTypeScriptModule("../src/lib/commercial-ingestion-core.ts");
+  const result = core.validateCommercialImportRows([{ title: "Cerere incompletă", company: "Compania F", currency: "RON", context: "Notă sursă" }]);
+  assert.equal(result.accepted.length, 1);
+  assert.equal(result.accepted[0].audit_completeness, "minimal");
+  assert.ok(result.accepted[0].missing_operational_fields.includes("responsabil"));
+  assert.ok(result.accepted[0].missing_operational_fields.includes("următoarea acțiune"));
+  assert.ok(result.accepted[0].missing_operational_fields.includes("termenul următoarei acțiuni"));
+});
+
+test("combined audit context is rejected instead of being silently truncated", async () => {
+  const core = await loadTypeScriptModule("../src/lib/commercial-ingestion-core.ts");
+  const result = core.validateCommercialImportRows([{
+    title: "Context prea lung",
+    currency: "RON",
+    context: "a".repeat(5900),
+    next_action: "b".repeat(500)
+  }]);
+  assert.equal(result.accepted.length, 0);
+  assert.equal(result.rejected[0].error_code, "combined_context_too_long");
+  assert.match(result.rejected[0].error_message, /fără a elimina dovezile materiale/);
 });
 
 test("migration enforces workspace idempotency, bounded processing and RLS", async () => {

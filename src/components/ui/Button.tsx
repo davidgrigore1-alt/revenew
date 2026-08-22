@@ -13,6 +13,7 @@ export type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   title?: string;
+  download?: boolean | string;
   "aria-label"?: string;
   "aria-controls"?: string;
   "aria-expanded"?: boolean;

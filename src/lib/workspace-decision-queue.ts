@@ -1,8 +1,8 @@
 import "server-only";
 
 import { approvalStateForSignal } from "@/lib/approval-center";
-import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import { isOpenOpportunity } from "@/lib/opportunity-domain";
+import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import type { RecoverySummary } from "@/lib/recovery";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
 
@@ -150,12 +150,13 @@ export function buildWorkspaceDecisionQueue(
 
   for (const opportunity of input.opportunities.filter(isOpenOpportunity)) {
     const href = `/opportunities/${opportunity.id}`;
-    const assessment = assessOpportunityAttention(opportunity, { now });
-    const nextAction = assessment.primaryNextAction;
-    const timestamp = assessment.lastMeaningfulActivityAt ?? validTimestamp(opportunity.updatedAt) ?? validTimestamp(opportunity.createdAt);
+    const state = buildOpportunityCommercialState(opportunity, { now, linkedSignals: input.signals });
+    const assessment = state.attention;
+    const nextAction = state.attention.primaryNextAction;
+    const timestamp = state.activity.lastMeaningfulActivityAt ?? validTimestamp(opportunity.updatedAt) ?? validTimestamp(opportunity.createdAt);
     const common = opportunityFields(opportunity);
 
-    if (nextAction?.dueDate && Date.parse(nextAction.dueDate) < now.getTime()) {
+    if (state.flags.nextActionOverdue && nextAction?.dueDate) {
       const actionHref = `${href}#workflow-actions`;
       candidates.push({
         id: `decision:overdue:${nextAction.id}`,
@@ -174,10 +175,9 @@ export function buildWorkspaceDecisionQueue(
       });
     }
 
-    const preparedDocument = opportunity.documents
-      .filter((document) => ["approved", "ready_to_send"].includes(document.status)
-        && document.sendStatus !== "sent" && document.status !== "sent" && !document.sentAt)
-      .sort((left, right) => String(right.readyAt ?? right.editedAt ?? right.createdAt ?? "").localeCompare(String(left.readyAt ?? left.editedAt ?? left.createdAt ?? "")))[0];
+    const preparedDocument = state.document.state === "prepared"
+      ? opportunity.documents.find((document) => document.id === state.document.id)
+      : undefined;
     if (preparedDocument) {
       const documentHref = `${href}#documents`;
       const documentTimestamp = validTimestamp(preparedDocument.readyAt) ?? validTimestamp(preparedDocument.editedAt) ?? validTimestamp(preparedDocument.createdAt);
@@ -249,8 +249,7 @@ export function buildWorkspaceDecisionQueue(
       });
     }
 
-    const primaryContact = opportunity.contacts?.find((contact) => contact.isPrimary);
-    if (!primaryContact) {
+    if (!state.primaryContact) {
       const contactHref = `${href}#opportunity-contacts`;
       candidates.push({
         id: `decision:contact:${opportunity.id}`,
@@ -268,7 +267,7 @@ export function buildWorkspaceDecisionQueue(
       });
     }
 
-    if (assessment.reasons.some((reason) => reason.code === "stale_activity") && nextAction && !(nextAction.dueDate && Date.parse(nextAction.dueDate) < now.getTime())) {
+    if (state.flags.stale && nextAction && !state.flags.nextActionOverdue) {
       candidates.push({
         id: `decision:inactive:${opportunity.id}`,
         type: "inactive_active_opportunity",

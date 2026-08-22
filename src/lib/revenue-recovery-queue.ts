@@ -1,9 +1,11 @@
-import { assessOpportunityAttention, type OpportunityAttentionAssessment } from "@/lib/opportunity-attention";
+import type { OpportunityAttentionAssessment } from "@/lib/opportunity-attention";
 import { isOpenOpportunity } from "@/lib/opportunity-domain";
-import type { Opportunity } from "@/lib/types";
+import { buildOpportunityCommercialState, type OpportunityCommercialState } from "@/lib/opportunity-commercial-state";
+import type { CommercialSignal, Opportunity } from "@/lib/types";
 
 export type RevenueRecoveryQueueItem = {
   opportunity: Opportunity;
+  state: OpportunityCommercialState;
   assessment: OpportunityAttentionAssessment;
   primaryReason: OpportunityAttentionAssessment["reasons"][number];
 };
@@ -26,16 +28,17 @@ function itemPriority(item: RevenueRecoveryQueueItem) {
   return statePriority + Math.max(...item.assessment.reasons.map((reason) => reasonPriority[reason.code] ?? 0));
 }
 
-export function buildRevenueRecoveryQueue(opportunities: Opportunity[], options: { now?: Date } = {}) {
+export function buildRevenueRecoveryQueue(opportunities: Opportunity[], options: { now?: Date; staleAfterDays?: number; linkedSignals?: CommercialSignal[] } = {}) {
   return opportunities
     .filter(isOpenOpportunity)
     .map((opportunity): RevenueRecoveryQueueItem | null => {
-      const assessment = assessOpportunityAttention(opportunity, options);
+      const state = buildOpportunityCommercialState(opportunity, options);
+      const assessment = state.attention;
       if (assessment.reasons.length === 0) return null;
       const primaryReason = [...assessment.reasons].sort(
         (left, right) => (reasonPriority[right.code] ?? 0) - (reasonPriority[left.code] ?? 0)
       )[0];
-      return { opportunity, assessment, primaryReason };
+      return { opportunity, state, assessment, primaryReason };
     })
     .filter((item): item is RevenueRecoveryQueueItem => Boolean(item))
     .sort((left, right) =>

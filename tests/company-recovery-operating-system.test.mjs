@@ -162,7 +162,7 @@ test("recovery queue empty state contains no fake metrics and populated rows exp
   assert.match(route, /Coada se construiește din semnale aprobate/);
   assert.match(route, /href="\/inbox\?create=1"/);
   assert.match(route, /href="\/inbox\/import"/);
-  assert.match(route, /buildRevenueRecoveryQueue\(summary\.activeOpportunities\)/);
+  assert.match(route, /buildRevenueRecoveryQueue\(summary\.activeOpportunities, \{ linkedSignals: signals\.signals \}\)/);
   assert.match(route, /Responsabil/);
   assert.match(route, /Următoarea acțiune/);
   assert.match(route, /Ultima activitate/);

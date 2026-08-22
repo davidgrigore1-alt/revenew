@@ -21,12 +21,23 @@ export type CommercialImportFieldKey =
   | "context"
   | "status"
   | "owner"
-  | "source_reference";
+  | "source_reference"
+  | "request_date"
+  | "contact_role"
+  | "last_action_summary"
+  | "next_action"
+  | "approval_required"
+  | "approval_status"
+  | "proposal_prepared"
+  | "proposal_sent"
+  | "outcome_confirmed"
+  | "operator_notes";
 
 export type CommercialImportField = {
   key: CommercialImportFieldKey;
   label: string;
   required?: boolean;
+  group?: "core" | "audit";
   aliases: string[];
 };
 
@@ -45,7 +56,17 @@ export const commercialImportFields: CommercialImportField[] = [
   { key: "context", label: "Text sursă / context", aliases: ["context", "raw text", "raw_text", "message", "mesaj", "notes", "observatii", "observații", "descriere", "description", "request_summary"] },
   { key: "status", label: "Status original", aliases: ["status", "stare", "stage", "etapa", "etapă", "current_status"] },
   { key: "owner", label: "Responsabil", aliases: ["owner", "responsabil", "assigned to", "sales rep", "responsible_person"] },
-  { key: "source_reference", label: "Referință sursă", aliases: ["source reference", "source_reference", "referinta", "referință", "id extern", "external id"] }
+  { key: "source_reference", label: "Referință sursă", aliases: ["source reference", "source_reference", "referinta", "referință", "id extern", "external id"] },
+  { key: "request_date", label: "Data cererii", group: "audit", aliases: ["request_date", "data cererii", "request date"] },
+  { key: "contact_role", label: "Rol contact / decident", group: "audit", aliases: ["contact_role", "rol contact", "contact role", "decision_role"] },
+  { key: "last_action_summary", label: "Ultima acțiune", group: "audit", aliases: ["last_action_summary", "ultima actiune", "ultima acțiune", "last action"] },
+  { key: "next_action", label: "Următoarea acțiune", group: "audit", aliases: ["next_action", "urmatoarea actiune", "următoarea acțiune", "pas urmator", "pas următor"] },
+  { key: "approval_required", label: "Aprobare necesară", group: "audit", aliases: ["approval_required", "aprobare necesara", "aprobare necesară"] },
+  { key: "approval_status", label: "Stare aprobare", group: "audit", aliases: ["approval_status", "stare aprobare", "status aprobare"] },
+  { key: "proposal_prepared", label: "Propunere pregătită", group: "audit", aliases: ["proposal_prepared", "propunere pregatita", "propunere pregătită"] },
+  { key: "proposal_sent", label: "Propunere trimisă", group: "audit", aliases: ["proposal_sent", "propunere trimisa", "propunere trimisă"] },
+  { key: "outcome_confirmed", label: "Rezultat confirmat", group: "audit", aliases: ["outcome_confirmed", "rezultat confirmat"] },
+  { key: "operator_notes", label: "Note operator", group: "audit", aliases: ["operator_notes", "note operator", "operator notes"] }
 ];
 
 export function normalizeCommercialHeader(value: string) {

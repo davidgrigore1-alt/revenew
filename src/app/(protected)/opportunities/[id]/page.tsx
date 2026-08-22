@@ -22,6 +22,7 @@ import { isOpenAIConfigured } from "@/lib/openai/client";
 import { buildOperationalRecommendation } from "@/lib/operational-intelligence";
 import { buildWorkspaceDecisionQueue } from "@/lib/workspace-decision-queue";
 import { buildOpportunityIntelligenceTimeline, type OpportunityTimelineResult } from "@/lib/opportunity-intelligence-timeline";
+import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 
 export function generateStaticParams() {
   return opportunities.map((opportunity) => ({ id: opportunity.id }));
@@ -56,6 +57,7 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
     risks: Array.from(new Set([...(sourceSignal.riskNotes ?? []), ...sourceSignal.uncertaintyNotes]))
   } : opportunity;
   const assistedPreparation = recommendNextBestAction(opportunity);
+  const commercialState = buildOpportunityCommercialState(opportunity, { linkedSignals });
   const opportunityQueue = buildWorkspaceDecisionQueue(
     { opportunities: [opportunity], signals: linkedSignals },
     { limit: 1 }
@@ -82,17 +84,17 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <OpportunityContextNavigation showEvidence={Boolean(explainedRecommendation)} />
-        <div id="opportunity-commercial-facts" className="scroll-mt-24" data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} /></div>
+        <div id="opportunity-commercial-facts" className="scroll-mt-24" data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} commercialState={commercialState} assignableProfiles={assignableProfiles} /></div>
         <OpportunityIntelligenceTimeline result={intelligenceTimeline} />
         {explainedRecommendation ? <div id="opportunity-evidence" className="scroll-mt-24" data-guide-anchor="opportunity-evidence"><RecommendationExplanationCard recommendation={explainedRecommendation} compact /></div> : null}
         <OpportunityActionWorkbench opportunity={opportunity} recommendation={assistedPreparation} />
         <div id="action-responsibility" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>
-          <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} mode="responsibility" />
+          <OpportunityControlCenter opportunity={opportunity} commercialState={commercialState} assignableProfiles={assignableProfiles} mode="responsibility" />
         </div>
         <div id="action-outcome" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>
-          <OpportunityControlCenter opportunity={opportunity} assignableProfiles={assignableProfiles} mode="outcome" />
+          <OpportunityControlCenter opportunity={opportunity} commercialState={commercialState} assignableProfiles={assignableProfiles} mode="outcome" />
         </div>
         <div id="action-response" className="hidden scroll-mt-24 target:block">
           <div className="mb-3 flex justify-end"><Button href="#action-workbench" variant="secondary" size="small">Închide formularul</Button></div>

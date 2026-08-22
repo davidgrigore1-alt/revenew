@@ -58,7 +58,8 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
 test("estimated opportunity value stays separate from confirmed revenue", async () => {
   const controlCenter = await readFile(controlCenterUrl, "utf8");
   assert.match(controlCenter, /Valoare estimată, nu confirmată/);
-  assert.match(controlCenter, /actualOutcomeAmount != null \? <div><dt[^>]*>Venit confirmat/);
+  assert.match(controlCenter, /commercialState\.financial\.confirmedRevenue != null/);
+  assert.match(controlCenter, /commercialState\.financial\.confirmedRevenueCurrency/);
   assert.match(controlCenter, /Venit recuperat confirmat/);
   assert.match(controlCenter, /Separat de valoarea estimată a oportunității/);
 });

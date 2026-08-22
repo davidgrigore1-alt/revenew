@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { Button } from "@/components/ui/Button";
-import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import {
   applicationDateKey,
   commercialTypeForOpportunity,
@@ -14,6 +13,7 @@ import {
   lifecycleLabels,
   stageForLegacyStatus
 } from "@/lib/opportunity-domain";
+import type { OpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import {
   recordOpportunityOutcome,
   reopenOpportunity,
@@ -38,10 +38,12 @@ function FormLabel({ children, required = false }: { children: React.ReactNode; 
 
 export function OpportunityControlCenter({
   opportunity,
+  commercialState,
   assignableProfiles,
   mode = "summary"
 }: {
   opportunity: Opportunity;
+  commercialState: OpportunityCommercialState;
   assignableProfiles: AssignableProfile[];
   mode?: ControlCenterMode;
 }) {
@@ -52,24 +54,16 @@ export function OpportunityControlCenter({
   const [outcomeStatus, setOutcomeStatus] = useState<OpportunityLifecycleStatus>("won");
   const [pendingOutcome, setPendingOutcome] = useState<FormData | null>(null);
   const lifecycle = lifecycleForOpportunity(opportunity);
-  const attention = assessOpportunityAttention(opportunity);
+  const attention = commercialState.attention;
   const primaryContact = opportunity.contacts?.find((contact) => contact.isPrimary) ?? null;
-  const companyName = primaryContact?.contact.organization?.name ?? opportunity.contact?.company ?? "Companie neconfirmată";
-  const evidenceCount = opportunity.timeline.length + opportunity.documents.length;
-  const ownerName = assignableProfiles.find((profile) => profile.id === opportunity.ownerProfileId)?.fullName ?? null;
+  const companyName = commercialState.organization.name ?? "Companie neconfirmată";
+  const evidenceCount = commercialState.evidence.length;
+  const ownerName = commercialState.ownership.ownerName ?? assignableProfiles.find((profile) => profile.id === opportunity.ownerProfileId)?.fullName ?? null;
   const decisionMaker = opportunity.contacts?.find((association) => {
     const value = `${association.role ?? ""} ${association.contact.decisionRole ?? ""}`.toLowerCase();
     return /decision|decident|buyer|approver/.test(value);
   }) ?? null;
-  const latestTimelineEvidence = [...opportunity.timeline]
-    .sort((left, right) => (right.date ?? "").localeCompare(left.date ?? ""))[0];
-  const latestDocumentEvidence = [...opportunity.documents]
-    .sort((left, right) => (right.createdAt ?? "").localeCompare(left.createdAt ?? ""))[0];
-  const visibleEvidence = latestTimelineEvidence
-    ? { label: latestTimelineEvidence.label, date: latestTimelineEvidence.date, href: "#opportunity-timeline" }
-    : latestDocumentEvidence
-      ? { label: latestDocumentEvidence.title, date: latestDocumentEvidence.createdAt, href: "#opportunity-documents" }
-      : null;
+  const visibleEvidence = commercialState.evidence.find((item) => item.sourceType !== "opportunity") ?? null;
 
   function handleResult(result: { ok: boolean; error?: string }, success: string) {
     if (result.ok) {
@@ -109,7 +103,7 @@ export function OpportunityControlCenter({
             {error ? <StatusNotice tone="error">{error}</StatusNotice> : null}
             <div className={notice || error ? "mt-6" : ""}>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold">{stageLabels[stageForLegacyStatus(opportunity.status)]}</span>
+                <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-1 text-xs font-semibold">{stageLabels[commercialState.stage]}</span>
                 <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-3 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
                 <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
                 <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Valoare estimată: {formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</span>
@@ -117,10 +111,10 @@ export function OpportunityControlCenter({
                 <span className="rounded-pill border border-[rgb(var(--border))] px-3 py-1 text-xs font-semibold sm:hidden">Responsabil: {ownerName ?? "Neatribuit"}</span>
               </div>
               <p className="mt-6 text-xs font-semibold uppercase tracking-[0.15em] text-[rgb(var(--primary))]">Acțiunea care deblochează progresul</p>
-              <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{attention.primaryNextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{attention.primaryNextAction?.dueDate ? `Termen: ${formatDate(attention.primaryNextAction.dueDate)}. Verifică responsabilul și contextul înainte de execuție.` : "O oportunitate fără acțiune și termen nu poate fi urmărită operațional. Completează pasul următor înainte de follow-up."}</p>
+              <h2 id="execution-brief-title" className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">{commercialState.nextAction?.title ?? "Stabilește următoarea acțiune"}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{commercialState.nextAction?.dueAt ? `Termen: ${formatDate(commercialState.nextAction.dueAt)}. Verifică responsabilul și contextul înainte de execuție.` : "O oportunitate fără acțiune și termen nu poate fi urmărită operațional. Completează pasul următor înainte de follow-up."}</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button href={attention.primaryNextAction ? "#workflow-actions-list" : "#action-schedule"}>{attention.primaryNextAction ? "Revizuiește acțiunea" : "Programează acțiunea"}</Button>
+                <Button href={commercialState.recommendedSafeIntervention.href}>{commercialState.recommendedSafeIntervention.label}</Button>
                 <Button href={visibleEvidence?.href ?? "#opportunity-timeline"} variant="secondary">Verifică dovezile</Button>
               </div>
               <p className="mt-4 text-xs text-[rgb(var(--text-muted))]">Aprobarea umană rămâne obligatorie pentru orice comunicare externă sau rezultat comercial.</p>
@@ -146,11 +140,11 @@ export function OpportunityControlCenter({
                 {visibleEvidence ? (
                   <>
                     <dd className="mt-1 text-sm font-semibold"><a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{visibleEvidence.label}</a></dd>
-                    {visibleEvidence.date ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDate(visibleEvidence.date)}</p> : null}
+                    {visibleEvidence.observedAt ? <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDate(visibleEvidence.observedAt)}</p> : null}
                   </>
                 ) : <dd className="mt-1 text-sm font-semibold text-[rgb(var(--warning-text))]">Lipsește o dovadă verificabilă</dd>}
               </div>
-              <div className={`grid gap-4 border-t border-[rgb(var(--border))] pt-5 ${opportunity.actualOutcomeAmount != null ? "grid-cols-2" : "grid-cols-1"}`}><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ultima activitate importantă</dt><dd className="mt-1 text-sm font-semibold">{attention.lastMeaningfulActivityAt ? formatDate(attention.lastMeaningfulActivityAt) : "Date insuficiente"}</dd></div>{opportunity.actualOutcomeAmount != null ? <div><dt className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat</dt><dd className="mt-1 text-sm font-semibold">{formatCurrency(opportunity.actualOutcomeAmount, opportunity.currency ?? "RON")}</dd></div> : null}</div>
+              <div className={`grid gap-4 border-t border-[rgb(var(--border))] pt-5 ${commercialState.financial.confirmedRevenue != null ? "grid-cols-2" : "grid-cols-1"}`}><div><dt className="text-xs text-[rgb(var(--text-muted))]">Ultima activitate importantă</dt><dd className="mt-1 text-sm font-semibold">{commercialState.activity.lastMeaningfulActivityAt ? formatDate(commercialState.activity.lastMeaningfulActivityAt) : "Date insuficiente"}</dd></div>{commercialState.financial.confirmedRevenue != null ? <div><dt className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat</dt><dd className="mt-1 text-sm font-semibold">{formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency ?? "RON")}</dd></div> : null}</div>
             </dl>
           </aside>
         </div>

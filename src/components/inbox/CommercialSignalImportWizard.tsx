@@ -51,6 +51,8 @@ const sourceOptions: Array<{ value: CommercialIntakeSource; label: string }> = [
 ];
 
 const emptyMapping = () => Object.fromEntries(commercialImportFields.map((field) => [field.key, null])) as Record<CommercialImportFieldKey, number | null>;
+const coreImportFields = commercialImportFields.filter((field) => field.group !== "audit");
+const auditImportFields = commercialImportFields.filter((field) => field.group === "audit");
 
 export function CommercialSignalImportWizard({ history }: { history: CommercialImportHistoryItem[] }) {
   const [mode, setMode] = useState<IntakeMode>("single");
@@ -72,6 +74,7 @@ export function CommercialSignalImportWizard({ history }: { history: CommercialI
 
   const mappedRows = useMemo(() => rows.map((row) => Object.fromEntries(commercialImportFields.map((field) => [field.key, mapping[field.key] == null ? "" : row[mapping[field.key] as number] ?? ""]))), [mapping, rows]);
   const missingRequired = commercialImportFields.filter((field) => field.required && mapping[field.key] == null);
+  const mappedAuditFields = auditImportFields.filter((field) => mapping[field.key] != null).length;
   const selectedCount = selected.size;
 
   function clearOutcome() {
@@ -193,6 +196,10 @@ export function CommercialSignalImportWizard({ history }: { history: CommercialI
         </> : null}
 
         {mode === "csv" ? <>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Pentru un audit de 20–50 de oportunități, pornește de la structura recomandată și elimină rândurile fictive.</p>
+            <Button href="/samples/revenew-client-audit-template.csv" variant="ghost" size="small" download>Descarcă șablonul de audit</Button>
+          </div>
           <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
             <div className="grid content-start gap-2"><label htmlFor="source-intake-csv" className="text-sm font-semibold">Lipește CSV</label><Textarea id="source-intake-csv" rows={8} value={csvText} maxLength={60000} onChange={(event) => { setCsvText(event.target.value); clearOutcome(); }} placeholder="titlu,sursă,context,companie,contact,valoare,monedă,termen" /><Button variant="secondary" size="small" onClick={() => loadCsv(csvText, `intake-csv-${Date.now()}.csv`)} disabled={!csvText.trim()} className="mt-1 w-fit">Citește textul CSV</Button></div>
             <div className="hidden items-center text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-faint))] lg:flex">sau</div>
@@ -202,8 +209,12 @@ export function CommercialSignalImportWizard({ history }: { history: CommercialI
             </label>
           </div>
           {rows.length ? <div className="grid gap-5 border-t border-[rgb(var(--border))] pt-5">
-            <div><p className="text-sm font-semibold">Mapare coloane · {fileName}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{rows.length} rânduri detectate. Verifică maparea; coloanele nemapate nu sunt importate.</p></div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{commercialImportFields.map((field) => <Field key={field.key} label={field.label} required={field.required}><Select value={mapping[field.key] ?? ""} onChange={(event) => { setMapping((current) => ({ ...current, [field.key]: event.target.value === "" ? null : Number(event.target.value) })); setMappingConfirmed(false); clearOutcome(); }}><option value="">Nu importa</option>{headers.map((header, index) => <option key={`${header}-${index}`} value={index}>{header || `Coloana ${index + 1}`}</option>)}</Select></Field>)}</div>
+            <div><p className="text-sm font-semibold">Mapare coloane · {fileName}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{rows.length} rânduri detectate. Verifică maparea; câmpurile operaționale sunt păstrate ca dovadă de verificat, nu ca rezultat confirmat.</p></div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{coreImportFields.map((field) => <MappingField key={field.key} field={field} mapping={mapping} headers={headers} onChange={(value) => { setMapping((current) => ({ ...current, [field.key]: value })); setMappingConfirmed(false); clearOutcome(); }} />)}</div>
+            <details className="group rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
+              <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-control px-4 py-3 marker:hidden"><span><span className="block text-sm font-semibold">Context operațional pentru audit</span><span className="mt-0.5 block text-xs font-normal text-[rgb(var(--text-muted))]">{mappedAuditFields} din {auditImportFields.length} câmpuri recunoscute · responsabil, acțiuni, aprobare, propunere și rezultat declarat</span></span><span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span></summary>
+              <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 md:grid-cols-2 xl:grid-cols-3">{auditImportFields.map((field) => <MappingField key={field.key} field={field} mapping={mapping} headers={headers} onChange={(value) => { setMapping((current) => ({ ...current, [field.key]: value })); setMappingConfirmed(false); clearOutcome(); }} />)}</div>
+            </details>
             {missingRequired.length ? <AlertBanner tone="warning">Mapează câmpul obligatoriu: {missingRequired.map((field) => field.label).join(", ")}.</AlertBanner> : null}
             <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={mappingConfirmed} onChange={(event) => { setMappingConfirmed(event.target.checked); clearOutcome(); }} className="mt-1 h-4 w-4 accent-[rgb(var(--primary))]" /><span><span className="font-semibold">Am verificat maparea</span><span className="block text-xs leading-5 text-[rgb(var(--text-muted))]">Semnalele sunt doar previzualizate până la confirmarea finală.</span></span></label>
             <Button onClick={previewCsv} loading={pending} disabled={!mappingConfirmed || Boolean(missingRequired.length)} className="w-fit">Validează previzualizarea</Button>
@@ -238,17 +249,17 @@ function PreviewSection({ preview, selected, onToggle, onSelectSafe, onConfirm, 
 
 function PreviewRow({ row, selected, onToggle }: { row: CommercialImportPreviewRow; selected: boolean; onToggle: (fingerprint: string) => void }) {
   const disabled = row.exact_duplicate;
-  return <tr className="transition-colors hover:bg-[rgb(var(--surface-subtle))]"><td className="border-b border-[rgb(var(--border))] px-4 py-3"><input type="checkbox" checked={selected} disabled={disabled} onChange={() => onToggle(row.row_fingerprint)} aria-label={`Selectează ${row.title}`} className="h-4 w-4 accent-[rgb(var(--primary))]" /></td><td className="max-w-64 border-b border-[rgb(var(--border))] px-4 py-3"><p className="truncate font-semibold">{row.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{row.context || "Fără context suplimentar"}</p></td><td className="border-b border-[rgb(var(--border))] px-4 py-3">{sourceLabel(row.source_type)}</td><td className="max-w-52 border-b border-[rgb(var(--border))] px-4 py-3"><p className="truncate">{row.company || "—"}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{row.contact || row.email || "Contact neprecizat"}</p></td><td className="border-b border-[rgb(var(--border))] px-4 py-3 tabular-nums">{row.estimated_value ? `${row.estimated_value} ${row.currency}` : "—"}</td><td className="border-b border-[rgb(var(--border))] px-4 py-3 tabular-nums">{row.requested_date ? row.requested_date.slice(0, 10) : "—"}</td><td className="border-b border-[rgb(var(--border))] px-4 py-3"><RowStatuses row={row} /></td></tr>;
+  return <tr className="transition-colors hover:bg-[rgb(var(--surface-subtle))]"><td className="border-b border-[rgb(var(--border))] px-4 py-3"><input type="checkbox" checked={selected} disabled={disabled} onChange={() => onToggle(row.row_fingerprint)} aria-label={`Selectează ${row.title}`} className="h-4 w-4 accent-[rgb(var(--primary))]" /></td><td className="max-w-64 border-b border-[rgb(var(--border))] px-4 py-3"><p className="truncate font-semibold">{row.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{row.context || "Fără context suplimentar"}</p></td><td className="border-b border-[rgb(var(--border))] px-4 py-3">{sourceLabel(row.source_type)}</td><td className="max-w-52 border-b border-[rgb(var(--border))] px-4 py-3"><p className="truncate">{row.company || "—"}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{row.contact || row.email || "Contact neprecizat"}</p></td><td className="border-b border-[rgb(var(--border))] px-4 py-3 tabular-nums">{row.estimated_value ? `${row.estimated_value} ${row.currency}` : "—"}</td><td className="border-b border-[rgb(var(--border))] px-4 py-3 tabular-nums">{row.requested_date ? row.requested_date.slice(0, 10) : "—"}</td><td className="border-b border-[rgb(var(--border))] px-4 py-3"><RowStatuses row={row} />{row.missing_operational_fields.length ? <p className="mt-2 max-w-56 text-xs leading-5 text-[rgb(var(--text-muted))]">Lipsesc: {row.missing_operational_fields.join(", ")}.</p> : <p className="mt-2 text-xs text-[rgb(var(--text-muted))]">Câmpurile operaționale principale sunt disponibile.</p>}</td></tr>;
 }
 
 function PreviewCard({ row, selected, onToggle }: { row: CommercialImportPreviewRow; selected: boolean; onToggle: (fingerprint: string) => void }) {
-  return <label className={`rounded-card border p-4 ${selected ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}><span className="flex items-start gap-3"><input type="checkbox" checked={selected} disabled={row.exact_duplicate} onChange={() => onToggle(row.row_fingerprint)} className="mt-1 h-4 w-4 accent-[rgb(var(--primary))]" /><span className="min-w-0 flex-1"><span className="block font-semibold">{row.title}</span><span className="mt-1 block text-xs text-[rgb(var(--text-muted))]">{sourceLabel(row.source_type)} · {row.company || "Companie neprecizată"}</span></span></span><span className="mt-3 flex flex-wrap gap-2"><RowStatuses row={row} /></span><span className="mt-3 grid grid-cols-2 gap-3 text-xs"><span><span className="block text-[rgb(var(--text-muted))]">Valoare</span>{row.estimated_value ? `${row.estimated_value} ${row.currency}` : "—"}</span><span><span className="block text-[rgb(var(--text-muted))]">Termen</span>{row.requested_date ? row.requested_date.slice(0, 10) : "—"}</span></span></label>;
+  return <label className={`rounded-card border p-4 ${selected ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))]"}`}><span className="flex items-start gap-3"><input type="checkbox" checked={selected} disabled={row.exact_duplicate} onChange={() => onToggle(row.row_fingerprint)} className="mt-1 h-4 w-4 accent-[rgb(var(--primary))]" /><span className="min-w-0 flex-1"><span className="block font-semibold">{row.title}</span><span className="mt-1 block text-xs text-[rgb(var(--text-muted))]">{sourceLabel(row.source_type)} · {row.company || "Companie neprecizată"}</span></span></span><span className="mt-3 flex flex-wrap gap-2"><RowStatuses row={row} /></span><span className="mt-3 grid grid-cols-2 gap-3 text-xs"><span><span className="block text-[rgb(var(--text-muted))]">Valoare</span>{row.estimated_value ? `${row.estimated_value} ${row.currency}` : "—"}</span><span><span className="block text-[rgb(var(--text-muted))]">Termen</span>{row.requested_date ? row.requested_date.slice(0, 10) : "—"}</span></span>{row.missing_operational_fields.length ? <span className="mt-3 block text-xs leading-5 text-[rgb(var(--text-muted))]">De completat: {row.missing_operational_fields.join(", ")}.</span> : null}</label>;
 }
 
 function RowStatuses({ row }: { row: CommercialImportPreviewRow }) {
   const duplicate = row.exact_duplicate || row.probable_signal_match;
-  const incomplete = !row.context || (!row.company && !row.contact && !row.email);
-  return <>{duplicate ? <StatusPill tone="warning">Posibil duplicat</StatusPill> : <StatusPill tone="success">Nou</StatusPill>}{incomplete ? <StatusPill tone="neutral">Incomplet</StatusPill> : <StatusPill tone="brand">Gata de import</StatusPill>}</>;
+  const completeness = row.audit_completeness;
+  return <>{duplicate ? <StatusPill tone="warning">Posibil duplicat</StatusPill> : <StatusPill tone="success">Nou</StatusPill>}{completeness === "strong" ? <StatusPill tone="brand">Context operațional solid</StatusPill> : completeness === "partial" ? <StatusPill tone="warning">Necesită completare</StatusPill> : <StatusPill tone="neutral">Context minim</StatusPill>}</>;
 }
 
 function ResultSection({ result }: { result: CommercialImportResult }) {
@@ -263,6 +274,10 @@ function HistorySection({ history }: { history: CommercialImportHistoryItem[] })
 
 function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: ReactNode }) {
   return <label className="grid gap-2 text-sm font-semibold"><span className="flex flex-wrap items-center justify-between gap-2"><span>{label}</span><span className="text-[0.6875rem] uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span></span>{hint ? <span className="text-xs font-normal text-[rgb(var(--text-muted))]">{hint}</span> : null}{children}</label>;
+}
+
+function MappingField({ field, mapping, headers, onChange }: { field: (typeof commercialImportFields)[number]; mapping: Record<CommercialImportFieldKey, number | null>; headers: string[]; onChange: (value: number | null) => void }) {
+  return <Field label={field.label} required={field.required}><Select value={mapping[field.key] ?? ""} onChange={(event) => onChange(event.target.value === "" ? null : Number(event.target.value))}><option value="">Nu importa</option>{headers.map((header, index) => <option key={`${header}-${index}`} value={index}>{header || `Coloana ${index + 1}`}</option>)}</Select></Field>;
 }
 
 function Count({ label, value, emphasize = false }: { label: string; value: number; emphasize?: boolean }) {

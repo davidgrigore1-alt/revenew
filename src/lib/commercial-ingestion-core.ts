@@ -22,6 +22,18 @@ export type NormalizedCommercialImportRow = {
   owner_label: string;
   owner_profile_id: string;
   source_reference: string;
+  request_date_at: string;
+  contact_role: string;
+  last_action_summary: string;
+  next_action_label: string;
+  approval_required_label: string;
+  approval_status_label: string;
+  proposal_prepared_label: string;
+  proposal_sent_label: string;
+  outcome_confirmed_label: string;
+  operator_notes: string;
+  audit_completeness: "minimal" | "partial" | "strong";
+  missing_operational_fields: string[];
   probable_signal_match: boolean;
   probable_company_match: boolean;
   probable_contact_match: boolean;
@@ -113,6 +125,18 @@ function normalizeMoney(value: string) {
   return Number.isFinite(numeric) && numeric >= 0 && numeric <= 1_000_000_000_000 ? String(numeric) : null;
 }
 
+function auditContextLine(label: string, value: string) {
+  return value ? `${label}: ${value}` : "";
+}
+
+function mergeAuditContext(baseContext: string, fields: Array<[string, string]>) {
+  const details = fields.map(([label, value]) => auditContextLine(label, value)).filter(Boolean);
+  if (!details.length) return baseContext;
+  return [baseContext, "Context operațional importat, de verificat:", ...details]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function commercialRowFingerprint(row: Omit<NormalizedCommercialImportRow, "row_number" | "row_fingerprint">) {
   const fingerprintText = (value: string) => value.normalize("NFKC").toLocaleLowerCase("ro-RO").replace(/\s+/g, " ").trim();
   const identity = [
@@ -152,7 +176,12 @@ export function validateCommercialImportRows(rawRows: CommercialMappedRow[]) {
       [raw.currency, 3, "Moneda"], [raw.last_interaction, 40, "Data ultimei interacțiuni"],
       [raw.due_date, 40, "Termenul comercial"], [raw.context, 6000, "Textul sursă"],
       [raw.status, 500, "Statusul original"], [raw.owner, 240, "Responsabilul"],
-      [raw.source_reference, 500, "Referința sursă"], [raw.source_type || raw.source, 120, "Sursa"]
+      [raw.source_reference, 500, "Referința sursă"], [raw.source_type || raw.source, 120, "Sursa"],
+      [raw.request_date, 40, "Data cererii"], [raw.contact_role, 240, "Rolul contactului"],
+      [raw.last_action_summary, 1000, "Ultima acțiune"], [raw.next_action, 1000, "Următoarea acțiune"],
+      [raw.approval_required, 80, "Cerința de aprobare"], [raw.approval_status, 160, "Starea aprobării"],
+      [raw.proposal_prepared, 80, "Starea pregătirii propunerii"], [raw.proposal_sent, 80, "Starea trimiterii propunerii"],
+      [raw.outcome_confirmed, 80, "Starea rezultatului"], [raw.operator_notes, 1200, "Notele operatorului"]
     ];
     const oversizedField = fieldLimits.find(([value, max]) => normalizedLength(value) > max);
     const title = clean(raw.title, 240);
@@ -163,6 +192,8 @@ export function validateCommercialImportRows(rawRows: CommercialMappedRow[]) {
     const date = normalizeDate(dateInput);
     const dueDateInput = clean(raw.due_date, 40);
     const dueDate = normalizeDate(dueDateInput);
+    const requestDateInput = clean(raw.request_date, 40);
+    const requestDate = normalizeDate(requestDateInput);
     const currency = clean(raw.currency, 3).toUpperCase() || "RON";
     const explicitSourceType = clean(raw.source_type, 120);
     const sourceLabelInput = clean(raw.source, 120);
@@ -177,13 +208,56 @@ export function validateCommercialImportRows(rawRows: CommercialMappedRow[]) {
     else if (!currencies.has(currency)) error = { code: "invalid_currency", message: "Moneda acceptată este RON, EUR, USD, GBP sau CHF." };
     else if (dateInput && !date) error = { code: "invalid_date", message: "Data ultimei interacțiuni nu este validă." };
     else if (dueDateInput && !dueDate) error = { code: "invalid_due_date", message: "Termenul comercial nu este valid. Folosește formatul ZZ.LL.AAAA sau AAAA-LL-ZZ." };
+    else if (requestDateInput && !requestDate) error = { code: "invalid_request_date", message: "Data cererii nu este validă. Folosește formatul ZZ.LL.AAAA sau AAAA-LL-ZZ." };
     else if (!sourceType) error = { code: "invalid_source_type", message: "Tipul sursei acceptat este manual, email, phone, whatsapp, csv_import sau other." };
 
+    const contactRole = clean(raw.contact_role, 240);
+    const lastActionSummary = clean(raw.last_action_summary, 1000);
+    const nextActionLabel = clean(raw.next_action, 1000);
+    const approvalRequiredLabel = clean(raw.approval_required, 80);
+    const approvalStatusLabel = clean(raw.approval_status, 160);
+    const proposalPreparedLabel = clean(raw.proposal_prepared, 80);
+    const proposalSentLabel = clean(raw.proposal_sent, 80);
+    const outcomeConfirmedLabel = clean(raw.outcome_confirmed, 80);
+    const operatorNotes = clean(raw.operator_notes, 1200);
+    const company = clean(raw.company, 240);
+    const ownerLabel = clean(raw.owner, 240);
+    const operationalChecks: Array<[boolean, string]> = [
+      [Boolean(company), "companie"],
+      [Boolean(clean(raw.status, 500)), "stare comercială"],
+      [Boolean(ownerLabel), "responsabil"],
+      [Boolean(date), "ultima interacțiune"],
+      [Boolean(nextActionLabel), "următoarea acțiune"],
+      [Boolean(dueDate), "termenul următoarei acțiuni"],
+      [Boolean(clean(raw.context, 6000) || lastActionSummary || operatorNotes), "dovadă sau context"]
+    ];
+    const missingOperationalFields = operationalChecks.filter(([present]) => !present).map(([, label]) => label);
+    const knownOperationalFields = operationalChecks.length - missingOperationalFields.length;
+    const auditCompleteness: NormalizedCommercialImportRow["audit_completeness"] =
+      knownOperationalFields >= 6 ? "strong" : knownOperationalFields >= 3 ? "partial" : "minimal";
+    const context = mergeAuditContext(clean(raw.context, 6000), [
+      ["Data cererii", requestDate ? requestDate.slice(0, 10) : ""],
+      ["Rol contact / decident", contactRole],
+      ["Ultima acțiune", lastActionSummary],
+      ["Următoarea acțiune declarată", nextActionLabel],
+      ["Aprobare necesară", approvalRequiredLabel],
+      ["Stare aprobare", approvalStatusLabel],
+      ["Propunere pregătită", proposalPreparedLabel],
+      ["Propunere trimisă", proposalSentLabel],
+      ["Rezultat declarat", outcomeConfirmedLabel],
+      ["Note operator", operatorNotes]
+    ]);
+    if (!error && normalizedLength(context) > 6000) {
+      error = {
+        code: "combined_context_too_long",
+        message: "Contextul sursă și câmpurile operaționale depășesc împreună limita de 6.000 de caractere. Scurtează textul fără a elimina dovezile materiale."
+      };
+    }
     const base = {
       source_label: clean(raw.source, 120) || (sourceInput ? `Import controlat · ${sourceInput}` : "Import controlat"),
       source_type: sourceType ?? "csv_import",
       title,
-      company: clean(raw.company, 240),
+      company,
       contact: clean(raw.contact, 240),
       email,
       phone,
@@ -191,11 +265,23 @@ export function validateCommercialImportRows(rawRows: CommercialMappedRow[]) {
       currency,
       last_interaction_at: date,
       requested_date: dueDate,
-      context: clean(raw.context, 6000),
+      context,
       status_label: clean(raw.status, 500),
-      owner_label: clean(raw.owner, 240),
+      owner_label: ownerLabel,
       owner_profile_id: "",
       source_reference: clean(raw.source_reference, 500),
+      request_date_at: requestDate,
+      contact_role: contactRole,
+      last_action_summary: lastActionSummary,
+      next_action_label: nextActionLabel,
+      approval_required_label: approvalRequiredLabel,
+      approval_status_label: approvalStatusLabel,
+      proposal_prepared_label: proposalPreparedLabel,
+      proposal_sent_label: proposalSentLabel,
+      outcome_confirmed_label: outcomeConfirmedLabel,
+      operator_notes: operatorNotes,
+      audit_completeness: auditCompleteness,
+      missing_operational_fields: missingOperationalFields,
       probable_signal_match: false,
       probable_company_match: false,
       probable_contact_match: false,

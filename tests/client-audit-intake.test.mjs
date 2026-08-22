@@ -11,6 +11,7 @@ const read = (relativePath) => readFileSync(new URL(`../${relativePath}`, import
 const guidePath = "docs/client-audit-intake.md";
 const checklistPath = "docs/client-audit-checklist.md";
 const samplePath = "docs/samples/revenew-client-audit-template.csv";
+const publicSamplePath = "public/samples/revenew-client-audit-template.csv";
 const guide = read(guidePath);
 const checklist = read(checklistPath);
 const sample = read(samplePath);
@@ -65,6 +66,7 @@ test("client audit CSV is import-oriented, fictional and keeps currencies explic
 
 test("repository safety permits only the documented client CSV", () => {
   assert.equal(forbiddenFileReason(samplePath), null);
+  assert.equal(forbiddenFileReason(publicSamplePath), null);
   assert.equal(forbiddenFileReason("docs/samples/another-export.csv"), "temporary log or CSV");
   assert.equal(forbiddenFileReason("logs/client-audit.log"), "temporary log or CSV");
 });
@@ -73,12 +75,19 @@ test("existing signal import recognizes the client template's supported columns"
   const fields = read("src/lib/commercial-ingestion-fields.ts");
   for (const alias of [
     "opportunity_title", "company_name", "contact_name", "contact_email", "request_source",
-    "request_summary", "current_status", "responsible_person", "last_action_date", "next_action_due_date"
+    "request_summary", "current_status", "responsible_person", "last_action_date", "next_action_due_date",
+    "request_date", "contact_role", "last_action_summary", "next_action", "approval_required",
+    "approval_status", "proposal_prepared", "proposal_sent", "outcome_confirmed", "operator_notes"
   ]) {
     assert.match(fields, new RegExp(`"${alias}"`));
   }
-  assert.match(guide, /Coloanele de lucru care nu sunt mapate rămân informații pentru normalizare și revizuire/);
+  assert.match(guide, /Coloanele operaționale mapate sunt păstrate în dovada textuală a semnalului/);
+  assert.match(guide, /nu devin automat responsabil, acțiune, aprobare, trimitere sau rezultat confirmat/);
   assert.match(guide, /Importul creează \*\*semnale pentru revizuire\*\*, nu oportunități sau acțiuni automate/);
   assert.match(guide, /Mapează `responsible_person` numai dacă numele corespunde exact unui membru activ/);
   assert.match(guide, /pentru nume anonimizate selectează `Nu importa`/);
+});
+
+test("downloadable audit template stays identical to the documented canonical sample", () => {
+  assert.equal(read(publicSamplePath).replaceAll("\r\n", "\n"), read(samplePath).replaceAll("\r\n", "\n"));
 });
