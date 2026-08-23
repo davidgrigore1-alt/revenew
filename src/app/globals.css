@@ -568,7 +568,7 @@ body {
   background-size: 48px 48px, 48px 48px;
 }
 
-/* Pass 3B marketing palette: authoritative blue, isolated from app accents. */
+/* Pass 3C marketing palette: champagne brand identity, cool blue product data. */
 .marketing-canvas {
   --background: 250 251 253;
   --background-soft: 244 247 252;
@@ -580,25 +580,35 @@ body {
   --text-secondary: 55 65 81;
   --text-muted: 96 108 126;
   --text-faint: 139 149 164;
-  --rn-accent: 47 100 232;
-  --rn-accent-foreground: 255 255 255;
-  --rn-accent-soft: 219 234 254;
-  --rn-accent-muted: 239 246 255;
-  --rn-accent-border: 147 177 253;
-  --rn-accent-ring: 37 99 235;
-  --rn-accent-glow: 59 130 246;
-  --rn-accent-surface: 239 246 255;
-  --rn-accent-950: 23 37 84;
-  --rn-accent-900: 30 58 138;
-  --rn-accent-800: 30 64 175;
-  --rn-accent-700: 37 71 196;
-  --rn-accent-600: 37 86 218;
-  --rn-accent-500: 47 100 232;
-  --rn-accent-400: 96 139 244;
-  --rn-accent-300: 147 177 253;
-  --rn-accent-100: 219 234 254;
-  --rn-accent-50: 239 246 255;
+  --rn-accent: 190 145 67;
+  --rn-accent-foreground: 24 18 8;
+  --rn-accent-soft: 246 235 205;
+  --rn-accent-muted: 253 248 235;
+  --rn-accent-border: 218 185 118;
+  --rn-accent-ring: 164 119 48;
+  --rn-accent-glow: 201 154 60;
+  --rn-accent-surface: 253 248 235;
+  --rn-accent-950: 54 38 13;
+  --rn-accent-900: 84 59 19;
+  --rn-accent-800: 117 82 27;
+  --rn-accent-700: 145 101 34;
+  --rn-accent-600: 172 124 45;
+  --rn-accent-500: 190 145 67;
+  --rn-accent-400: 210 174 103;
+  --rn-accent-300: 228 201 145;
+  --rn-accent-100: 246 235 205;
+  --rn-accent-50: 253 248 235;
+  --primary: var(--rn-accent-700);
+  --primary-hover: var(--rn-accent-800);
+  --primary-active: var(--rn-accent-900);
   --primary-foreground: 255 255 255;
+  --primary-muted: var(--rn-accent-100);
+  --primary-strong: 117 82 27;
+  --product-blue: 47 100 232;
+  --product-blue-strong: 30 64 175;
+  --product-blue-soft: 239 246 255;
+  --chart-secondary: 123 137 158;
+  --chart-blocked: 209 155 67;
 }
 
 .dark .marketing-canvas {
@@ -615,11 +625,18 @@ body {
   --text-secondary: 211 216 225;
   --text-muted: 157 166 181;
   --text-faint: 103 112 128;
-  --primary: 96 139 244;
-  --primary-hover: 147 177 253;
-  --primary-active: 59 130 246;
-  --primary-foreground: 9 10 13;
-  --primary-muted: 23 37 84;
+  --primary: 218 179 102;
+  --primary-hover: 235 205 147;
+  --primary-active: 190 145 67;
+  --primary-foreground: 18 14 8;
+  --primary-muted: 48 38 20;
+  --primary-strong: 235 205 147;
+  --brand-50: 45 36 21;
+  --product-blue: 96 139 244;
+  --product-blue-strong: 147 177 253;
+  --product-blue-soft: 21 31 55;
+  --chart-secondary: 133 145 164;
+  --chart-blocked: 190 145 67;
   --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.24);
   --shadow-elevated: 0 28px 80px rgba(0,0,0,.5);
 }
@@ -632,12 +649,12 @@ body {
 
 @keyframes marketing-node-active {
   0%, 18%, 100% { border-color: rgb(var(--border)); box-shadow: none; }
-  32%, 64% { border-color: rgb(var(--primary)); box-shadow: 0 0 0 4px rgb(var(--primary) / .12); }
+  32%, 64% { border-color: rgb(var(--product-blue)); box-shadow: 0 0 0 3px rgb(var(--product-blue) / .11); }
 }
 
 @keyframes marketing-pipeline-card {
   0%, 18% { transform: translateX(0); }
-  38%, 72% { transform: translateX(calc(100% + 1rem)); }
+  38%, 72% { transform: translateX(calc(100% + .75rem)); }
   90%, 100% { transform: translateX(0); }
 }
 
@@ -653,3 +670,46 @@ body {
 }
 .marketing-flow-node { animation: marketing-node-active 6s var(--ease-standard) infinite; }
 .marketing-pipeline-card { animation: marketing-pipeline-card 8s var(--ease-emphasized) infinite; will-change: transform; }
+.marketing-workflow-canvas {
+  background-image: radial-gradient(rgb(var(--border-strong) / .55) .7px, transparent .7px);
+  background-size: 18px 18px;
+}
+.marketing-workflow-progress { animation: marketing-flow-pulse 6s var(--ease-emphasized) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-flow-node,
+  .marketing-workflow-progress,
+  .marketing-pipeline-card { animation: none !important; }
+}
+
+.marketing-pricing-card {
+  background:
+    linear-gradient(145deg, rgb(var(--surface)) 0%, rgb(var(--surface-subtle)) 100%);
+  box-shadow: 0 1px 2px rgb(15 23 42 / .05), 0 18px 44px rgb(15 23 42 / .06);
+}
+.marketing-pricing-card-featured {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 64px rgb(74 54 20 / .14);
+}
+.marketing-pricing-card-featured::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgb(var(--primary)), transparent);
+  content: "";
+}
+.dark .marketing-pricing-card {
+  border-color: rgb(63 66 74);
+  background: linear-gradient(145deg, rgb(22 24 29), rgb(15 17 21));
+  box-shadow: 0 20px 56px rgb(0 0 0 / .34);
+}
+.dark .marketing-pricing-card-featured {
+  border-color: rgb(var(--primary) / .72);
+  background: linear-gradient(145deg, rgb(34 30 22), rgb(18 19 23) 66%);
+  box-shadow: 0 28px 72px rgb(0 0 0 / .48);
+}
+.dark .marketing-pricing-badge {
+  border-color: rgb(var(--primary) / .7);
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
+}
