@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRightIcon,
-  ArrowUpRightIcon,
   BuildingOffice2Icon,
-  CheckCircleIcon,
   ClockIcon,
   DocumentCheckIcon,
   EyeIcon,
@@ -17,6 +15,7 @@ import {
 import { FaqAccordion, type FaqCategory } from "@/components/marketing/FaqAccordion";
 import { ControlledWorkflowSection, LandingStorySections } from "@/components/marketing/LandingStorySections";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingPricingGrid } from "@/components/marketing/MarketingPricingGrid";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { OpportunityExecutionPreview, PortfolioSummaryPreview } from "@/components/marketing/ProductShowcases";
 import { RevenueLeakMap } from "@/components/marketing/RevenueLeakMap";
@@ -25,7 +24,6 @@ import { WhyReveNewComparison } from "@/components/marketing/WhyReveNewCompariso
 import { Button } from "@/components/ui/Button";
 import { authPath } from "@/lib/auth/redirects";
 import { getReveNewAccessMode } from "@/lib/billing/paid-access";
-import { commercialPricingPlans } from "@/lib/billing/plans";
 import { marketingSections } from "@/lib/marketing/navigation";
 import { canonicalUrl } from "@/lib/seo";
 
@@ -282,30 +280,7 @@ export default function LandingPage() {
       <section id="preturi" className="scroll-mt-28 mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
         <Reveal className="grid items-end gap-6 lg:grid-cols-[0.8fr_1.2fr]"><SectionHeading eyebrow="Investiție clară" title="Începe cu intervenția potrivită." /><p className="max-w-2xl text-base leading-7 text-[rgb(var(--muted-foreground))] lg:justify-self-end">Fiecare opțiune clarifică ce include și ce urmează, fără garanții artificiale sau urgență inventată.</p></Reveal>
         {accessMode === "preview" ? <p className="mt-6 max-w-3xl rounded-card border border-[rgb(var(--brand-500)/0.32)] bg-[rgb(var(--brand-50))] p-3.5 text-sm leading-6">Mod de testare: selecția de mai jos nu creează o plată sau un abonament activ.</p> : null}
-        <div className="marketing-pricing-grid mt-9 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {commercialPricingPlans.map((plan, index) => {
-            const featured = plan.title === "ReveNew Managed";
-            const audit = plan.title === "Revenue Recovery Audit";
-            const custom = plan.title === "Custom Implementation";
-            return (
-              <Reveal key={plan.title} delay={index * 80} className={custom ? "md:col-span-2 xl:col-span-1" : ""}>
-                <article className={`marketing-card-lift marketing-pricing-card relative flex h-full overflow-hidden rounded-[1.05rem] border p-6 ${featured ? "marketing-pricing-card-featured border-[rgb(var(--primary)/0.62)]" : "border-[rgb(var(--border-strong))]"}`}>
-                  {featured ? <span className="marketing-pricing-badge absolute right-5 top-5 rounded-full border border-[rgb(var(--primary)/0.42)] bg-[rgb(var(--brand-50))] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[rgb(var(--primary-strong))]">Operare continuă</span> : null}
-                  <div className="flex w-full flex-col">
-                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">{custom ? "Implementare enterprise" : plan.label}</p>
-                    <h3 className="mt-4 pr-20 text-2xl font-semibold tracking-[-0.025em]">{custom ? "Implementare personalizată" : plan.title}</h3>
-                    <div className="mt-5 border-y border-[rgb(var(--border))] py-4"><p className="text-4xl font-semibold tracking-[-0.035em]">{custom ? "Ofertă" : plan.price}</p><p className="mt-1.5 text-sm text-[rgb(var(--muted-foreground))]">{custom ? "în funcție de volum și complexitate" : plan.billing}</p></div>
-                    <p className="mt-4 text-sm leading-6 text-[rgb(var(--muted-foreground))]">{plan.description}</p>
-                    <ul className="mt-5 grid gap-2.5 text-sm text-[rgb(var(--text-secondary))]">
-                      {plan.items.slice(0, 6).map((item) => <li key={item} className="flex gap-2.5"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />{item}</li>)}
-                    </ul>
-                    <div className="mt-auto pt-6"><Button href={authPath("/signup", audit ? "audit" : "select_plan")} variant={featured ? "primary" : "secondary"} className="group w-full">{custom ? "Solicită o discuție" : plan.cta}<ArrowUpRightIcon className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" /></Button></div>
-                  </div>
-                </article>
-              </Reveal>
-            );
-          })}
-        </div>
+        <MarketingPricingGrid />
       </section>
 
       <section id="intrebari" className="scroll-mt-28 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">

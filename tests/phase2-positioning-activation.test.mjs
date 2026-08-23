@@ -11,11 +11,11 @@ test("Phase 2 positioning defines commercial recovery without debt ambiguity", (
   assert.match(landing, /nu datorii/i);
   assert.match(landing, /Nu este recuperare de creanțe/);
   assert.match(landing, /ReveNew recomandă, iar echipa ta decide/);
-  assert.match(plans, /Revenue Recovery Audit/);
-  assert.match(plans, /490 EUR/);
-  assert.match(plans, /ReveNew Managed/);
-  assert.match(plans, /690 EUR/);
-  assert.match(plans, /Custom Implementation/);
+  for (const plan of ["Start", "Growth", "Scale", "Enterprise"]) assert.match(plans, new RegExp(`title: "${plan}"`));
+  assert.match(plans, /monthlyPrice: 59/);
+  assert.match(plans, /annualPrice: 103/);
+  assert.match(plans, /annualPrice: 199/);
+  assert.match(plans, /monthlyPrice: null/);
 });
 
 test("navigation reflects user jobs and keeps platform administration permission-gated", () => {

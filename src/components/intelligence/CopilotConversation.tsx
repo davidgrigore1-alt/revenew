@@ -25,8 +25,8 @@ function contextForPath(pathname: string, lockedContext?: Partial<CopilotPageCon
 function suggestionsFor(context: CopilotPageContext) {
   if (context.pageType === "company") return ["Rezumă relația cu această companie.", "Ce a rămas nerezolvat?", "Ce oportunități sunt active?"];
   if (context.pageType === "opportunity") return ["Rezumă-mi situația înainte de follow-up.", "Ce lipsește?", "Care este următorul pas sigur?"];
-  if (context.pageType === "dashboard") return ["Ce s-a schimbat astăzi?", "De ce este prioritatea principală importantă?", "Ce necesită decizie umană?"];
-  return ["Care sunt cele mai importante trei probleme?", "Ce oportunități nu au următor pas?", "Explică această pagină."];
+  if (context.pageType === "dashboard") return ["Ce follow-up-uri sunt restante?", "Ce oportunități nu au responsabil?", "Ce aprobări sunt în așteptare?", "Care este cel mai mare risc comercial?"];
+  return ["Arată-mi top 5 oportunități după valoare.", "Ce follow-up-uri sunt restante?", "Ce oportunități nu au următor pas?", "Ce s-a schimbat recent?", "Explică această pagină."];
 }
 
 export function CopilotConversation({ className, lockedContext, autoFocus = false, initialSuggestions }: { className?: string; lockedContext?: Partial<CopilotPageContext>; autoFocus?: boolean; initialSuggestions?: string[] }) {
@@ -82,26 +82,27 @@ export function CopilotConversation({ className, lockedContext, autoFocus = fals
           <section aria-labelledby="copilot-suggestions-title">
             <h3 id="copilot-suggestions-title" className="sr-only">Întrebări utile aici</h3>
             <div className="flex flex-wrap gap-2">
-              {suggestions.slice(0, 3).map((suggestion) => <button key={suggestion} type="button" disabled={loading} className="focus-ring min-h-8 rounded-control border border-[rgb(var(--border))] bg-transparent px-3 py-1.5 text-left text-xs font-medium text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(suggestion)}>{suggestion}</button>)}
+              {suggestions.slice(0, 4).map((suggestion) => <button key={suggestion} type="button" disabled={loading} className="focus-ring min-h-8 rounded-control border border-[rgb(var(--border))] bg-transparent px-3 py-1.5 text-left text-xs font-medium text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(suggestion)}>{suggestion}</button>)}
             </div>
           </section>
         ) : conversation.map((item) => (
           <article key={item.id} className="border-b border-[rgb(var(--border))] pb-5 last:border-0" aria-labelledby={`${item.id}-answer`}>
             <p className="rounded-control bg-[rgb(var(--surface-subtle))] px-3 py-2 text-sm font-medium text-[rgb(var(--text-secondary))]">{item.question}</p>
             <div className="mt-4">
-              <p id={`${item.id}-answer`} className="text-[0.95rem] leading-6 text-[rgb(var(--foreground))]">{item.answer.answer}</p>
+              <h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Ce am găsit</h4>
+              <p id={`${item.id}-answer`} className="mt-2 text-[0.95rem] leading-6 text-[rgb(var(--foreground))]">{item.answer.answer}</p>
               {item.answer.evidence.length > 0 ? (
                 <section className="mt-4 border-t border-[rgb(var(--border))] pt-3" aria-label={`Dovezi, ${item.answer.evidence.length}`}>
-                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]"><BookOpenIcon className="h-4 w-4" aria-hidden="true" />Dovezi · {item.answer.evidence.length}</h4>
+                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]"><BookOpenIcon className="h-4 w-4" aria-hidden="true" />Context verificat · Dovezi · {item.answer.evidence.length}</h4>
                   <div className="mt-2 divide-y divide-[rgb(var(--border))]">
                     {item.answer.evidence.map((evidence) => {
-                      const content = <><span className="font-semibold text-[rgb(var(--foreground))]">{evidence.label}</span><span className="text-xs text-[rgb(var(--text-muted))]">{evidence.sourceType} · {evidence.fact}</span></>;
+                      const content = <><span className="flex flex-wrap items-center gap-2 font-semibold text-[rgb(var(--foreground))]"><span className="status-pill status-pill-neutral">{evidence.sourceType}</span>{evidence.label}</span><span className="text-xs leading-5 text-[rgb(var(--text-muted))]">{evidence.fact}</span></>;
                       return evidence.route ? <Link key={evidence.sourceId} href={evidence.route} className="focus-ring flex min-h-11 flex-col justify-center gap-0.5 rounded-button px-1 py-2 hover:text-[rgb(var(--primary))]">{content}</Link> : <div key={evidence.sourceId} className="flex min-h-11 flex-col justify-center gap-0.5 py-2">{content}</div>;
                     })}
                   </div>
                 </section>
               ) : null}
-              {item.answer.missingInformation.length > 0 ? <section className="mt-4 border-l-2 border-[rgb(var(--warning-border))] pl-3"><h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Ce nu pot confirma</h4><ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.answer.missingInformation.map((missing) => <li key={missing}>— {missing}</li>)}</ul></section> : null}
+              {item.answer.missingInformation.length > 0 ? <section className="mt-4 border-l-2 border-[rgb(var(--warning-border))] pl-3"><h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--warning-text))]">Ce nu pot confirma · ce lipsește</h4><ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.answer.missingInformation.map((missing) => <li key={missing}>— {missing}</li>)}</ul></section> : null}
               {item.answer.caveats.length > 0 ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.answer.caveats.join(" ")}</p> : null}
               {item.answer.suggestedAction ? <div className="mt-4"><Button href={item.answer.suggestedAction.route} size="small">{item.answer.suggestedAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></div> : null}
               {item.answer.followUps.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{item.answer.followUps.map((followUp) => <button key={followUp} type="button" disabled={loading} className="focus-ring rounded-button border border-[rgb(var(--border))] px-3 py-2 text-left text-xs font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(followUp)}>{followUp}</button>)}</div> : null}

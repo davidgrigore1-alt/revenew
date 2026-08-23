@@ -31,7 +31,7 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
               const panelId = `${baseId}-answer-${key.replace(/\s+/g, "-")}`;
 
               return (
-                <article key={item.question} className="overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card transition-colors hover:border-[rgb(var(--brand-500)/0.45)]">
+                <article key={item.question} className={clsx("marketing-faq-item overflow-hidden rounded-card border bg-[rgb(var(--surface))] shadow-card", open ? "border-[rgb(var(--primary)/0.42)]" : "border-[rgb(var(--border))]")}>
                   <h4>
                     <button
                       id={buttonId}
@@ -42,7 +42,7 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
                       onClick={() => setOpenKey(open ? "" : key)}
                     >
                       <span>{item.question}</span>
-                      <ChevronDownIcon className={clsx("h-5 w-5 shrink-0 transition motion-reduce:transition-none", open && "rotate-180")} aria-hidden="true" />
+                      <ChevronDownIcon className={clsx("h-5 w-5 shrink-0 transition-transform duration-300 motion-reduce:transition-none", open && "rotate-180 text-[rgb(var(--primary))]")} aria-hidden="true" />
                     </button>
                   </h4>
                   <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!open} className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 pb-5 pt-4">

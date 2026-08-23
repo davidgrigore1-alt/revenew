@@ -613,14 +613,14 @@ body {
 
 .dark .marketing-canvas {
   color-scheme: dark;
-  --background: 9 10 13;
-  --background-soft: 12 14 18;
-  --surface: 16 18 23;
-  --surface-subtle: 20 23 29;
-  --surface-muted: 27 31 39;
-  --surface-elevated: 22 25 32;
-  --border: 42 47 58;
-  --border-strong: 67 75 91;
+  --background: 0 0 0;
+  --background-soft: 4 4 4;
+  --surface: 10 10 10;
+  --surface-subtle: 14 14 14;
+  --surface-muted: 17 17 17;
+  --surface-elevated: 12 12 12;
+  --border: 36 36 36;
+  --border-strong: 58 58 58;
   --foreground: 249 250 252;
   --text-secondary: 211 216 225;
   --text-muted: 157 166 181;
@@ -712,4 +712,323 @@ body {
   border-color: rgb(var(--primary) / .7);
   background: rgb(var(--primary));
   color: rgb(var(--primary-foreground));
+}
+/* Landing motion: restrained sequencing, optical clarity and data-first feedback. */
+.marketing-product-surface {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+.marketing-motion-card,
+.marketing-pipeline-opportunity,
+.marketing-stagger-row,
+.marketing-attention-card,
+.marketing-pricing-card,
+.marketing-faq-item {
+  transition: border-color 320ms var(--ease-standard), box-shadow 420ms var(--ease-standard), transform 420ms cubic-bezier(.22, 1, .36, 1), background-color 320ms var(--ease-standard);
+}
+.marketing-motion-card:hover,
+.marketing-pipeline-opportunity:hover,
+.marketing-attention-card:hover {
+  z-index: 2;
+  border-color: rgb(var(--product-blue) / .42);
+  box-shadow: 0 14px 32px rgb(15 23 42 / .1);
+  transform: translate3d(0, -2px, 0);
+}
+.marketing-flow-node { animation-duration: 12s; }
+.marketing-flow-node:nth-child(5) { animation-name: marketing-approved-node; }
+.marketing-flow-node > div:last-child { animation: marketing-status-reveal 12s var(--ease-standard) infinite; }
+.marketing-stagger-row:hover { background: rgb(var(--product-blue-soft) / .55); }
+.marketing-reveal[data-visible="true"] .marketing-stagger-row,
+.marketing-reveal[data-visible="true"] .marketing-pipeline-stage,
+.marketing-reveal[data-visible="true"] .marketing-attention-card {
+  animation: marketing-enter-up 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.marketing-stagger-row:nth-child(2) { animation-delay: 70ms !important; }
+.marketing-stagger-row:nth-child(3) { animation-delay: 140ms !important; }
+.marketing-stagger-row:nth-child(4) { animation-delay: 210ms !important; }
+.marketing-stagger-row:nth-child(5) { animation-delay: 280ms !important; }
+.marketing-composer-subject { animation: marketing-copy-reveal 12s var(--ease-standard) 1.4s infinite both; }
+.marketing-composer-body { animation: marketing-copy-reveal 12s var(--ease-standard) 2.1s infinite both; }
+.marketing-approval-button { animation: marketing-approval-emphasis 12s var(--ease-standard) 3.2s infinite; }
+.marketing-chart-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+.marketing-reveal[data-visible="true"] .marketing-chart-line-primary { animation: marketing-chart-draw 1.4s cubic-bezier(.22, 1, .36, 1) 180ms forwards; }
+.marketing-reveal[data-visible="true"] .marketing-chart-line-secondary { animation: marketing-chart-draw 1.4s cubic-bezier(.22, 1, .36, 1) 360ms forwards; }
+.marketing-chart-legend { opacity: 0; }
+.marketing-reveal[data-visible="true"] .marketing-chart-legend { animation: marketing-fade-in 520ms var(--ease-standard) 480ms forwards; }
+.marketing-chart-bar { transform: scaleY(0); }
+.marketing-reveal[data-visible="true"] .marketing-chart-bar { animation: marketing-bar-grow 760ms cubic-bezier(.22, 1, .36, 1) forwards; }
+.marketing-pricing-card:hover {
+  border-color: rgb(var(--primary) / .48);
+  box-shadow: 0 26px 64px rgb(74 54 20 / .14);
+  transform: translate3d(0, -4px, 0);
+}
+.marketing-pricing-card-featured { animation: marketing-pricing-ambient 8s var(--ease-standard) infinite; }
+.marketing-faq-item:hover { border-color: rgb(var(--primary) / .36); }
+.marketing-faq-panel {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 360ms cubic-bezier(.22, 1, .36, 1), opacity 260ms var(--ease-standard);
+}
+.marketing-faq-panel.is-open { grid-template-rows: 1fr; opacity: 1; }
+
+.marketing-demo-question { animation: marketing-demo-question 14s var(--ease-standard) infinite both; }
+.marketing-demo-analyzing,
+.marketing-demo-processing { animation: marketing-demo-analyzing 14s var(--ease-standard) infinite both; }
+.marketing-demo-answer,
+.marketing-demo-context-answer { animation: marketing-demo-answer 14s var(--ease-standard) infinite both; }
+.marketing-demo-command-text {
+  animation: marketing-demo-command 14s steps(28, end) infinite both;
+  clip-path: inset(0 100% 0 0);
+}
+.marketing-demo-spinner { animation: marketing-demo-spin 900ms linear infinite; }
+.marketing-demo-dots i {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: marketing-demo-dot 1.2s ease-in-out infinite;
+}
+.marketing-demo-dots i:nth-child(2) { animation-delay: 160ms; }
+.marketing-demo-dots i:nth-child(3) { animation-delay: 320ms; }
+.marketing-demo-result-row {
+  opacity: 0;
+  animation: marketing-demo-row 14s var(--ease-standard) infinite both;
+}
+.marketing-demo-proof {
+  opacity: 0;
+  animation: marketing-demo-proof 14s var(--ease-standard) infinite both;
+}
+.marketing-demo-proof:nth-child(1) { animation-delay: .1s; }
+.marketing-demo-proof:nth-child(2) { animation-delay: .45s; }
+.marketing-demo-proof:nth-child(3) { animation-delay: .8s; }
+.marketing-demo-log-step,
+.marketing-demo-log-ready {
+  opacity: 0;
+  animation: marketing-demo-log-step 14s var(--ease-standard) infinite both;
+}
+.marketing-demo-log-step:nth-child(2) { animation-delay: .1s; }
+.marketing-demo-log-step:nth-child(3) { animation-delay: .55s; }
+.marketing-demo-log-step:nth-child(4) { animation-delay: 1s; }
+.marketing-demo-log-ready { animation-delay: 1.35s; }
+
+@keyframes marketing-enter-up {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes marketing-approved-node {
+  0%, 26%, 100% { border-color: rgb(var(--border)); box-shadow: none; }
+  46%, 72% { border-color: rgb(var(--primary)); box-shadow: 0 0 0 3px rgb(var(--primary) / .12); }
+}
+@keyframes marketing-status-reveal {
+  0%, 12%, 100% { opacity: .45; transform: translateY(2px); }
+  26%, 78% { opacity: 1; transform: translateY(0); }
+}
+@keyframes marketing-copy-reveal {
+  0%, 8%, 86%, 100% { opacity: .25; clip-path: inset(0 100% 0 0); }
+  18%, 74% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+@keyframes marketing-approval-emphasis {
+  0%, 28%, 58%, 100% { box-shadow: none; transform: translateY(0); }
+  38%, 48% { box-shadow: 0 0 0 4px rgb(var(--primary) / .12); transform: translateY(-1px); }
+}
+@keyframes marketing-chart-draw { to { stroke-dashoffset: 0; } }
+@keyframes marketing-bar-grow { to { transform: scaleY(1); } }
+@keyframes marketing-fade-in { to { opacity: 1; } }
+@keyframes marketing-pricing-ambient {
+  0%, 100% { box-shadow: 0 24px 64px rgb(74 54 20 / .14); }
+  50% { box-shadow: 0 28px 72px rgb(74 54 20 / .2); }
+}
+@keyframes marketing-demo-question {
+  0%, 4%, 88%, 100% { opacity: .58; transform: translateY(2px); }
+  9%, 76% { opacity: 1; transform: translateY(0); }
+}
+@keyframes marketing-demo-command {
+  0%, 7%, 90%, 100% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  18%, 80% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+@keyframes marketing-demo-analyzing {
+  0%, 16%, 39%, 100% { opacity: 0; transform: translateY(3px); }
+  22%, 34% { opacity: 1; transform: translateY(0); }
+}
+@keyframes marketing-demo-answer {
+  0%, 34%, 88%, 100% { opacity: 0; transform: translateY(6px); }
+  43%, 79% { opacity: 1; transform: translateY(0); }
+}
+@keyframes marketing-demo-row {
+  0%, 30%, 88%, 100% { opacity: 0; transform: translateX(-5px); background-color: transparent; }
+  39%, 73% { opacity: 1; transform: translateX(0); background-color: rgb(239 246 255 / .8); }
+}
+@keyframes marketing-demo-proof {
+  0%, 38%, 90%, 100% { opacity: 0; transform: translateY(4px); }
+  48%, 78% { opacity: 1; transform: translateY(0); }
+}
+@keyframes marketing-demo-log-step {
+  0%, 43%, 91%, 100% { opacity: .28; transform: translateX(0); }
+  52%, 82% { opacity: 1; transform: translateX(0); }
+}
+@keyframes marketing-demo-spin { to { transform: rotate(360deg); } }
+@keyframes marketing-demo-dot {
+  0%, 60%, 100% { opacity: .3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+.dark .marketing-motion-card:hover,
+.dark .marketing-pipeline-opportunity:hover,
+.dark .marketing-attention-card:hover { box-shadow: 0 18px 38px rgb(0 0 0 / .32); }
+.dark .marketing-pricing-card-featured { animation-name: marketing-pricing-ambient-dark; }
+@keyframes marketing-pricing-ambient-dark {
+  0%, 100% { box-shadow: 0 28px 72px rgb(0 0 0 / .48); }
+  50% { box-shadow: 0 32px 80px rgb(0 0 0 / .58), 0 0 0 1px rgb(var(--primary) / .08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing-product-demo *,
+  .marketing-flow-node,
+  .marketing-flow-node > div:last-child,
+  .marketing-composer-subject,
+  .marketing-composer-body,
+  .marketing-approval-button,
+  .marketing-chart-line,
+  .marketing-chart-bar,
+  .marketing-chart-legend,
+  .marketing-pricing-card-featured { animation: none !important; }
+  .marketing-demo-command-text { clip-path: none !important; }
+  .marketing-demo-question,
+  .marketing-demo-answer,
+  .marketing-demo-context-answer,
+  .marketing-demo-result-row,
+  .marketing-demo-proof,
+  .marketing-demo-log-step,
+  .marketing-demo-log-ready,
+  .marketing-chart-legend { opacity: 1 !important; transform: none !important; }
+  .marketing-chart-line { stroke-dashoffset: 0 !important; }
+  .marketing-chart-bar { transform: scaleY(1) !important; }
+  .marketing-faq-panel { transition: none !important; }
+}
+
+/* Premium signup: solid-black foundation with restrained champagne emphasis. */
+.signup-premium-theme {
+  color-scheme: dark;
+  --background: 0 0 0;
+  --background-soft: 4 4 4;
+  --surface: 10 10 10;
+  --surface-subtle: 7 7 7;
+  --surface-muted: 17 17 17;
+  --surface-elevated: 14 14 14;
+  --border: 38 38 38;
+  --border-strong: 65 65 65;
+  --foreground: 250 250 249;
+  --text-secondary: 218 216 211;
+  --text-muted: 164 161 154;
+  --text-faint: 106 103 98;
+  --primary: 218 179 102;
+  --primary-hover: 235 205 147;
+  --primary-active: 190 145 67;
+  --primary-foreground: 18 14 8;
+  --primary-muted: 48 38 20;
+  --focus-ring: 218 179 102;
+  --danger-background: 46 14 17;
+  --danger-text: 249 164 164;
+  --danger-border: 116 39 45;
+}
+
+.signup-premium-shell {
+  background:
+    radial-gradient(circle at 76% 12%, rgb(218 179 102 / .07), transparent 27rem),
+    rgb(0 0 0);
+}
+
+.signup-premium-aside {
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / .025), transparent 42%),
+    rgb(7 7 7);
+}
+
+.signup-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.signup-stepper li {
+  min-width: 0;
+  color: rgb(var(--text-faint));
+}
+
+.signup-stepper button {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: .55rem;
+  border-radius: .65rem;
+  padding: .55rem;
+  text-align: left;
+  transition: color 220ms var(--ease-standard), background-color 220ms var(--ease-standard);
+}
+
+.signup-stepper li.is-current button {
+  background: rgb(var(--surface-muted));
+  color: rgb(var(--foreground));
+}
+
+.signup-stepper li.is-complete button {
+  color: rgb(var(--text-muted));
+  cursor: pointer;
+}
+
+.signup-step-number {
+  display: inline-flex;
+  width: 1.65rem;
+  height: 1.65rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(var(--border));
+  border-radius: 999px;
+  font-size: .66rem;
+  font-weight: 700;
+}
+
+.signup-stepper .is-current .signup-step-number,
+.signup-stepper .is-complete .signup-step-number {
+  border-color: rgb(var(--primary) / .55);
+  background: rgb(var(--primary) / .1);
+  color: rgb(var(--primary));
+}
+
+.signup-step-card {
+  border: 1px solid rgb(255 255 255 / .11);
+  border-radius: 1rem;
+  background: linear-gradient(155deg, rgb(17 17 17), rgb(8 8 8) 72%);
+  padding: 1.35rem;
+  box-shadow: 0 28px 80px rgb(0 0 0 / .48), inset 0 1px rgb(255 255 255 / .035);
+}
+
+.signup-step-fields {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1.35rem;
+  animation: signup-step-enter 320ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.signup-step-fields[hidden] {
+  display: none;
+}
+
+@keyframes signup-step-enter {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (max-width: 520px) {
+  .signup-stepper { gap: .2rem; }
+  .signup-stepper button { justify-content: center; padding: .45rem .2rem; }
+  .signup-stepper button > span:last-child { display: none; }
+  .signup-step-card { padding: 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup-step-fields { animation: none !important; }
+  .signup-stepper button { transition: none !important; }
 }

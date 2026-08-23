@@ -50,7 +50,7 @@ function SettingsRow({ label, description, children }: { label: string; descript
   );
 }
 
-type SettingsTab = "workspace" | "control" | "usage" | "development";
+type SettingsTab = "workspace" | "integrations" | "control" | "usage" | "development";
 
 export default async function SettingsPage({ searchParams }: { searchParams?: Promise<{ tab?: string }> }) {
   const requestedTab = (await searchParams)?.tab;
@@ -63,7 +63,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
   const openAIConnected = isOpenAIConfigured();
   const isDevelopmentMode = process.env.NODE_ENV === "development";
   const isPreviewMode = paidAccess?.accessMode === "preview";
-  const activeTab: SettingsTab = requestedTab === "control" || requestedTab === "usage" || (requestedTab === "development" && isDevelopmentMode && !isPreviewMode)
+  const activeTab: SettingsTab = requestedTab === "integrations" || requestedTab === "control" || requestedTab === "usage" || (requestedTab === "development" && isDevelopmentMode && !isPreviewMode)
     ? requestedTab
     : "workspace";
   const usageSnapshot = business
@@ -89,7 +89,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
   }
 
   const navigationGroups: Array<{ label: string; items: Array<[SettingsTab, string]> }> = [
-    { label: "Spațiu de lucru", items: [["workspace", "Aspect și identitate"], ["control", "Acces și recomandări"]] },
+    { label: "Spațiu de lucru", items: [["workspace", "Aspect și identitate"], ["integrations", "Integrări și implementare"], ["control", "Acces și recomandări"]] },
     { label: "Administrare", items: [["usage", "Plan și utilizare"]] },
     ...(isDevelopmentMode && !isPreviewMode ? [{ label: "Sistem", items: [["development", "Dezvoltare"]] as Array<[SettingsTab, string]> }] : [])
   ];
@@ -161,6 +161,25 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
             </>
           ) : null}
 
+          {activeTab === "integrations" ? (
+            <SettingsGroup id="integrari" title="Integrări și implementare" description="Sursele disponibile, permisiunile necesare și pașii de activare. ReveNew nu afișează o integrare ca activă înainte de confirmarea tehnică.">
+              <SettingsRow label="Import CSV" description="Pentru oportunități, companii și context comercial existent.">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><span className="status-pill status-pill-success">Disponibil</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Importul este revizuit înainte de confirmare; datele nevalide nu sunt tratate ca oportunități confirmate.</p></div>
+                  <Link href="/inbox/import" className="focus-ring shrink-0 rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide importul →</Link>
+                </div>
+              </SettingsRow>
+              <SettingsRow label="Gmail și Google Calendar" description="Email, întâlniri și follow-up în contextul spațiului de lucru.">
+                <div><span className="status-pill status-pill-neutral">În pregătire</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Conectarea va solicita permisiuni explicite și va păstra vizibile sursa și momentul sincronizării. Nu există o conexiune live confirmată acum.</p></div>
+              </SettingsRow>
+              <SettingsRow label="Microsoft 365" description="Outlook Email și Calendar, cu aprobare administrativă unde este necesar.">
+                <div><span className="status-pill status-pill-neutral">În pregătire</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Activarea va depinde de consimțământul Microsoft și de politicile organizației. ReveNew nu citește automat căsuța poștală în starea curentă.</p></div>
+              </SettingsRow>
+              <SettingsRow label="API și implementare asistată" description="Pentru volume, sisteme sursă și cerințe de guvernanță specifice.">
+                <div><span className="status-pill status-pill-neutral">Evaluare asistată</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Schema, permisiunile, izolarea datelor și frecvența sincronizării sunt stabilite înainte de activare.</p><Link href="/access#planuri" className="focus-ring mt-3 inline-flex rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Discută implementarea →</Link></div>
+              </SettingsRow>
+            </SettingsGroup>
+          ) : null}
           {activeTab === "control" ? (
             <SettingsGroup id="acces" title="Acces și recomandări" description="Starea serviciilor, controlul uman și limitele de utilizare a datelor.">
               <SettingsRow label="Recomandări și AI" description="ReveNew pregătește recomandări; echipa decide și trimite.">

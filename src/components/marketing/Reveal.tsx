@@ -44,11 +44,11 @@ export function Reveal({ children, className, delay = 0 }: { children: ReactNode
       className={cn("marketing-reveal", className)}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translate3d(0, 0, 0)" : "translate3d(0, 14px, 0)",
+        transform: visible ? "translate3d(0, 0, 0)" : "translate3d(0, 18px, 0)",
         transitionDelay: visible && delay ? `${delay}ms` : "0ms",
-        transitionDuration: "240ms",
+        transitionDuration: "520ms",
         transitionProperty: "opacity, transform",
-        transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)"
+        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)"
       }}
     >
       {children}

@@ -44,6 +44,7 @@ export default async function SignupPage({ searchParams }: { searchParams?: { in
       title="Creează contul ReveNew"
       description="Acesta este primul pas. După confirmarea emailului vei configura firma, contextul comercial și primul flux de lucru."
       accent="gold"
+      variant="signup"
       trustLine="Crearea contului nu configurează automat firma și nu pornește acțiuni comerciale în numele tău."
       footerPrompt="Ai deja cont?"
       footerHref={authPath("/login", "login")}

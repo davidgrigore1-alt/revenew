@@ -46,13 +46,57 @@ function prohibitedRequest(question: string) {
   const value = normalized(question);
   return /ignora.*permisi|alte.*(?:spatii|workspace)|drop table|system prompt|instructiuni.*ascuns|chain of thought|aproba.*(?:oportunitate|semnal)|trimite.*(?:email|mesaj)/.test(value);
 }
+function answerFromStructuredData(question: string, result: CopilotToolResult) {
+  if (!result.data || typeof result.data !== "object") return "";
+  const data = result.data as Record<string, unknown>;
+  const query = normalized(question);
+  if (result.toolName === "get_daily_brief") {
+    const priorities = Array.isArray(data.priorities) ? data.priorities.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object")) : [];
+    if (/expunere|valoare.*companie/.test(query)) {
+      const totals = new Map<string, { amount: number; currency: string }>();
+      for (const item of priorities) {
+        const company = String(item.company ?? "Companie neconfirmată");
+        const current = totals.get(company) ?? { amount: 0, currency: String(item.currency ?? "") };
+        totals.set(company, { amount: current.amount + Number(item.amount ?? 0), currency: current.currency || String(item.currency ?? "") });
+      }
+      const leader = Array.from(totals.entries()).sort((left, right) => right[1].amount - left[1].amount)[0];
+      if (leader && leader[1].amount > 0) return `${leader[0]} are cea mai mare expunere vizibilă în prioritățile autorizate: ${leader[1].amount} ${leader[1].currency}. Valoarea este estimată, nu venit confirmat.`;
+    }
+    const matches = priorities.filter((item) => {
+      const text = normalized(JSON.stringify(item));
+      if (/restant|depasit|follow.?up/.test(query)) return /restant|depasit|termen|follow.?up/.test(text);
+      if (/aprobar|asteapta aprob/.test(query)) return /aprobar|asteptare/.test(text);
+      if (/fara responsabil|nu au responsabil|owner/.test(query)) return /responsabil.*(?:lips|neconfirmat)|fara responsabil/.test(text);
+      if (/risc/.test(query)) return /risc|bloca|expir|restant/.test(text);
+      return true;
+    });
+    const selected = (/cel mai mare|top 5|top cinci/.test(query) ? [...matches].sort((left, right) => Number(right.amount ?? 0) - Number(left.amount ?? 0)) : matches).slice(0, /top 5|top cinci/.test(query) ? 5 : 3);
+    if (selected.length > 0) {
+      const items = selected.map((item, index) => {
+        const amount = Number(item.amount ?? 0);
+        const value = amount > 0 && item.currency ? ` · valoare estimată ${amount} ${String(item.currency)}` : "";
+        return `${index + 1}. ${String(item.title ?? "Prioritate comercială")} — ${String(item.reason ?? item.whyItMatters ?? "necesită verificare")}${value}`;
+      });
+      return `Am găsit ${matches.length} ${matches.length === 1 ? "situație relevantă" : "situații relevante"} în datele autorizate. ${items.join(" ")} Valorile sunt estimări, nu venit confirmat.`;
+    }
+    return [typeof data.headline === "string" ? data.headline : "", typeof data.summary === "string" ? data.summary : "", "Nu am găsit un caz care să corespundă exact filtrului cerut în prioritățile autorizate."].filter(Boolean).join(" ");
+  }
+  if (result.toolName === "get_opportunity_context") {
+    const opportunity = data.opportunity && typeof data.opportunity === "object" ? data.opportunity as Record<string, unknown> : null;
+    if (opportunity && /draft|mesaj|follow.?up/.test(query)) {
+      return `Draft pentru revizuire umană: „Bună ziua, revin privind ${String(opportunity.title ?? "discuția comercială")}. Pentru a confirma următorul pas, vă rog să ne spuneți dacă există informații sau o decizie de clarificat. Mulțumesc.” ReveNew nu trimite acest mesaj.`;
+    }
+    if (opportunity) return `${String(opportunity.title ?? "Oportunitatea")} este în starea ${String(opportunity.status ?? "neconfirmată")}. Responsabil: ${String(opportunity.ownerName ?? "neconfirmat")}. Următoarea intervenție sigură: ${String(opportunity.recommendedAction ?? "de stabilit")}. Valoarea afișată este estimată, nu venit confirmat.`;
+  }
+  return "";
+}
 
 function fallbackToolFor(request: CopilotRequest) {
   const query = normalized(request.question);
   if (/cum |unde |ce este revenew|explica pagina|folosesc|ghid/.test(query)) return { name: "get_product_help", args: { question: request.question } };
   if (request.context.pageType === "company" && request.context.organizationId) return { name: "get_company_context", args: { organizationId: request.context.organizationId } };
   if (request.context.pageType === "opportunity" && request.context.opportunityId) return { name: "get_opportunity_context", args: { opportunityId: request.context.opportunityId } };
-  if (/prioritar|probleme|decizie|astazi|schimbat|prima data|brief/.test(query)) return { name: "get_daily_brief", args: {} };
+  if (/prioritar|probleme|decizie|astazi|schimbat|prima data|brief|restant|depasit|follow.?up|responsabil|owner|aprobar|risc|top 5|top cinci|expunere|valoare.*companie/.test(query)) return { name: "get_daily_brief", args: {} };
   if (/semnal|descoper/.test(query)) return { name: "get_commercial_discoveries", args: {} };
   return { name: "search_commercial_context", args: { query: request.question } };
 }
@@ -93,7 +137,7 @@ function deterministicAnswer(request: CopilotRequest, result: CopilotToolResult,
   const facts = Array.from(new Set(sources.slice(0, 3).map((item) => item.fact.replace(/\s+/g, " ").trim()).filter(Boolean)));
   const productAnswer = result.toolName === "get_product_help" && result.state === "ready" && result.data && typeof result.data === "object"
     ? String((result.data as Record<string, unknown>).answer ?? "") : "";
-  const answer = productAnswer || facts.join(" ") || "Nu am suficiente informații în ReveNew pentru a confirma asta.";
+  const answer = productAnswer || answerFromStructuredData(request.question, result) || facts.join(" ") || "Nu am suficiente informații în ReveNew pentru a confirma asta.";
   return {
     answer,
     summaryType: productAnswer ? "product_help" : sources.length ? "commercial" : providerFailure ? "temporary_error" : "insufficient_information",

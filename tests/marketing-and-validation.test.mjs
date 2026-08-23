@@ -62,10 +62,11 @@ test("landing page uses centralized navigation and truthful pricing/copy", () =>
   assert.equal(page.includes('id="control"'), true);
   assert.equal(page.includes('id="preturi"'), true);
   assert.equal(page.includes('id="intrebari"'), true);
-  assert.equal(plans.includes('price: "490 EUR"'), true);
-  assert.equal(plans.includes('price: "690 EUR"'), true);
-  assert.equal(plans.includes("de la 690"), false);
-  assert.equal(page.includes("mt-auto pt-6"), true, "pricing CTA region must be pinned to the bottom structurally");
+  assert.equal(plans.includes('title: "Start"'), true);
+  assert.equal(plans.includes('title: "Growth"'), true);
+  assert.equal(plans.includes('title: "Scale"'), true);
+  assert.equal(plans.includes('title: "Enterprise"'), true);
+  assert.equal(page.includes("MarketingPricingGrid"), true, "pricing uses the interactive monthly/annual grid");
   assert.equal(page.includes("FAQPage"), false);
   assert.equal(page.includes("fake"), false);
 });

@@ -1,19 +1,19 @@
 export const previewPlans = [
   {
     id: "audit",
-    title: "Revenue Recovery Audit",
-    price: "490 EUR",
-    billing: "plată unică",
-    description: "Audit de 7 zile pentru identificarea oportunităților comerciale care merită reluate.",
-    cta: "Continuă cu Audit"
+    title: "Start",
+    price: "59 EUR",
+    billing: "utilizator / lună",
+    description: "Pentru echipe care vor să structureze oportunitățile, responsabilitatea și următoarea acțiune.",
+    cta: "Continuă cu Start"
   },
   {
     id: "managed",
-    title: "ReveNew Managed",
-    price: "690 EUR",
-    billing: "pe lună",
-    description: "Proces recurent de verificare, prioritizare, follow-up și raportare comercială.",
-    cta: "Continuă cu ReveNew Managed"
+    title: "Growth",
+    price: "129 EUR",
+    billing: "utilizator / lună",
+    description: "Pentru echipe care au nevoie de prioritizare recurentă, control și vizibilitate managerială.",
+    cta: "Continuă cu Growth"
   }
 ] as const;
 
@@ -31,56 +31,39 @@ export function getPreviewPlanById(value: string | null | undefined) {
 
 export const commercialPricingPlans = [
   {
-    label: "PUNCT DE PORNIRE",
-    title: "Revenue Recovery Audit",
-    price: "490 EUR",
-    billing: "plată unică",
-    description: "Evaluare structurată inițială a oportunităților comerciale blocate. Nu garantează venit recuperat.",
-    items: [
-      "analiza semnalelor comerciale disponibile",
-      "identificarea cererilor fără răspuns",
-      "identificarea ofertelor fără follow-up",
-      "prioritizarea oportunităților",
-      "estimarea valorii comerciale",
-      "pregătirea mesajelor și scripturilor",
-      "raport executiv",
-      "recomandarea următorilor pași"
-    ],
-    cta: "Solicită auditul"
+    label: "PENTRU ECHIPE MICI",
+    title: "Start",
+    monthlyPrice: 59,
+    annualPrice: 47,
+    description: "Control operațional pentru primele fluxuri de oportunități și follow-up.",
+    items: ["Control Center și coadă de priorități", "oportunități, responsabil și următoarea acțiune", "import CSV asistat", "Ask ReveNew cu surse autorizate", "rapoarte operaționale de bază"],
+    cta: "Solicită activarea"
   },
   {
-    label: "OPERARE CONTINUĂ",
-    title: "ReveNew Managed",
-    price: "690 EUR",
-    billing: "pe lună",
-    description: "Proces recurent pentru firme care vor verificare, prioritizare și urmărire comercială continuă.",
-    items: [
-      "tot ce conține auditul inițial",
-      "revizuirea recurentă a semnalelor",
-      "prioritizare periodică",
-      "follow-up-uri pregătite",
-      "actualizarea statusurilor și rezultatelor",
-      "raport lunar",
-      "suport operațional",
-      "ajustarea procesului pe baza rezultatelor"
-    ],
-    cta: "Programează o discuție"
+    label: "RECOMANDAT",
+    title: "Growth",
+    monthlyPrice: 129,
+    annualPrice: 103,
+    description: "Pentru echipe care coordonează mai multe oportunități și au nevoie de control managerial.",
+    items: ["tot ce include Start", "prioritizare și risc comercial extinse", "aprobări și auditabilitate", "rapoarte pentru management", "implementare ghidată"],
+    cta: "Solicită o discuție"
   },
   {
-    label: "LA CERERE",
-    title: "Custom Implementation",
-    price: "Preț personalizat",
-    billing: "în funcție de volum și complexitate",
-    description: "Ofertă separată pentru integrări aprobate, migrare, fluxuri, instruire și cerințe enterprise.",
-    items: [
-      "analiză de proces",
-      "configurarea fluxurilor necesare",
-      "importuri sau integrări aprobate",
-      "reguli de prioritizare",
-      "raportare pentru echipă",
-      "plan de implementare",
-      "suport adaptat proiectului"
-    ],
+    label: "PENTRU OPERAȚIUNI COMPLEXE",
+    title: "Scale",
+    monthlyPrice: 249,
+    annualPrice: 199,
+    description: "Pentru volume mai mari, reguli de lucru mature și cerințe de guvernanță.",
+    items: ["tot ce include Growth", "configurare avansată a fluxurilor", "control de acces și politici extinse", "suport prioritar de implementare", "evaluare pentru integrări aprobate"],
     cta: "Discută opțiunile"
+  },
+  {
+    label: "ENTERPRISE",
+    title: "Enterprise",
+    monthlyPrice: null,
+    annualPrice: null,
+    description: "Pentru cerințe de securitate, integrare, volum și guvernanță stabilite împreună.",
+    items: ["scoping tehnic și comercial", "plan de integrare și migrare", "cerințe contractuale și de securitate", "roluri și controale adaptate", "suport de implementare dedicat"],
+    cta: "Solicită evaluarea"
   }
 ] as const;
