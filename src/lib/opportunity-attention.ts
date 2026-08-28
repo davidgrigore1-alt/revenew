@@ -113,7 +113,7 @@ function isDecisionMaker(opportunity: Opportunity) {
 }
 
 function latestActivity(opportunity: Opportunity) {
-  const meaningfulEvent = /^(stage_changed|marked_contacted|contacted|follow_up_scheduled|next_action_(created|completed)|action_(completed|postponed)|primary_contact_changed|contact_assigned|outcome_(recorded|corrected)|lifecycle_reopened)$/;
+  const meaningfulEvent = /^(stage_changed|marked_contacted|contacted|follow_up_scheduled|next_action_(created|completed)|action_(completed|postponed|cancelled)|commercial_details_changed|primary_contact_changed|contact_assigned|outcome_(recorded|corrected)|lifecycle_reopened)$/;
   const values = [
     opportunity.createdAt,
     ...opportunity.timeline

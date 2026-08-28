@@ -1,0 +1,13 @@
+.workflowGrid {
+ display:grid;
+ grid-template-columns:minmax(220px,1.6fr) 112px minmax(170px,1.1fr) 130px minmax(100px,.7fr) 218px;
+ gap:16px; align-items:center;
+}
+.workflowGrid > * { min-width:0; }
+.workflowTable { min-width:1100px; }
+.playbookGrid { display:grid; grid-template-columns:minmax(260px,1.4fr) minmax(260px,1fr) 218px; gap:24px; align-items:center; }
+.board { display:grid; grid-template-columns:repeat(5,minmax(260px,1fr)); align-items:start; gap:12px; }
+.column { border:1px solid rgb(var(--border)); border-radius:12px; background:rgb(var(--background-soft)); overflow:hidden; }
+.columnBody { display:grid; align-content:start; gap:var(--card-gap); padding:var(--card-padding); min-height:180px; }
+.reviewPanes { align-items:start; }
+.reviewPane { max-height:calc(100dvh - 290px); min-height:340px; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; }

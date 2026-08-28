@@ -6,6 +6,7 @@ import {
   selectPrimaryNextAction,
   stageForOpportunity
 } from "@/lib/opportunity-domain";
+import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import type {
   CommercialSignal,
   Opportunity,
@@ -23,7 +24,9 @@ export type OpportunityTimelineSourceType =
   | "document"
   | "commercial_signal"
   | "commercial_response"
-  | "contact";
+  | "contact"
+  | "email"
+  | "calendar_event";
 
 export type OpportunityTimelineEvent = {
   id: string;
@@ -32,6 +35,7 @@ export type OpportunityTimelineEvent = {
   title: string;
   summary: string;
   nature: OpportunityTimelineNature;
+  timeframe?: "current" | "historical";
   importance: OpportunityTimelineImportance;
   category: "Oportunitate" | "Acțiune" | "Document" | "Interacțiune" | "Decizie" | "Contact" | "ReveNew";
   source: {
@@ -73,6 +77,10 @@ export type OpportunityTimelineResult = {
 type TimelineInput = {
   opportunity: Opportunity;
   linkedSignals?: CommercialSignal[];
+  externalContext?: {
+    emails: Array<{ id: string; sent_at: string; direction: "inbound" | "outbound"; sender_name: string | null; sender_email: string | null; subject: string | null; excerpt: string | null }>;
+    events: Array<{ id: string; title: string | null; starts_at: string; ends_at: string; event_status: string | null }>;
+  };
 };
 
 type TimelineOptions = {
@@ -174,7 +182,7 @@ function normalizeStoredEvent(event: OpportunityEvent): OpportunityTimelineEvent
     category: eventCategory(type),
     source: { type: "opportunity_event", id: event.id, label: "Eveniment înregistrat", href: "#opportunity-source-context" },
     evidence: ["Data și descrierea provin din istoricul persistent al oportunității."],
-    actor: event.actorProfileId ? "Membru al echipei" : null,
+    actor: event.actorName ?? (event.actorProfileId ? "Membru al echipei · nume indisponibil" : null),
     statusBefore: metadataString(event, "status_before"),
     statusAfter: metadataString(event, "status_after"),
     dedupeKey: relatedSource ? `${relatedSource}:${occurredAt}` : undefined
@@ -278,7 +286,7 @@ function normalizeResponses(opportunity: Opportunity): OpportunityTimelineEvent[
         href: response.sourceDocumentId ? `/outreach/${response.sourceDocumentId}` : "#action-response"
       },
       evidence: ["Rezumatul și momentul provin din răspunsul comercial înregistrat."],
-      actor: response.recordedBy || null,
+      actor: response.recordedByName ?? (response.recordedBy ? "Membru al echipei · nume indisponibil" : null),
       dedupeKey: `commercial_response:${response.id}:${occurredAt}`
     }];
   });
@@ -342,6 +350,7 @@ function inactivityInsights(observed: OpportunityTimelineEvent[], now: Date, thr
     insights.push({
       id: `derived:inactivity:${previous.id}:${current.id}`,
       type: "inactivity_gap",
+      timeframe: current.id === "timeline-now-boundary" ? "current" : "historical",
       occurredAt: current.occurredAt,
       title: `${days} zile fără activitate înregistrată`,
       summary: `Interval calculat între „${previous.title}” și ${current.id === "timeline-now-boundary" ? "momentul actual" : `„${current.title}”`}.`,
@@ -363,6 +372,7 @@ function overdueInsights(actions: OpportunityAction[], now: Date): OpportunityTi
       id: `derived:overdue:${action.id}`,
       type: "action_became_overdue",
       occurredAt: dueAt,
+      timeframe: "current" as const,
       title: "Acțiune devenită restantă",
       summary: `${action.title} · termen depășit, finalizare neînregistrată.`,
       nature: "derived" as const,
@@ -379,6 +389,7 @@ function missingNextActionInsight(opportunity: Opportunity, now: Date): Opportun
   return [{
     id: `derived:missing-next-action:${opportunity.id}`,
     type: "missing_next_action",
+    timeframe: "current",
     occurredAt: now.toISOString(),
     title: "Următorul pas nu este confirmat",
     summary: "Nu există o acțiune viitoare înregistrată pentru această oportunitate.",
@@ -390,9 +401,47 @@ function missingNextActionInsight(opportunity: Opportunity, now: Date): Opportun
   }];
 }
 
+function normalizeExternalEmail(email: NonNullable<TimelineInput["externalContext"]>["emails"][number]): OpportunityTimelineEvent | null {
+  const occurredAt = validTimestamp(email.sent_at);
+  if (!occurredAt) return null;
+  const inbound = email.direction === "inbound";
+  const identity = email.sender_name || email.sender_email || "Contact neidentificat";
+  return {
+    id: `email:${email.id}`,
+    type: inbound ? "email_received" : "email_sent",
+    occurredAt,
+    title: inbound ? `Email primit de la ${identity}` : "Email trimis",
+    summary: [email.subject || "Fără subiect", email.excerpt].filter(Boolean).join(" · ").slice(0, 320),
+    nature: "observed",
+    importance: "major",
+    category: "Interacțiune",
+    source: { type: "email", id: email.id, label: "Gmail autorizat", href: `/inbox?email=${email.id}` },
+    evidence: ["Mesaj sincronizat din conexiunea Gmail privată a utilizatorului curent."],
+    dedupeKey: `email:${email.id}`
+  };
+}
+
+function normalizeExternalMeeting(event: NonNullable<TimelineInput["externalContext"]>["events"][number]): OpportunityTimelineEvent | null {
+  const occurredAt = validTimestamp(event.starts_at);
+  if (!occurredAt) return null;
+  return {
+    id: `calendar:${event.id}`,
+    type: "calendar_meeting",
+    occurredAt,
+    title: event.title || "Întâlnire comercială",
+    summary: `Eveniment Calendar · ${event.event_status || "status neconfirmat"}`,
+    nature: "observed",
+    importance: "major",
+    category: "Interacțiune",
+    source: { type: "calendar_event", id: event.id, label: "Google Calendar autorizat" },
+    evidence: ["Eveniment sincronizat din conexiunea Calendar privată a utilizatorului curent."],
+    dedupeKey: `calendar:${event.id}`
+  };
+}
 function buildSnapshot(opportunity: Opportunity, observed: OpportunityTimelineEvent[], now: Date): OpportunityTimelineSnapshot {
-  const nextAction = selectPrimaryNextAction(opportunity.actions);
-  const dueAt = validTimestamp(nextAction?.dueDate);
+  const state = buildOpportunityCommercialState(opportunity, {now});
+  const nextAction = state.nextAction;
+  const dueAt = nextAction?.dueAt ?? null;
   const estimatedValue = Number(opportunity.estimatedValueHigh ?? opportunity.estimatedValueLow ?? 0);
   const latest = [...observed].sort(chronologicalCompare)[0] ?? null;
   const lifecycle = lifecycleForOpportunity(opportunity);
@@ -405,7 +454,7 @@ function buildSnapshot(opportunity: Opportunity, observed: OpportunityTimelineEv
     nextActionLabel: nextAction?.title ?? "Următorul pas nu este confirmat",
     nextActionDueAt: dueAt,
     nextActionState: !nextAction ? "neconfirmat" : dueAt && Date.parse(dueAt) < now.getTime() ? "restant" : "programat",
-    ownerLabel: opportunity.ownerName ?? "Responsabil neconfirmat"
+    ownerLabel: state.ownership.ownerName ?? (state.ownership.ownerProfileId ? "Responsabil atribuit · nume indisponibil" : "Responsabil neconfirmat")
   };
 }
 
@@ -422,6 +471,8 @@ export function buildOpportunityIntelligenceTimeline(input: TimelineInput, optio
     ...(input.linkedSignals ?? [])
       .filter((signal) => !input.opportunity.businessId || signal.businessId === input.opportunity.businessId)
       .map(normalizeSignal),
+    ...(input.externalContext?.emails ?? []).map(normalizeExternalEmail),
+    ...(input.externalContext?.events ?? []).map(normalizeExternalMeeting),
     ...input.opportunity.timeline.map(normalizeStoredEvent)
   ].filter((event): event is OpportunityTimelineEvent => Boolean(event)));
   const derived = [

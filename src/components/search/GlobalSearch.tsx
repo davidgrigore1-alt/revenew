@@ -13,6 +13,25 @@ import { cn } from "@/lib/utils";
 import { searchWorkspace } from "@/lib/search/actions";
 
 export const GLOBAL_SEARCH_OPEN_EVENT = "revenew:open-global-search";
+const quickActions = [
+  { id: "ask", group: "Acțiuni rapide", title: "Întreabă ReveNew", context: "Deschide interfața de inteligență operațională", href: "/ai" },
+  { id: "create-company", group: "Acțiuni rapide", title: "Creează companie", context: "Adaugă o companie în workspace-ul curent", href: "/companies?create=1" },
+  { id: "create-contact", group: "Acțiuni rapide", title: "Creează contact", context: "Adaugă o persoană și leag-o de o companie", href: "/contacts?create=1" },
+  { id: "create-opportunity", group: "Acțiuni rapide", title: "Creează oportunitate", context: "Pornește o oportunitate comercială asociată unei companii", href: "/opportunities?create=1" },
+  { id: "today", group: "Acțiuni rapide", title: "Deschide activitatea de astăzi", context: "Task-uri, termene și situații care necesită atenție", href: "/today" },
+  { id: "approvals", group: "Acțiuni rapide", title: "Deschide aprobările", context: "Revizuiește deciziile care necesită control uman", href: "/approvals" },
+  { id: "prepared", group: "Acțiuni rapide", title: "Revizuiește lucrul pregătit", context: "Drafturi și actualizări pregătite înainte de execuție", href: "/prepared" }
+] as const;
+
+type SearchDisplayResult = {
+  id: string;
+  group: string;
+  title: string;
+  context: string;
+  href: string;
+  reason?: string;
+  evidence?: Array<{ label: string }>;
+};
 
 export function GlobalSearch() {
   const router = useRouter();
@@ -152,12 +171,12 @@ export function GlobalSearch() {
 
   const sectionResults = useMemo(() => searchAppSections(query), [query]);
   const structuredQuery = searchResponse && !["entity_search", "company_context"].includes(searchResponse.intent.kind);
-  const results = useMemo(
-    () => structuredQuery ? [...workspaceResults, ...sectionResults] : [...sectionResults, ...workspaceResults],
-    [sectionResults, structuredQuery, workspaceResults]
+  const results = useMemo<SearchDisplayResult[]>(
+    () => query.trim().length < 2 ? [...quickActions] : structuredQuery ? [...workspaceResults, ...sectionResults] : [...sectionResults, ...workspaceResults],
+    [query, sectionResults, structuredQuery, workspaceResults]
   );
   const grouped = useMemo(() => {
-    return results.reduce<Record<string, typeof results>>((groups, result) => {
+    return results.reduce<Record<string, SearchDisplayResult[]>>((groups, result) => {
       (groups[result.group] ??= []).push(result);
       return groups;
     }, {});
@@ -215,7 +234,7 @@ export function GlobalSearch() {
           </p>
           {loading ? <SearchSkeleton compact={sectionResults.length > 0} /> : null}
           {!loading && error ? <p role="alert" className="rounded-control border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] p-4 text-sm text-[rgb(var(--danger-text))]">{sectionResults.length > 0 ? "Secțiunile produsului rămân disponibile. Căutarea în înregistrări nu a putut fi finalizată." : error}</p> : null}
-          {!loading && !error && query.trim().length < 2 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Introdu cel puțin două caractere. Rezultatele sunt limitate la spațiul de lucru curent.</p> : null}
+          {!loading && !error && query.trim().length < 2 ? <p className="px-5 pb-3 pt-2 text-xs text-[rgb(var(--text-muted))]">Comenzi sigure disponibile imediat. Pentru înregistrări, introdu cel puțin două caractere.</p> : null}
           {!loading && !error && query.trim().length >= 2 && results.length === 0 ? <p className="p-5 text-sm text-[rgb(var(--text-muted))]">Nu am găsit o secțiune sau o înregistrare accesibilă. Încearcă un termen precum „companii”, „audit” sau „ajutor”.</p> : null}
           {!loading && !error && searchResponse && workspaceResults.length > 0 ? (
             <div className="mb-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5">
@@ -250,7 +269,7 @@ export function GlobalSearch() {
                       <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{result.title}</span>
                       <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-muted))]">{result.context}</span>
                       {"reason" in result ? <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce apare:</strong> {result.reason}</span> : null}
-                      {"evidence" in result && result.evidence[0] ? <span className="mt-0.5 block text-xs leading-5 text-[rgb(var(--text-faint))]">Dovadă: {result.evidence[0].label}</span> : null}
+                      {"evidence" in result && result.evidence?.[0] ? <span className="mt-0.5 block text-xs leading-5 text-[rgb(var(--text-faint))]">Dovadă: {result.evidence[0].label}</span> : null}
                     </Link>
                   );
                 })}

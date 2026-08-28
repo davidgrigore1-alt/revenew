@@ -8,12 +8,17 @@ import { recordProductEvent } from "@/lib/product-events";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const targetPages = new Set(["opportunities", "pipeline", "companies", "contacts", "activities"]);
-const allowedFilters = new Set(["q", "status", "lifecycle", "commercialType", "attention", "due", "owner", "contact", "decisionMaker", "sort", "page"]);
+const allowedFilters = new Set(["q", "status", "lifecycle", "commercialType", "attention", "due", "owner", "contact", "decisionMaker", "relationship", "sort", "page"]);
+const enumFilterPattern = /^[a-z0-9_-]{1,48}$/i;
 
 function parseFilterState(value: string) {
   const params = new URLSearchParams(value.slice(0, 2000));
   const entries: Array<[string, string]> = [];
-  params.forEach((item, key) => { if (allowedFilters.has(key) && item.length <= 160) entries.push([key, item]); });
+  params.forEach((item, key) => {
+    if (!allowedFilters.has(key) || item.length > 160) return;
+    if (key !== "q" && !enumFilterPattern.test(item)) return;
+    entries.push([key, item]);
+  });
   return Object.fromEntries(entries);
 }
 
@@ -60,8 +65,8 @@ export async function deleteSavedView(id: string) {
     Promise.resolve(createSupabaseServerClient())
   ]);
   if (!authorization.profileId || !current || !supabase) return { ok: false };
-  const { error } = await supabase.from("saved_views").delete().eq("id", id).eq("business_id", current.business.id).eq("profile_id", authorization.profileId);
-  if (error) return { ok: false };
-  revalidatePath("/opportunities");
+  const { data, error } = await supabase.from("saved_views").delete().eq("id", id).eq("business_id", current.business.id).eq("profile_id", authorization.profileId).select("target_page").single();
+  if (error || !data || !targetPages.has(data.target_page)) return { ok: false };
+  revalidatePath("/" + data.target_page);
   return { ok: true };
 }

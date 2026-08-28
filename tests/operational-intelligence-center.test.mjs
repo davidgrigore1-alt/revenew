@@ -31,6 +31,7 @@ function decision(index, overrides = {}) {
     whyItMatters: "Continuitatea comercială poate fi pierdută.",
     severity: index === 1 ? "critical" : "attention",
     relatedCompanyName: "Companie Exemplu SRL",
+    ownerState: "missing",
     relatedOpportunityId: `opportunity-${index}`,
     relatedOpportunityTitle: `Oportunitate ${index}`,
     actionLabel: index === 1 ? "Revizuiește oportunitatea" : "Deschide semnalul",
@@ -170,7 +171,7 @@ test("AI page uses URL tabs with Ask as the default and keeps the registry secon
   assert.match(page, /const intelligenceTabs = \[/);
   assert.match(page, /: "ask";/);
   assert.match(page, /href=\{`\/ai\?tab=\$\{tab\.id\}`\}/);
-  assert.match(page, /activeTab === "ask" \? <AskReveNew \/>/);
+  assert.match(page, /activeTab === "ask" \? <AskReveNew\b/);
   assert.match(page, /activeTab === "discoveries" \? <CommercialDiscoveries/);
   assert.match(page, /activeTab === "recommendations" \?/);
   assert.match(page, /activeTab === "capabilities" \?/);

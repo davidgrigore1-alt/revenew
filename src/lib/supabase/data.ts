@@ -119,7 +119,7 @@ function mapCrmOrganization(row: CrmOrganizationRow | null): CrmOrganization | n
   };
 }
 
-function mapOpportunityContacts(rows: OpportunityContactRow[] = []): OpportunityContact[] {
+export function mapOpportunityContacts(rows: OpportunityContactRow[] = []): OpportunityContact[] {
   const mapped: OpportunityContact[] = [];
 
   for (const row of rows) {
@@ -157,7 +157,7 @@ function mapOpportunityContacts(rows: OpportunityContactRow[] = []): Opportunity
   return mapped;
 }
 
-function mapOpportunityAction(action: Record<string, unknown>): OpportunityAction {
+export function mapOpportunityAction(action: Record<string, unknown>): OpportunityAction {
   return {
     id: String(action.id),
     type: action.type as OpportunityAction["type"],
@@ -174,7 +174,7 @@ function mapOpportunityAction(action: Record<string, unknown>): OpportunityActio
   };
 }
 
-function mapOpportunityEvent(event: Record<string, unknown>): OpportunityEvent {
+export function mapOpportunityEvent(event: Record<string, unknown>): OpportunityEvent {
   return {
     id: String(event.id),
     type: String(event.event_type ?? "event"),
@@ -204,7 +204,7 @@ function mapCommercialResponse(row: Record<string, unknown>): CommercialResponse
   };
 }
 
-function mapOpportunity(
+export function mapOpportunity(
   row: OpportunityRow,
   actions: OpportunityAction[] = [],
   documents: OpportunityDocument[] = [],
@@ -396,7 +396,7 @@ export async function getOpportunitiesForCurrentBusiness() {
   ));
 }
 
-export async function getOpportunityForCurrentBusiness(id: string) {
+export async function getOpportunityForCurrentBusiness(id: string, options: { includeDocumentContent?: boolean } = {}) {
   if (!isSupabaseConfigured) {
     return demoOpportunities.find((item) => item.id === id) ?? null;
   }
@@ -423,7 +423,7 @@ export async function getOpportunityForCurrentBusiness(id: string) {
   ] = await Promise.all([
     supabase.from("opportunities").select("*").eq("id", id).eq("business_id", business.id).single(),
     supabase.from("opportunity_actions").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("created_at", { ascending: false }).limit(200),
-    supabase.from("opportunity_documents").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("created_at", { ascending: false }).limit(100),
+    (options.includeDocumentContent === false ? supabase.from("opportunity_documents").select("id,document_type,title,status,created_at,edited_at,copied_at,ready_at,sent_at") : supabase.from("opportunity_documents").select("*")).eq("business_id", business.id).eq("opportunity_id", id).order("created_at", { ascending: false }).limit(100),
     supabase.from("opportunity_events").select("*").eq("business_id", business.id).eq("opportunity_id", id).order("occurred_at", { ascending: true }).limit(300),
     supabase
       .from("opportunity_contacts")
@@ -474,9 +474,9 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     id: document.id,
     type: document.document_type,
     title: document.title,
-    content: document.body ?? "",
+    content: "body" in document ? String(document.body ?? "") : "",
     status: document.status ?? "draft",
-    generationMode: document.generation_mode ?? undefined,
+    generationMode: "generation_mode" in document ? document.generation_mode ?? undefined : undefined,
     createdAt: document.created_at ?? undefined,
     editedAt: document.edited_at ?? undefined,
     copiedAt: document.copied_at ?? undefined,
@@ -484,10 +484,10 @@ export async function getOpportunityForCurrentBusiness(id: string) {
     sentAt: document.sent_at ?? undefined
   }));
 
-  const mappedEvents: OpportunityEvent[] = (events ?? []).map((event) => mapOpportunityEvent(event));
+  const mappedEvents: OpportunityEvent[] = (events ?? []).map((event) => ({...mapOpportunityEvent(event), actorName: (owners ?? []).find((owner: {profile_id:string;full_name:string}) => owner.profile_id === event.actor_profile_id)?.full_name ?? null}));
 
   const mappedContacts = contactsError ? [] : mapOpportunityContacts((contacts ?? []) as OpportunityContactRow[]);
-  const mappedResponses = (responses ?? []).map((response) => mapCommercialResponse(response as Record<string, unknown>));
+  const mappedResponses = (responses ?? []).map((response) => ({...mapCommercialResponse(response as Record<string, unknown>),recordedByName:(owners ?? []).find((owner:{profile_id:string;full_name:string})=>owner.profile_id===response.recorded_by)?.full_name??null}));
 
   const ownerProfileId = (opportunity as OpportunityRow).owner_profile_id;
   const ownerName = ownerProfileId

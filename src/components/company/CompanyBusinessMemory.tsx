@@ -38,12 +38,12 @@ export function CompanyBusinessMemory({ memory, executiveDecision, recoverableVa
       : "border-[rgb(var(--success-border))] bg-[rgb(var(--success-background))] text-[rgb(var(--success-text))]";
 
   return <Card id="company-memory" as="section" variant="default" padding="none" aria-labelledby="company-memory-title" className="scroll-mt-24 overflow-hidden">
-    <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+    <div className="px-4 pt-4 sm:px-5">
       <SectionHeader eyebrow="Decizie executivă" title="Ce contează acum" description="Fapte, bucle și lipsuri care pot afecta următoarea decizie comercială." />
     </div>
 
-    <section aria-labelledby="company-memory-title" className="mt-5 border-y border-[rgb(var(--border-strong))] border-l-[3px] border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))]">
-      <div className="grid gap-4 px-5 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center sm:px-6">
+    <section aria-labelledby="company-memory-title" className="mt-3 border-y border-[rgb(var(--border-strong))] border-l-[3px] border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))]">
+      <div className="grid gap-3 px-4 py-4 sm:px-5">
         <span className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClasses}`}>{executiveDecision.statusLabel}</span>
         <div className="min-w-0">
           <div className="flex items-center gap-2"><ExclamationTriangleIcon className="h-4 w-4 text-[rgb(var(--warning-text))]" aria-hidden="true" /><h3 id="company-memory-title" className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-muted))]">De reținut</h3></div>
@@ -53,9 +53,9 @@ export function CompanyBusinessMemory({ memory, executiveDecision, recoverableVa
           {Object.keys(recoverableValueByCurrency).length > 0 ? <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Valoare recuperabilă estimată:</strong> {Object.entries(recoverableValueByCurrency).map(([currency, value]) => formatCurrency(value, currency)).join(" · ")} · Separată de venitul confirmat.</p> : null}
           <EvidenceLine label={primaryEvidenceLabel} timestamp={executiveDecision.evidence[0]?.sourceTimestamp ?? null} href={executiveDecision.evidence[0]?.href} />
         </div>
-        <Link href={executiveDecision.safeNextActionHref} className="focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition-colors duration-fast hover:bg-[rgb(var(--primary-hover))] active:bg-[rgb(var(--primary-active))]">{executiveDecision.safeNextActionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+        <Link href={executiveDecision.safeNextActionHref} className="focus-ring inline-flex min-h-8 w-fit items-center justify-center gap-2 rounded-control bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] transition-colors duration-fast hover:bg-[rgb(var(--primary-hover))] active:bg-[rgb(var(--primary-active))]">{executiveDecision.safeNextActionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
       </div>
-      {additionalMemory.length > 0 ? <div className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-5 py-4 sm:px-6">{additionalMemory.map((item) => <MemoryRow key={item.id} item={item} />)}</div> : null}
+      {additionalMemory.length > 0 ? <details className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 sm:px-5"><summary className="focus-ring cursor-pointer text-xs font-medium">Context suplimentar · {additionalMemory.length} observații</summary><div className="mt-3">{additionalMemory.map((item) => <MemoryRow key={item.id} item={item} />)}</div></details> : null}
     </section>
 
     <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-[rgb(var(--border))]">

@@ -1,26 +1,113 @@
-import { forwardRef, type SelectHTMLAttributes } from "react";
+"use client";
+
+import { Children, forwardRef, isValidElement, useEffect, useId, useRef, useState, type ReactNode, type SelectHTMLAttributes, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
+import { ChevronDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { nextSelectOption } from "@/lib/ui/select-navigation";
 import { cn } from "@/lib/utils";
 
-export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
-  invalid?: boolean;
-};
+export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean; density?: "default" | "compact" };
+type Choice = { value: string; label: string; disabled: boolean; group?: string };
+function textOf(node: ReactNode): string {
+ return Children.toArray(node).map(child => isValidElement<{ children?: ReactNode }>(child) ? textOf(child.props.children) : String(child)).join("");
+}
+function choicesOf(children: ReactNode, group?: string, disabled = false): Choice[] {
+ return Children.toArray(children).flatMap(child => {
+  if (!isValidElement<{children?: ReactNode; value?: string | number; disabled?: boolean; label?: string}>(child)) return [];
+  if (child.type === "option") return [{ value: String(child.props.value ?? textOf(child.props.children)), label: child.props.label ?? textOf(child.props.children), disabled: disabled || Boolean(child.props.disabled), group }];
+  return choicesOf(child.props.children, child.type === "optgroup" ? child.props.label : group, disabled || Boolean(child.props.disabled));
+ });
+}
 
+/** Native select is an invisible form bridge only. The interactive control is a select-only combobox. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { className, invalid = false, children, ...props },
-  ref
+ { className, invalid = false, density = "default", children, id, value, defaultValue, disabled, required, onChange, ...props }, ref
 ) {
-  return (
-    <select
-      ref={ref}
-      aria-invalid={invalid || props["aria-invalid"] || undefined}
-      className={cn(
-        "focus-ring min-h-10 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] shadow-sm transition-colors duration-fast hover:border-[rgb(var(--border-strong))] disabled:cursor-not-allowed disabled:bg-[rgb(var(--surface-muted))] disabled:text-[rgb(var(--text-muted))] disabled:opacity-70",
-        invalid && "border-[rgb(var(--danger-border))]",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </select>
-  );
+ const uid = useId(), button = useRef<HTMLButtonElement>(null), native = useRef<HTMLSelectElement|null>(null), menu = useRef<HTMLDivElement>(null);
+ const choices = choicesOf(children);
+ const [current, setCurrent] = useState(String(value ?? defaultValue ?? choices[0]?.value ?? ""));
+ const [open, setOpen] = useState(false), [active, setActive] = useState(-1);
+ const [label, setLabel] = useState<string>();
+ const [validationError,setValidationError]=useState(false);
+ const [position, setPosition] = useState({left:0, top:0, width:0, maxHeight:280});
+ const search = useRef({value:"", at:0});
+ const selected = choices.find(choice => choice.value === String(value ?? current));
+ useEffect(() => {
+  const element = native.current;
+  if (!element) return;
+  // Read the browser-resolved value for uncontrolled forms and changing option lists.
+  setCurrent(element.value);
+  const reset = () => requestAnimationFrame(() => { setCurrent(element.value); setValidationError(false); setOpen(false); });
+  element.form?.addEventListener("reset", reset);
+  const parentLabel = button.current?.closest("label");
+  if (parentLabel) { const clone = parentLabel.cloneNode(true) as HTMLElement; clone.querySelectorAll("button,select").forEach(node => node.remove()); setLabel(clone.textContent?.trim()); }
+  return () => element.form?.removeEventListener("reset", reset);
+ }, [children]);
+ useEffect(()=>{if(disabled)setOpen(false);},[disabled]);
+ useEffect(() => {
+  if (!open || disabled) return;
+  function place() {
+   const rect = button.current?.getBoundingClientRect(); if (!rect) return;
+   const width = Math.min(Math.max(rect.width,220), window.innerWidth-16);
+   const below = window.innerHeight-rect.bottom-12, above = rect.top-12;
+   const height = Math.min(280, Math.max(below,above));
+   const down = below >= Math.min(280,above);
+   setPosition({left:Math.max(8,Math.min(rect.left,window.innerWidth-width-8)),top:down?rect.bottom+4:Math.max(8,rect.top-height-4),width,maxHeight:height});
+  }
+  function outside(event: PointerEvent) { if (!button.current?.contains(event.target as Node) && !menu.current?.contains(event.target as Node)) setOpen(false); }
+  place(); document.addEventListener("pointerdown",outside); window.addEventListener("resize",place); window.addEventListener("scroll",place,true);
+  return () => { document.removeEventListener("pointerdown",outside); window.removeEventListener("resize",place); window.removeEventListener("scroll",place,true); };
+ }, [open, disabled]);
+ useEffect(() => { if(open) menu.current?.querySelector('[data-active="true"]')?.scrollIntoView({block:"nearest"}); }, [active,open]);
+ function choose(index:number) {
+  const choice=choices[index]; if(!choice || choice.disabled || disabled) return;
+  if(native.current) { native.current.value=choice.value; setCurrent(choice.value); native.current.dispatchEvent(new Event("change",{bubbles:true})); }
+  setValidationError(false); setOpen(false); button.current?.focus();
+ }
+ function show(direction=1) {
+  setActive(Math.max(0,choices.findIndex(choice => choice.value===selected?.value && !choice.disabled)));
+  if(!selected || selected.disabled) setActive(direction===1?choices.findIndex(choice=>!choice.disabled):choices.map(choice=>!choice.disabled).lastIndexOf(true));
+  setOpen(true);
+ }
+ function keyDown(event:KeyboardEvent<HTMLButtonElement>) {
+  if(["ArrowDown","ArrowUp","Home","End","Enter"," "].includes(event.key)) {
+   event.preventDefault();
+   if(event.key==="Enter"||event.key===" ") { if(open)choose(active);else show(); return; }
+   if(!open) { if(event.key==="Home"||event.key==="End"){setActive(nextSelectOption(choices,-1,event.key));setOpen(true);}else show(event.key==="ArrowUp"?-1:1); return; }
+   setActive(nextSelectOption(choices,active,event.key));
+  } else if(event.key==="Escape") { if(open){event.preventDefault();event.stopPropagation();setOpen(false);} }
+  else if(event.key==="Tab") setOpen(false);
+  else if(event.key.length===1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+   event.preventDefault();
+   search.current={value:(Date.now()-search.current.at<700?search.current.value:"")+event.key.toLocaleLowerCase("ro"),at:Date.now()};
+   const index=choices.findIndex(choice=>!choice.disabled && choice.label.toLocaleLowerCase("ro").startsWith(search.current.value));
+   if(index>=0){setActive(index);setOpen(true);}
+  }
+ }
+ const describedBy=[props["aria-describedby"],validationError?uid+"-error":null].filter(Boolean).join(" ")||undefined;
+ return <span className="relative block min-w-0">
+  <select {...props} ref={node=>{native.current=node;if(typeof ref==="function")ref(node);else if(ref)ref.current=node;}} value={value} defaultValue={defaultValue} disabled={disabled} required={required}
+   tabIndex={-1} aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0" onFocus={()=>button.current?.focus()}
+   onInvalid={event=>{event.preventDefault();setValidationError(true);button.current?.focus();show();}}
+   onChange={event=>{setCurrent(event.target.value);onChange?.(event);}}>{children}</select>
+  <button ref={button} id={id} type="button" role="combobox" disabled={disabled} aria-expanded={open&&!disabled} aria-controls={uid} aria-haspopup="listbox"
+   aria-activedescendant={open&&active>=0?uid+"-"+active:undefined} aria-label={props["aria-label"]??label} aria-labelledby={props["aria-labelledby"]} aria-describedby={describedBy} aria-required={required}
+   aria-invalid={invalid||validationError||props["aria-invalid"]||undefined} title={selected?.label}
+   onClick={()=>open?setOpen(false):show()} onKeyDown={keyDown}
+   className={cn("focus-ring flex w-full items-center justify-between gap-2 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1 text-left text-sm font-normal text-[rgb(var(--foreground))] transition-colors hover:border-[rgb(var(--border-strong))] disabled:cursor-not-allowed disabled:opacity-50",(invalid||validationError)&&"border-[rgb(var(--danger-border))]",density==="compact"?"h-[var(--control-height-compact)]":"h-[var(--control-height)]",className)}>
+   <span className="min-w-0 truncate">{selected?.label??"Selectează"}</span><ChevronDownIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-[rgb(var(--text-muted))]"/>
+  </button>
+  {validationError?<span id={uid+"-error"} role="alert" className="mt-1 block text-xs text-[rgb(var(--danger-text))]">Selectează o opțiune pentru a continua.</span>:null}
+  {open&&!disabled?createPortal(<div ref={menu} id={uid} role="listbox" aria-label={props["aria-label"]??label??"Opțiuni"} style={{position:"fixed",...position,zIndex:10000}} className="product-popup overflow-y-auto overscroll-contain rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-floating))] p-1 shadow-xl">
+   {choices.map((choice,index)=><div key={choice.value+":"+index}>
+    {choice.group&&choice.group!==choices[index-1]?.group?<p className="px-3 pb-1 pt-3 text-metadata font-semibold text-[rgb(var(--text-muted))]">{choice.group}</p>:null}
+    <div id={uid+"-"+index} role="option" aria-selected={choice.value===selected?.value} aria-disabled={choice.disabled} data-active={index===active}
+     onPointerMove={()=>!choice.disabled&&setActive(index)} onMouseDown={event=>event.preventDefault()} onClick={()=>choose(index)}
+     className={cn("flex min-h-9 cursor-pointer items-center justify-between gap-3 rounded-[5px] px-3 py-2 text-xs leading-5 text-[rgb(var(--foreground))]",index===active&&"bg-[rgb(var(--surface-muted))] ring-1 ring-inset ring-[rgb(var(--primary)/0.4)]",choice.disabled&&"cursor-not-allowed opacity-40")}>
+     <span>{choice.label}</span>{choice.value===selected?.value?<CheckIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-[rgb(var(--primary))]"/>:null}
+    </div>
+   </div>)}
+   {!choices.length?<p className="px-3 py-2 text-xs text-[rgb(var(--text-muted))]">Nicio opțiune disponibilă.</p>:null}
+  </div>,document.body):null}
+ </span>;
 });

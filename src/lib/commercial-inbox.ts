@@ -1,5 +1,6 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
+import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
@@ -717,6 +718,7 @@ export async function archiveCommercialSignal(id: string, reason = "") {
   const eventResult = await addCommercialSignalEvent(id, "signal_archived", "Semnal arhivat în urma unei decizii umane.", { reason: cleanReason });
   const signal = mapSignal(data as CommercialSignalRow);
   if (eventResult.ok && eventResult.event) signal.events = [eventResult.event];
+  revalidateCommercialState(signal.detectedFromOpportunityId ?? signal.convertedOpportunityId);
   revalidatePath("/inbox");
   revalidatePath("/approvals");
   return { ok: true, tableReady: true, signal };
@@ -944,6 +946,7 @@ export async function setCommercialSignalReviewDecision(
   );
   const signal = mapSignal(data as CommercialSignalRow);
   if (eventResult.ok && eventResult.event) signal.events = [eventResult.event];
+  revalidateCommercialState(signal.detectedFromOpportunityId ?? signal.convertedOpportunityId);
   revalidatePath("/inbox");
   revalidatePath("/approvals");
   revalidatePath("/dashboard");
@@ -1023,7 +1026,7 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   revalidatePath("/opportunities");
-  if (result?.opportunity_id) revalidatePath(`/opportunities/${result.opportunity_id}`);
+  revalidateCommercialState(result?.opportunity_id ?? signalLink.detected_from_opportunity_id);
   const updatedSignal = updatedRow ? mapSignal(updatedRow as CommercialSignalRow) : undefined;
   if (updatedSignal && feedbackEvent?.ok && feedbackEvent.event) updatedSignal.events = [feedbackEvent.event];
   return {

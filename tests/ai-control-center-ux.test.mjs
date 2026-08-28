@@ -24,7 +24,7 @@ test("AI Control Center is protected by the existing app shell and derives claim
   const layout = read("src/app/(protected)/layout.tsx");
 
   assert.match(page, /aiCapabilities/);
-  assert.match(page, /Controlul inteligenței operaționale/);
+  assert.match(page, /Inteligență operațională/);
   assert.match(page, /Capabilitate disponibilă intern/);
   assert.match(page, /Mediu demonstrativ/);
   assert.match(page, /Blocat până la revizuire de securitate/);
@@ -39,7 +39,9 @@ test("sidebar exposes one permission-aware AI route and active-route mapping rem
   const navigation = read("src/lib/navigation.ts");
   assert.equal((navigation.match(/href: "\/ai"/g) ?? []).length, 1);
   assert.match(navigation, /name: "Inteligență operațională".+permission: "dashboard\.read"/);
-  assert.match(navigation, /id: "intelligence", label: "Inteligență"/);
+  const { groupNavigationItems, primaryNavigation } = loadTsModule("src/lib/navigation.ts");
+  const home = groupNavigationItems(primaryNavigation).find((group) => group.id === "home");
+  assert.equal(home.items[1].href, "/ai");
 });
 
 test("reusable toast feedback is bounded, accessible and provides precise safe routes", () => {

@@ -170,7 +170,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
                 </div>
               </SettingsRow>
               <SettingsRow label="Gmail și Google Calendar" description="Email, întâlniri și follow-up în contextul spațiului de lucru.">
-                <div><span className="status-pill status-pill-neutral">În pregătire</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Conectarea va solicita permisiuni explicite și va păstra vizibile sursa și momentul sincronizării. Nu există o conexiune live confirmată acum.</p></div>
+                <div><span className="status-pill status-pill-neutral">Disponibil în Aplicații</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Conectarea folosește permisiuni Google doar-citire și păstrează separat starea Gmail și Calendar.</p><Link href="/apps" className="focus-ring mt-3 inline-flex rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Gestionează Google Workspace →</Link></div>
               </SettingsRow>
               <SettingsRow label="Microsoft 365" description="Outlook Email și Calendar, cu aprobare administrativă unde este necesar.">
                 <div><span className="status-pill status-pill-neutral">În pregătire</span><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Activarea va depinde de consimțământul Microsoft și de politicile organizației. ReveNew nu citește automat căsuța poștală în starea curentă.</p></div>

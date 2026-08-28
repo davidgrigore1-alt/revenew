@@ -88,7 +88,7 @@ export function buildFixtures(profileId, now = new Date()) {
   const baseOpportunity = (index, organizationIndex, title, status, value, overrides = {}) => ({
     id: opportunityIds[index], business_id: DEMO.businessId, organization_id: organizationIds[organizationIndex],
     title, type: "manual", status, lifecycle_status: "open", commercial_type: "commercial_recovery",
-    owner_profile_id: profileId, currency: "RON", estimated_value_low: Math.round(value * 0.7), estimated_value_high: value,
+    owner_profile_id: profileId, currency: "RON", estimated_value_low: value, estimated_value_high: value,
     deadline: date(14 + index), fit_score: 78, urgency_score: 64, money_score: 72, confidence_score: 68,
     summary: "Oportunitate comercială urmărită pentru clarificarea responsabilului, dovezilor și următorului pas.",
     relevance: ["relație comercială existentă", "următor pas verificabil"], risks: [],

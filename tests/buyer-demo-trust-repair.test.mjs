@@ -39,7 +39,7 @@ test("fixed Romanian surfaces avoid mixed operational terminology", () => {
   assert.doesNotMatch(`${companies}\n${settings}\n${help}`, /workspace-ul|Control workspace|>Workspace</i);
   assert.doesNotMatch(help, /ownership/i);
   assert.match(navigation, /Inteligență operațională/);
-  assert.match(ai, /Controlul inteligenței operaționale/);
+  assert.match(ai, /Inteligență operațională/);
   assert.match(todayCard, /Valoare estimată, neconfirmată/);
   assert.match(pipeline, /Valoare estimată în pipeline/);
 });

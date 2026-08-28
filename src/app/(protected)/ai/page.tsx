@@ -221,7 +221,7 @@ const intelligenceTabs = [
 ] as const;
 type IntelligenceTab = typeof intelligenceTabs[number]["id"];
 
-export default async function AiControlCenterPage({ searchParams }: { searchParams?: { tab?: string } }) {
+export default async function AiControlCenterPage({ searchParams }: { searchParams?: { tab?: string; question?: string; meeting?: string } }) {
   const activeCount = aiCapabilities.filter((capability) => capability.status === "available_internal").length;
   const sandboxCount = aiCapabilities.filter((capability) => capability.status === "sandbox_only").length;
   const blockedCount = aiCapabilities.filter((capability) => capability.status === "blocked_until_security_review").length;
@@ -247,8 +247,8 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
   return (
     <PageShell
       eyebrow="Inteligență controlată"
-      title="Controlul inteligenței operaționale"
-      description="Riscuri, dovezi și acțiuni sigure derivate din datele comerciale disponibile, cu decizia finală păstrată la oameni."
+      title="Inteligență operațională"
+      description="Întreabă ReveNew ce se întâmplă în activitatea comercială, ce merită atenție și ce poate pregăti pentru tine."
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
     >
       <nav aria-label="Secțiunile inteligenței operaționale" className="flex gap-1 overflow-x-auto border-b border-[rgb(var(--border))]">
@@ -265,11 +265,11 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
         ))}
       </nav>
 
-      {activeTab === "ask" ? <AskReveNew /> : null}
+      {activeTab === "ask" ? <AskReveNew initialQuestion={searchParams?.question?.slice(0, 3000) ?? ""} selectedRecordId={searchParams?.meeting} /> : null}
       {activeTab === "discoveries" ? <CommercialDiscoveries result={discoveries} error={!discoveries} /> : null}
 
       {activeTab === "recommendations" ? <><section data-guide-anchor="ai-recommendation" className="relative border-y border-[rgb(var(--border-strong)/0.72)] py-5 sm:py-6" aria-labelledby="operational-intelligence-summary">
-        <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
+        <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.65fr)]">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] text-[rgb(var(--text-secondary))]"><CpuChipIcon className="h-4 w-4" aria-hidden="true" /></div>
@@ -324,7 +324,7 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
           <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Cel mult trei decizii ordonate determinist după severitate, termen și valoare estimată. Nu sunt acțiuni executate.</p>
         </div>
         {intelligence.recommendations.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid items-start gap-4 xl:grid-cols-2">
             {intelligence.recommendations.map((recommendation, index) => (
               <RecommendationCard key={recommendation.id} recommendation={recommendation} position={index + 1} />
             ))}

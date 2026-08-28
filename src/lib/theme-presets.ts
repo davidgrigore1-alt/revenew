@@ -112,7 +112,7 @@ export const accentThemePresets: AccentThemePreset[] = [
   }
 ];
 
-export const defaultAccentTheme: AccentThemeId = "emerald";
+export const defaultAccentTheme: AccentThemeId = "champagne";
 
 export function isAccentThemeId(value: unknown): value is AccentThemeId {
   return typeof value === "string" && accentThemePresets.some((preset) => preset.id === value);

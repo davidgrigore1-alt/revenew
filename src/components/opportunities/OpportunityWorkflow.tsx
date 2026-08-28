@@ -1,6 +1,8 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -94,11 +96,13 @@ export function OpportunityWorkflow({
   openAIConfigured: boolean;
   existingContacts?: Array<{ id: string; fullName: string; organizationName?: string | null; email?: string | null }>;
 }) {
+  const router = useRouter();
   const { showToast } = useToast();
   const [status, setStatus] = useState<OpportunityStatus>(opportunity.status);
   const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
   const [documentOverrides, setDocumentOverrides] = useState<Record<string, Partial<OpportunityDocument>>>({});
   const [actions, setActions] = useState<OpportunityAction[]>(opportunity.actions);
+  useEffect(() => { setActions(opportunity.actions); setStatus(opportunity.status); }, [opportunity.actions, opportunity.status]);
   const [selectedDocumentId, setSelectedDocumentId] = useState("");
   const [editorTitle, setEditorTitle] = useState("");
   const [editorContent, setEditorContent] = useState("");
@@ -383,6 +387,7 @@ export function OpportunityWorkflow({
     ]);
     setStatus("follow_up_needed");
     setShowFollowUpForm(false);
+    router.refresh();
     setSuccess("Follow-up programat. Îl poți revizui în Activitatea mea.");
     setDocuments((current) => [
       { id: `follow-up-doc-${Date.now()}`, type: "follow_up_email", title: generated.title, content: generated.content, status: "draft", generationMode: generated.mode, createdAt: new Date().toISOString() },
@@ -412,6 +417,7 @@ export function OpportunityWorkflow({
     }
 
     setStatus(nextStatus);
+    router.refresh();
     setSuccess("Status actualizat.");
     setLoading("");
     restoreScrollPosition(scroll.top, scroll.left);
@@ -514,11 +520,12 @@ export function OpportunityWorkflow({
           ? {
               ...item,
               status: action === "cancel" ? "cancelled" : action === "done" ? "done" : item.status,
-              dueDate: action === "postpone" ? new Date(Date.now() + 3 * 86400000).toISOString() : item.dueDate
+              dueDate: action === "postpone" && "dueAt" in result && result.dueAt ? result.dueAt : item.dueDate
             }
           : item
       )
     );
+    router.refresh();
     setSuccess(action === "postpone" ? "Acțiunea a fost amânată." : action === "cancel" ? "Acțiunea a fost anulată." : "Acțiunea a fost finalizată.");
     setLoading("");
     restoreScrollPosition(scroll.top, scroll.left);
@@ -636,11 +643,11 @@ export function OpportunityWorkflow({
 
       <details className="group rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]">
         <summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 text-sm font-semibold marker:hidden">
-          <span>Context comercial complet <span className="font-normal text-[rgb(var(--text-muted))]">· rezumat, relevanță și riscuri</span></span>
+          <span>Context la analiză <span className="font-normal text-[rgb(var(--text-muted))]">· observații istorice, nu starea curentă</span></span>
           <span aria-hidden="true" className="text-[rgb(var(--primary))] transition-transform group-open:rotate-45">+</span>
         </summary>
         <div className="grid gap-4 border-t border-[rgb(var(--border))] p-4 lg:grid-cols-3">
-          <DataCard title="Rezumat de lucru">
+          <DataCard title="Rezumat înregistrat">
             <p className="text-sm leading-6 text-[rgb(var(--text-secondary))]">{opportunity.summary}</p>
           </DataCard>
           <DataCard title="De ce contează">
@@ -650,7 +657,7 @@ export function OpportunityWorkflow({
               ))}
             </ul>
           </DataCard>
-          <DataCard title="Riscuri">
+          <DataCard title="Riscuri la analiză">
             <ul className="space-y-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">
               {opportunity.risks.map((item, index) => (
                 <li key={`${index}-${item}`}>{item}</li>
@@ -676,11 +683,11 @@ export function OpportunityWorkflow({
             <div className="grid gap-3 sm:grid-cols-3">
               <input aria-label="Data follow-up" type="date" value={followUpDate} onChange={(event) => setFollowUpDate(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]" />
               <input aria-label="Ora follow-up" type="time" value={followUpTime} onChange={(event) => setFollowUpTime(event.target.value)} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]" />
-              <select aria-label="Prioritate follow-up" value={followUpPriority} onChange={(event) => setFollowUpPriority(event.target.value as "low" | "medium" | "high")} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]">
+              <Select aria-label="Prioritate follow-up" value={followUpPriority} onChange={(event) => setFollowUpPriority(event.target.value as "low" | "medium" | "high")} className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))]">
                 <option value="low">Prioritate redusă</option>
                 <option value="medium">Prioritate normală</option>
                 <option value="high">Prioritate ridicată</option>
-              </select>
+              </Select>
             </div>
             <textarea aria-label="Notă follow-up" value={followUpNote} onChange={(event) => setFollowUpNote(event.target.value)} rows={5} className="focus-ring rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-3 text-[rgb(var(--foreground))]" />
             <button type="button" onClick={scheduleFollowUp} disabled={Boolean(loading)} className="focus-ring w-fit rounded-button bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-[rgb(var(--primary-foreground))] disabled:opacity-60">

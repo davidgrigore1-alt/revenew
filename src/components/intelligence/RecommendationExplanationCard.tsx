@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/Button";
 import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
 import type { OperationalIntelligenceRecommendation } from "@/lib/operational-intelligence";
 import { explanationForRecommendation } from "@/lib/revenew-explanation-adapters";
+import { describeCurrentCommercialState, type OpportunityCommercialState } from "@/lib/opportunity-commercial-state";
+import { evidenceHref, metadataEvidence } from "@/lib/evidence-reference";
+import { EvidenceList } from "@/components/evidence/EvidenceList";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const strengthTone: Record<OperationalIntelligenceRecommendation["evidenceStrength"], BadgeTone> = {
@@ -12,11 +15,28 @@ const strengthTone: Record<OperationalIntelligenceRecommendation["evidenceStreng
   verify: "warning"
 };
 
-export function RecommendationExplanationCard({ recommendation, compact = false, position }: {
+export function RecommendationExplanationCard({ recommendation, compact = false, position, currentState }: {
   recommendation: OperationalIntelligenceRecommendation;
   compact?: boolean;
   position?: number;
+  currentState?: OpportunityCommercialState;
 }) {
+  if (currentState) {
+    const facts = describeCurrentCommercialState(currentState), remaining = currentState.exceptions;
+    return <article aria-label="Recomandare curentă" className="rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-4">
+      <p className="text-xs font-semibold text-[rgb(var(--text-muted))]">Recomandare explicată</p>
+      <h3 className="mt-2 text-lg font-semibold">{facts.blocker}</h3>
+      <section className="mt-4 text-sm leading-6"><h4 className="text-xs font-semibold">Situația acum</h4><p className="mt-1 text-[rgb(var(--text-secondary))]">{facts.owner}</p><p className="text-[rgb(var(--text-secondary))]">{facts.next}</p></section>
+      {currentState.resolvedSinceDetection.length ? <section className="mt-4"><h4 className="text-xs font-semibold">Ce s-a rezolvat</h4><ul className="mt-1 space-y-1 text-sm">{currentState.resolvedSinceDetection.map(item=><li key={item.eventId}>{item.label}</li>)}</ul></section> : null}
+      {remaining.length ? <section className="mt-4"><h4 className="text-xs font-semibold">Ce rămâne</h4><ul className="mt-1 space-y-1 text-sm text-[rgb(var(--text-secondary))]">{remaining.slice(0,2).map(item=><li key={item.code}>{item.explanation}</li>)}</ul></section> : null}
+      <section className="mt-4"><h4 className="text-xs font-semibold">De ce contează</h4><p className="mt-1 text-sm leading-6 text-[rgb(var(--text-secondary))]">Următorul pas și decizia umană păstrează controlul asupra valorii comerciale estimate; nu confirmă venit recuperat.</p></section>
+      <div className="mt-4"><p className="mb-2 text-xs font-semibold">Acțiune sigură</p><Button size="small" href={evidenceHref(facts.action.href)??facts.action.href}>{facts.action.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true"/></Button></div>
+      <details className="mt-4 border-t border-[rgb(var(--border))] pt-2 text-xs"><summary className="focus-ring cursor-pointer rounded py-2 font-medium text-[rgb(var(--text-secondary))]">De ce apare? · Dovezi</summary>
+        <p className="py-2 text-[rgb(var(--text-muted))]">Stare curentă, evaluată din înregistrări autorizate. Istoricul de detectare nu înlocuiește aceste fapte.</p>
+        <EvidenceList items={currentState.evidence.map(item=>metadataEvidence({sourceType:item.sourceType==="response"||item.sourceType==="outcome"?"event":item.sourceType,sourceId:item.sourceId,title:item.label,occurredAt:item.observedAt,entityHref:item.href}))}/>
+      </details>
+    </article>;
+  }
   const primaryEvidence = recommendation.evidence[0];
   const primaryGap = recommendation.missingInformation[0] ?? "Nu a fost identificată o lipsă critică în datele disponibile.";
 

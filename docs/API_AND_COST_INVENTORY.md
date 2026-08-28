@@ -14,46 +14,50 @@ This document contains provider names and environment variable names only. It mu
 - Billing unit: Supabase project usage, not per-ReveNew AI action
 - Security notes: service-role usage is isolated in server-only modules
 
-### OpenAI
-- Mechanism: `openai` SDK
-- Environment variables: `OPENAI_API_KEY`, `OPENAI_MODEL`
-- Server-only variables: both
-- Call sites: `/api/ai/analyze-opportunity`, `/api/ai/generate-document`
-- Client-facing features: advanced opportunity analysis, generated commercial drafts
-- Billing unit: provider tokens
-- Fallback: local generation when OpenAI is not configured
-- Timeout: 20 seconds via abort signal
-- Retry: no automatic retry
-- Auth: required through workspace access
-- Business authorization: current business resolved server-side
-- Quota: reservation and settlement through usage layer when migration exists
-- Current status: live if key is configured
+### OpenAI / local Ollama
+- Mechanism: shared bounded provider abstraction
+- Environment variables: provider-specific server-only configuration
+- Client-facing features: source-bound summaries, explanations and editable drafting assistance
+- Billing unit: provider tokens for OpenAI; local compute for Ollama
+- Fallback: deterministic output when a generative provider is unavailable
+- Retry: no automatic retry for user-visible commercial actions
+- Auth: authenticated workspace access is required
+- Business authorization: context is resolved server-side and bounded before generation
+
+### Gmail and Google Calendar
+- OAuth variables: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`
+- Credential encryption: refresh credentials are encrypted at rest with a server-only environment key
+- Default scopes: identity, Gmail read-only and Calendar read-only
+- Optional scope: `gmail.send`, requested separately from the read connection
+- Send path: persisted owner-private draft → approval → final confirmation → atomic claim → Gmail server-side send
+- Retry: no automatic retry after an uncertain provider result
+- Billing unit: Google Workspace API quota; no ReveNew email markup
+- Privacy: raw mailbox/calendar context remains private to the connection owner
 
 ## Configured but Unused
 
 ### Resend
 - Environment variable: `RESEND_API_KEY`
-- Status: declared placeholder, no confirmed live sending flow
-- Future metric: `emails_sent`
+- Status: legacy placeholder; the confirmed product send path uses Gmail OAuth, not Resend
 
 ## Planned / Not Implemented
 
-Gmail sync, web research, OCR pages, WhatsApp delivery, voice minutes, CRM synchronization, payment provider checkout and webhooks.
+Web research, OCR pages, WhatsApp delivery, voice minutes, external CRM synchronization, payment provider checkout and webhooks.
 
-## Implemented Changes
+## Implemented Controls
 
-- AI routes no longer trust client-supplied business/opportunity objects.
+- AI routes do not trust client-supplied business or record payloads.
 - Provider calls require authenticated workspace access.
-- Document generation loads opportunity by ID for the current business.
 - Input shape, content type and sizes are validated.
-- OpenAI calls use timeouts and bounded output tokens.
-- Usage feature IDs, plan limits, pricing and cost calculation are centralized.
-- Additive usage migration defines ledger, counters, overrides and reservation RPCs.
-- Errors returned to the client are Romanian and provider-safe.
+- AI calls use timeouts and bounded output.
+- Gmail send permission is incremental and optional.
+- Email send requires an approved content fingerprint and a second explicit confirmation.
+- Provider tokens and message bodies are excluded from logs and user-visible JSON.
+- Sequences prepare work only; they never send autonomously.
 
 ## Remaining Production Requirements
 
-- Apply and verify the usage migration manually.
-- Configure production `REVENEW_USAGE_MODE=enforce` only after migration and monitoring are verified.
-- Add real payment provider and webhook verification before paid access launch.
-- Add email provider integration only when sending is actually implemented.
+- Configure production provider credentials without committing secret values.
+- Monitor Google quota, revoked grants, uncertain provider responses and deferred audit/context writes.
+- Keep Gmail send permission optional until the controlled flow has production operational evidence.
+- Add payment provider and webhook verification before paid access launch.

@@ -1,17 +1,20 @@
 import type { OpportunityAttentionAssessment } from "@/lib/opportunity-attention";
 import { isOpenOpportunity } from "@/lib/opportunity-domain";
-import { buildOpportunityCommercialState, type OpportunityCommercialState } from "@/lib/opportunity-commercial-state";
+import { buildOpportunityCommercialState, type OpportunityCommercialState, type CommercialStateException } from "@/lib/opportunity-commercial-state";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
 
 export type RevenueRecoveryQueueItem = {
   opportunity: Opportunity;
   state: OpportunityCommercialState;
   assessment: OpportunityAttentionAssessment;
-  primaryReason: OpportunityAttentionAssessment["reasons"][number];
+  primaryReason: CommercialStateException;
 };
 
 const reasonPriority: Record<string, number> = {
   overdue_next_action: 900,
+  pending_approval: 850,
+  prepared_document_not_advanced: 825,
+  outreach_restricted: 840,
   missing_next_action: 800,
   unassigned_owner: 700,
   proposal_without_follow_up: 650,
@@ -25,7 +28,7 @@ const reasonPriority: Record<string, number> = {
 
 function itemPriority(item: RevenueRecoveryQueueItem) {
   const statePriority = item.assessment.state === "blocked" ? 1_200 : item.assessment.state === "at_risk" ? 1_000 : 0;
-  return statePriority + Math.max(...item.assessment.reasons.map((reason) => reasonPriority[reason.code] ?? 0));
+  return statePriority + Math.max(...item.state.exceptions.map((reason) => reasonPriority[reason.code] ?? 0));
 }
 
 export function buildRevenueRecoveryQueue(opportunities: Opportunity[], options: { now?: Date; staleAfterDays?: number; linkedSignals?: CommercialSignal[] } = {}) {
@@ -34,10 +37,8 @@ export function buildRevenueRecoveryQueue(opportunities: Opportunity[], options:
     .map((opportunity): RevenueRecoveryQueueItem | null => {
       const state = buildOpportunityCommercialState(opportunity, options);
       const assessment = state.attention;
-      if (assessment.reasons.length === 0) return null;
-      const primaryReason = [...assessment.reasons].sort(
-        (left, right) => (reasonPriority[right.code] ?? 0) - (reasonPriority[left.code] ?? 0)
-      )[0];
+      if (state.exceptions.length === 0) return null;
+      const primaryReason = state.exceptions[0];
       return { opportunity, state, assessment, primaryReason };
     })
     .filter((item): item is RevenueRecoveryQueueItem => Boolean(item))

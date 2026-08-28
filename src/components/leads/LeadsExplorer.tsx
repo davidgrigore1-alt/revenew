@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useMemo, useState } from "react";
 import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import type { LeadContact, LeadStatus } from "@/lib/types";
@@ -39,24 +40,24 @@ export function LeadsExplorer({ leads }: { leads: LeadContact[] }) {
   return (
     <div className="grid gap-5">
       <div className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-4 md:grid-cols-4">
-        <select value={industry} onChange={(event) => setIndustry(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
+        <Select value={industry} onChange={(event) => setIndustry(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
           <option value={all}>Toate industriile</option>
           {industries.map((item) => <option key={item}>{item}</option>)}
-        </select>
-        <select value={city} onChange={(event) => setCity(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
+        </Select>
+        <Select value={city} onChange={(event) => setCity(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
           <option value={all}>Toate orașele</option>
           {cities.map((item) => <option key={item}>{item}</option>)}
-        </select>
-        <select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus | typeof all)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
+        </Select>
+        <Select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus | typeof all)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
           <option value={all}>Toate statusurile</option>
           {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>
-        <select value={minScore} onChange={(event) => setMinScore(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
+        </Select>
+        <Select value={minScore} onChange={(event) => setMinScore(event.target.value)} className="h-11 rounded-lg border border-white/10 bg-ink-900/80 px-3 text-sm text-white">
           <option value="0">Orice scor</option>
           <option value="70">Scor 70+</option>
           <option value="80">Scor 80+</option>
           <option value="85">Scor 85+</option>
-        </select>
+        </Select>
       </div>
 
       <div className="grid gap-4">

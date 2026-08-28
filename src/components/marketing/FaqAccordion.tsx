@@ -42,11 +42,19 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
                       onClick={() => setOpenKey(open ? "" : key)}
                     >
                       <span>{item.question}</span>
-                      <ChevronDownIcon className={clsx("h-5 w-5 shrink-0 transition-transform duration-300 motion-reduce:transition-none", open && "rotate-180 text-[rgb(var(--primary))]")} aria-hidden="true" />
+                      <ChevronDownIcon className={clsx("h-5 w-5 shrink-0 transition-transform duration-[220ms] motion-reduce:transition-none", open && "rotate-180 text-[rgb(var(--primary))]")} aria-hidden="true" />
                     </button>
                   </h4>
-                  <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!open} className="border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 pb-5 pt-4">
-                    <p className="text-sm leading-7 text-[rgb(var(--muted-foreground))]">{item.answer}</p>
+                  <div
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={buttonId}
+                    aria-hidden={!open}
+                    className={clsx("marketing-faq-panel grid border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]", open && "is-open")}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <p className="px-4 pb-5 pt-4 text-sm leading-7 text-[rgb(var(--muted-foreground))]">{item.answer}</p>
+                    </div>
                   </div>
                 </article>
               );

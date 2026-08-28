@@ -33,7 +33,7 @@ export default async function OutreachPage() {
   }
 
   return (
-    <PageShell eyebrow="Documente" title="Studio de follow-up" description="Revizuiește, adaptează și aprobă comunicarea comercială. Niciun mesaj nu este trimis automat." actions={<Button href="/opportunities" variant="secondary">Vezi oportunitățile</Button>}>
+    <PageShell eyebrow="Lucru pregătit" breadcrumbs={[{label:"Lucru pregătit",href:"/prepared"},{label:"Studio de follow-up"}]} title="Studio de follow-up" description="Revizuiește, adaptează și aprobă comunicarea comercială. Niciun mesaj nu este trimis automat." actions={<Button href="/opportunities" variant="secondary">Vezi oportunitățile</Button>}>
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         {drafts.length ? <OutreachBoard drafts={drafts} /> : <div className="grid justify-items-start gap-3"><EmptyState title="Nu există drafturi comerciale încă" description="Generează un email sau un follow-up dintr-o oportunitate. Documentul va apărea aici pentru revizuire și aprobare umană." /><Button href="/opportunities">Vezi oportunitățile</Button></div>}

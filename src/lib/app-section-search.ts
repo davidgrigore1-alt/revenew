@@ -37,6 +37,7 @@ export const appSectionIndex: AppSectionSearchResult[] = [
   { id: "reports", group: "Secțiuni", title: "Rapoarte", context: "Secțiune · Indicatori și livrabile", href: "/reports", aliases: ["rapoarte", "raportare", "indicatori"], keywords: ["management", "pipeline", "venit"] },
   { id: "today", group: "Secțiuni", title: "Activitatea mea", context: "Secțiune · Acțiuni și termene", href: "/today", aliases: ["activitate", "activitatea mea", "astăzi", "sarcini"], keywords: ["acțiune", "termen", "amânare"] },
   { id: "approvals", group: "Secțiuni", title: "Aprobări", context: "Secțiune · Decizii umane", href: "/approvals", aliases: ["aprobări", "aprobare", "decizii"], keywords: ["uman", "confirmare", "revizuire"] },
+  { id: "prepared", group: "Secțiuni", title: "Lucru pregătit", context: "Secțiune · Drafturi și actualizări de revizuit", href: "/prepared", aliases: ["lucru pregătit", "drafturi", "prepared work"], keywords: ["revizuire", "aprobare", "email pregătit", "task pregătit"] },
   { id: "recoverable", group: "Secțiuni", title: "Recuperare venituri", context: "Secțiune · Bucle comerciale deschise", href: "/recoverable", aliases: ["recuperare", "venituri recuperabile", "coada de recuperare"], keywords: ["restant", "blocat", "risc"] },
   { id: "dashboard", group: "Secțiuni", title: "Control Center", context: "Secțiune · Deciziile de astăzi", href: "/dashboard", aliases: ["dashboard", "control center", "acasă"], keywords: ["priorități", "decizie critică", "rezumat"] }
 ];

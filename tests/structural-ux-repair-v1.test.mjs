@@ -17,6 +17,8 @@ test("opportunity exposes semantic URL tabs and renders only the active panel", 
   assert.match(page, /href=\{`\?tab=\$\{tab\.id\}`\}/);
   assert.match(page, /activeTab === "context"/);
   assert.match(page, /activeTab === "history"/);
+  assert.match(page, /\{ id: "history", label: "Semnale" \}/);
+  assert.match(page, /Istoricul verificabil rămâne disponibil în Context/);
   assert.match(page, /activeTab === "workflow"/);
   assert.doesNotMatch(page, /target:block|className="hidden scroll-mt-24|\border-\d+|flex-row-reverse/);
   assert.match(timeline, /id="opportunity-timeline"/);
@@ -29,7 +31,7 @@ test("opportunity exposes semantic URL tabs and renders only the active panel", 
 
 test("intelligence hierarchy is Ask then Discover then Decide", () => {
   const page = read("src/app/(protected)/ai/page.tsx");
-  const askIndex = page.indexOf("<AskReveNew />");
+  const askIndex = page.indexOf("<AskReveNew ");
   const discoveryIndex = page.indexOf("<CommercialDiscoveries");
   const passiveIndex = page.indexOf('data-guide-anchor="ai-recommendation"');
   const recommendationIndex = page.indexOf('aria-labelledby="operational-recommendations"');
@@ -54,7 +56,7 @@ test("contextual explanations cover the product map and explain Companies specif
   assert.match(help, /punctul de intrare către contextul și istoricul unei organizații/);
   assert.match(help, /currentActionLabel: "Arată companiile"/);
   assert.match(companies, /data-guide-anchor="companies-register"/);
-  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(assistant, /<CopilotConversation\b[^\n]*\bautoFocus\b/);
   assert.match(read("src/lib/ai/copilot-tools.ts"), /get_product_help/);
 });
 

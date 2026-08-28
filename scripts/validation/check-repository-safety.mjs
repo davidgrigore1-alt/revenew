@@ -38,6 +38,14 @@ export function secretLabelsForContent(content) {
   return secretPatterns.filter((pattern) => pattern.expression.test(content)).map((pattern) => pattern.label);
 }
 
+
+export function isApprovedLocalServiceRoleReference(fileName, content) {
+  return fileName === "scripts/demo/local-supabase.mjs"
+    && content.includes("assertLocalUrl(apiUrl")
+    && content.includes("assertLocalUrl(dbUrl")
+    && content.includes("SUPABASE_SERVICE_ROLE_KEY: local.serviceRoleKey")
+    && !content.includes("SUPABASE_SERVICE_ROLE_KEY: process.env");
+}
 async function main() {
   const listed = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], { cwd: repositoryRoot, encoding: "utf8" });
   const files = listed.split("\0").filter(Boolean).map((name) => name.replaceAll("\\", "/"));
@@ -72,7 +80,11 @@ async function main() {
       continue;
     }
     if (buffer.length > 2_000_000 || buffer.includes(0)) continue;
-    for (const label of secretLabelsForContent(buffer.toString("utf8"))) flag(fileName, label);
+    const content = buffer.toString("utf8");
+    for (const label of secretLabelsForContent(content)) {
+      if (label === "non-empty service-role key" && isApprovedLocalServiceRoleReference(fileName, content)) continue;
+      flag(fileName, label);
+    }
   }
 
   if (findings.size > 0) {

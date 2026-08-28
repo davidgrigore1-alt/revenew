@@ -1,4 +1,5 @@
 import "server-only";
+import { dispatchApprovalCompletedEvent } from "@/lib/workflow-events";
 import { createHash, randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
@@ -212,7 +213,9 @@ export async function decideGovernedApproval(approvalId: string, decision: "appr
   const { data } = await context.admin.from("business_approval_requests").update({ status: decision, decided_by_profile_id: context.profileId, decided_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", approvalId).eq("business_id", context.businessId).eq("status", "pending").select("id").maybeSingle();
   if (!data) return { ok: false as const, error: "Cererea a fost deja decisă." };
   await audit(context, { category: "approval", action: `approval.${decision}`, entityType: request.data.entity_type, entityId: request.data.entity_id, result: decision, description: decision === "approved" ? "Cererea a fost aprobată." : "Cererea a fost respinsă." });
-  revalidatePath("/settings"); return { ok: true as const };
+  const workflowResult = decision === "approved" ? await dispatchApprovalCompletedEvent(context.businessId, data.id) : null;
+  revalidatePath("/settings");
+  return { ok: true as const, ...(workflowResult?.failed ? { message: "Decizia a fost salvată. Evaluarea workflow-urilor nu a putut fi finalizată." } : {}) };
 }
 
 export async function getOutcomeGovernanceDecision(input: { opportunityId: string; outcome: "won" | "lost"; amount: number; currency: string; reason: string; outcomeDate: string }) {

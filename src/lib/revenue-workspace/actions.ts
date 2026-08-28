@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
+import { dispatchStageChangedEvent } from "@/lib/workflow-events";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { consumeGovernedApproval, getOutcomeGovernanceDecision } from "@/lib/enterprise-governance-internal";
@@ -48,25 +49,30 @@ type TrustedEvent = {
 };
 
 async function eventForOpportunity(input: TrustedEvent) {
-  const supabase = createSupabaseServerClient();
-  if (!supabase) return;
-  const { error } = await supabase.from("opportunity_events").insert({
-    opportunity_id: input.opportunityId,
-    business_id: input.businessId,
-    actor_profile_id: input.actorProfileId,
-    event_type: input.eventType,
-    label: input.label,
-    description: input.description,
-    metadata: input.metadata ?? {}
-  });
-  if (error) console.error("workspace_event_insert_failed", { code: error.code });
+  try {
+    const supabase = createSupabaseServerClient();
+    if (!supabase) return { failed: true };
+    const { data, error } = await supabase.from("opportunity_events").insert({
+      opportunity_id: input.opportunityId,
+      business_id: input.businessId,
+      actor_profile_id: input.actorProfileId,
+      event_type: input.eventType,
+      label: input.label,
+      description: input.description,
+      metadata: { ...input.metadata, origin: "user" }
+    }).select("id").maybeSingle();
+    if (error || !data) {
+      console.error("workspace_event_insert_failed", { code: error?.code });
+      return { failed: true };
+    }
+    return input.eventType === "stage_changed"
+      ? await dispatchStageChangedEvent(input.businessId, data.id)
+      : { failed: false };
+  } catch { return { failed: true }; }
 }
 
 function revalidateOpportunity(opportunityId: string) {
-  revalidatePath("/pipeline");
-  revalidatePath("/today");
-  revalidatePath("/dashboard");
-  revalidatePath(`/opportunities/${opportunityId}`);
+  revalidateCommercialState(opportunityId);
 }
 
 export async function updatePipelineStatus(opportunityId: string, formData: FormData) {
@@ -87,17 +93,21 @@ export async function updatePipelineStatus(opportunityId: string, formData: Form
     return { ok: false, error: "Etapa selectată nu este o tranziție validă. Avansează sau revino câte o etapă." };
   }
 
-  const { error } = await supabase
+  const { data: changed, error } = await supabase
     .from("opportunities")
     .update({ status: nextStatus, lifecycle_status: "open" })
     .eq("id", opportunityId)
-    .eq("business_id", business.id);
+    .eq("business_id", business.id)
+    .eq("status", opportunity.status)
+    .select("id").maybeSingle();
   if (error) {
     console.error("pipeline_status_update_failed", { code: error.code });
     return { ok: false, error: "Etapa nu a putut fi actualizată. Verifică migrarea Phase 1." };
   }
 
-  await eventForOpportunity({
+  if (!changed) return { ok: false, error: "Etapa s-a schimbat între timp. Reîncarcă oportunitatea înainte de a continua." };
+  // Reopening without a stage transition is not a stage_changed event.
+  const eventResult = opportunity.status !== nextStatus ? await eventForOpportunity({
     opportunityId,
     businessId: business.id,
     actorProfileId: actorProfileId(authorization),
@@ -105,9 +115,9 @@ export async function updatePipelineStatus(opportunityId: string, formData: Form
     label: "Etapă pipeline actualizată",
     description: `Etapa a fost schimbată din ${opportunity.status} în ${nextStatus}.`,
     metadata: { previous_status: opportunity.status, next_status: nextStatus }
-  });
+  }) : null;
   revalidateOpportunity(opportunityId);
-  return { ok: true };
+  return { ok: true, ...(eventResult?.failed ? { message: "Etapa a fost salvată. Evaluarea workflow-urilor nu a putut fi finalizată." } : {}) };
 }
 
 export async function createOpportunityTask(opportunityId: string, formData: FormData) {
@@ -332,7 +342,7 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
   });
   if (lifecycleStatus === "won") await eventForOpportunity({
     opportunityId, businessId: business.id, actorProfileId: actorProfileId(authorization),
-    eventType: "confirmed_revenue_recorded", label: "Venit recuperat confirmat",
+    eventType: "confirmed_revenue_recorded", label: "Valoare efectivă confirmată",
     description: "Valoarea efectivă a fost confirmată explicit odată cu rezultatul câștigat.",
     metadata: { actual_outcome_amount: amount, currency }
   });

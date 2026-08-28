@@ -5,6 +5,7 @@ import { isOpenOpportunity } from "@/lib/opportunity-domain";
 import { buildOpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import type { RecoverySummary } from "@/lib/recovery";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
+import type { CommercialCommunication } from "@/lib/commercial-execution";
 
 export type WorkspaceDecisionSeverity = "critical" | "attention" | "informative";
 
@@ -17,7 +18,9 @@ export type WorkspaceDecisionType =
   | "opportunity_without_owner"
   | "company_without_primary_contact"
   | "inactive_active_opportunity"
-  | "high_value_blocked_opportunity";
+  | "high_value_blocked_opportunity"
+  | "reply_received"
+  | "waiting_for_client";
 
 export type WorkspaceDecisionEvidence = {
   sourceType: "opportunity" | "opportunity_action" | "opportunity_document" | "commercial_signal" | "approval";
@@ -46,7 +49,9 @@ export type WorkspaceDecisionItem = {
   estimatedValue?: number;
   currency?: string;
   ownerName?: string;
+  ownerState?: "missing" | "unverified" | "confirmed";
   statusLabel: string;
+  executionState?: import("@/lib/commercial-execution").CommercialExecutionState;
 };
 
 export type WorkspaceDecisionQueue = {
@@ -65,6 +70,8 @@ const typeRank: Record<WorkspaceDecisionType, number> = {
   pending_approval: 8,
   prepared_work_not_advanced: 7,
   high_value_blocked_opportunity: 6,
+  reply_received: 10,
+  waiting_for_client: 1,
   opportunity_without_next_action: 5,
   opportunity_without_owner: 5,
   unresolved_signal: 4,
@@ -105,6 +112,7 @@ function opportunityFields(opportunity: Opportunity) {
     ...opportunityContext(opportunity),
     relatedOpportunityId: opportunity.id,
     relatedOpportunityTitle: opportunity.title,
+    ownerState: (!opportunity.ownerProfileId ? "missing" : opportunity.ownerName ? "confirmed" : "unverified") as WorkspaceDecisionItem["ownerState"],
     ...(opportunity.ownerName ? { ownerName: opportunity.ownerName } : {}),
     ...opportunityEstimate(opportunity)
   };
@@ -143,20 +151,55 @@ function opportunityEvidence(opportunity: Opportunity, href: string): WorkspaceD
 
 export function buildWorkspaceDecisionQueue(
   input: Pick<RecoverySummary, "opportunities" | "signals">,
-  options: { now?: Date; limit?: number } = {}
+  options: { now?: Date; limit?: number; communicationsByOpportunityId?: Record<string, CommercialCommunication> } = {}
 ): WorkspaceDecisionQueue {
   const now = options.now ?? new Date();
   const candidates: WorkspaceDecisionItem[] = [];
 
   for (const opportunity of input.opportunities.filter(isOpenOpportunity)) {
     const href = `/opportunities/${opportunity.id}`;
-    const state = buildOpportunityCommercialState(opportunity, { now, linkedSignals: input.signals });
+    const state = buildOpportunityCommercialState(opportunity, { now, linkedSignals: input.signals, communication: options.communicationsByOpportunityId?.[opportunity.id] });
     const assessment = state.attention;
     const nextAction = state.attention.primaryNextAction;
     const timestamp = state.activity.lastMeaningfulActivityAt ?? validTimestamp(opportunity.updatedAt) ?? validTimestamp(opportunity.createdAt);
     const common = opportunityFields(opportunity);
 
-    if (state.flags.nextActionOverdue && nextAction?.dueDate) {
+    if (state.execution.recentInboundReply) {
+      candidates.push({
+        id: "decision:reply:" + opportunity.id,
+        type: "reply_received",
+        title: "Răspuns nou primit",
+        reason: state.execution.reason,
+        whyItMatters: "O comunicare inbound nouă poate schimba următorul pas și trebuie revizuită înaintea unui follow-up.",
+        severity: "attention",
+        ...common,
+        actionLabel: "Revizuiește contextul",
+        actionHref: href,
+        evidence: [opportunityEvidence(opportunity, href)],
+        occurredAt: state.communication.lastInboundAt,
+        statusLabel: "Răspuns primit",
+        executionState: state.execution.state
+      });
+    } else if (state.execution.state === "waiting_for_client") {
+      candidates.push({
+        id: "decision:waiting:" + opportunity.id,
+        type: "waiting_for_client",
+        title: "Așteaptă răspunsul clientului",
+        reason: state.execution.reason,
+        whyItMatters: "ReveNew nu recomandă un follow-up prematur cât timp fereastra de răspuns este legitimă.",
+        severity: "informative",
+        ...common,
+        actionLabel: "Deschide contextul",
+        actionHref: href,
+        evidence: [opportunityEvidence(opportunity, href)],
+        occurredAt: state.communication.lastOutboundAt,
+        dueAt: state.execution.nextReviewAt ?? undefined,
+        statusLabel: "Așteaptă clientul",
+        executionState: state.execution.state
+      });
+    }
+
+    if (state.flags.nextActionOverdue && nextAction?.dueDate && state.execution.state !== "waiting_for_client") {
       const actionHref = `${href}#workflow-actions`;
       candidates.push({
         id: `decision:overdue:${nextAction.id}`,
@@ -197,7 +240,7 @@ export function buildWorkspaceDecisionQueue(
       });
     }
 
-    if (assessment.state === "at_risk" && Number(opportunity.estimatedValueHigh ?? 0) > 0 && !assessment.reasons.some((reason) => reason.code === "overdue_next_action")) {
+    if (assessment.state === "at_risk" && state.execution.state !== "waiting_for_client" && Number(opportunity.estimatedValueHigh ?? 0) > 0 && !assessment.reasons.some((reason) => reason.code === "overdue_next_action")) {
       candidates.push({
         id: `decision:blocked:${opportunity.id}`,
         type: "high_value_blocked_opportunity",
@@ -214,7 +257,7 @@ export function buildWorkspaceDecisionQueue(
       });
     }
 
-    if (!nextAction) {
+    if (!nextAction && state.execution.state !== "waiting_for_client") {
       const actionHref = `${href}#workflow-actions`;
       candidates.push({
         id: `decision:next-action:${opportunity.id}`,
@@ -288,7 +331,10 @@ export function buildWorkspaceDecisionQueue(
   for (const signal of input.signals) {
     const approvalState = approvalStateForSignal(signal);
     const timestamp = validTimestamp(signal.reviewedAt) ?? validTimestamp(signal.updatedAt) ?? validTimestamp(signal.createdAt) ?? validTimestamp(signal.occurredAt);
-    const common = { ...signalContext(signal), ...supportedEstimate(signal.estimatedRecoverableValue, signal.currency) };
+    const linked = input.opportunities.find(opportunity => opportunity.businessId === signal.businessId
+      && (opportunity.id === signal.detectedFromOpportunityId || opportunity.id === signal.convertedOpportunityId));
+    const common = { ...signalContext(signal), ...supportedEstimate(signal.estimatedRecoverableValue, signal.currency),
+      ...(linked ? opportunityFields(linked) : {}) };
     if (approvalState === "pending") {
       const href = `/approvals?signal=${signal.id}`;
       candidates.push({
@@ -318,7 +364,7 @@ export function buildWorkspaceDecisionQueue(
         id: `decision:signal:${signal.id}`,
         type: "unresolved_signal",
         title: "Semnal comercial prioritar nerezolvat",
-        reason: signal.primaryRecoveryReason || signal.extractedSummary || signal.title,
+        reason: linked ? "Semnalul asociat oportunității necesită revizuire. " + (buildOpportunityCommercialState(linked, {now, linkedSignals:input.signals}).exceptions[0]?.explanation ?? "Nu există blocaje curente identificate.") : "La detectare: " + (signal.primaryRecoveryReason || signal.extractedSummary || signal.title),
         whyItMatters: "Un semnal prioritar neverificat poate întârzia o decizie comercială ce necesită context și control uman.",
         severity: signal.priority === "urgent" || signal.urgencyLevel === "critical" ? "critical" : "attention",
         ...common,

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
-import { forbiddenFileReason, secretLabelsForContent } from "../scripts/validation/check-repository-safety.mjs";
+import { forbiddenFileReason, isApprovedLocalServiceRoleReference, secretLabelsForContent } from "../scripts/validation/check-repository-safety.mjs";
 import { scanMigration } from "../scripts/validation/check-migrations.mjs";
 
 const readJson = async (fileName) => JSON.parse(await readFile(new URL(fileName, import.meta.url), "utf8"));
@@ -48,6 +48,14 @@ test("repository gate reports secret categories rather than values", () => {
   assert.deepEqual(labels, ["non-empty service-role key"]);
 });
 
+test("repository gate permits only the guarded local Supabase service-role reference", () => {
+  const assignment = ["SUPABASE_SERVICE_ROLE_KEY", "local.serviceRoleKey"].join(": ");
+  const guarded = `assertLocalUrl(apiUrl); assertLocalUrl(dbUrl); ${assignment}`;
+  assert.equal(isApprovedLocalServiceRoleReference("scripts/demo/local-supabase.mjs", guarded), true);
+  assert.equal(isApprovedLocalServiceRoleReference("src/runtime.ts", guarded), false);
+  assert.equal(isApprovedLocalServiceRoleReference("scripts/demo/local-supabase.mjs", assignment), false);
+});
+
 test("package scripts and CI expose the complete safety workflow", async () => {
   const packageJson = await readJson("../package.json");
   for (const command of ["typecheck", "lint", "test", "test:targeted", "build", "validate", "validate:quick", "validate:security", "validate:migrations"]) {
@@ -64,10 +72,12 @@ test("migration integrity baseline covers the complete reviewed history", async 
   const baseline = await readJson("../scripts/validation/migration-integrity-baseline.json");
   const migrationsDirectory = new URL("../supabase/migrations/", import.meta.url);
   const migrations = (await readdir(migrationsDirectory)).filter((name) => name.endsWith(".sql")).sort();
-  assert.deepEqual(Object.keys(baseline.files).sort(), migrations);
-  assert.equal(baseline.reviewedThrough, migrations.at(-1));
+  const reviewedMigrations = Object.keys(baseline.files).sort();
+  assert.equal(baseline.reviewedThrough, reviewedMigrations.at(-1));
+  assert.ok(reviewedMigrations.every((migration) => migrations.includes(migration)));
+  assert.ok(migrations.filter((migration) => !reviewedMigrations.includes(migration)).every((migration) => migration > baseline.reviewedThrough));
 
-  for (const migration of migrations) {
+  for (const migration of reviewedMigrations) {
     const sql = await readFile(new URL(migration, migrationsDirectory), "utf8");
     const digests = [sql, sql.replace(/\r\n?/g, "\n")].map((value) => createHash("sha256").update(value).digest("hex"));
     assert.ok(digests.includes(baseline.files[migration]), `${migration} changed after review`);

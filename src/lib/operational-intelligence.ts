@@ -110,7 +110,9 @@ const typeLabels: Record<WorkspaceDecisionType, string> = {
   opportunity_without_owner: "Responsabil lipsă",
   company_without_primary_contact: "Contact principal lipsă",
   inactive_active_opportunity: "Oportunitate inactivă",
-  high_value_blocked_opportunity: "Valoare estimată expusă"
+  high_value_blocked_opportunity: "Valoare estimată expusă",
+  reply_received: "Răspuns nou primit",
+  waiting_for_client: "Așteaptă clientul"
 };
 
 const prioritizationRules: Record<WorkspaceDecisionType, string> = {
@@ -122,7 +124,9 @@ const prioritizationRules: Record<WorkspaceDecisionType, string> = {
   opportunity_without_owner: "Lipsește persoana responsabilă de următorul pas.",
   company_without_primary_contact: "Lipsește contactul principal necesar unui follow-up sigur.",
   inactive_active_opportunity: "Ultima activitate importantă nu indică progres recent.",
-  high_value_blocked_opportunity: "Blocajele active afectează o oportunitate cu valoare estimată."
+  high_value_blocked_opportunity: "Blocajele active afectează o oportunitate cu valoare estimată.",
+  reply_received: "Ultima comunicare inbound este mai nouă decât ultimul mesaj trimis.",
+  waiting_for_client: "Ultimul mesaj este trimis, iar fereastra conservatoare de răspuns este activă."
 };
 
 const humanDecisions: Record<WorkspaceDecisionType, string> = {
@@ -134,7 +138,9 @@ const humanDecisions: Record<WorkspaceDecisionType, string> = {
   opportunity_without_owner: "Atribuie o persoană responsabilă înainte de continuarea execuției.",
   company_without_primary_contact: "Confirmă persoana potrivită înainte de orice follow-up.",
   inactive_active_opportunity: "Decide dacă oportunitatea continuă, necesită un nou pas sau trebuie închisă.",
-  high_value_blocked_opportunity: "Revizuiește blocajele și confirmă primul pas sigur."
+  high_value_blocked_opportunity: "Revizuiește blocajele și confirmă primul pas sigur.",
+  reply_received: "Revizuiește răspunsul înainte de a confirma următorul pas.",
+  waiting_for_client: "Nu interveni încă; verifică din nou la momentul calculat."
 };
 
 const consequencesOfInaction: Record<WorkspaceDecisionType, string> = {
@@ -146,7 +152,9 @@ const consequencesOfInaction: Record<WorkspaceDecisionType, string> = {
   opportunity_without_owner: "Responsabilitatea rămâne ambiguă, iar follow-up-ul poate fi amânat sau duplicat.",
   company_without_primary_contact: "Echipa poate pregăti un follow-up pentru persoana nepotrivită sau poate întârzia clarificarea.",
   inactive_active_opportunity: "Lipsa unei decizii poate menține artificial oportunitatea activă și poate ascunde riscul real.",
-  high_value_blocked_opportunity: "Blocajul poate menține expusă valoarea estimată fără să existe progres sau venit confirmat."
+  high_value_blocked_opportunity: "Blocajul poate menține expusă valoarea estimată fără să existe progres sau venit confirmat.",
+  reply_received: "Răspunsul poate rămâne nerevizuit și poate întârzia decizia comercială.",
+  waiting_for_client: "Un follow-up prematur poate crea zgomot și dubla comunicarea deja trimisă."
 };
 
 function entityTypeFor(item: WorkspaceDecisionItem): OperationalIntelligenceRecommendation["entityType"] {
@@ -169,7 +177,7 @@ function sourceTypeLabel(evidence: WorkspaceDecisionEvidence) {
 function missingInformationFor(item: WorkspaceDecisionItem) {
   const missing: string[] = [];
 
-  if (item.relatedOpportunityId && !item.ownerName) missing.push("Responsabil neatribuit.");
+  if (item.ownerState === "missing") missing.push("Responsabil neatribuit.");
   if (!item.relatedCompanyName) missing.push("Compania asociată nu este confirmată.");
 
   if (item.type === "pending_approval") missing.push("Decizia de aprobare nu este încă înregistrată.");
@@ -195,6 +203,7 @@ function traceFor(
     `Stare observată: ${item.statusLabel}.`,
     item.relatedCompanyName ? `Companie: ${item.relatedCompanyName}.` : null,
     item.relatedOpportunityTitle ? `Oportunitate: ${item.relatedOpportunityTitle}.` : null,
+    item.ownerName ? `Responsabil: ${item.ownerName}.` : item.ownerState === "unverified" ? "Responsabil atribuit; numele nu este disponibil." : null,
     `Dovezi disponibile: ${item.evidence.length}.`
   ].filter((fact): fact is string => Boolean(fact));
 

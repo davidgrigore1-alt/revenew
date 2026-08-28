@@ -164,6 +164,7 @@ export type OpportunityEvent = {
   description: string;
   businessId?: string | null;
   actorProfileId?: string | null;
+  actorName?: string | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -182,6 +183,7 @@ export type CommercialResponse = {
   nextActionDueAt?: string | null;
   milestone?: CommercialMilestone | null;
   recordedBy: string;
+  recordedByName?: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -169,7 +169,9 @@ const gapScope: Record<RevenueRecoveryAuditGap["type"], (count: number) => strin
   opportunity_without_owner: (count) => `Atribuirea unui responsabil pentru cele ${count} oportunități nealocate.`,
   company_without_primary_contact: (count) => `Validarea contactului principal pentru cele ${count} cazuri incomplete.`,
   inactive_active_opportunity: (count) => `Reconfirmarea celor ${count} oportunități active fără progres recent.`,
-  high_value_blocked_opportunity: (count) => `Revizuirea celor ${count} oportunități cu valoare estimată ridicată și execuție blocată.`
+  high_value_blocked_opportunity: (count) => "Revizuirea oportunităților cu valoare estimată ridicată și execuție blocată: " + count + ".",
+  reply_received: (count) => "Revizuirea răspunsurilor noi primite: " + count + ".",
+  waiting_for_client: (count) => "Monitorizarea ferestrelor legitime de răspuns: " + count + "."
 };
 
 function executiveSummary(audit: RevenueRecoveryAudit) {

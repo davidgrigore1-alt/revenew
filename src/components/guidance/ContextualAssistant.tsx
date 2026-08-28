@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowPathIcon, QuestionMarkCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { CopilotConversation } from "@/components/intelligence/CopilotConversation";
@@ -15,9 +15,9 @@ const ASSISTANT_TRANSITION_MS = 160;
 
 export function AssistantButton({ className }: { className?: string }) {
   return (
-    <button type="button" className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] transition-colors hover:bg-[rgb(var(--surface-muted))] sm:px-3", className)} onClick={() => window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT))} aria-label="Deschide Asistent ReveNew">
-      <QuestionMarkCircleIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />
-      <span className="hidden sm:inline">Asistent</span>
+    <button type="button" className={cn("focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] transition-colors hover:border-[rgb(var(--primary-border))] hover:bg-[rgb(var(--surface-muted))] sm:px-3", className)} onClick={() => window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT))} aria-label="Întreabă ReveNew">
+      <SparklesIcon className="h-4 w-4 text-[rgb(var(--primary))]" aria-hidden="true" />
+      <span className="hidden sm:inline">Întreabă ReveNew</span>
     </button>
   );
 }
@@ -27,6 +27,8 @@ export function ContextualAssistant() {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const [notice, setNotice] = useState("");
+  const [selectedRecordId, setSelectedRecordId] = useState<string | undefined>();
+  const [initialQuestion, setInitialQuestion] = useState("");
   const [buyerDemoActive, setBuyerDemoActive] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -45,7 +47,7 @@ export function ContextualAssistant() {
   }
 
   useEffect(() => {
-    function openAssistant() {
+    function openAssistant(event: Event) {
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
       if (animationFrameRef.current !== null) window.cancelAnimationFrame(animationFrameRef.current);
       returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -53,11 +55,17 @@ export function ContextualAssistant() {
       setOpen(true);
       setVisible(false);
       setNotice("");
+      const detail = event instanceof CustomEvent ? event.detail as { selectedRecordId?: unknown; question?: unknown } | null : null;
+      const selected = pathname === "/inbox" ? (typeof detail?.selectedRecordId === "string" ? detail.selectedRecordId : new URLSearchParams(window.location.search).get("email")) : null;
+      setSelectedRecordId(selected && /^[0-9a-f-]{36}$/i.test(selected) ? selected : undefined);
+      setInitialQuestion(typeof detail?.question === "string" ? detail.question.slice(0, 3000) : "");
       animationFrameRef.current = window.requestAnimationFrame(() => setVisible(true));
     }
     window.addEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
     return () => window.removeEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
-  }, []);
+  }, [pathname]);
+
+  useEffect(() => { setOpen(false); setVisible(false); setSelectedRecordId(undefined); }, [pathname]);
 
   useEffect(() => () => {
     if (animationFrameRef.current !== null) window.cancelAnimationFrame(animationFrameRef.current);
@@ -97,11 +105,11 @@ export function ContextualAssistant() {
   return (
     <div className="fixed inset-0 z-[85]" role="presentation" data-state={visible ? "open" : "closed"}>
       <button type="button" className={cn("absolute inset-0 bg-black/68 transition-opacity duration-[160ms] ease-out motion-reduce:transition-none", visible ? "opacity-100" : "opacity-0")} aria-label="Închide Asistent ReveNew" onClick={closeAssistant} />
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contextual-assistant-title" aria-describedby="contextual-assistant-description" className={cn("absolute inset-x-0 bottom-0 flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-modal transition-[transform,opacity] duration-[160ms] ease-out will-change-transform motion-reduce:transform-none motion-reduce:transition-none sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[min(31rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel", visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-full opacity-0 sm:translate-x-full sm:translate-y-0") }>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="contextual-assistant-title" aria-describedby="contextual-assistant-description" className={cn("absolute inset-x-0 bottom-0 flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-modal transition-[transform,opacity] duration-[160ms] ease-out will-change-transform motion-reduce:transform-none motion-reduce:transition-none sm:inset-y-0 sm:left-auto sm:h-auto sm:w-[min(38rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-none sm:rounded-l-panel", visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-full opacity-0 sm:translate-x-full sm:translate-y-0") }>
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 sm:p-5">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Inteligență comercială controlată</p>
-            <h2 id="contextual-assistant-title" className="mt-1 text-xl font-semibold">Asistent ReveNew</h2>
+            <h2 id="contextual-assistant-title" className="mt-1 text-xl font-semibold">Întreabă ReveNew</h2>
             <p id="contextual-assistant-description" className="mt-1 text-sm leading-5 text-[rgb(var(--text-muted))]">Răspunde pe baza informațiilor autorizate din ReveNew.</p>
           </div>
           <button type="button" className="focus-ring inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-button text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]" aria-label="Închide Asistent ReveNew" onClick={closeAssistant}><XMarkIcon className="h-5 w-5" aria-hidden="true" /></button>
@@ -109,7 +117,7 @@ export function ContextualAssistant() {
 
         <div className="app-scrollbar min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           {demoStep ? <section className="mb-4 rounded-control border border-[rgb(var(--gold-500)/0.28)] bg-[rgb(var(--gold-500)/0.07)] p-3" aria-labelledby="assistant-demo-step"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--gold-700))] dark:text-[rgb(var(--gold-300))]">Prezentare activă · {demoStep.shortTitle}</p><h3 id="assistant-demo-step" className="mt-1 text-sm font-semibold">Ce urmărești în acest pas</h3><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{demoStep.notice}</p></section> : null}
-          <CopilotConversation autoFocus />
+          <CopilotConversation key={`${pathname}:${selectedRecordId ?? ""}:${initialQuestion}`} lockedContext={pathname === "/inbox" && selectedRecordId ? { selectedRecordId } : undefined} initialQuestion={initialQuestion} autoFocus />
           {notice ? <p className="mt-4 rounded-control bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5 text-[rgb(var(--text-muted))]" role="status">{notice}</p> : null}
         </div>
 

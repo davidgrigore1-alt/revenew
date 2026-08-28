@@ -30,7 +30,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   return (
     <Link
       href={`/opportunities/${opportunity.id}`}
-      className="focus-ring block min-w-0 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))]"
+      className="product-lift focus-ring block min-w-0 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 hover:bg-[rgb(var(--surface-subtle))] motion-reduce:transform-none"
     >
       <div className="grid gap-4 lg:grid-cols-[minmax(14rem,1.2fr)_minmax(30rem,1.8fr)_auto] lg:items-center">
         <div className="min-w-0">

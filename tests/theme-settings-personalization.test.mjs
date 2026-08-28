@@ -19,8 +19,8 @@ function compileModel(relativePath) {
 
 const themes = compileModel("src/lib/theme-presets.ts");
 
-test("premium accent presets are complete, namespaced and keep Emerald as the ReveNew default", () => {
-  assert.equal(themes.defaultAccentTheme, "emerald");
+test("premium accent presets are complete, namespaced and keep Champagne Gold as the ReveNew default", () => {
+  assert.equal(themes.defaultAccentTheme, "champagne");
   assert.equal(themes.ACCENT_THEME_STORAGE_KEY, "revenew.theme.accent");
   assert.equal(themes.WORKSPACE_IDENTITY_STORAGE_KEY, "revenew.workspace.identityPreview");
   assert.deepEqual(
@@ -59,7 +59,7 @@ test("workspace identity remains an honest local display preference", () => {
     assert.match(panel, new RegExp(label));
   }
   assert.match(panel, /nu convertește valorile existente/i);
-  assert.match(panel, /monedele rămân separate în rapoarte/i);
+  assert.match(panel, /moneda originală rămâne identificabilă în rapoarte/i);
   assert.match(panel, /interfața curentă rămâne în română/i);
   assert.match(panel, /Datele legale ale companiei nu se modifică/i);
   assert.match(provider, /window\.localStorage/);

@@ -19,7 +19,7 @@ function riskReason(opportunity: Opportunity) {
 
 export function RiskOpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   return (
-    <Link href={`/opportunities/${opportunity.id}`} className="focus-ring block rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 transition hover:border-[rgb(var(--primary)_/_0.45)]">
+    <Link href={`/opportunities/${opportunity.id}`} className="product-lift focus-ring block rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 hover:border-[rgb(var(--primary)/0.45)] motion-reduce:transform-none">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate font-semibold text-[rgb(var(--foreground))]">{opportunity.title}</h3>

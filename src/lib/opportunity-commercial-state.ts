@@ -1,3 +1,4 @@
+import { formatProductDateTime } from "@/lib/ui/presentation";
 import { approvalStateForSignal } from "@/lib/approval-center";
 import {
   assessOpportunityAttention,
@@ -9,6 +10,7 @@ import {
   stageForLegacyStatus
 } from "@/lib/opportunity-domain";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
+import { assessCommercialExecution, type CommercialCommunication, type CommercialExecutionAssessment } from "@/lib/commercial-execution";
 
 export type CommercialStateEvidenceType =
   | "opportunity"
@@ -46,6 +48,10 @@ export type CommercialStateException = {
 };
 
 export type OpportunityCommercialState = {
+  businessId: Opportunity["businessId"];
+  evaluatedAt: string;
+  /** Current facts and interpretations; never a replacement for historical snapshots. */
+  resolvedSinceDetection: Array<{ label: string; eventId: string }>;
   opportunityId: string;
   title: string;
   organization: { id: string | null; name: string | null };
@@ -71,6 +77,7 @@ export type OpportunityCommercialState = {
     id: string;
     title: string;
     dueAt: string | null;
+    status: string;
     ownerProfileId: string | null;
     ownerName: string | null;
     overdue: boolean;
@@ -101,6 +108,13 @@ export type OpportunityCommercialState = {
     category: string | null;
     respondedAt: string | null;
   };
+  communication: {
+    lastInboundAt: string | null;
+    lastOutboundAt: string | null;
+    nextMeetingAt: string | null;
+    responseWindowDays: number;
+  };
+  execution: CommercialExecutionAssessment;
   outcome: {
     state: ReturnType<typeof lifecycleForOpportunity>;
     confirmedByHuman: boolean;
@@ -167,15 +181,16 @@ function safeActionFor(code: CommercialStateExceptionCode, opportunityId: string
 
 export function buildOpportunityCommercialState(
   opportunity: Opportunity,
-  options: { now?: Date; staleAfterDays?: number; linkedSignals?: CommercialSignal[] } = {}
+  options: { businessId?: string; now?: Date; staleAfterDays?: number; linkedSignals?: CommercialSignal[]; communication?: CommercialCommunication; explicitBlocker?: string | null; waitingInternal?: string | null } = {}
 ): OpportunityCommercialState {
+  if (options.businessId && opportunity.businessId !== options.businessId) throw new Error("commercial_state_scope_forbidden");
   const now = options.now ?? new Date();
   const baseHref = `/opportunities/${opportunity.id}`;
   const linkedSignals = (options.linkedSignals ?? []).filter((signal) =>
-    signal.detectedFromOpportunityId === opportunity.id || signal.convertedOpportunityId === opportunity.id
+    signal.businessId === opportunity.businessId && (signal.detectedFromOpportunityId === opportunity.id || signal.convertedOpportunityId === opportunity.id)
   );
   const attention = assessOpportunityAttention(opportunity, { now, staleAfterDays: options.staleAfterDays });
-  const primaryContact = opportunity.contacts?.find((item) => item.isPrimary) ?? null;
+  const primaryContact = opportunity.contacts?.find((item) => item.isPrimary && item.contact.businessId === opportunity.businessId) ?? null;
   const nextAction = attention.primaryNextAction;
   const nextActionOverdue = Boolean(nextAction?.dueDate && Date.parse(nextAction.dueDate) < now.getTime());
   const pendingApprovals = linkedSignals.filter((signal) => approvalStateForSignal(signal) === "pending");
@@ -252,8 +267,29 @@ export function buildOpportunityCommercialState(
         ? { state: "draft" as const, id: draftDocument.id, title: draftDocument.title }
         : { state: "none" as const, id: null, title: null };
   const recommendedSafeIntervention = exceptions[0]?.safeAction ?? { label: "Revizuiește oportunitatea", href: baseHref };
+  const responseWindowDays = Math.min(10, Math.max(1, options.communication?.expectedResponseWindowDays ?? 3));
+  const execution = assessCommercialExecution({
+    now, lifecycleOpen: lifecycle === "open", ownerMissing: !opportunity.ownerProfileId, nextActionMissing: !nextAction,
+    nextActionOverdue, approvalPending: pendingApprovals.length > 0, outreachRestricted: Boolean(opportunity.outreachRestrictedAt),
+    explicitBlocker: options.explicitBlocker, waitingInternal: options.waitingInternal,
+    preparedWorkState: preparedDocument ? "ready_for_review" : draftDocument ? "prepared" : "none",
+    attentionRequired: attention.state === "at_risk", communication: options.communication
+  });
 
+  const resolvedSinceDetection: OpportunityCommercialState["resolvedSinceDetection"] = [];
+  const assignment = opportunity.timeline.find(event => event.type === "commercial_details_changed"
+    && event.metadata?.previous_owner_profile_id === null && Boolean(opportunity.ownerProfileId)
+    && event.metadata?.owner_profile_id === opportunity.ownerProfileId
+    && (!event.businessId || event.businessId === opportunity.businessId) && Date.parse(event.date) <= now.getTime());
+  if (assignment) resolvedSinceDetection.push({ label: "Responsabil comercial atribuit" + (opportunity.ownerName ? " — " + opportunity.ownerName : ""), eventId: assignment.id });
+  const postponed = nextAction && !nextActionOverdue && opportunity.timeline.find(event => event.type === "action_postponed"
+    && event.metadata?.action_id === nextAction.id && event.metadata?.due_at === nextAction.dueDate
+    && (!event.businessId || event.businessId === opportunity.businessId) && Date.parse(event.date) <= now.getTime());
+  if (postponed) resolvedSinceDetection.push({ label: "Următorul pas reprogramat", eventId: postponed.id });
   return {
+    businessId: opportunity.businessId,
+    evaluatedAt: now.toISOString(),
+    resolvedSinceDetection,
     opportunityId: opportunity.id,
     title: opportunity.title,
     organization: companyFor(opportunity),
@@ -263,12 +299,14 @@ export function buildOpportunityCommercialState(
     financial: { estimatedValue: Number(opportunity.estimatedValueHigh ?? 0) > 0 ? Number(opportunity.estimatedValueHigh) : null, currency: opportunity.currency ?? "RON", confirmedRevenue, confirmedRevenueCurrency: confirmedRevenue === null ? null : opportunity.currency ?? "RON" },
     ownership: { ownerProfileId: opportunity.ownerProfileId ?? null, ownerName: opportunity.ownerName ?? null, validity: !opportunity.ownerProfileId ? "missing" : opportunity.ownerName ? "confirmed" : "unverified" },
     activity: { lastMeaningfulActivityAt: lastMeaningful, inactivityDays },
-    nextAction: nextAction ? { id: nextAction.id, title: nextAction.title, dueAt: validTimestamp(nextAction.dueDate), ownerProfileId: nextAction.assignedToProfileId ?? opportunity.ownerProfileId ?? null, ownerName: nextAction.assignedToName ?? opportunity.ownerName ?? null, overdue: nextActionOverdue } : null,
+    nextAction: nextAction ? { id: nextAction.id, title: nextAction.title, dueAt: validTimestamp(nextAction.dueDate), status: nextAction.status, ownerProfileId: nextAction.assignedToProfileId ?? opportunity.ownerProfileId ?? null, ownerName: nextAction.assignedToName ?? opportunity.ownerName ?? null, overdue: nextActionOverdue } : null,
     flags: { nextActionMissing: !nextAction, nextActionOverdue, followUpOverdue: nextActionOverdue, stale: attention.reasons.some((reason) => reason.code === "stale_activity"), blocked: exceptions.some((item) => item.severity === "critical") },
     approval: { state: pendingApprovals.length ? "pending" : "not_required", pendingCount: pendingApprovals.length, signalId: pendingApprovals[0]?.id ?? null },
     document,
     outreach: { restricted: Boolean(opportunity.outreachRestrictedAt), reason: opportunity.outreachRestrictionReason ?? null },
     response: { state: latestResponse ? "recorded" : "none", category: latestResponse?.category ?? null, respondedAt: latestResponse?.respondedAt ?? null },
+    communication: { lastInboundAt: options.communication?.lastInboundAt ?? null, lastOutboundAt: options.communication?.lastOutboundAt ?? null, nextMeetingAt: options.communication?.nextMeetingAt ?? null, responseWindowDays },
+    execution,
     outcome: { state: lifecycle, confirmedByHuman: lifecycle !== "open" && Boolean(opportunity.outcomeRecordedByProfileId || opportunity.outcomeRecordedAt), recordedAt: opportunity.outcomeRecordedAt ?? null },
     attention,
     exceptions,
@@ -278,4 +316,16 @@ export function buildOpportunityCommercialState(
     humanDecisionRequired: exceptions.length > 0 || lifecycle === "open",
     auditReferences: evidence.map((item) => item.id)
   };
+}
+
+/** Shared wording for current facts, never copied from a detection narrative. */
+export function describeCurrentCommercialState(state: OpportunityCommercialState) {
+  const owner = state.ownership.ownerName
+    ? state.ownership.ownerName + " este responsabilul comercial."
+    : state.ownership.ownerProfileId ? "Responsabilul este atribuit; numele nu este disponibil." : "Responsabilul comercial nu este atribuit.";
+  const next = state.nextAction
+    ? state.nextAction.title + (state.nextAction.dueAt ? " — " + formatProductDateTime(state.nextAction.dueAt) : " — termen neconfirmat") + (state.nextAction.overdue ? " · Acțiune restantă." : ".")
+    : state.lifecycle === "open" ? "Următorul pas nu este confirmat." : "Oportunitatea este închisă.";
+  return { owner, next, blocker: state.exceptions[0]?.label ?? (state.lifecycle === "open" ? "Fără blocaje identificate" : "Oportunitate închisă"),
+    action: state.recommendedSafeIntervention };
 }

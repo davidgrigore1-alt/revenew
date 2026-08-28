@@ -294,7 +294,7 @@ export const aiCapabilities = [
   {
     id: "gmail.sendAfterApproval",
     label: "Trimitere Gmail după aprobare",
-    description: "Capacitate viitoare pentru trimitere explicit confirmată, niciodată implicită.",
+    description: "Trimiterea Gmail există în composerul controlat, dar invocarea directă de către agentul AI rămâne blocată.",
     status: "blocked_until_security_review",
     category: "gmail",
     riskLevel: "critical",
@@ -307,8 +307,8 @@ export const aiCapabilities = [
     requiresOAuth: true,
     requiresTokenStorage: true,
     allowedExecutionMode: "blocked",
-    currentLimitations: ["Nu trimite prin Gmail și nu citește inboxul."],
-    futureRequirements: ["Confirmare finală, idempotency, restricții de outreach, revocare și jurnal de livrare."]
+    currentLimitations: ["Ask ReveNew poate pregăti conținutul, dar nu poate iniția direct trimiterea; utilizatorul aprobă și confirmă separat în composer."],
+    futureRequirements: ["Revizuire de securitate separată înainte ca această capabilitate să poată fi orchestrată de agent; fără trimitere autonomă."]
   },
   {
     id: "voice.simulatedReceptionist",

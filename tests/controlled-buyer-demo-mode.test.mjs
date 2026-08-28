@@ -83,7 +83,7 @@ test("buyer demo suppresses duplicate onboarding guidance and contextualizes the
   assert.match(pageGuide, /buyerDemoActive/);
   assert.match(assistant, /Prezentare activă/);
   assert.match(assistant, /demoStep\.notice/);
-  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(assistant, /<CopilotConversation\b[^\n]*\bautoFocus\b/);
 });
 
 test("help exposes the demo entry point while sparse Home and guided understanding remain mounted", () => {

@@ -1,9 +1,11 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { useToast } from "@/components/ui/ToastProvider";
 import { Button } from "@/components/ui/Button";
 import {
   applicationDateKey,
@@ -48,9 +50,9 @@ export function OpportunityControlCenter({
   mode?: ControlCenterMode;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [outcomeStatus, setOutcomeStatus] = useState<OpportunityLifecycleStatus>("won");
   const [pendingOutcome, setPendingOutcome] = useState<FormData | null>(null);
   const confirmationDialogRef = useRef<HTMLDivElement>(null);
@@ -103,11 +105,11 @@ export function OpportunityControlCenter({
   function handleResult(result: { ok: boolean; error?: string }, success: string) {
     if (result.ok) {
       setError("");
-      setNotice(success);
+      showToast({ title: success, tone: "success" });
       router.refresh();
     } else {
-      setNotice("");
       setError(toUserFacingActionError(result.error, "Schimbarea nu a putut fi salvată. Verifică datele și încearcă din nou."));
+      showToast({ title: "Schimbarea nu a fost salvată", description: toUserFacingActionError(result.error, "Verifică datele și încearcă din nou."), tone: "danger" });
     }
   }
 
@@ -132,13 +134,12 @@ export function OpportunityControlCenter({
   return (
     <div className="grid gap-6">
       {mode === "summary" ? <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="execution-brief-title">
-        {notice ? <div className="px-4 pt-4 sm:px-5"><StatusNotice tone="success">{notice}</StatusNotice></div> : null}
         {error ? <div className="px-4 pt-4 sm:px-5"><StatusNotice tone="error">{error}</StatusNotice></div> : null}
         <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-pill border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2.5 py-1 text-xs font-semibold">{stageLabels[commercialState.stage]}</span>
-              <span className="rounded-pill border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-2.5 py-1 text-xs font-semibold text-[rgb(var(--warning-text))]">{attentionLabels[attention.state]}</span>
+              <span className={commercialState.execution.severity === "critical" ? "status-pill status-pill-danger" : commercialState.execution.severity === "attention" ? "status-pill status-pill-warning" : commercialState.execution.severity === "positive" ? "status-pill status-pill-success" : "status-pill status-pill-neutral"}>{commercialState.execution.label}</span>
               <span className="text-xs text-[rgb(var(--text-muted))]">{commercialTypeLabels[commercialTypeForOpportunity(opportunity)]}</span>
             </div>
             <p className="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Următoarea acțiune</p>
@@ -160,8 +161,12 @@ export function OpportunityControlCenter({
           <div className="px-4 py-3"><dt className="text-[0.6875rem] text-[rgb(var(--text-muted))]">Dovezi disponibile</dt><dd className="mt-1 text-sm font-semibold">{visibleEvidence ? <a className="focus-ring rounded-sm text-[rgb(var(--primary))] hover:underline" href={visibleEvidence.href}>{evidenceCount} · {visibleEvidence.label}</a> : "Lipsește o dovadă verificabilă"}</dd></div>
         </dl>
 
-        <div className="flex flex-col gap-2 px-4 py-3 text-xs leading-5 text-[rgb(var(--text-muted))] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
-          <p>{attention.reasons.length > 0 ? <><strong className="text-[rgb(var(--warning-text))]">Necesită verificare:</strong> {attention.reasons.slice(0, 2).map((reason) => reason.label).join(" · ")}</> : <><strong className="text-[rgb(var(--success-text))]">Fără excepții active.</strong> Datele disponibile nu indică un blocaj operațional.</>} {commercialState.financial.confirmedRevenue != null ? <>Venit confirmat: <strong className="text-[rgb(var(--foreground))]">{formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency ?? "RON")}</strong>.</> : null}</p>
+        <div className="grid gap-3 px-4 py-3 text-xs leading-5 text-[rgb(var(--text-muted))] sm:px-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div>
+            <p><strong className="text-[rgb(var(--foreground))]">De ce această stare:</strong> {commercialState.execution.reason}</p>
+            <p className="mt-1">{attention.reasons.length > 0 ? <><strong className="text-[rgb(var(--warning-text))]">Necesită verificare:</strong> {attention.reasons.slice(0, 2).map((reason) => reason.label).join(" · ")}</> : <><strong className="text-[rgb(var(--success-text))]">Fără excepții active.</strong> Datele disponibile nu indică un blocaj operațional.</>} {commercialState.financial.confirmedRevenue != null ? <>Venit confirmat: <strong className="text-[rgb(var(--foreground))]">{formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency ?? "RON")}</strong>.</> : null}</p>
+            {commercialState.execution.nextReviewAt ? <p className="mt-1"><strong className="text-[rgb(var(--foreground))]">Următoarea verificare:</strong> {formatDate(commercialState.execution.nextReviewAt)}</p> : null}
+          </div>
           <p className="shrink-0">Aprobarea umană rămâne obligatorie pentru comunicare externă și rezultate.</p>
         </div>
       </section> : null}
@@ -170,15 +175,15 @@ export function OpportunityControlCenter({
           <DataCard title="Responsabilitate" description="Atribuie oportunitatea și confirmă clasificarea comercială.">
             <form action={(formData) => startTransition(async () => handleResult(await updateOpportunityCommercialDetails(opportunity.id, formData), "Responsabilitatea a fost actualizată."))} className="grid gap-3">
               <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Responsabil</FormLabel>
-                <select name="ownerProfileId" defaultValue={opportunity.ownerProfileId ?? ""} className={fieldClass}>
+                <Select name="ownerProfileId" defaultValue={opportunity.ownerProfileId ?? ""} className={fieldClass}>
                   <option value="">Neatribuit</option>
                   {assignableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.fullName}</option>)}
-                </select>
+                </Select>
               </label>
               <label className="grid gap-2 text-sm font-semibold"><FormLabel>Tip comercial</FormLabel>
-                <select name="commercialType" defaultValue={commercialTypeForOpportunity(opportunity)} className={fieldClass}>
+                <Select name="commercialType" defaultValue={commercialTypeForOpportunity(opportunity)} className={fieldClass}>
                   {Object.entries(commercialTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
+                </Select>
               </label>
               <Button type="submit" disabled={isPending}>{isPending ? "Se salvează..." : "Salvează responsabilitatea"}</Button>
             </form>
@@ -189,19 +194,19 @@ export function OpportunityControlCenter({
             <form action={reviewOutcome} className="grid gap-3">
               <input type="hidden" name="expectedUpdatedAt" value={opportunity.updatedAt ?? ""} />
               <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Rezultat</FormLabel>
-                <select name="lifecycleStatus" value={outcomeStatus} onChange={(event) => setOutcomeStatus(event.target.value as OpportunityLifecycleStatus)} className={fieldClass}>
+                <Select name="lifecycleStatus" value={outcomeStatus} onChange={(event) => setOutcomeStatus(event.target.value as OpportunityLifecycleStatus)} className={fieldClass}>
                   <option value="won">Câștigată / recuperată</option>
                   <option value="lost">Pierdută</option>
-                </select>
+                </Select>
               </label>
               <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Motiv</FormLabel>
-                <select name="outcomeReason" className={fieldClass} defaultValue={outcomeStatus === "won" ? "won" : "other"} key={outcomeStatus}>
+                <Select name="outcomeReason" className={fieldClass} defaultValue={outcomeStatus === "won" ? "won" : "other"} key={outcomeStatus}>
                   {outcomeStatus === "won" ? <>
                     <option value="won">Contract câștigat</option><option value="recovered">Venit recuperat</option><option value="expanded">Extindere</option><option value="renewed">Reînnoire</option><option value="other">Alt motiv</option>
                   </> : <>
                     <option value="customer_selected_other">Clientul a ales alt furnizor</option><option value="no_budget">Buget indisponibil</option><option value="no_response">Fără răspuns</option><option value="timing">Moment nepotrivit</option><option value="not_qualified">Neeligibilă</option><option value="duplicate">Duplicat</option><option value="cancelled">Anulată</option><option value="other">Alt motiv</option>
                   </>}
-                </select>
+                </Select>
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold"><FormLabel required>Data rezultatului</FormLabel><input name="outcomeDate" type="date" required defaultValue={applicationDateKey()} className={fieldClass} /></label>

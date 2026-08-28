@@ -1,0 +1,1 @@
+GRANT SELECT ON TABLE public.opportunity_documents TO service_role;

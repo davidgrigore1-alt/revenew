@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useEffect, useState } from "react";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
@@ -16,7 +17,7 @@ import {
   type WorkspaceIdentityPreview
 } from "@/lib/theme-presets";
 
-const fieldClassName = "focus-ring min-h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))]";
+const fieldClassName = "focus-ring min-h-9 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))]";
 
 export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }: { baselineName: string; baselineIndustry: string }) {
   const {
@@ -85,7 +86,7 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
       </div>
 
       <div className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">
-        <div className="grid gap-5 py-5 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] lg:gap-8">
+        <div className="grid gap-4 py-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] lg:gap-6">
           <div>
             <h3 className="text-sm font-semibold">Culoare accent</h3>
             <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Preseturi cu contrast controlat, fără selector de culoare liber.</p>
@@ -126,7 +127,7 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
           </div>
         </div>
 
-        <div id="identitate" data-guide-anchor="settings-identity" className="scroll-mt-36 grid gap-5 py-5 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] lg:gap-8" aria-labelledby="identity-title">
+        <div id="identitate" data-guide-anchor="settings-identity" className="scroll-mt-36 grid gap-4 py-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] lg:gap-6" aria-labelledby="identity-title">
           <div>
             <h3 id="identity-title" className="text-sm font-semibold">Identitate spațiu de lucru</h3>
             <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Afișare locală, distinctă de datele legale ale companiei.</p>
@@ -135,11 +136,11 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
             <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-semibold">Nume afișat al spațiului de lucru<Input value={identity.displayName} maxLength={64} onChange={(event) => updateIdentity("displayName", event.target.value)} /></label>
             <label className="grid gap-2 text-sm font-semibold">Inițiale / marcă scurtă<Input value={identity.initials} maxLength={4} onChange={(event) => updateIdentity("initials", event.target.value.replace(/[^a-zA-Z0-9ĂÂÎȘȚăâîșț]/g, "").toLocaleUpperCase("ro-RO"))} placeholder="AM" /></label>
-            <label className="grid gap-2 text-sm font-semibold">Industrie<select className={fieldClassName} value={identity.industry} onChange={(event) => updateIdentity("industry", event.target.value)}>{workspaceIndustryOptions.map((industry) => <option key={industry}>{industry}</option>)}</select></label>
-            <label className="grid gap-2 text-sm font-semibold">Monedă principală<select className={fieldClassName} value={identity.currency} onChange={(event) => updateIdentity("currency", event.target.value as WorkspaceIdentityPreview["currency"])}><option>RON</option><option>EUR</option><option>RON + EUR</option></select></label>
-            <label className="grid gap-2 text-sm font-semibold sm:col-span-2">Preferință de limbă<select className={fieldClassName} value={identity.language} onChange={(event) => updateIdentity("language", event.target.value as WorkspaceIdentityPreview["language"])}><option value="ro">Română</option><option value="en-ready">English · pregătit pentru viitor</option></select></label>
+            <label className="grid gap-2 text-sm font-semibold">Industrie<Select className={fieldClassName} value={identity.industry} onChange={(event) => updateIdentity("industry", event.target.value)}>{workspaceIndustryOptions.map((industry) => <option key={industry}>{industry}</option>)}</Select></label>
+            <label className="grid gap-2 text-sm font-semibold">Monedă principală<Select className={fieldClassName} value={identity.currency} onChange={(event) => updateIdentity("currency", event.target.value as WorkspaceIdentityPreview["currency"])}><option>RON</option><option>EUR</option><option>RON + EUR</option></Select></label>
+            <label className="grid gap-2 text-sm font-semibold sm:col-span-2">Preferință de limbă<Select className={fieldClassName} value={identity.language} onChange={(event) => updateIdentity("language", event.target.value as WorkspaceIdentityPreview["language"])}><option value="ro">Română</option><option value="en-ready">English · pregătit pentru viitor</option></Select></label>
             <WorkspaceLogoPicker />
-            <p className="text-xs leading-5 text-[rgb(var(--text-muted))] sm:col-span-2">Moneda este o preferință de afișare: nu convertește valorile existente, iar monedele rămân separate în rapoarte. Preferința English este pregătită pentru viitor; interfața curentă rămâne în română.</p>
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))] sm:col-span-2">Moneda este o preferință de afișare: nu convertește valorile existente, iar moneda originală rămâne identificabilă în rapoarte. Conversia analitică se selectează separat în Control Center și Pipeline. Preferința English este pregătită pentru viitor; interfața curentă rămâne în română.</p>
           </div>
             <div data-accent-preview={draftAccent} style={accentThemeStyle(draftAccent)} className="mt-4 flex flex-col gap-3 border-t border-[rgb(var(--border))] pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-3"><WorkspaceIdentityMark displayName={identity.displayName || baselineName} initials={identity.initials} /><div className="min-w-0"><p className="truncate text-sm font-semibold" title={identity.displayName || baselineName}>{identity.displayName || baselineName}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{identity.industry || "Industrie necompletată"} · {identity.currency}</p></div></div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { OpportunityCard } from "@/components/dashboard/OpportunityCard";
@@ -242,13 +243,13 @@ export function AnalyzeOpportunityForm({ business, openAIConfigured }: AnalyzeOp
           </label>
           <label className="block min-w-0">
             <span className="text-sm font-medium text-zinc-300">Tip sursă</span>
-            <select name="type" className="mt-2 h-11 w-full min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60">
+            <Select name="type" className="mt-2 h-11 w-full min-w-0 rounded-lg border border-white/10 bg-ink-900/80 px-4 text-white outline-none focus:border-mint-400/60">
               {sourceTypes.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block min-w-0">
             <span className="text-sm font-medium text-zinc-300">Text brut oportunitate</span>

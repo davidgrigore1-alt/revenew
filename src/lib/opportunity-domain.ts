@@ -63,6 +63,35 @@ export function applicationLocalDateTimeToIso(dateKey: string, timeKey: string) 
   return new Date(candidate).toISOString();
 }
 
+/** Shared preparation/approval invariant. Null means an explicit deadline is still needed. */
+export function assertFutureActionDueAt(value: string | null | undefined, now = new Date()) {
+  if (value && (!Number.isFinite(Date.parse(value)) || Date.parse(value) <= now.getTime())) throw new Error("ask_action_due_future_required");
+}
+
+/** Suggested working windows, not a customer commitment. Never reuse a historical deadline. */
+export function suggestFutureActionDueAt(input: { now?: Date; explicitDueAt?: string | null; meetingAt?: string | null; critical?: boolean }) {
+  const now = input.now ?? new Date();
+  if (input.explicitDueAt) { assertFutureActionDueAt(input.explicitDueAt, now); return new Date(input.explicitDueAt).toISOString(); }
+  const meeting = input.meetingAt ? Date.parse(input.meetingAt) : NaN;
+  // A very close meeting requires a human choice instead of invented precision.
+  if (Number.isFinite(meeting) && meeting > now.getTime()) {
+    const before = meeting - 60 * 60 * 1000;
+    return before > now.getTime() ? new Date(before).toISOString() : null;
+  }
+  const today = applicationDateKey(now);
+  for (let offset = input.critical ? 0 : 1; offset <= 7; offset += 1) {
+    const calendarDay = new Date(`${today}T12:00:00Z`);
+    calendarDay.setUTCDate(calendarDay.getUTCDate() + offset);
+    if ([0, 6].includes(calendarDay.getUTCDay())) continue;
+    const dateKey = calendarDay.toISOString().slice(0, 10);
+    for (const slot of ["09:00", "11:00", "14:00", "16:00"]) {
+      const due = applicationLocalDateTimeToIso(dateKey, slot);
+      if (due && Date.parse(due) > now.getTime() + 30 * 60 * 1000) return due;
+    }
+  }
+  return null;
+}
+
 export const commercialTypeLabels: Record<OpportunityCommercialType, string> = {
   new_business: "Business nou",
   stalled_pipeline: "Pipeline blocat",

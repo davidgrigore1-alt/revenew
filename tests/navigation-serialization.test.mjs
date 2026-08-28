@@ -58,14 +58,16 @@ test("admin navigation remains permission-gated by centralized permission", () =
   assert.equal(admin.icon, "shield-check");
 });
 
-test("commercial inbox and approval center are unique adjacent primary routes", () => {
+test("communication and approval surfaces are unique intentional primary routes", () => {
   const inboxItems = dashboardNavigation.filter((item) => item.href === "/inbox");
   const approvalItems = dashboardNavigation.filter((item) => item.href === "/approvals");
 
   assert.equal(primaryNavigation[0].href, "/dashboard");
   assert.equal(primaryNavigation[1].href, "/inbox");
-  assert.equal(primaryNavigation[2].href, "/approvals");
-  assert.equal(primaryNavigation[3].href, "/today");
+  assert.equal(primaryNavigation[2].href, "/meetings");
+  assert.equal(primaryNavigation[3].href, "/sequences");
+  assert.equal(primaryNavigation[4].href, "/approvals");
+  assert.equal(primaryNavigation[5].href, "/today");
   assert.equal(inboxItems.length, 1);
   assert.equal(inboxItems[0].name, "Inbox Comercial");
   assert.equal(inboxItems[0].icon, "inbox-stack");

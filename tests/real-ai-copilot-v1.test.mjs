@@ -16,6 +16,8 @@ function compile(relativePath, aliases = {}) {
 }
 
 const types = compile("src/lib/ai/copilot-types.ts");
+const workflowFoundation = compile("src/lib/workflow-foundation.ts");
+const workflowDrafting = compile("src/lib/workflow-drafting.ts", { "@/lib/workflow-foundation": workflowFoundation });
 const validation = compile("src/lib/ai/copilot-validation.ts", { "@/lib/ai/copilot-types": types });
 const evals = compile("src/lib/ai/copilot-evals.ts");
 
@@ -36,6 +38,8 @@ function compileOrchestrator(executeTool) {
     "server-only": {},
     "crypto": { randomUUID: () => "request-test" },
     "@/lib/ai/copilot-types": types,
+    "@/lib/workflow-drafting": workflowDrafting,
+    "@/lib/ai/multi-record-planning": { maybeRunMultiRecordPlanning: async () => null },
     "@/lib/ai/copilot-instructions": { REVENew_COPILOT_INSTRUCTIONS: "test instructions" },
     "@/lib/ai/provider": { getCopilotProvider() { throw new Error("provider must be injected"); } },
     "@/lib/ai/copilot-tools": { copilotToolDefinitions: [], executeCopilotTool: executeTool },
@@ -43,9 +47,32 @@ function compileOrchestrator(executeTool) {
   });
 }
 
-function request(question = "De ce este Vector prioritar?") {
+function request(question = "Care este contextul comercial pentru Vector?") {
   return { question, context: { route: "/dashboard", pageType: "dashboard" }, history: [] };
 }
+
+test("PASS I attention answers keep server-ranked intervention objects without an AI call", async () => {
+  let calls = 0;
+  const items = [{ id: "vector", title: "Vector", recommendation: "Revizuiește propunerea", rankingReasons: ["Decizie pregătită"] }];
+  const engine = compileOrchestrator(async (name, args) => {
+    assert.equal(name, "get_execution_context"); assert.equal(args.view, "interventions");
+    return result({ toolName: name, data: { view: "interventions", interventions: items }, sources: [{ sourceId: "intervention:vector", label: "Vector", sourceType: "Oportunitate", route: "/opportunities/vector", fact: "Decizie pregătită." }] });
+  });
+  const response = await engine.runCopilot(request("Ce necesită atenție astăzi?"), { available: () => true, model: () => "test", createTurn: async () => { calls++; throw new Error("must not run"); } });
+  assert.equal(calls, 0); assert.equal(response.answer.presentation.kind, "interventions");
+  assert.equal(response.answer.presentation.interventions[0].id, "vector");
+  assert.doesNotMatch(response.answer.answer, /1\.|generativ nu este disponibil/);
+});
+
+test("PASS I page context routes contact, selected email and safe next-step requests", () => {
+  const engine = compileOrchestrator(async () => result());
+  const contact = { ...request("Ce oportunități sunt asociate?"), context: { route: "/crm/contacts/person", pageType: "other", contactId: "person" } };
+  assert.equal(engine.planCopilotRequest(contact).args.view, "contact");
+  const email = { ...request("Rezumă conversația"), context: { route: "/inbox", pageType: "other", selectedRecordId: "exact-email" } };
+  assert.equal(engine.planCopilotRequest(email).args.view, "recent_interactions");
+  const next = engine.planCopilotRequest({ ...request("Pregătește următorul pas."), context: { route: "/opportunities/vector", pageType: "opportunity", opportunityId: "vector" } });
+  assert.equal(next.name, "get_opportunity_context"); assert.equal(next.args.actionType, "next_action");
+});
 
 test("copilot request validation bounds question, history and page identifiers", () => {
   const parsed = validation.parseCopilotRequest({ question: "  De ce este Vector prioritar?  ", context: { route: "/opportunities/vector", opportunityId: "vector", business_id: "forbidden" }, history: Array.from({ length: 12 }, (_, index) => ({ role: index % 2 ? "assistant" : "user", content: `turn ${index}` })) });
@@ -198,16 +225,41 @@ test("assistant UI is structured, contextual, accessible and does not render uns
   assert.match(drawer, /returnFocusRef\.current\?\.focus/);
   assert.match(conversation, /Dovezi ·/);
   assert.match(conversation, /Ce nu pot confirma/);
-  assert.match(conversation, /Verific informațiile disponibile/);
+  assert.match(conversation, /Verific contextul autorizat/);
   assert.match(conversation, /Reîncearcă/);
   assert.match(conversation, /event\.key === "Enter"/);
   assert.match(conversation, /motion-reduce:animate-none/);
   assert.match(company, /lockedContext=\{\{ pageType: "company", organizationId \}\}/);
-  assert.match(ask, /lockedContext=\{\{ pageType: "ai" \}\}/);
+  assert.match(ask, /lockedContext=\{\{ pageType: "ai", \.\.\.\(selectedRecordId \? \{ selectedRecordId \} : \{\}\) \}\}/);
   assert.doesNotMatch(conversation + drawer, /dangerouslySetInnerHTML|javascript:|ChatGPT|avatar|AI gradient/i);
 });
 
 test("documentation records privacy, no-write boundary and deterministic fallback", () => {
   const docs = read("docs/real-ai-copilot.md");
   for (const phrase of ["store: false", "server-side", "read-only", "Nu există SQL generat", "fallback", "fără web search", "fără stocare persistentă"]) assert.match(docs, new RegExp(phrase, "i"));
+});
+
+
+test("G3E review questions dispatch through existing truth tool without model calls",async()=>{
+ let modelCalls=0,toolCalls=0;
+ const grounded={answer:"Aprobarea necesită decizie.",summaryType:"commercial",findings:[],evidence:[],checkedSources:[],
+  missingInformation:[],caveats:[],preparedAction:null,suggestedAction:null,followUps:[],mode:"deterministic_fallback",providerAvailable:false};
+ const engine=compileOrchestrator(async(name)=>{toolCalls++;assert.equal(name,"get_commercial_truth");return result({toolName:name,data:grounded,sources:[]});});
+ for(const question of ["De ce trebuie decis acum?","Ce s-a schimbat?","Ce dovezi susțin asta?","Ce rămâne nerezolvat?","Ce impact a fost verificat?"]){
+  const answer=await engine.runCopilot({...request(question),context:{route:"/dashboard?view=review&range=7",pageType:"dashboard"}},{available:()=>true,model:()=>"must-not-run",createTurn:async()=>{modelCalls++;throw Error("forbidden");}});
+  assert.equal(answer.answer.preparedAction,null);assert.equal(answer.diagnostics.totalTokens,0);
+ }
+ assert.equal(modelCalls,0);assert.equal(toolCalls,5);
+});
+
+test("G3B truth questions use the canonical deterministic tool without a model or prepared effect",async()=>{
+ let modelCalls=0,toolCalls=0;
+ const grounded={answer:"Verifică asocierea documentului.",summaryType:"commercial",findings:[],evidence:[],checkedSources:[],
+  missingInformation:[],caveats:[],preparedAction:null,suggestedAction:null,followUps:[],mode:"deterministic_fallback",providerAvailable:false,
+  commercialTruth:{scope:"Această oportunitate",limited:false,items:[]}};
+ const engine=compileOrchestrator(async(name,args)=>{toolCalls++;assert.equal(name,"get_commercial_truth");assert.match(args.question,/contrazic/);
+  return result({toolName:name,data:grounded,sources:[]});});
+ const answer=await engine.runCopilot(request("Ce informații se contrazic?"),{available:()=>true,model:()=>"must-not-run",createTurn:async()=>{modelCalls++;throw new Error("forbidden");}});
+ assert.equal(modelCalls,0);assert.equal(toolCalls,1);assert.equal(answer.answer.commercialTruth.scope,"Această oportunitate");
+ assert.equal(answer.answer.preparedAction,null);assert.equal(answer.diagnostics.totalTokens,0);
 });

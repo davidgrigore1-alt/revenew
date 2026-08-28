@@ -27,7 +27,7 @@ export function AppShell({
 }) {
   return (
     <ToastProvider>
-    <div className="min-h-dvh overflow-x-hidden bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
+    <div className="product-desktop min-h-dvh overflow-x-hidden bg-[rgb(var(--background))] text-[rgb(var(--foreground))]">
       <a href="#app-content" className="focus-ring fixed left-3 top-3 z-[100] -translate-y-20 rounded-button border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] px-4 py-2 text-sm font-semibold text-[rgb(var(--foreground))] shadow-modal transition-transform focus:translate-y-0">
         Sari la conținut
       </a>

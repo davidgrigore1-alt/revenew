@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
@@ -416,8 +416,7 @@ export async function saveOpportunityContact(opportunityId: string, formData: Fo
       input.isPrimary ? "Contactul principal al oportunității a fost actualizat." : "Contactele oportunității au fost actualizate."
     );
 
-    revalidatePath(`/opportunities/${opportunityId}`);
-    revalidatePath("/opportunities");
+    revalidateCommercialState(opportunityId);
     return { ok: true, message: input.isPrimary ? "Contact principal salvat." : "Contact salvat." };
   } catch (error) {
     return contactDatabaseError(error);
@@ -466,8 +465,7 @@ export async function setPrimaryOpportunityContact(opportunityId: string, associ
       "Contactul principal al oportunității a fost schimbat."
     );
 
-    revalidatePath(`/opportunities/${opportunityId}`);
-    revalidatePath("/opportunities");
+    revalidateCommercialState(opportunityId);
     return { ok: true, message: "Contactul principal a fost actualizat." };
   } catch (error) {
     return contactDatabaseError(error);
@@ -498,8 +496,7 @@ export async function removeOpportunityContact(opportunityId: string, associatio
       "Un contact a fost eliminat din această oportunitate."
     );
 
-    revalidatePath(`/opportunities/${opportunityId}`);
-    revalidatePath("/opportunities");
+    revalidateCommercialState(opportunityId);
     return { ok: true, message: "Contactul a fost eliminat din oportunitate." };
   } catch (error) {
     return contactDatabaseError(error);

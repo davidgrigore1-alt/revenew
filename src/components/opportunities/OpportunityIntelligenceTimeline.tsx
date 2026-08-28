@@ -30,7 +30,7 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
       <article className={isDerived ? "rounded-control border border-[rgb(var(--border-strong))] border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] px-3 py-3 sm:px-4" : "min-w-0 py-0.5"}>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className={`rounded-pill border px-2 py-0.5 text-[0.6875rem] font-semibold ${isDerived ? "border-[rgb(var(--primary)/0.4)] text-[rgb(var(--primary))]" : "border-[rgb(var(--border))] text-[rgb(var(--text-muted))]"}`}>
-            {isDerived ? "Interpretare ReveNew" : "Fapt înregistrat"}
+            {isDerived ? event.timeframe === "current" ? "Interpretare ReveNew · acum" : "Interpretare ReveNew · istoric" : "Fapt înregistrat"}
           </span>
           <span className="text-[0.6875rem] font-medium text-[rgb(var(--text-muted))]">{event.category}</span>
           <time dateTime={event.occurredAt} title={formatTimelineExactDate(event.occurredAt)} className="text-[0.6875rem] text-[rgb(var(--text-muted))] sm:ml-auto">
@@ -56,7 +56,7 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
   );
 }
 
-export function OpportunityIntelligenceTimeline({ result }: { result: OpportunityTimelineResult | null }) {
+export function OpportunityIntelligenceTimeline({ result, showCurrentState = true }: { result: OpportunityTimelineResult | null; showCurrentState?: boolean }) {
   if (!result || result.state === "error") {
     return (
       <section id="opportunity-timeline" tabIndex={-1} className="scroll-mt-24 rounded-panel border border-[rgb(var(--danger-border))] bg-[rgb(var(--surface))] p-5 outline-none target:ring-2 target:ring-[rgb(var(--primary)/0.42)]" aria-labelledby="opportunity-timeline-title">
@@ -80,14 +80,14 @@ export function OpportunityIntelligenceTimeline({ result }: { result: Opportunit
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Poveste comercială verificabilă</p>
             <h2 id="opportunity-timeline-title" className="mt-1 font-display text-xl font-semibold tracking-tight sm:text-2xl">Istoric comercial</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">Fapte înregistrate și interpretări ReveNew în ordine cronologică.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">Fapte înregistrate și interpretări cu momentul evaluării explicit. Istoricul nu înlocuiește situația curentă.</p>
           </div>
           <div className="flex items-center gap-2 text-xs text-[rgb(var(--text-muted))]">
             <ClockIcon className="h-4 w-4" aria-hidden="true" />
             {result.observedCount} fapte · {result.derivedCount} interpretări
           </div>
         </div>
-        <div className="mt-5 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4" aria-labelledby="current-state-title">
+        {showCurrentState ? <div className="mt-5 rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-4" aria-labelledby="current-state-title">
           <h3 id="current-state-title" className="text-sm font-semibold">Situație actuală</h3>
           <dl className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <SnapshotItem label="Status">{state.status}</SnapshotItem>
@@ -96,7 +96,7 @@ export function OpportunityIntelligenceTimeline({ result }: { result: Opportunit
             <SnapshotItem label="Următor pas">{state.nextActionLabel}<span className={`block text-xs font-semibold ${state.nextActionState === "restant" ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-muted))]"}`}>{state.nextActionState === "restant" ? "Restant" : state.nextActionState === "programat" ? "Programat" : "Neconfirmat"}{state.nextActionDueAt ? ` · ${formatTimelineExactDate(state.nextActionDueAt)}` : ""}</span></SnapshotItem>
             <SnapshotItem label="Responsabil">{state.ownerLabel}</SnapshotItem>
           </dl>
-        </div>
+        </div> : null}
       </header>
 
       <div className="px-4 py-5 sm:px-6">

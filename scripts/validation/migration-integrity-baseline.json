@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260822090944_immutable_pilot_measurement_v1.sql",
+  "reviewedThrough": "20260828131036_executive_review_checkpoints.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -31,6 +31,19 @@
     "20260719143946_commercial_signal_conversion_privileges.sql": "6290f0af8ada08bcd3db1f1d5feade8c53fdff6226cf82299e2020647f3a2e57",
     "20260719181513_source_intake_external_signals_v1.sql": "8f8090e45c1dd8d4c6222e7295e2869f69ecd114fecc2f54dbd86fc387a46db7",
     "20260719185230_harden_source_intake_validation.sql": "d35adcc59ce29c0e631c1c898b23c2e607603c689e363fedcbeea39b048c89d2",
-    "20260822090944_immutable_pilot_measurement_v1.sql": "2d02ac5b6db7f587d310f363d33f325aa614fce244283a371715feab80683795"
+    "20260822090944_immutable_pilot_measurement_v1.sql": "2d02ac5b6db7f587d310f363d33f325aa614fce244283a371715feab80683795",
+    "20260823155517_google_workspace_context.sql": "915d6e9edefababeca10fa51390a786fed73278256e1d866ad1d45b0d63166db",
+    "20260823203717_harden_google_connector_runtime.sql": "84e543bb23cc9c53c6298ae2ea63f32cae91bc8f870045a4ba56e79fb49e7943",
+    "20260824122213_communication_os_v1.sql": "e6cbf6fb059227ddae9ac1d97e121829823b3ab1feb3adac3e9d665d485e409c",
+    "20260824143000_workspace_notes_v1.sql": "b099dcd0e3f79139a4ecf9cb64794b5d26d51e62579dd2d88ad10643783e3f2e",
+    "20260825120000_ask_safe_action_plans.sql": "991c7436a7eca50e856eccc472c52ef1697dedb09235b94775fd0df03edc83b7",
+    "20260825172929_commercial_workflow_runtime_core.sql": "cc26f46a73dbfe5f28ae175bfa7fa7ad88529783f0d071af4042bcb54cdcf7ec",
+    "20260826113000_workflow_service_role_acl.sql": "9e3792a9425562ea803b55a45d753144d6494548bcc3cc7c8994c9780a846505",
+    "20260826115635_ask_multi_record_result_sets.sql": "7b38fc012f041ff306171ed7d0537353df931c46f06c113e0b645435da423cef",
+    "20260827024500_opportunity_workflow_acl.sql": "598dc1e7574789815ac046916d61eae2d43e4050f11544d0ad22eff2c14e2e4c",
+    "20260828094643_commercial_documents_service_role_select.sql": "ee37fed3e507d5ad74d6eae78fac061f129b908744069364ff7f4a04d1c42de5",
+    "20260828011406_scoped_google_drive_evidence.sql": "ada290be5a00b501aef158c6b56cefa34b4f2756a69d811bd27b724717ed0f50",
+    "20260828110003_verified_commercial_impact.sql": "90495ca1674b361bcf4f48499f76c1b8c4087695280db2d8ce46f426013da89c",
+    "20260828131036_executive_review_checkpoints.sql": "cb735df2d4a251d7137fcec7c8ea438cc580a1f18b560e8df3ceccd385d2565d"
   }
 }

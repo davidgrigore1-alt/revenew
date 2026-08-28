@@ -41,6 +41,8 @@ const answerSchema = {
 
 export function createOpenAICopilotProvider(): CopilotProvider {
   return {
+    kind: "openai",
+    deterministicFirst: false,
     available: isOpenAIConfigured,
     model: getCopilotModel,
     async createTurn(input): Promise<CopilotProviderTurn> {
@@ -55,7 +57,7 @@ export function createOpenAICopilotProvider(): CopilotProvider {
         tool_choice: "auto",
         max_output_tokens: 1100,
         ...(input.requireStructuredAnswer ? {
-          text: { format: { type: "json_schema", name: "revenew_copilot_answer", strict: true, schema: answerSchema } }
+          text: { format: { type: "json_schema", name: "revenew_structured_answer", strict: true, schema: (input.responseSchema ?? answerSchema) as typeof answerSchema } }
         } : {})
       }, { signal }), 22_000);
       const toolCalls = response.output.flatMap((item) => item.type === "function_call" ? [{ callId: item.call_id, name: item.name, argumentsJson: item.arguments }] : []);

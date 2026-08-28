@@ -69,11 +69,16 @@ const config: Config = {
         display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {
-        metadata: ["0.75rem", { lineHeight: "1rem" }],
-        body: ["0.875rem", { lineHeight: "1.375rem" }],
-        "card-title": ["1rem", { lineHeight: "1.5rem" }],
-        "section-title": ["1.25rem", { lineHeight: "1.75rem" }],
-        "page-title": ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "-0.025em" }]
+        xs: ["var(--font-size-xs)", { lineHeight: "var(--line-height-xs)" }],
+        sm: ["var(--font-size-sm)", { lineHeight: "var(--line-height-sm)" }],
+        micro: ["var(--font-size-micro)", { lineHeight: "1rem" }],
+        label: ["var(--font-size-label)", { lineHeight: "1.25rem" }],
+        "page-heading": ["var(--font-size-page-heading)", { lineHeight: "2.125rem", letterSpacing: "-0.025em" }],
+        metadata: ["var(--font-size-metadata)", { lineHeight: "1rem" }],
+        body: ["var(--font-size-body)", { lineHeight: "1.375rem" }],
+        "card-title": ["var(--font-size-card-title)", { lineHeight: "1.5rem" }],
+        "section-title": ["var(--font-size-section-title)", { lineHeight: "1.75rem" }],
+        "page-title": ["var(--font-size-page-title)", { lineHeight: "2.125rem", letterSpacing: "-0.025em" }]
       },
       borderRadius: {
         control: "var(--radius-control)",

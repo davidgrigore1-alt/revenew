@@ -24,10 +24,10 @@ test("assistant v2 explains key screens with route-specific, human-controlled gu
   const assistant = read("src/components/guidance/ContextualAssistant.tsx");
   const conversation = read("src/components/intelligence/CopilotConversation.tsx");
   assert.match(conversation, /Explică această pagină/);
-  assert.match(assistant, />Asistent</);
+  assert.match(assistant, />Întreabă ReveNew</);
   assert.match(assistant, /Asistent ReveNew/);
   assert.match(assistant, /Răspunde pe baza informațiilor autorizate din ReveNew\./);
-  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(assistant, /<CopilotConversation\b[^\n]*\bautoFocus\b/);
   assert.match(conversation, /Doar informații autorizate/);
   const cases = [
     ["/dashboard", "screen-dashboard", "Control Center"],
@@ -93,7 +93,7 @@ test("assistant drawer uses a short composited transition and preserves keyboard
   assert.match(assistant, /event\.key === "Escape"/);
   assert.match(assistant, /returnFocusRef\.current\?\.focus/);
   assert.match(assistant, /textarea:not\(\[disabled\]\)/);
-  assert.match(assistant, /CopilotConversation autoFocus/);
+  assert.match(assistant, /<CopilotConversation\b[^\n]*\bautoFocus\b/);
   assert.doesNotMatch(assistant, /backdrop-blur/);
 });
 

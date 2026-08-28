@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -445,18 +446,18 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             <Field required label="Numele firmei" name="businessName" value={draft.businessName} onChange={updateField} error={errors.businessName} placeholder="Auto Management SRL" autoComplete="organization" />
             <label className="block">
               <span className="text-sm font-medium text-[rgb(var(--foreground))]">Domeniul de activitate *</span>
-              <select id="industry" required value={draft.industry} onChange={(event) => updateField("industry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
+              <Select id="industry" required value={draft.industry} onChange={(event) => updateField("industry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 <option value="">Alege domeniul</option>
                 {industryOptions.map((item) => <option key={item} value={item}>{item}</option>)}
-              </select>
+              </Select>
               {errors.industry ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.industry}</p> : null}
             </label>
             {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" />}
             <label className="block">
               <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara *</span>
-              <select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
+              <Select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label}</option>)}
-              </select>
+              </Select>
             </label>
             {controlledAreas ? (
               <SearchableSelect required label={regionLabel} name="administrativeArea" value={draft.administrativeArea} onChange={updateField} options={administrativeAreaOptions} error={errors.administrativeArea} placeholder="Selectează județul" />
@@ -470,9 +471,9 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr] md:col-span-2">
               <label className="block">
                 <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara telefonului</span>
-                <select id="companyPhoneCountry" value={draft.companyPhoneCountry} onChange={(event) => updateField("companyPhoneCountry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
+                <Select id="companyPhoneCountry" value={draft.companyPhoneCountry} onChange={(event) => updateField("companyPhoneCountry", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                   {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label} {country.callingCode}</option>)}
-                </select>
+                </Select>
               </label>
               <Field required label="Telefonul firmei" name="companyPhone" value={draft.companyPhone} onChange={updateField} error={errors.companyPhone} placeholder="+40 721 000 000" type="tel" autoComplete="tel" />
             </div>
@@ -504,9 +505,9 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               <Field required label="Valoarea medie a unui client sau contract" name="averageContractValue" value={draft.averageContractValue} onChange={updateField} error={errors.averageContractValue} placeholder="6200" type="number" />
               <label className="block">
                 <span className="text-sm font-medium text-[rgb(var(--foreground))]">Moneda *</span>
-                <select id="currency" required value={draft.currency} onChange={(event) => updateField("currency", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
+                <Select id="currency" required value={draft.currency} onChange={(event) => updateField("currency", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                   {currencyOptions.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
-                </select>
+                </Select>
               </label>
             </div>
           </div>
@@ -529,10 +530,10 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
             {draft.leadSources.includes("Alte surse") ? <Field required label="Alte surse" name="customLeadSource" value={draft.customLeadSource} onChange={updateField} error={errors.customLeadSource} placeholder="Descrie sursa" /> : null}
             <label className="block">
               <span className="text-sm font-medium text-[rgb(var(--foreground))]">Care este problema comercială principală? *</span>
-              <select id="mainCommercialProblem" required value={draft.mainCommercialProblem} onChange={(event) => updateField("mainCommercialProblem", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
+              <Select id="mainCommercialProblem" required value={draft.mainCommercialProblem} onChange={(event) => updateField("mainCommercialProblem", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
                 <option value="">Alege problema</option>
                 {commercialProblemOptions.map((problem) => <option key={problem} value={problem}>{problem}</option>)}
-              </select>
+              </Select>
               {errors.mainCommercialProblem ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.mainCommercialProblem}</p> : null}
             </label>
             {draft.mainCommercialProblem === "Altă problemă" ? <Field required label="Altă problemă" name="customCommercialProblem" value={draft.customCommercialProblem} onChange={updateField} error={errors.customCommercialProblem} placeholder="Descrie problema" /> : null}

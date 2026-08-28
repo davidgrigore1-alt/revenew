@@ -105,6 +105,7 @@ export function runWithLocalEnvironment(command, args) {
       ...process.env,
       NEXT_PUBLIC_SUPABASE_URL: local.apiUrl,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: local.anonKey,
+      SUPABASE_SERVICE_ROLE_KEY: local.serviceRoleKey,
       REVENEW_ACCESS_MODE: "preview",
       EMAIL_SENDING_MODE: "disabled",
       RESEND_API_KEY: "",

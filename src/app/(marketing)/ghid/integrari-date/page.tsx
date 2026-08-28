@@ -15,7 +15,7 @@ export default function GuideIntegrationsPage() {
       <h1>Integrări, date și stadiul produsului</h1>
       <p>ReveNew folosește Supabase pentru autentificare și date de workspace. OpenAI poate fi folosit server-side pentru analiză și generare de drafturi atunci când cheia este configurată.</p>
       <h2>Ce nu este activ încă</h2>
-      <p>Nu există flux confirmat de trimitere Resend, Gmail OAuth, WhatsApp delivery, voice AI, OCR sau sincronizare CRM. Aceste direcții pot fi planificate, dar nu sunt prezentate ca funcții active.</p>
+      <p>Google Workspace poate furniza context Gmail și Calendar prin OAuth separat. Trimiterea Gmail este opțională și necesită revizuirea draftului plus confirmare finală; WhatsApp, voice AI, OCR și sincronizările CRM externe rămân neimplementate.</p>
       <h2>Securitate și confidențialitate</h2>
       <p>Cheile de provider trebuie să rămână server-only. Ghidul public nu încarcă date private, oportunități sau identificatori de workspace.</p>
     </article>

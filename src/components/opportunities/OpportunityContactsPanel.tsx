@@ -1,10 +1,12 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { useToast } from "@/components/ui/ToastProvider";
 import {
   removeOpportunityContact,
   saveOpportunityContact,
@@ -84,6 +86,7 @@ function ContactLine({ label, value, href }: { label: string; value?: string | n
 
 export function OpportunityContactsPanel({ opportunityId, contacts, existingContacts = [] }: OpportunityContactsPanelProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(contacts.length === 0);
   const [editing, setEditing] = useState<EditableContact>({ ...emptyEditableContact, isPrimary: contacts.length === 0 });
@@ -113,6 +116,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
   function refreshAfter(result: { ok: boolean; message?: string; error?: string }) {
     if (result.ok) {
       setMessage(result.message ?? "Contactele au fost actualizate.");
+      showToast({ title: result.message ?? "Contactele au fost actualizate.", tone: "success" });
       setError("");
       setEditing({ ...emptyEditableContact, isPrimary: false });
       setShowForm(false);
@@ -121,6 +125,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
     }
 
     setError(result.error ?? "Contactele nu au putut fi actualizate.");
+    showToast({ title: "Contactele nu au fost actualizate", description: result.error ?? "Verifică datele și încearcă din nou.", tone: "danger" });
     setMessage("");
   }
 
@@ -271,7 +276,7 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
             <input type="hidden" name="organizationName" value="" />
             <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
               Asociază un contact existent
-              <select
+              <Select
                 name="contactId"
                 className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 onChange={(event) => {
@@ -286,13 +291,13 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
                 {existingContacts.map((contact) => (
                   <option key={contact.id} value={contact.id}>{[contact.fullName, contact.organizationName, contact.email].filter(Boolean).join(" · ")}</option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
               Rol
-              <select name="role" defaultValue="decision_maker" className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]">
+              <Select name="role" defaultValue="decision_maker" className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]">
                 <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
-              </select>
+              </Select>
             </label>
             <label className="flex items-center gap-3 text-sm font-semibold text-[rgb(var(--foreground))] md:col-span-2">
               <input name="isPrimary" type="checkbox" defaultChecked={contacts.length === 0} className="focus-ring size-4 rounded border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] text-[rgb(var(--primary))]" />
@@ -338,14 +343,14 @@ export function OpportunityContactsPanel({ opportunityId, contacts, existingCont
               </label>
               <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Rol în oportunitate
-                <select
+                <Select
                   name="role"
                   defaultValue={editing.role}
                   className="focus-ring h-11 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))]"
                 >
                   {editing.role && !["decision_maker", "economic_buyer", "champion", "influencer", "approver", "other"].includes(editing.role) ? <option value={editing.role}>Rol legacy: {editing.role}</option> : null}
                   <option value="decision_maker">Decident</option><option value="economic_buyer">Cumpărător economic</option><option value="champion">Champion intern</option><option value="influencer">Influencer</option><option value="approver">Aprobator</option><option value="other">Alt rol</option>
-                </select>
+                </Select>
               </label>
               <label className="grid gap-2 text-sm font-semibold text-[rgb(var(--foreground))]">
                 Email

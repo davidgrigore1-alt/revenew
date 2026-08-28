@@ -16,7 +16,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
     const ActiveIcon = active.Icon;
     return (
-      <button type="button" onClick={() => setTheme(nextTheme)} title="Schimbă tema" aria-label={`Schimbă tema. Activă: ${active.label}`} className="focus-ring inline-flex h-10 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-[rgb(var(--foreground))] shadow-sm transition hover:bg-[rgb(var(--muted))]">
+      <button type="button" onClick={() => setTheme(nextTheme)} title="Schimbă tema" aria-label={`Schimbă tema. Activă: ${active.label}`} className="focus-ring inline-flex h-8 shrink-0 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 text-[rgb(var(--foreground))] transition-[background-color,border-color,color] duration-fast ease-standard hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--muted))]">
         <ActiveIcon className="h-5 w-5" aria-hidden="true" />
       </button>
     );

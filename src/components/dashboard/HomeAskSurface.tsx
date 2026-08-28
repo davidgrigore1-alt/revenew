@@ -6,12 +6,12 @@ const suggestions = ["Ce necesită atenție astăzi?", "Ce s-a schimbat de ieri?
 
 export function HomeAskSurface({ greeting }: { greeting: string }) {
   return (
-    <section className="mx-auto w-full max-w-3xl pt-4 sm:pt-8" aria-labelledby="home-greeting">
+    <section className="mx-auto w-full max-w-4xl pt-4 sm:pt-8" aria-labelledby="home-greeting">
       <div>
         <h1 id="home-greeting" className="text-2xl font-semibold tracking-[-0.03em] text-[rgb(var(--foreground))] sm:text-[1.75rem]">{greeting}</h1>
       </div>
       <div className="mt-5">
-        <CopilotConversation lockedContext={{ pageType: "dashboard" }} initialSuggestions={suggestions} />
+        <CopilotConversation lockedContext={{ pageType: "dashboard" }} contextLabel="Control Center" initialSuggestions={suggestions} />
       </div>
     </section>
   );

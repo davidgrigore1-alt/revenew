@@ -1,0 +1,18 @@
+@media print {
+ .root {
+  --surface: 255 255 255;
+  --surface-subtle: 248 248 248;
+  --foreground: 20 20 20;
+  --text-muted: 70 70 70;
+  --text-secondary: 45 45 45;
+  --border: 210 210 210;
+  color: black;
+  background: white;
+ }
+ .root table { width: 100%; font-size: 10pt; }
+ .root tr { break-inside: avoid; }
+ .root article { break-before: auto; }
+ .root a { color: inherit; }
+ .root details::details-content { content-visibility: visible; display: contents; }
+ .root details > :not(summary) { display: block !important; }
+}

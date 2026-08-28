@@ -11,11 +11,11 @@ import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import { applicationDateKey, lifecycleForOpportunity } from "@/lib/opportunity-domain";
 import Link from "next/link";
 import { CreateOpportunityPanel } from "@/components/opportunities/CreateOpportunityPanel";
-import { getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
+import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 
-export default async function OpportunitiesPage({ searchParams }: { searchParams: OpportunityFilterState & { page?: string } }) {
+export default async function OpportunitiesPage({ searchParams }: { searchParams: OpportunityFilterState & { page?: string; create?: string } }) {
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const [allOpportunities, savedViews, crm] = await Promise.all([getOpportunitiesForCurrentBusiness(), getSavedViews("opportunities"), getCrmWorkspaceForCurrentBusiness()]);
+  const [allOpportunities, savedViews, crm, assignableProfiles] = await Promise.all([getOpportunitiesForCurrentBusiness(), getSavedViews("opportunities"), getCrmWorkspaceForCurrentBusiness(), getAssignableProfilesForCurrentBusiness()]);
   const today = applicationDateKey();
   const query = (searchParams.q ?? "").trim().toLocaleLowerCase("ro-RO").slice(0, 120);
   const filtered = allOpportunities.filter((opportunity) => {
@@ -54,7 +54,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
       eyebrow="Oportunități"
       title="Oportunități comerciale"
       description={`Cazuri aprobate și accesibile echipei ${business?.name ?? "firmei tale"}, pregătite pentru atribuirea responsabilului, următoarea acțiune și decizie.`}
-      actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
+      actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} assignableProfiles={assignableProfiles} initialOpen={searchParams.create === "1"} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
     >
       <div className="grid gap-6">
         {!isSupabaseConfigured ? <DemoNotice /> : null}

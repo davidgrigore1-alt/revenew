@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
 import { redirect } from "next/navigation";
 import {
   generateCallScript,
@@ -407,6 +408,7 @@ export async function persistFollowUp(
     console.error("Supabase follow-up event insert error", eventResult.error);
   }
 
+  revalidateCommercialState(opportunityId);
   return {
     ok: true,
     id: data.id,
@@ -456,10 +458,10 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
     label = "Actiune anulata";
   }
 
-  const { error } = await supabase.from("opportunity_actions").update(payload).eq("id", actionId).eq("business_id", business.id).eq("opportunity_id", opportunityId);
-  if (error) {
+  const { data: updatedAction, error } = await supabase.from("opportunity_actions").update(payload).eq("id", actionId).eq("business_id", business.id).eq("opportunity_id", opportunityId).select("id,due_at").maybeSingle();
+  if (error || !updatedAction) {
     console.error("Supabase action update error", error);
-    return { ok: false, error: `Actiunea nu a putut fi actualizata: ${error.message}` };
+    return { ok: false, error: "Acțiunea nu a putut fi actualizată în workspace-ul curent." };
   }
 
   const eventResult = await supabase.from("opportunity_events").insert({
@@ -469,11 +471,12 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
     event_type: eventType,
     label,
     description: label,
-    metadata: { action_id: actionId }
+    metadata: { action_id: actionId, ...(payload.due_at ? { due_at: payload.due_at } : {}) }
   });
   if (eventResult.error) {
     console.error("Supabase action event insert error", eventResult.error);
   }
 
-  return { ok: true };
+  revalidateCommercialState(opportunityId);
+  return { ok: true, dueAt: updatedAction.due_at ?? null };
 }

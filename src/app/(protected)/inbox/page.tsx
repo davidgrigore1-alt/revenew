@@ -1,23 +1,43 @@
 import { CommercialInboxClient } from "@/components/inbox/CommercialInboxClient";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
+import { ConnectedEmailInbox } from "@/components/inbox/ConnectedEmailInbox";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { Button } from "@/components/ui/Button";
 import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
 import type { CommercialSignalSource } from "@/lib/types";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
+import { getOwnedExternalContext, requireGoogleConnectorActor } from "@/lib/google-workspace/repository";
 import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
+import { getResponseWindowBusinessDays, listOwnedCommunicationDrafts } from "@/lib/communication-os";
 
-export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string; create?: string } }) {
-  const [inbox, crm, assignableProfiles, opportunities] = await Promise.all([
+async function getPrivateConnectedEmails() {
+  try {
+    const actor = await requireGoogleConnectorActor();
+    const [context, drafts, responseWindowBusinessDays] = await Promise.all([getOwnedExternalContext({ actor, limit: 20 }), listOwnedCommunicationDrafts(actor), getResponseWindowBusinessDays(actor)]);
+    const draftBySource = new Map(drafts.filter((draft) => draft.source_message_id).map((draft) => [draft.source_message_id, draft.status]));
+    return { responseWindowBusinessDays, emails: context.emails.map((email) => ({
+      id: email.id, sentAt: email.sent_at, senderName: email.sender_name, senderEmail: email.sender_email,
+      subject: email.subject, excerpt: email.excerpt, direction: email.direction,
+      linkedContactId: email.linked_contact_id, linkedOrganizationId: email.linked_organization_id, linkedOpportunityId: email.linked_opportunity_id,
+      draftStatus: draftBySource.get(email.id) ?? null
+    })) };
+  } catch {
+    return { emails: [], responseWindowBusinessDays: 3 };
+  }
+}
+
+export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string; create?: string; email?: string } }) {
+  const [inbox, crm, assignableProfiles, opportunities, privateContext] = await Promise.all([
     getCommercialSignalsForCurrentBusiness(),
     getCrmWorkspaceForCurrentBusiness(),
     getAssignableProfilesForCurrentBusiness(),
-    getOpportunitiesForCurrentBusiness()
+    getOpportunitiesForCurrentBusiness(),
+    getPrivateConnectedEmails()
   ]);
 
   return (
     <PageShell
-      eyebrow="Inbox Comercial"
+      eyebrow="Semnale și conversații"
       title="Inbox Comercial"
       description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide."
       actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button><InboxIngestionActions showDetection={inbox.signals.length > 0} /></>}
@@ -34,6 +54,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
         initialSignalId={searchParams?.signal}
         initialCreateOpen={searchParams?.create === "1"}
       />
+      <ConnectedEmailInbox emails={privateContext.emails} responseWindowBusinessDays={privateContext.responseWindowBusinessDays} initialEmailId={searchParams?.email} />
     </PageShell>
   );
 }

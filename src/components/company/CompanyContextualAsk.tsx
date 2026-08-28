@@ -9,7 +9,7 @@ export function CompanyContextualAsk({ organizationId, companyName, suggestions 
         <h2 id="company-ask-title" className="text-section-title font-semibold">Întreabă despre {companyName}</h2>
         <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Răspuns limitat la datele autorizate ale acestei relații.</p>
       </div>
-      <CopilotConversation className="pt-5" lockedContext={{ pageType: "company", organizationId }} initialSuggestions={suggestions} />
+      <CopilotConversation className="pt-5" lockedContext={{ pageType: "company", organizationId }} contextLabel={companyName} initialSuggestions={suggestions} />
     </section>
   );
 }

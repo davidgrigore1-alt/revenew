@@ -1,11 +1,13 @@
 "use client";
 
+import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { SavedViewControls } from "@/components/filters/SavedViewControls";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
 import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
 import type { CrmContact, CrmOrganization } from "@/lib/types";
@@ -16,6 +18,11 @@ type CrmWorkspaceClientProps = {
   contacts: CrmContact[];
   view?: "all" | "companies" | "contacts";
   organizationStats?: Record<string, { activeOpportunities: number; lastActivity?: string }>;
+  savedViews?: Array<{ id: string; name: string; filter_state: Record<string, string> | null }>;
+  initialQuery?: string;
+  initialRelationship?: string;
+  initialSort?: string;
+  initialCreate?: boolean;
 };
 
 const roleOptions = [
@@ -33,7 +40,7 @@ const roleOptions = [
 const roleLabels = Object.fromEntries(roleOptions) as Record<string, string>;
 const relationshipLabels: Record<string, string> = { prospect: "Prospect", customer: "Client", partner: "Partener", inactive: "Inactiv" };
 
-export function CrmWorkspaceClient({ organizations, contacts, view = "all", organizationStats = {} }: CrmWorkspaceClientProps) {
+export function CrmWorkspaceClient({ organizations, contacts, view = "all", organizationStats = {}, savedViews = [], initialQuery = "", initialRelationship = "all", initialSort = "updated", initialCreate = false }: CrmWorkspaceClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [notice, setNotice] = useState("");
@@ -41,8 +48,10 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   const [editingOrganization, setEditingOrganization] = useState<CrmOrganization | null>(null);
   const [editingContact, setEditingContact] = useState<CrmContact | null>(null);
   const [panel, setPanel] = useState<"organization" | "contact" | null>(null);
-  const [query, setQuery] = useState("");
-  const [relationship, setRelationship] = useState("all");
+  const [query, setQuery] = useState(initialQuery);
+  const [relationship, setRelationship] = useState(initialRelationship);
+  const [sort, setSort] = useState(initialSort);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [websiteError, setWebsiteError] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
   const websiteRef = useRef<HTMLInputElement>(null);
@@ -52,6 +61,27 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
     return matchesQuery && (relationship === "all" || organization.relationshipStatus === relationship);
   }), [organizations, normalizedQuery, relationship]);
   const filteredContacts = useMemo(() => contacts.filter((contact) => !normalizedQuery || `${contact.fullName} ${contact.email ?? ""} ${contact.phone ?? ""} ${contact.jobTitle ?? ""} ${contact.organization?.name ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery)), [contacts, normalizedQuery]);
+  const sortedOrganizations = useMemo(() => [...filteredOrganizations].sort((left, right) => {
+    if (sort === "name") return left.name.localeCompare(right.name, "ro");
+    if (sort === "opportunities") return (organizationStats[right.id]?.activeOpportunities ?? 0) - (organizationStats[left.id]?.activeOpportunities ?? 0);
+    return String(organizationStats[right.id]?.lastActivity ?? right.updatedAt ?? "").localeCompare(String(organizationStats[left.id]?.lastActivity ?? left.updatedAt ?? ""));
+  }), [filteredOrganizations, organizationStats, sort]);
+  const sortedContacts = useMemo(() => [...filteredContacts].sort((left, right) => {
+    if (sort === "company") return String(left.organization?.name ?? "").localeCompare(String(right.organization?.name ?? ""), "ro");
+    if (sort === "updated") return String(right.updatedAt ?? "").localeCompare(String(left.updatedAt ?? ""));
+    return left.fullName.localeCompare(right.fullName, "ro");
+  }), [filteredContacts, sort]);
+  const currentQuery = new URLSearchParams(Object.entries({
+    q: query.trim(),
+    relationship: view === "contacts" || relationship === "all" ? "" : relationship,
+    sort
+  }).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
+  const visibleIds = view === "contacts" ? sortedContacts.map((item) => item.id) : sortedOrganizations.map((item) => item.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  useEffect(() => {
+    if (initialCreate) setPanel(view === "contacts" ? "contact" : "organization");
+  }, [initialCreate, view]);
+
   useEffect(() => {
     if (!panel) return;
     panelRef.current?.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea")?.focus();
@@ -115,13 +145,18 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={view === "contacts" ? "Nume, companie, email sau telefon" : "Companie, industrie sau oraș"} className="focus-ring h-10 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] pl-10 pr-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]" />
             </span>
           </label>
-          {view !== "contacts" ? <label className="grid gap-2 text-sm font-semibold">Relație<select value={relationship} onChange={(event) => setRelationship(event.target.value)} className="focus-ring h-10 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]"><option value="all">Toate</option><option value="prospect">Prospect</option><option value="customer">Client</option><option value="partner">Partener</option><option value="inactive">Inactiv</option></select></label> : <span />}
+          {view !== "contacts" ? <label className="grid gap-2 text-sm font-semibold">Relație<Select value={relationship} onChange={(event) => setRelationship(event.target.value)} className="focus-ring h-10 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]"><option value="all">Toate</option><option value="prospect">Prospect</option><option value="customer">Client</option><option value="partner">Partener</option><option value="inactive">Inactiv</option></Select></label> : <span />}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="grid gap-1 text-xs font-semibold text-[rgb(var(--text-secondary))]">Sortare<Select value={sort} onChange={(event) => setSort(event.target.value)} className="focus-ring h-9 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2.5 text-xs font-medium"><option value="updated">Actualizare recentă</option><option value="name">Nume</option>{view !== "contacts" ? <option value="opportunities">Oportunități active</option> : <option value="company">Companie</option>}</Select></label>
           {view !== "contacts" ? <Button className="gap-2" onClick={() => { setEditingOrganization(null); setPanel("organization"); }}><PlusIcon className="h-4 w-4" aria-hidden="true" />Adaugă companie</Button> : null}
           {view !== "companies" ? <Button className="gap-2" onClick={() => { setEditingContact(null); setPanel("contact"); }}><PlusIcon className="h-4 w-4" aria-hidden="true" />Adaugă contact</Button> : null}
         </div>
       </div>
+
+      <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage={view === "contacts" ? "contacts" : "companies"} />
+
+      {selectedIds.size > 0 ? <div role="toolbar" aria-label="Acțiuni pentru selecție" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><div className="flex flex-wrap gap-2"><Button href="/ai" variant="secondary" size="small">Deschide Ask ReveNew</Button><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div></div> : null}
 
       {view !== "contacts" && panel === "organization" ? <div className="fixed inset-0 z-50 flex justify-end bg-black/45" role="dialog" aria-modal="true" aria-label={editingOrganization ? "Editează compania" : "Adaugă companie"} onKeyDown={(event) => { if (event.key === "Escape") setPanel(null); }}>
         <button type="button" className="absolute inset-0" aria-label="Închide formularul" onClick={() => setPanel(null)} />
@@ -180,12 +215,12 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Relație
-            <select name="relationshipStatus" defaultValue={editingOrganization?.relationshipStatus ?? "prospect"} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+            <Select name="relationshipStatus" defaultValue={editingOrganization?.relationshipStatus ?? "prospect"} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
               <option value="prospect">Prospect</option>
               <option value="customer">Client</option>
               <option value="partner">Partener</option>
               <option value="inactive">Inactiv</option>
-            </select>
+            </Select>
           </label>
           <label className="grid gap-2 text-sm font-semibold md:col-span-2">
             Note
@@ -209,10 +244,10 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           <input type="hidden" name="id" value={editingContact?.id ?? ""} />
           <label className="grid gap-2 text-sm font-semibold">
             Companie
-            <select name="organizationId" defaultValue={editingContact?.organizationId ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+            <Select name="organizationId" defaultValue={editingContact?.organizationId ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
               <option value="">Fără companie</option>
               {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
-            </select>
+            </Select>
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Nume complet
@@ -244,9 +279,9 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Rol decizie
-            <select name="decisionRole" defaultValue={editingContact?.decisionRole ?? "other"} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
+            <Select name="decisionRole" defaultValue={editingContact?.decisionRole ?? "other"} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3">
               {roleOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
+            </Select>
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Profil profesional
@@ -277,7 +312,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             <caption className="sr-only">Companiile accesibile în spațiul de lucru curent</caption>
             <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
               <tr className="border-b border-[rgb(var(--border-strong))]">
-                <th scope="col" className="w-[27%] px-3 py-2.5">Companie</th>
+                <th scope="col" className="w-[27%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează companiile vizibile" className="size-4" />Companie</span></th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Relație</th>
                 <th scope="col" className="w-[22%] px-3 py-2.5">Contact principal</th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Oportunități</th>
@@ -286,16 +321,17 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgb(var(--border))]">
-              {filteredOrganizations.map((organization) => {
+              {sortedOrganizations.map((organization) => {
                 const organizationContacts = contacts.filter((contact) => contact.organizationId === organization.id);
                 const primary = organizationContacts.find((contact) => contact.isPrimaryForOrganization);
                 return (
                   <tr key={organization.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
                     <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--primary))] group-focus-within:border-l-[rgb(var(--primary))]">
-                      <Link href={`/crm/organizations/${organization.id}`} className="focus-ring block min-w-0 rounded-control">
+                      <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-0.5 size-4 shrink-0" />
+                      <Link href={`/crm/organizations/${organization.id}`} className="focus-ring block min-w-0 flex-1 rounded-control">
                         <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--primary))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline">{organization.name}</span>
                         <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{[organization.industry, organization.city].filter(Boolean).join(" · ") || "Context necompletat"}</span>
-                      </Link>
+                      </Link></div>
                     </td>
                     <td className="px-3 py-2.5"><span className={"status-pill " + (organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand")}>{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Neclasificată"}</span></td>
                     <td className="px-3 py-2.5"><p className="truncate font-medium text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{primary?.jobTitle ?? (organizationContacts.length ? organizationContacts.length + " contacte" : "Fără contact")}</p></td>
@@ -323,7 +359,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             <caption className="sr-only">Contactele comerciale accesibile în spațiul de lucru curent</caption>
             <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
               <tr className="border-b border-[rgb(var(--border-strong))]">
-                <th scope="col" className="w-[23%] px-3 py-2.5">Persoană</th>
+                <th scope="col" className="w-[23%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează contactele vizibile" className="size-4" />Persoană</span></th>
                 <th scope="col" className="w-[19%] px-3 py-2.5">Companie</th>
                 <th scope="col" className="w-[13%] px-3 py-2.5">Rol</th>
                 <th scope="col" className="w-[25%] px-3 py-2.5">Contact</th>
@@ -332,13 +368,14 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgb(var(--border))]">
-              {filteredContacts.map((contact) => (
+              {sortedContacts.map((contact) => (
                 <tr key={contact.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
                   <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--primary))] group-focus-within:border-l-[rgb(var(--primary))]">
-                    <button type="button" className="focus-ring block w-full min-w-0 rounded-control text-left" aria-label={`Editează contactul ${contact.fullName}`} onClick={() => { setEditingContact(contact); setPanel("contact"); }}>
+                    <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(contact.id)) next.delete(contact.id); else next.add(contact.id); return next; })} aria-label={"Selectează contactul " + contact.fullName} className="mt-0.5 size-4 shrink-0" />
+                    <Link href={"/crm/contacts/" + contact.id} className="focus-ring block w-full min-w-0 flex-1 rounded-control text-left" aria-label={"Deschide contactul " + contact.fullName}>
                       <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--primary))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline">{contact.fullName}</span>
                       <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{contact.jobTitle ?? "Funcție neconfirmată"}</span>
-                    </button>
+                    </Link></div>
                   </td>
                   <td className="px-3 py-2.5">{contact.organizationId && contact.organization ? <Link href={`/crm/organizations/${contact.organizationId}?tab=contacts`} className="focus-ring block truncate rounded-control text-[rgb(var(--text-secondary))] decoration-[rgb(var(--primary))] underline-offset-4 hover:text-[rgb(var(--primary))] hover:underline">{contact.organization.name}</Link> : <span className="text-[rgb(var(--text-muted))]">Fără companie</span>}</td>
                   <td className="px-3 py-2.5 text-xs font-medium text-[rgb(var(--text-secondary))]">{roleLabels[contact.decisionRole ?? "other"] ?? "Neconfirmat"}</td>

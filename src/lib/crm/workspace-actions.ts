@@ -8,6 +8,7 @@ import { isMissingRelationError } from "@/lib/supabase/database-errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
+import { processCommercialWorkflowEvent } from "@/lib/workflow-runtime";
 
 type CrmActionResult = { ok: true; id?: string; message: string } | { ok: false; error: string; schemaMissing?: boolean };
 
@@ -230,7 +231,7 @@ export async function archiveCrmContact(id: string): Promise<CrmActionResult> {
 
 export async function createCrmOpportunity(formData: FormData): Promise<CrmActionResult> {
   await requireActivePaidAccess();
-  await requirePermission("opportunities.create");
+  const authorization = await requirePermission("opportunities.create");
 
   if (!isSupabaseConfigured) {
     return { ok: false, error: "Oportunitățile reale sunt disponibile doar când Supabase este configurat." };
@@ -247,12 +248,19 @@ export async function createCrmOpportunity(formData: FormData): Promise<CrmActio
     const summary = field(formData, "summary", 1200);
     const estimatedValue = field(formData, "estimatedValue", 24).replace(",", ".");
     const deadline = field(formData, "deadline", 10) || null;
+    const ownerProfileId = field(formData, "ownerProfileId", 64) || null;
     if (!organizationId || !title || !summary) throw new Error("Compania, titlul și contextul comercial sunt obligatorii.");
     if (estimatedValue && !/^(0|[1-9]\d{0,9})(\.\d{1,2})?$/.test(estimatedValue)) {
       throw new Error("Valoarea estimată trebuie să fie un număr pozitiv valid.");
     }
     if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || Number.isNaN(Date.parse(`${deadline}T00:00:00Z`)))) {
       throw new Error("Termenul oportunității nu este valid.");
+    }
+
+    if (ownerProfileId) {
+      const { data: assignableProfiles, error: ownerError } = await supabase.rpc("business_assignable_profiles", { target_business_id: business.id });
+      const isAssignable = (assignableProfiles ?? []).some((profile: { profile_id?: string }) => profile.profile_id === ownerProfileId);
+      if (ownerError || !isAssignable) throw new Error("Responsabilul selectat nu aparține workspace-ului curent.");
     }
 
     const { data: organization, error: organizationError } = await supabase
@@ -268,6 +276,7 @@ export async function createCrmOpportunity(formData: FormData): Promise<CrmActio
     const { data, error } = await supabase.from("opportunities").insert({
       business_id: business.id,
       organization_id: organization.id,
+      owner_profile_id: ownerProfileId,
       title,
       type: "manual",
       status: "reviewed",
@@ -288,14 +297,36 @@ export async function createCrmOpportunity(formData: FormData): Promise<CrmActio
       recommended_action: "Asociază contactul principal și stabilește următoarea acțiune.",
       raw_source_text: summary,
       currency: "RON"
-    }).select("id").single();
+    }).select("id,created_at").single();
     if (error || !data) throw error ?? new Error("Oportunitatea nu a fost creată.");
+
+    let workflowEvaluationFailed = false;
+    try {
+      const workflowResults = await processCommercialWorkflowEvent({
+        businessId: business.id,
+        trigger: "opportunity_created",
+        eventKey: `opportunity:${data.id}:created`,
+        targetId: data.id,
+        triggeredByProfileId: authorization.profileId,
+        sourceEvent: { kind: "opportunity", id: data.id, occurredAt: data.created_at, origin: "user", actorProfileId: authorization.profileId },
+      });
+      workflowEvaluationFailed = workflowResults.some((result) => result.status === "failed");
+    } catch {
+      // Crearea oportunității rămâne validă; evităm un retry care ar dubla înregistrarea.
+      workflowEvaluationFailed = true;
+    }
 
     revalidatePath("/opportunities");
     revalidatePath("/pipeline");
     revalidatePath("/dashboard");
     revalidatePath(`/crm/organizations/${organization.id}`);
-    return { ok: true, id: data.id, message: "Oportunitatea a fost creată. Adaugă contactul principal și următoarea acțiune." };
+    return {
+      ok: true,
+      id: data.id,
+      message: workflowEvaluationFailed
+        ? "Oportunitatea a fost creată. Automatizările nu au putut fi evaluate; verifică Workflow Studio."
+        : "Oportunitatea a fost creată. Adaugă contactul principal și următoarea acțiune.",
+    };
   } catch (error) {
     return crmDatabaseError(error);
   }

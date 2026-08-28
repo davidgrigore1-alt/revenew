@@ -16,7 +16,7 @@ import { FaqAccordion, type FaqCategory } from "@/components/marketing/FaqAccord
 import { ControlledWorkflowSection, LandingStorySections } from "@/components/marketing/LandingStorySections";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingPricingGrid } from "@/components/marketing/MarketingPricingGrid";
-import { ProductPreview } from "@/components/marketing/ProductPreview";
+import { ProductRevealStage } from "@/components/marketing/ProductRevealStage";
 import { OpportunityExecutionPreview, PortfolioSummaryPreview } from "@/components/marketing/ProductShowcases";
 import { RevenueLeakMap } from "@/components/marketing/RevenueLeakMap";
 import { Reveal } from "@/components/marketing/Reveal";
@@ -105,7 +105,7 @@ export default function LandingPage() {
 
       <section id="continut" className="border-b border-[rgb(var(--border))] bg-[rgb(var(--background))]">
         <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8">
-          <div className="border-x border-[rgb(var(--border))] px-5 pb-10 pt-14 text-center sm:px-10 sm:pb-12 sm:pt-16 lg:px-14 lg:pb-14 lg:pt-20">
+          <div className="px-5 pb-7 pt-12 text-center sm:px-10 sm:pb-8 sm:pt-14 lg:px-14 lg:pb-9 lg:pt-16">
             <p className="mx-auto inline-flex w-fit items-center gap-2 rounded-pill border border-[rgb(var(--primary)/0.24)] bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--text-secondary))]"><span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--primary))]" aria-hidden="true" />Sistem operațional pentru revenue recovery</p>
             <h1 className="mx-auto mt-6 max-w-[1050px] text-[clamp(3rem,6.2vw,5.8rem)] font-semibold leading-[0.91] tracking-[-0.066em]">
               Claritate pentru venitul rămas între pași.
@@ -113,8 +113,8 @@ export default function LandingPage() {
             <p className="mx-auto mt-7 max-w-[760px] text-base leading-7 text-[rgb(var(--text-secondary))] sm:text-xl sm:leading-8">ReveNew aduce în același loc dovada, responsabilul și următoarea acțiune, înainte ca o oportunitate comercială să iasă din atenție.</p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Button href="#preturi" size="large">Solicită un audit controlat <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button><Button href="#produs-in-actiune" variant="secondary" size="large">Explorează produsul</Button></div>
           </div>
-          <div className="border-x border-b border-[rgb(var(--border))] px-2 pb-10 sm:px-5 sm:pb-14 lg:px-8 lg:pb-16"><ProductPreview /></div>
-          <aside className="grid border-x border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left md:grid-cols-3" aria-label="Principii ReveNew">
+          <ProductRevealStage />
+          <aside className="grid border-b border-t border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-left md:grid-cols-3" aria-label="Principii ReveNew">
             {[
               ["Dovezi verificabile", "Nu este recuperare de creanțe: ReveNew urmărește oportunități comerciale, nu datorii."],
               ["Control uman", "ReveNew recomandă, iar echipa ta decide. O persoană verifică și aprobă."],
