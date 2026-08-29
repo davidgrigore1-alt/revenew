@@ -18,8 +18,8 @@ Stare verificată pentru sprintul comercial buyer-ready. „Disponibil” însea
 | Guvernanță enterprise | Parțial disponibilă | Da | Nu | Nu | Da | Da | Condiționat | Izolarea, rolurile și controalele există; achiziția enterprise cere încă validări organizaționale și juridice. |
 | Document Intelligence | Parțial disponibilă | Da | Asistat | Nu | Da | Da | Da pentru pregătire internă | Nu există OCR sau ingestie automată a documentelor externe. |
 | Voice | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Există doar concepte/sandbox-uri locale; fără telefonie sau apeluri reale. |
-| Gmail | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Fără OAuth, citire inbox, creare draft Gmail sau trimitere Gmail. |
-| Google Calendar | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Sandbox-ul nu citește disponibilitate și nu creează evenimente reale. |
+| Gmail | Conectabil live, condiționat de configurare și autorizare | Da, după sincronizare | Asistat pentru context și pregătire | Citire; trimitere numai cu grant separat | Obligatorie pentru draft și confirmarea finală | Da | Condiționat | OAuth și sincronizarea read-only sunt owner-private. Trimiterea reală folosește `gmail.send`, versiune aprobată și confirmare finală; nu există trimitere autonomă. |
+| Google Calendar | Conectabil live, numai citire | Da, după sincronizare | Asistat pentru context | Nu | Da | Da | Condiționat | OAuth solicită `calendar.events.readonly`; citește evenimentele calendarului principal, dar nu creează și nu modifică evenimente. |
 | Semnale externe automate | Neimplementat live | Nu | Nu | Nu | — | — | Nu | Semnalele provin din introducere/import controlat, nu din monitorizare web autonomă. |
 | Automatizare workflow | Limitată la pași interni controlați | Da | Nu | Nu | Da | Da | Da | Nu există agent autonom care schimbă stări sau contactează clienți fără aprobare. |
 | Pilot comercial controlat | Disponibil cu baseline și situație finală imuabile | Da | Nu este necesar | Nu | Obligatorie | Da | Da | Cohorta, criteriile, politica și fusul orar sunt înghețate la baseline; comparația folosește aceeași cohortă și nu atribuie cauzalitate. |
@@ -27,6 +27,6 @@ Stare verificată pentru sprintul comercial buyer-ready. „Disponibil” însea
 ## Reguli de prezentare
 
 - Nu prezenta estimarea ca venit confirmat, ROI ori rezultat garantat.
-- Nu afirma că Gmail, Calendar, Voice sau semnalele externe live sunt active.
+- Nu afirma că Gmail sau Calendar sunt conectate într-un mediu ori pentru un utilizator fără starea runtime corespunzătoare. Nu afirma că Voice sau semnalele externe live sunt active.
 - Pentru o demonstrație comercială folosește date fictive sau un spațiu de lucru autorizat și anonimizat.
 - Orice mesaj extern, rezultat sau schimbare comercială materială rămâne sub control uman și trebuie să lase dovadă auditabilă.

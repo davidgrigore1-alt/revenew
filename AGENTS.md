@@ -1,168 +1,106 @@
-# AGENTS.md — ReveNew Codex Instructions
+# AGENTS.md — ReveNew repository instructions
 
-## Project Identity
+## What ReveNew is
 
-This repository may still be named `moneyhunter-ai`, but the product is now called **ReveNew**.
+ReveNew is a production-grade B2B SaaS for revenue recovery and opportunity management. It helps teams identify, prioritize and track recoverable commercial opportunities with explicit ownership, next actions, evidence, auditability and human control.
 
-Always use **ReveNew** in product UI, user-facing copy, metadata, headings, navigation, pricing pages, and documentation unless referring to legacy repository history.
+The repository may retain the legacy name `moneyhunter-ai`; use **ReveNew** in product UI, user-facing copy, metadata and current documentation. User-facing copy is Romanian-first, professional and specific. Avoid hype, guaranteed-result language, fake ROI claims and generic AI marketing copy.
 
-ReveNew is a production-grade B2B SaaS for revenue recovery and opportunity management. It is not a demo, not a generic AI app, and not just a landing page.
+## What must never be broken
 
-The product helps businesses identify, prioritize, and track lost or underused commercial opportunities with clear ownership, next actions, auditability, and human control.
+Preserve the canonical ownership chain:
 
-## Core Design Source
+`auth.users.id` → `profiles.user_id` → `profiles.id` → `businesses.owner_profile_id`
 
-Before making frontend or UX changes, read:
-
-- `DESIGN.md`
-
-`DESIGN.md` is the design contract for the redesign. Follow it unless the user explicitly overrides it.
-
-Do not copy Aura templates directly. Use them only as visual and structural inspiration. The final UI must be adapted to ReveNew’s existing product, data model, business logic, and workflows.
-
-## Language and Copy
-
-All user-facing product copy must be in premium Romanian business language.
-
-Use clear, mature, specific wording.
-
-Avoid:
-- hype;
-- “revoluționar”;
-- “garantat”;
-- fake ROI promises;
-- generic AI startup language;
-- childish tone;
-- overpromising automation.
-
-The product should emphasize:
-- venit recuperabil;
-- oportunități comerciale;
-- follow-up;
-- ownership;
-- next action;
-- control uman;
-- auditabilitate;
-- risc;
-- prioritate;
-- decizii comerciale.
-
-## Security Rules
-
-Security is non-negotiable.
-
-Do not:
-- expose API keys in frontend code;
-- expose Supabase service role keys;
-- move privileged server-side logic into client components;
-- weaken Supabase auth;
-- weaken RLS;
-- modify RLS policies for styling/design;
-- modify database schema for visual design unless explicitly required and justified;
-- add unnecessary tracking scripts;
-- show raw secrets, tokens, env values, or internal errors in UI;
-- introduce autonomous risky commercial actions without human review.
+Never introduce or rely on `businesses.owner_id`. Workspace identity, roles, permissions, ownership and approval state must be derived and verified server-side.
 
 Preserve:
-- Supabase auth;
-- protected routes;
-- server/client boundaries;
-- workspace/business data isolation;
-- privacy/security by design;
-- auditability;
-- human approval flows.
 
-## Implementation Workflow
+- Supabase Auth, protected routes and Row Level Security;
+- strict tenant and owner isolation;
+- server/client privilege boundaries and least privilege;
+- auditability, provenance and human approval flows;
+- the distinction between estimates, recoverable value and confirmed revenue;
+- the distinction between prepared, approved and executed actions;
+- safe deterministic behavior when an AI or external provider is unavailable.
 
-Do not implement the full redesign in one massive pass.
+Never expose service-role credentials, API keys, OAuth tokens, environment values or raw internal errors. Never move privileged logic into client components. Never claim an external action occurred without provider confirmation.
 
-Work in phases:
+Do not hardcode fake data into authenticated production flows. Use explicit empty states or clearly isolated demo fixtures.
 
-1. Audit current UI architecture.
-2. Refactor design tokens and shared UI components.
-3. Refactor app shell, sidebar, topbar, and page headers.
-4. Redesign Dashboard / Control Center.
-5. Redesign Opportunities list and Opportunity detail/workflow.
-6. Redesign Landing, Access, and Pricing pages.
-7. Redesign Onboarding, Reports, Settings, and Help.
-8. Polish responsive behavior, accessibility, loading states, empty states, and QA.
+## Which document is authoritative
 
-For each phase:
-- inspect relevant files first;
-- preserve existing functionality;
-- keep changes focused;
-- report changed files;
-- explain any risk;
-- run relevant validation commands.
+Read only the documents relevant to the task, then verify them against code and tests when they describe runtime behavior.
 
-## Design Priorities
+- Repository and product context: `docs/CODEX_CONTEXT.md`
+- Current capability truth: `docs/product-truth-matrix.md`
+- Engineering workflow and Definition of Done: `docs/engineering-operating-system.md`
+- Current execution state: the single checkpoint in `docs/exec-plans/active/`
+- Authorization model: `docs/AUTHORIZATION_ARCHITECTURE.md`
+- Authorization inventories: `docs/FUNCTION_AUTHORIZATION_MATRIX.md`, `docs/ROUTE_AUTHORIZATION_MATRIX.md`, `docs/TABLE_RLS_MATRIX.md`
+- Database and local safety: `docs/development-safety.md`
+- Product information architecture: `docs/product-information-architecture.md`
+- Current design system: `docs/design/revenew-design-system-v4.md`
+- Current surface structure: `docs/design/redesign-v4-structure.md`
+- Product claims and copy boundaries: `docs/BRAND_MESSAGE_HOUSE.md`
+- AI architecture: `docs/real-ai-copilot.md`
+- Google Workspace integration: `docs/google-workspace-connector.md`
+- Local buyer-safe demo: `docs/local-demo.md`
 
-Priority pages:
+`DESIGN.md`, completed G3 documents and historical Codex prompts are background records, not the current source of truth when a document above covers the task.
 
-1. Dashboard / Control Center
-2. Opportunities list
-3. Opportunity detail / workflow
-4. Landing page
-5. Access / pricing activation page
-6. Onboarding
-7. Reports
-8. Settings
-9. Login / Signup
-10. Help / secondary pages
+Capability status is evidence-only. Do not infer that a feature is live from a route, component, filename, roadmap or partial implementation. Establish the runtime path, authority boundary, provider mode, side effects, approval contract and test evidence before changing capability claims.
 
-The app must not become a pretty landing page with a weak dashboard. The authenticated product experience is the core.
+## Workflow
 
-## UI Rules
+Use the risk model in `docs/engineering-operating-system.md`:
 
-Use:
-- premium emerald/teal accents;
-- slate/zinc/neutral foundations;
-- subtle borders;
-- clear surfaces;
-- compact operational density;
-- strong typography hierarchy;
-- restrained motion;
-- accessible focus states;
-- professional tables;
-- useful empty states;
-- clear status pills;
-- action-oriented dashboards.
+1. Inspect the relevant code, tests, instructions and current worktree.
+2. Plan proportionally to risk and state assumptions and non-goals.
+3. Implement the smallest coherent patch authorized by the user.
+4. Perform adversarial review when permissions, tenants, persistence, money, AI, integrations, migrations or release behavior are involved.
+5. Validate proportionally and report exact results, skips and residual risk.
 
-Avoid:
-- generic purple SaaS gradients;
-- neon;
-- cyberpunk;
-- excessive glassmorphism;
-- decorative charts;
-- huge useless cards;
-- fake dashboard data;
-- AI slop visuals;
-- copying template colors blindly.
+Do not mix opportunistic refactors into focused work. Preserve unrelated user changes. Do not rename routes, files or exported functions casually.
 
-## Data Rules
+Parallel work is appropriate only for independent read-only investigations or clearly separated file domains after interfaces are fixed. Avoid concurrent edits to shared auth, migrations, schemas, design primitives or canonical documents.
 
-Do not hardcode fake data into authenticated production flows.
+## Change-specific rules
 
-Demo-looking data may only be used in isolated mock/demo components if clearly separated from real app logic.
+### UI and UX
 
-If live data is missing, create proper empty states instead of fake numbers.
+Read the current design and information-architecture documents before frontend changes. Preserve operational density, accessible focus, keyboard behavior, responsive states and real data semantics. Do not copy historical templates or reformat production code merely to satisfy brittle source-shape tests.
 
-## Routing Rules
+### AI and integrations
 
-Do not rename routes, files, or exported functions casually.
+Keep AI grounded in tenant-authorized evidence. Generated content remains a recommendation or draft until explicitly approved. External integrations must use minimal scopes, encrypted credentials, revocation, idempotency and safe audit data. Provider failure must not silently become success or fabricated context.
 
-Route changes must be explicitly justified because they can break navigation, auth redirects, and Vercel deployment behavior.
+### Database and migrations
 
-## Validation Commands
+Read `docs/development-safety.md` and the authorization architecture first. Treat historical migration bytes as immutable after successful deployment. Prefer additive migrations. Do not weaken RLS or broaden grants for convenience.
 
-Use the project’s existing scripts where available.
+Never apply migrations remotely, reset Supabase or perform destructive database operations without explicit user authorization for that exact action and target.
 
-Preferred validation:
+### Environment and repository safety
 
-```bash
+Do not expose `.env` contents. Do not commit backup files, generated debris or local credentials. Do not run destructive cleanup, commit, push or deploy unless the user explicitly requests it. Respect the package manager and scripts already declared by the repository.
+
+## Validation level
+
+Select LOW, MEDIUM, HIGH or RELEASE Definition of Done from `docs/engineering-operating-system.md`.
+
+Available repository gates include:
+
+```text
 npm run typecheck
 npm run lint
-npm run validate:security
 npm run validate:migrations
-npm run validate:diff
+npm run validate:security
+npm test
 npm run build
+git diff --check
+```
+
+Run only the proportionate subset unless the user requests a full gate. Build and full-suite execution are required for release closure, not automatically for a documentation-only patch. Never hide skipped tests or claim unrun validation.
+
+At handoff, report changed files, behavioral impact, validation performed, validation deliberately omitted and remaining risk.

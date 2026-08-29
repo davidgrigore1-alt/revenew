@@ -1,216 +1,52 @@
 # ReveNew
 
-Pentru contextul permanent de produs, arhitectură, securitate și faza activă, citește mai întâi [docs/CODEX_CONTEXT.md](docs/CODEX_CONTEXT.md).
+ReveNew is a Romanian-first B2B SaaS for identifying, reviewing and tracking recoverable commercial opportunities with explicit ownership, evidence, auditability and human control.
 
-ReveNew este un MVP Next.js pentru oportunități B2B: autentificare, onboarding de business, oportunități, acțiuni, documente generate mock, lead-uri, outreach și rapoarte.
+## Prerequisites
 
-## Siguranța dezvoltării
+- Node.js compatible with the repository toolchain
+- npm
+- Docker only for workflows that use local Supabase
+- Supabase credentials for connected development environments
 
-Înainte de commit rulează `npm run validate:quick`; înainte de merge sau push rulează `npm run validate`. Pașii pentru migrații, două calculatoare, Docker și recuperarea asset-urilor sunt în [ghidul de siguranță](docs/development-safety.md).
+## Local development
 
-## Rulare locală
-
-```powershell
-cd "C:\Users\David\OneDrive\Documents\M"
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" install
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run dev
-```
-
-Aplicația pornește pe `http://localhost:3000`.
-
-## Variabile de mediu
-
-Copiază `.env.example` în `.env.local` și completează:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
-RESEND_API_KEY=
-EMAIL_SENDING_MODE=disabled
-EMAIL_FROM_ADDRESS=
-```
-
-`OPENAI_API_KEY` activează analiza și generarea cu OpenAI. Trimiterea rămâne sigură implicit prin `EMAIL_SENDING_MODE=disabled`; `test` verifică numai fluxul intern, iar `live` necesită atât `RESEND_API_KEY`, cât și `EMAIL_FROM_ADDRESS`. Cheile sunt citite exclusiv pe server.
-
-## Supabase setup
-
-1. Creează un proiect nou în Supabase.
-2. Copiază Project URL în `NEXT_PUBLIC_SUPABASE_URL`.
-3. Copiază anon public key în `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Copiază service role key în `SUPABASE_SERVICE_ROLE_KEY`.
-5. Rulează migrările SQL din `supabase/migrations` în Supabase SQL Editor sau prin Supabase CLI.
-
-Ordinea migrărilor:
-
-```text
-202606100001_initial_moneyhunter_schema.sql
-202606100002_phase4_rls_and_workflow.sql
-202606100003_fix_auth_profile_business_rls.sql
-202606100007_stabilize_supabase_rls.sql
-```
-
-`202606100007_stabilize_supabase_rls.sql` este migratia finala de stabilizare pentru RLS. Este idempotenta, nu sterge tabele si nu sterge date. Activeaza politicile pentru `profiles`, `businesses`, `business_members`, `business_services`, `business_targets`, `opportunities`, `opportunity_actions`, `opportunity_documents` si `opportunity_events`.
-
-## How to verify Supabase connection
-
-Schema relationship used by the app:
-
-- `profiles.user_id` stores `auth.users.id`
-- `profiles.id` is the application profile id
-- `businesses.owner_profile_id` references `profiles.id`
-- `business_members.profile_id` references `profiles.id`
-
-After a successful signup:
-
-1. Supabase Auth should show a user in Authentication.
-2. Table Editor should show a row in `profiles`.
-3. `profiles.user_id` should equal the Auth user id.
-
-After successful onboarding:
-
-1. `businesses` should contain the new business.
-2. `businesses.owner_profile_id` should equal `profiles.id`, not the Auth user id unless those happen to be the same.
-3. `business_members.profile_id` should equal `profiles.id`.
-4. `business_services` and `business_targets` should contain rows for the new business id.
-5. `/settings` should show `Business source: Supabase`.
-
-Table Editor should contain rows in:
-
-- `profiles`
-- `businesses`
-- `business_members`
-- `business_services`
-- `business_targets`
-
-To verify ownership and membership in SQL Editor:
-
-```sql
-select
-  b.name as business_name,
-  b.owner_profile_id,
-  p.id as profile_id,
-  p.email,
-  bm.role as member_role
-from public.businesses b
-left join public.profiles p on p.id = b.owner_profile_id
-left join public.business_members bm on bm.business_id = b.id
-order by b.created_at desc;
-```
-
-Pentru oportunitati reale:
-
-1. Intra in `/opportunities/analyze`.
-2. Completeaza formularul si apasa `Analizeaza oportunitatea`.
-3. Apasa `Salvează oportunitate`.
-4. Aplicatia creeaza un rand real in `opportunities` cu `business_id` egal cu businessul activ si redirectioneaza catre detaliul oportunitatii.
-5. `/opportunities` si `/dashboard` citesc oportunitatile reale cand Supabase este conectat.
-
-Development diagnostics:
-
-- `/debug/supabase` shows env/session/profile/business/table select status.
-- `/debug/repair-profile` creates a missing profile for the logged-in auth user and returns the profile id.
-
-## Demo local pentru prezentare
-
-Pentru demonstrații client-safe folosește fluxul local izolat descris în [docs/local-demo.md](docs/local-demo.md). Acesta pornește cu autentificare locală reală, workspace-ul fictiv `Meridian Commercial Operations`, email extern și AI dezactivate și fără modificarea fișierului `.env.local`.
+Install dependencies and start the application from the repository root:
 
 ```powershell
-npm run demo:buyer-ready
-npm run demo:dev
+npm install
+npm run dev
 ```
 
-Ruta protejată `/demo` oferă un traseu de opt pași prin aceeași lume comercială persistentă: Control Center → oportunitate și istoric → Company 360 → Ask și Descoperiri → Inbox → aprobare umană → audit → pilot pe 14 zile. Fallback-ul fără Supabase rămâne util pentru dezvoltarea interfeței, dar nu înlocuiește mediul local izolat pentru o demonstrație comercială.
+Copy `.env.example` to `.env.local` only when a connected environment is needed. Keep credentials local and never commit or print environment files. Provider-backed features remain unavailable unless their required server-side configuration and user authorization are present.
 
-## Primul audit client
+For the isolated buyer-safe local demo, follow [`docs/local-demo.md`](docs/local-demo.md). Database and multi-environment safety instructions are in [`docs/development-safety.md`](docs/development-safety.md).
 
-Pentru trecerea de la demonstrație la un audit controlat, folosește [ghidul de intake](docs/client-audit-intake.md), [checklist-ul comercial](docs/client-audit-checklist.md) și [șablonul CSV](docs/samples/revenew-client-audit-template.csv).
+## Canonical documentation
 
-Fluxul recomandat este: eșantion anonimizabil de 20–50 de înregistrări → previzualizare și mapare în `/inbox/import` → revizuire umană în Inbox Comercial → audit executiv → propunere pilot controlat pe 14 zile. Importul creează semnale pentru revizuire și nu trimite comunicări externe.
+- Repository context: [`docs/CODEX_CONTEXT.md`](docs/CODEX_CONTEXT.md)
+- Capability truth: [`docs/product-truth-matrix.md`](docs/product-truth-matrix.md)
+- Engineering policy: [`docs/engineering-operating-system.md`](docs/engineering-operating-system.md)
+- Active execution plan: [`docs/exec-plans/active/A3.2-closeout.md`](docs/exec-plans/active/A3.2-closeout.md)
+- Authorization architecture: [`docs/AUTHORIZATION_ARCHITECTURE.md`](docs/AUTHORIZATION_ARCHITECTURE.md)
+- Product information architecture: [`docs/product-information-architecture.md`](docs/product-information-architecture.md)
+- Current design system: [`docs/design/revenew-design-system-v4.md`](docs/design/revenew-design-system-v4.md)
+- Buyer-demo operator materials: [docs/sales/full-buyer-demo-script.md](docs/sales/full-buyer-demo-script.md) and [docs/sales/demo-readiness-checklist.md](docs/sales/demo-readiness-checklist.md)
 
-Ruta `/reports/pilot-proof-of-value` păstrează contractul de măsurare al pilotului, cohorta și criteriile stabilite înainte de pornire, baseline-ul imuabil și situația finală confirmată. Comparația folosește aceeași cohortă, păstrează monedele separat și nu atribuie ReveNew rezultatele comerciale observate.
+Consult the product-truth matrix before describing a capability as connected, live or execution-capable. Runtime configuration can make an implemented provider capability unavailable in a particular environment.
 
-## Outreach și discovery comercial
+## Validation
 
-Pentru primele conversații cu clienți folosește [playbook-ul de outreach](docs/sales/outreach-playbook.md), [scriptul apelului de discovery](docs/sales/discovery-call-script.md), [scriptul demonstrației de 5 minute](docs/sales/demo-script.md), [scriptul complet de 7–10 minute](docs/sales/full-buyer-demo-script.md), [checklistul de pregătire](docs/sales/demo-readiness-checklist.md), [răspunsurile la obiecții](docs/sales/objection-handling.md), [ghidul primelor 50 de companii prospect](docs/sales/first-50-prospect-list-guide.md) și [draftul de ofertă și prețuri](docs/sales/offer-and-pricing-draft.md).
-
-## Fundația pentru extinderea AI
-
-[Roadmap-ul AI și control plane-ul pentru acțiuni sigure](docs/ai-expansion-roadmap.md) separă capabilitățile interne disponibile, sandbox-urile și funcțiile blocate până la revizuirea de securitate. Registrul intern `src/lib/ai-capabilities.ts` descrie riscul, dovezile, aprobarea, auditul și cerințele OAuth pentru fiecare capabilitate, fără a activa Gmail, Google Calendar, telefonie sau alte efecte externe.
-
-[Arhitectura Asistentului ReveNew](docs/real-ai-copilot.md) descrie integrarea Responses API, instrumentele read-only autorizate, validarea dovezilor, minimizarea datelor și fallback-ul determinist. Copilotul este activat numai când `OPENAI_API_KEY` este configurată server-side și nu execută acțiuni comerciale.
-
-## Ce funcționează cu Supabase
-
-- signup cu Supabase Auth
-- login cu Supabase Auth
-- creare profil în `profiles`
-- protecție pentru rutele dashboard
-- onboarding persistent:
-  - `businesses`
-  - `business_members`
-  - `business_services`
-  - `business_targets`
-- încărcarea businessului curent în dashboard/settings
-- oportunități persistente în `opportunities`
-- analiza manuală salvează oportunitatea
-- detaliul oportunității citește:
-  - acțiuni
-  - documente
-  - evenimente
-- butoanele din detaliu pot salva:
-  - documente generate mock
-  - follow-up action
-  - status contacted/won/lost/ignored
-- rapoartele se pot calcula din oportunitățile reale
-
-## Ce este încă mock
-
-- OpenAI analyzer
-- generarea reală cu model AI
-- Resend/email sending
-- payments/subscriptions
-- crearea completă de lead-uri
-- administrare platformă completă
-
-## Verificare
+Use the smallest validation set appropriate to the change. The durable risk tiers and Definition of Done are documented in the engineering operating system.
 
 ```powershell
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run lint
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run build
+npm run typecheck
+npm run lint
+npm run validate:migrations
+npm run validate:security
+npm test
+npm run build
+git diff --check
 ```
 
-## Phase 5: OpenAI setup
-
-Adauga in `.env.local`:
-
-```env
-OPENAI_API_KEY=
-OPENAI_MODEL=
-```
-
-`OPENAI_MODEL` este optional. Daca lipseste, aplicatia foloseste modelul implicit din cod. Dupa modificarea variabilelor de mediu, reporneste serverul de development.
-
-Cum testezi analiza AI:
-
-1. Configureaza Supabase si finalizeaza onboarding.
-2. Adauga `OPENAI_API_KEY` in `.env.local`.
-3. Reporneste serverul.
-4. Mergi la `/opportunities/analyze`.
-5. Completeaza oportunitatea si apasa `Analizeaza cu AI`.
-6. Salvează preview-ul. Se creeaza rand in `opportunities` si eveniment in `opportunity_events`.
-
-Cum testezi generarea de documente:
-
-1. Deschide detaliul unei oportunitati.
-2. Apasa `Genereaza email outreach`, `Genereaza script apel`, `Genereaza draft oferta` sau `Genereaza checklist`.
-3. Documentele se salveaza in `opportunity_documents`.
-4. `Programează follow-up` scrie in `opportunity_actions`.
-5. Schimbarile de status scriu in `opportunities` si `opportunity_events`.
-
-Fallback fara OpenAI:
-
-- Daca `OPENAI_API_KEY` lipseste, analiza si documentele sunt generate local.
-- Daca Supabase este conectat, datele reale continua sa fie salvate.
-- Daca Supabase lipseste, aplicatia ramane in demo mode si nu scrie in baza de date.
+`npm run validate:quick` runs the repository's quick gate. `npm run validate` runs the complete validation sequence, including the build.
