@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260828131036_executive_review_checkpoints.sql",
+  "reviewedThrough": "20260829154828_allow_service_role_response_window_update.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -41,9 +41,15 @@
     "20260826113000_workflow_service_role_acl.sql": "9e3792a9425562ea803b55a45d753144d6494548bcc3cc7c8994c9780a846505",
     "20260826115635_ask_multi_record_result_sets.sql": "7b38fc012f041ff306171ed7d0537353df931c46f06c113e0b645435da423cef",
     "20260827024500_opportunity_workflow_acl.sql": "598dc1e7574789815ac046916d61eae2d43e4050f11544d0ad22eff2c14e2e4c",
+    "20260827103000_commercial_workflow_runtime_hardening.sql": "1a454f9e7dd56063048980fea46188a7f13dab91bbecb71a65096229b8d323cb",
+    "20260827233324_commercial_workflow_recovery.sql": "c2ee4551a0f5052b5f7a49ce878a159d26cb650c7d6ad94b28d62e0089442b22",
+    "20260827235327_commercial_workflow_source_event.sql": "2170aa49117c0cdbfd7744510dc9da0be55cfafcf2e9d88d30d8ba76ea3a23de",
     "20260828094643_commercial_documents_service_role_select.sql": "ee37fed3e507d5ad74d6eae78fac061f129b908744069364ff7f4a04d1c42de5",
+    "20260828201104_staging_security_hardening.sql": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20260828201121_staging_security_hardening.sql": "80a7fc77eb25b62a91999b8ec11ba8e6f04fac356c29e96a509edc1c16cbc6ec",
     "20260828011406_scoped_google_drive_evidence.sql": "ada290be5a00b501aef158c6b56cefa34b4f2756a69d811bd27b724717ed0f50",
     "20260828110003_verified_commercial_impact.sql": "90495ca1674b361bcf4f48499f76c1b8c4087695280db2d8ce46f426013da89c",
-    "20260828131036_executive_review_checkpoints.sql": "cb735df2d4a251d7137fcec7c8ea438cc580a1f18b560e8df3ceccd385d2565d"
+    "20260828131036_executive_review_checkpoints.sql": "cb735df2d4a251d7137fcec7c8ea438cc580a1f18b560e8df3ceccd385d2565d",
+    "20260829154828_allow_service_role_response_window_update.sql": "41fd0ed75c1e74221009422fce060652a7395f79e96851bdf59a821c62ea4168"
   }
 }

@@ -6,7 +6,7 @@ export function themeInitScript() {
     (function() {
       try {
         var key = "revenew-theme";
-        var stored = window.localStorage.getItem(key) || "system";
+        var stored = window.localStorage.getItem(key) || "light";
         var resolved = stored === "system"
           ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
           : stored;
@@ -22,8 +22,8 @@ export function themeInitScript() {
         });
         document.documentElement.dataset.accentTheme = accent;
       } catch (error) {
-        document.documentElement.classList.add("dark");
-        document.documentElement.dataset.theme = "system";
+        document.documentElement.classList.remove("dark");
+        document.documentElement.dataset.theme = "light";
         document.documentElement.dataset.accentTheme = ${JSON.stringify(defaultAccentTheme)};
       }
     })();

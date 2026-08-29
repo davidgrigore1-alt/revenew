@@ -5,42 +5,45 @@
 :root {
   color-scheme: light;
 
-  /* Neutral operational canvas with a restrained mineral undertone. */
-  --background: 249 250 249;
-  --background-soft: 245 247 246;
+  /* Light V2 experiment: true white with cool, low-chroma operational layers. */
+  --background: 255 255 255;
+  --background-soft: 244 247 251;
   --surface: 255 255 255;
-  --surface-subtle: 247 249 248;
-  --surface-muted: 237 241 239;
+  --surface-subtle: 248 250 252;
+  --surface-muted: 238 243 248;
+  --surface-selected: 232 238 245;
   --surface-elevated: 255 255 255;
   --surface-floating: 255 255 255;
-  --sidebar: 246 248 247;
-  --border: 220 225 222;
-  --border-strong: 190 200 195;
-  --foreground: 18 25 22;
-  --text-secondary: 61 72 67;
-  --text-muted: 101 113 107;
-  --text-faint: 139 150 144;
-  --sidebar-foreground: 18 25 22;
+  --sidebar: 247 249 252;
+  --border: 220 227 234;
+  --border-subtle: 231 235 240;
+  --divider: 231 235 240;
+  --border-strong: 190 201 213;
+  --foreground: 17 24 39;
+  --text-secondary: 86 98 115;
+  --text-muted: 122 133 148;
+  --text-faint: 151 160 173;
+  --sidebar-foreground: 17 24 39;
 
   /* Controlled accent roles. Presets override only these variables. */
-  --rn-accent: 214 183 74;
-  --rn-accent-foreground: 39 33 9;
-  --rn-accent-soft: 249 241 207;
-  --rn-accent-muted: 253 250 239;
-  --rn-accent-border: 226 201 104;
-  --rn-accent-ring: 171 139 43;
-  --rn-accent-glow: 214 183 74;
-  --rn-accent-surface: 253 250 239;
-  --rn-accent-950: 39 33 9;
-  --rn-accent-900: 59 49 12;
-  --rn-accent-800: 92 75 17;
-  --rn-accent-700: 128 103 24;
-  --rn-accent-600: 171 139 43;
-  --rn-accent-500: 214 183 74;
-  --rn-accent-400: 226 201 104;
-  --rn-accent-300: 235 218 155;
-  --rn-accent-100: 249 241 207;
-  --rn-accent-50: 253 250 239;
+  --rn-accent: 183 138 19;
+  --rn-accent-foreground: 77 56 0;
+  --rn-accent-soft: 242 228 181;
+  --rn-accent-muted: 250 245 228;
+  --rn-accent-border: 220 197 126;
+  --rn-accent-ring: 167 122 10;
+  --rn-accent-glow: 183 138 19;
+  --rn-accent-surface: 250 245 228;
+  --rn-accent-950: 77 56 0;
+  --rn-accent-900: 140 101 0;
+  --rn-accent-800: 167 122 10;
+  --rn-accent-700: 183 138 19;
+  --rn-accent-600: 183 138 19;
+  --rn-accent-500: 183 138 19;
+  --rn-accent-400: 220 197 126;
+  --rn-accent-300: 242 228 181;
+  --rn-accent-100: 242 228 181;
+  --rn-accent-50: 250 245 228;
   --brand-950: var(--rn-accent-950);
   --brand-900: var(--rn-accent-900);
   --brand-800: var(--rn-accent-800);
@@ -52,16 +55,31 @@
   --brand-100: var(--rn-accent-100);
   --brand-50: var(--rn-accent-50);
   /* Evidence/attention gold is semantic and must not follow workspace accents. */
-  --gold-700: 139 92 16;
-  --gold-500: 190 133 39;
-  --gold-300: 222 179 91;
-  --gold-100: 249 232 190;
-  --gold-50: 255 249 232;
-  --primary: var(--brand-700);
-  --primary-hover: var(--brand-800);
-  --primary-active: var(--brand-900);
-  --primary-foreground: 248 253 251;
-  --primary-muted: var(--brand-100);
+  --gold-700: 140 101 0;
+  --gold-500: 183 138 19;
+  --gold-300: 220 197 126;
+  --gold-100: 242 228 181;
+  --gold-50: 255 247 220;
+
+  /* Product operation and ReveNew intelligence are intentionally distinct. */
+  --interaction: 35 89 168;
+  --interaction-hover: 29 79 145;
+  --interaction-active: 24 66 123;
+  --interaction-tint: 238 245 255;
+  --interaction-border: 181 204 235;
+  --interaction-foreground: 255 255 255;
+  --intelligence: var(--rn-accent-500);
+  --intelligence-hover: var(--rn-accent-600);
+  --intelligence-strong: var(--rn-accent-800);
+  --intelligence-soft: var(--rn-accent-100);
+  --intelligence-tint: var(--rn-accent-50);
+  --intelligence-foreground: var(--rn-accent-foreground);
+
+  --primary: var(--rn-accent-700);
+  --primary-hover: var(--rn-accent-800);
+  --primary-active: var(--rn-accent-900);
+  --primary-foreground: var(--rn-accent-foreground);
+  --primary-muted: var(--rn-accent-100);
 
   /* Semantic feedback palette */
   --success-background: 234 248 240;
@@ -139,11 +157,11 @@
   --motion-slow: var(--motion-panel);
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --focus-ring: var(--rn-accent-ring);
+  --focus-ring: var(--interaction);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
   --primary-soft: var(--primary-muted);
-  --primary-border: var(--rn-accent-border);
+  --primary-border: var(--interaction-border);
 
   /* Legacy aliases retained until Phase 1B migration. */
   --muted: var(--surface-muted);
@@ -162,10 +180,13 @@
   --surface: 12 12 12;
   --surface-subtle: 16 16 16;
   --surface-muted: 24 24 24;
+  --surface-selected: 28 31 35;
   --surface-elevated: 19 19 19;
   --surface-floating: 19 19 19;
   --sidebar: 10 10 10;
   --border: 38 38 38;
+  --border-subtle: 30 30 30;
+  --divider: 30 30 30;
   --border-strong: 62 62 62;
   --foreground: 250 250 250;
   --text-secondary: 216 216 216;
@@ -177,6 +198,18 @@
   --primary-active: var(--brand-600);
   --primary-foreground: 10 10 11;
   --primary-muted: 24 24 24;
+  --interaction: 107 150 210;
+  --interaction-hover: 138 174 222;
+  --interaction-active: 83 128 190;
+  --interaction-tint: 20 32 49;
+  --interaction-border: 55 80 115;
+  --interaction-foreground: 8 14 24;
+  --intelligence: var(--rn-accent-400);
+  --intelligence-hover: var(--rn-accent-300);
+  --intelligence-strong: var(--rn-accent-300);
+  --intelligence-soft: var(--rn-accent-900);
+  --intelligence-tint: var(--rn-accent-950);
+  --intelligence-foreground: var(--rn-accent-foreground);
   --success-background: 9 39 25;
   --success-text: 119 222 168;
   --success-border: 27 99 61;
@@ -192,7 +225,7 @@
   --danger-border: 132 45 51;
   --danger-solid: 185 45 45;
   --danger-solid-hover: 153 34 34;
-  --focus-ring: var(--rn-accent-ring);
+  --focus-ring: var(--interaction);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.34), 0 10px 26px rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.42);
   --shadow-modal: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -200,14 +233,15 @@
 
 .account-light-theme {
   color-scheme: light;
-  --background: 248 250 249;
-  --background-soft: 244 247 246;
-  --surface: 255 255 255;
-  --surface-subtle: 249 250 250;
-  --surface-muted: 240 242 242;
+  --background: 245 245 242;
+  --background-soft: 247 247 244;
+  --surface: 250 250 248;
+  --surface-subtle: 247 247 244;
+  --surface-muted: 236 237 232;
   --surface-elevated: 255 255 255;
-  --border: 226 230 228;
-  --border-strong: 197 204 201;
+  --sidebar: 241 241 237;
+  --border: 221 222 216;
+  --border-strong: 201 202 196;
   --foreground: 24 29 27;
   --text-secondary: 67 75 71;
   --text-muted: 105 115 110;
@@ -368,7 +402,7 @@ body {
   transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
 }
 .product-interactive-row:hover { background: rgb(var(--surface-muted) / .72); }
-.product-interactive-row[aria-selected="true"] { background: rgb(var(--surface-elevated)); box-shadow: inset 2px 0 0 rgb(var(--primary)); }
+.product-interactive-row[aria-selected="true"] { background: rgb(var(--surface-selected)); box-shadow: inset 2px 0 0 rgb(var(--interaction)); }
 .operating-section { border-top: 1px solid rgb(var(--border)); border-bottom: 1px solid rgb(var(--border)); }
 .operating-row { position: relative; display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-3); }
 .operating-row + .operating-row { border-top: 1px solid rgb(var(--border)); }
@@ -465,7 +499,7 @@ body {
   left: 0;
   width: 2px;
   border-radius: var(--radius-pill);
-  background: rgb(var(--primary));
+  background: rgb(var(--intelligence));
   content: "";
 }
 

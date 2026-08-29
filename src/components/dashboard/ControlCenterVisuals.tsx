@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import {
   Area,
   Bar,
@@ -31,6 +31,36 @@ import { formatProductCurrency } from "@/lib/ui/presentation";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+function ChartInfo({
+  children,
+  label = "Informații despre grafic",
+  align = "left",
+}: {
+  children: ReactNode;
+  label?: string;
+  align?: "left" | "right";
+}) {
+  return (
+    <details className="group relative">
+      <summary
+        aria-label={label}
+        title={label}
+        className="focus-ring flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface-raised))] text-[11px] font-semibold text-[rgb(var(--text-muted))] transition-colors hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))] [&::-webkit-details-marker]:hidden"
+      >
+        <span aria-hidden="true">i</span>
+      </summary>
+
+      <div
+        className={`absolute top-8 z-40 w-72 max-w-[calc(100vw-2rem)] rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-floating))] p-3 text-xs leading-5 text-[rgb(var(--text-secondary))] ${
+          align === "right" ? "right-0" : "left-0"
+        }`}
+      >
+        {children}
+      </div>
+    </details>
+  );
+}
+
 const dateLabel = (value: string, full = false) =>
   new Intl.DateTimeFormat("ro-RO", {
     day: "numeric",
@@ -57,16 +87,19 @@ const compositionLabel = (
 
 const bucketColors = [
   "rgb(var(--danger-text) / .78)",
-  "rgb(var(--primary) / .92)",
+  "rgb(var(--intelligence) / .92)",
   "rgb(var(--text-muted) / .76)",
   "rgb(var(--text-faint) / .72)",
 ];
 
 const card =
-  "flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-5 shadow-card";
+  "flex min-w-0 flex-col rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5";
 
 const tooltipPanel =
   "min-w-[220px] max-w-[280px] rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-floating))] p-3.5 text-metadata shadow-elevated";
+
+const chartInteractionClass =
+  "cursor-default select-none [&_.recharts-wrapper]:select-none [&_.recharts-surface]:select-none [&_.recharts-surface]:outline-none [&_svg]:select-none [&_svg]:outline-none";
 
 type AxisTickProps = {
   x?: string | number;
@@ -87,16 +120,24 @@ export function ControlCenterVisuals({
 }) {
   const [currency, setCurrency] = useState<ReportingCurrency>("RON");
   const [reduceMotion, setReduceMotion] = useState(false);
+
   const rawId = useId();
   const chartId = rawId.replace(/:/g, "");
   const gradientId = `revenew-exposure-${chartId}`;
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduceMotion(query.matches);
+
+    const sync = () => {
+      setReduceMotion(query.matches);
+    };
+
     sync();
     query.addEventListener?.("change", sync);
-    return () => query.removeEventListener?.("change", sync);
+
+    return () => {
+      query.removeEventListener?.("change", sync);
+    };
   }, []);
 
   const model = buildReportingControlCenter(cases, currency, fx, asOf);
@@ -106,6 +147,7 @@ export function ControlCenterVisuals({
     formatProductCurrency(value, currency);
 
   const monetary = model.total !== null;
+
   const unavailableAmount = fx
     ? "sumă neconfirmată"
     : "conversie indisponibilă";
@@ -124,6 +166,7 @@ export function ControlCenterVisuals({
 
   const chartStart = chartData[0]?.timestamp ?? 0;
   const chartEnd = chartData[chartData.length - 1]?.timestamp ?? 0;
+
   const todayTimestamp =
     model.todayInRange && model.today
       ? Date.parse(`${model.today}T12:00:00Z`)
@@ -157,7 +200,9 @@ export function ControlCenterVisuals({
       (entry) => entry.label === String(payload?.value ?? ""),
     );
 
-    if (!row) return null;
+    if (!row) {
+      return null;
+    }
 
     const numericX = Number(x) || 0;
     const numericY = Number(y) || 0;
@@ -173,6 +218,7 @@ export function ControlCenterVisuals({
         >
           {row.label}
         </text>
+
         <text
           x={0}
           y={31}
@@ -197,6 +243,7 @@ export function ControlCenterVisuals({
           onChange={setCurrency}
           fx={fx}
         />
+
         <p className="text-micro text-[rgb(var(--text-muted))]">
           Monede originale ·{" "}
           {compositionLabel(model.originals) ||
@@ -206,16 +253,53 @@ export function ControlCenterVisuals({
 
       <div className="grid items-stretch gap-3.5 lg:grid-cols-[minmax(0,1.85fr)_minmax(320px,1fr)]">
         <figure className={card}>
-          <figcaption className="flex min-h-[88px] flex-wrap content-start items-start justify-between gap-x-5 gap-y-2">
+          <figcaption className="flex min-h-[72px] flex-wrap content-start items-start justify-between gap-x-5 gap-y-2">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-sm font-semibold">
                   Expunere cumulată după termen
                 </h2>
+
                 <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface-raised))] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">
                   {currency}
                 </span>
+
+                <ChartInfo>
+                  <div className="space-y-2">
+                    <p className="font-semibold text-[rgb(var(--foreground))]">
+                      Despre acest grafic
+                    </p>
+
+                    {model.undatedCount > 0 ? (
+                      <p>
+                        Fără termen:{" "}
+                        {caseCountLabel(model.undatedCount)} ·{" "}
+                        {model.undatedOriginals
+                          .map((entry) =>
+                            formatProductCurrency(
+                              entry.value,
+                              entry.currency,
+                            ),
+                          )
+                          .join(" · ") || "Valoare neconfirmată"}
+                      </p>
+                    ) : null}
+
+                    {excluded ? <p>{excluded}</p> : null}
+
+                    <p>
+                      Curba conectează vizual termene discrete și nu reprezintă
+                      istoricul expunerii sau o prognoză de încasare.
+                    </p>
+
+                    <p>
+                      Conversia este utilizată doar pentru analiză. Valorile
+                      originale rămân neschimbate.
+                    </p>
+                  </div>
+                </ChartInfo>
               </div>
+
               <p className="mt-1 text-metadata leading-5 text-[rgb(var(--text-muted))]">
                 Valoarea cazurilor deschise, ordonată după termenul comercial
               </p>
@@ -226,6 +310,7 @@ export function ControlCenterVisuals({
                 <strong className="block text-[1.4rem] font-semibold tracking-[-0.02em] tabular-nums">
                   {amount(model.datedValue)}
                 </strong>
+
                 <span className="text-micro text-[rgb(var(--text-muted))]">
                   estimat · cu termen confirmat
                 </span>
@@ -234,226 +319,221 @@ export function ControlCenterVisuals({
           </figcaption>
 
           <div
-            className="relative h-[268px] w-full"
+            className={`relative h-[268px] w-full rounded-[14px] bg-[rgb(var(--surface-raised))] ring-1 ring-inset ring-[rgb(var(--border)/0.55)] ${chartInteractionClass}`}
             role="img"
             aria-label={`Expunere estimată în ${currency}, cumulată după termenele comerciale actuale. Curba conectează vizual termene discrete și nu reprezintă istoric de venit.`}
           >
             {monetary && chartData.length ? (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={chartData}
-                    margin={{
-                      top: 18,
-                      right: 16,
-                      bottom: 10,
-                      left: 0,
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={chartData}
+                  margin={{
+                    top: 18,
+                    right: 16,
+                    bottom: 10,
+                    left: 4,
+                  }}
+                >
+                  <defs>
+                    <linearGradient
+                      id={gradientId}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="rgb(var(--intelligence))"
+                        stopOpacity={0.16}
+                      />
+                      <stop
+                        offset="55%"
+                        stopColor="rgb(var(--intelligence))"
+                        stopOpacity={0.07}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="rgb(var(--intelligence))"
+                        stopOpacity={0.015}
+                      />
+                    </linearGradient>
+                  </defs>
+
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="rgb(var(--border))"
+                    strokeOpacity={0.56}
+                  />
+
+                  <XAxis
+                    type="number"
+                    dataKey="timestamp"
+                    scale="time"
+                    domain={xDomain}
+                    axisLine={false}
+                    tickLine={false}
+                    minTickGap={34}
+                    tickMargin={12}
+                    tick={{
+                      fill: "rgb(var(--text-muted))",
+                      fontSize: 11,
                     }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id={gradientId}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="rgb(var(--primary))"
-                          stopOpacity={0.15}
-                        />
-                        <stop
-                          offset="55%"
-                          stopColor="rgb(var(--primary))"
-                          stopOpacity={0.055}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="rgb(var(--primary))"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
+                    tickFormatter={(value) =>
+                      dateLabel(
+                        new Date(Number(value))
+                          .toISOString()
+                          .slice(0, 10),
+                      )
+                    }
+                  />
 
-                    <CartesianGrid
-                      vertical={false}
-                      stroke="rgb(var(--border))"
-                      strokeOpacity={0.72}
+                  <YAxis
+                    width={58}
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={8}
+                    domain={[
+                      0,
+                      (dataMax: number) =>
+                        Math.max(1, dataMax * 1.08),
+                    ]}
+                    tick={{
+                      fill: "rgb(var(--text-muted))",
+                      fontSize: 11,
+                    }}
+                    tickFormatter={(value) =>
+                      compact(Number(value))
+                    }
+                  />
+
+                  {todayTimestamp !== null &&
+                  chartStart &&
+                  chartEnd ? (
+                    <ReferenceArea
+                      x1={chartStart}
+                      x2={todayTimestamp}
+                      fill="rgb(var(--danger-text))"
+                      fillOpacity={0.022}
+                      strokeOpacity={0}
                     />
+                  ) : null}
 
-                    <XAxis
-                      type="number"
-                      dataKey="timestamp"
-                      scale="time"
-                      domain={xDomain}
-                      axisLine={false}
-                      tickLine={false}
-                      minTickGap={34}
-                      tickMargin={12}
-                      tick={{
-                        fill: "rgb(var(--text-muted))",
-                        fontSize: 11,
+                  {todayTimestamp !== null ? (
+                    <ReferenceLine
+                      x={todayTimestamp}
+                      stroke="rgb(var(--text-muted) / .72)"
+                      strokeWidth={1}
+                      strokeDasharray="3 5"
+                      label={{
+                        value: "ASTĂZI",
+                        position: "insideTop",
+                        fill: "rgb(var(--text-secondary))",
+                        fontSize: 10,
+                        fontWeight: 600,
                       }}
-                      tickFormatter={(value) =>
-                        dateLabel(
-                          new Date(Number(value))
-                            .toISOString()
-                            .slice(0, 10),
-                        )
+                    />
+                  ) : null}
+
+                  <Tooltip
+                    isAnimationActive={!reduceMotion}
+                    animationDuration={160}
+                    cursor={{
+                      stroke: "rgb(var(--text-muted) / .45)",
+                      strokeWidth: 1,
+                      strokeDasharray: "3 5",
+                    }}
+                    content={({ active, payload }) => {
+                      const row = payload?.[0]?.payload as
+                        | (typeof chartData)[number]
+                        | undefined;
+
+                      if (!active || !row) {
+                        return null;
                       }
-                    />
 
-                    <YAxis
-                      width={48}
-                      axisLine={false}
-                      tickLine={false}
-                      tickMargin={8}
-                      domain={[
-                        0,
-                        (dataMax: number) =>
-                          Math.max(1, dataMax * 1.08),
-                      ]}
-                      tick={{
-                        fill: "rgb(var(--text-muted))",
-                        fontSize: 11,
-                      }}
-                      tickFormatter={(value) =>
-                        compact(Number(value))
-                      }
-                    />
+                      return (
+                        <div className={tooltipPanel}>
+                          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">
+                            {dateLabel(row.date, true)}
+                          </p>
 
-                    {todayTimestamp !== null &&
-                    chartStart &&
-                    chartEnd ? (
-                      <ReferenceArea
-                        x1={chartStart}
-                        x2={todayTimestamp}
-                        fill="rgb(var(--danger-text))"
-                        fillOpacity={0.022}
-                        strokeOpacity={0}
-                      />
-                    ) : null}
+                          <p className="mt-2 text-micro text-[rgb(var(--text-muted))]">
+                            Expunere cumulată · {currency}
+                          </p>
 
-                    {todayTimestamp !== null ? (
-                      <ReferenceLine
-                        x={todayTimestamp}
-                        stroke="rgb(var(--text-muted) / .72)"
-                        strokeWidth={1}
-                        strokeDasharray="3 5"
-                        label={{
-                          value: "ASTĂZI",
-                          position: "insideTop",
-                          fill: "rgb(var(--text-secondary))",
-                          fontSize: 10,
-                          fontWeight: 600,
-                        }}
-                      />
-                    ) : null}
+                          <p className="mt-0.5 text-lg font-semibold tracking-[-0.02em] tabular-nums">
+                            {amount(row.cumulative)}
+                          </p>
 
-                    <Tooltip
-                      isAnimationActive={!reduceMotion}
-                      animationDuration={160}
-                      cursor={{
-                        stroke: "rgb(var(--text-muted) / .45)",
-                        strokeWidth: 1,
-                        strokeDasharray: "3 5",
-                      }}
-                      content={({ active, payload }) => {
-                        const row = payload?.[0]?.payload as
-                          | (typeof chartData)[number]
-                          | undefined;
+                          <div className="mt-3 border-t border-[rgb(var(--border))] pt-2.5">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-[rgb(var(--text-muted))]">
+                                Până la acest termen
+                              </span>
 
-                        if (!active || !row) return null;
-
-                        return (
-                          <div className={tooltipPanel}>
-                            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">
-                              {dateLabel(row.date, true)}
-                            </p>
-
-                            <p className="mt-2 text-micro text-[rgb(var(--text-muted))]">
-                              Expunere cumulată · {currency}
-                            </p>
-                            <p className="mt-0.5 text-lg font-semibold tracking-[-0.02em] tabular-nums">
-                              {amount(row.cumulative)}
-                            </p>
-
-                            <div className="mt-3 border-t border-[rgb(var(--border))] pt-2.5">
-                              <div className="flex items-center justify-between gap-4">
-                                <span className="text-[rgb(var(--text-muted))]">
-                                  Până la acest termen
-                                </span>
-                                <span className="font-medium">
-                                  {caseCountLabel(
-                                    row.cumulativeCount,
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="mt-1.5 flex items-center justify-between gap-4">
-                                <span className="text-[rgb(var(--text-muted))]">
-                                  La acest termen
-                                </span>
-                                <span className="font-medium tabular-nums">
-                                  +{amount(row.addedValue)}
-                                </span>
-                              </div>
+                              <span className="font-medium">
+                                {caseCountLabel(row.cumulativeCount)}
+                              </span>
                             </div>
 
-                            <p className="mt-2.5 text-micro leading-4 text-[rgb(var(--text-muted))]">
-                              Monede originale ·{" "}
-                              {compositionLabel(
-                                row.cumulativeOriginals,
-                              )}
-                            </p>
+                            <div className="mt-1.5 flex items-center justify-between gap-4">
+                              <span className="text-[rgb(var(--text-muted))]">
+                                La acest termen
+                              </span>
+
+                              <span className="font-medium tabular-nums">
+                                +{amount(row.addedValue)}
+                              </span>
+                            </div>
                           </div>
-                        );
-                      }}
-                    />
 
-                    <Area
-                      type="monotoneX"
-                      dataKey="cumulative"
-                      stroke="none"
-                      fill={`url(#${gradientId})`}
-                      isAnimationActive={!reduceMotion}
-                      animationDuration={700}
-                      animationEasing="ease-out"
-                    />
+                          <p className="mt-2.5 text-micro leading-4 text-[rgb(var(--text-muted))]">
+                            Monede originale ·{" "}
+                            {compositionLabel(row.cumulativeOriginals)}
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
 
-                    <Line
-                      type="monotoneX"
-                      dataKey="cumulative"
-                      stroke="rgb(var(--primary))"
-                      strokeWidth={2.35}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      dot={{
-                        r: 3,
-                        fill: "rgb(var(--primary))",
-                        stroke: "rgb(var(--surface))",
-                        strokeWidth: 2,
-                      }}
-                      activeDot={{
-                        r: 5,
-                        fill: "rgb(var(--surface))",
-                        stroke: "rgb(var(--primary))",
-                        strokeWidth: 2.25,
-                      }}
-                      isAnimationActive={!reduceMotion}
-                      animationDuration={700}
-                      animationEasing="ease-out"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  <Area
+                    type="monotoneX"
+                    dataKey="cumulative"
+                    stroke="none"
+                    fill={`url(#${gradientId})`}
+                    isAnimationActive={!reduceMotion}
+                    animationDuration={700}
+                    animationEasing="ease-out"
+                  />
 
-                <p className="pointer-events-none absolute bottom-0 right-2 text-[10px] text-[rgb(var(--text-faint))]">
-                  Curba conectează vizual termene discrete.
-                </p>
-              </>
+                  <Line
+                    type="monotoneX"
+                    dataKey="cumulative"
+                    stroke="rgb(var(--intelligence))"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    dot={{
+                      r: 3.25,
+                      fill: "rgb(var(--intelligence))",
+                      stroke: "rgb(var(--surface))",
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: 5,
+                      fill: "rgb(var(--surface))",
+                      stroke: "rgb(var(--intelligence))",
+                      strokeWidth: 2.25,
+                    }}
+                    isAnimationActive={!reduceMotion}
+                    animationDuration={700}
+                    animationEasing="ease-out"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
             ) : (
-              <div className="flex h-full flex-col justify-center gap-3 text-xs leading-5 text-[rgb(var(--text-muted))]">
+              <div className="flex h-full flex-col justify-center gap-3 px-4 text-xs leading-5 text-[rgb(var(--text-muted))]">
                 <p>
                   {!fx
                     ? "Expunerea cumulată necesită un curs de referință valid. Valorile originale rămân disponibile."
@@ -476,7 +556,7 @@ export function ControlCenterVisuals({
             )}
           </div>
 
-          <div className="mt-2 flex min-h-10 flex-wrap items-start gap-x-4 gap-y-1 text-metadata text-[rgb(var(--text-muted))]">
+          <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1 text-metadata text-[rgb(var(--text-muted))]">
             {!monetary ? (
               <p>Valorile originale rămân separate pe monede.</p>
             ) : model.overdueCount > 0 ? (
@@ -485,6 +565,7 @@ export function ControlCenterVisuals({
                   aria-hidden="true"
                   className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--danger-text))]"
                 />
+
                 <span>
                   {amount(model.overdueValue)} înainte de astăzi ·{" "}
                   {caseCountLabel(model.overdueCount)}
@@ -502,17 +583,42 @@ export function ControlCenterVisuals({
         </figure>
 
         <figure className={card}>
-          <figcaption className="min-h-[88px]">
-            <h2 className="text-sm font-semibold">
-              Unde este concentrată expunerea
-            </h2>
+          <figcaption className="min-h-[72px]">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold">
+                Unde este concentrată expunerea
+              </h2>
+
+              <ChartInfo align="right">
+                <div className="space-y-2">
+                  <p className="font-semibold text-[rgb(var(--foreground))]">
+                    Despre acest grafic
+                  </p>
+
+                  <p>
+                    Barele grupează valoarea estimată și numărul de cazuri după
+                    apropierea termenului comercial.
+                  </p>
+
+                  <p>
+                    Cazurile fără termen sunt păstrate separat.
+                  </p>
+
+                  <p>
+                    Sunt folosite termenele actuale. Graficul nu reprezintă
+                    istoricul expunerii sau o prognoză de încasare.
+                  </p>
+                </div>
+              </ChartInfo>
+            </div>
+
             <p className="mt-1 text-metadata leading-5 text-[rgb(var(--text-muted))]">
               Valoarea cazurilor deschise, grupată după apropierea termenului
             </p>
           </figcaption>
 
           <div
-            className="relative h-[268px] w-full"
+            className={`relative h-[268px] w-full ${chartInteractionClass}`}
             role="img"
             aria-label={model.buckets
               .map(
@@ -523,9 +629,7 @@ export function ControlCenterVisuals({
                       : unavailableAmount
                   }, ${caseCountLabel(
                     sum(entry.counts),
-                  )}; ${compositionLabel(
-                    entry.summary.originals,
-                  )}`,
+                  )}; ${compositionLabel(entry.summary.originals)}`,
               )
               .join(". ")}
           >
@@ -544,7 +648,7 @@ export function ControlCenterVisuals({
                   <CartesianGrid
                     vertical={false}
                     stroke="rgb(var(--border))"
-                    strokeOpacity={0.72}
+                    strokeOpacity={0.56}
                   />
 
                   <XAxis
@@ -586,7 +690,9 @@ export function ControlCenterVisuals({
                         | (typeof barData)[number]
                         | undefined;
 
-                      if (!active || !row) return null;
+                      if (!active || !row) {
+                        return null;
+                      }
 
                       return (
                         <div className={tooltipPanel}>
@@ -626,7 +732,8 @@ export function ControlCenterVisuals({
 
                           {row.excludedCount ? (
                             <p className="mt-1 text-micro text-[rgb(var(--text-muted))]">
-                              {row.excludedCount} valori excluse din suma convertită.
+                              {row.excludedCount} valori excluse din suma
+                              convertită.
                             </p>
                           ) : null}
                         </div>
@@ -663,48 +770,32 @@ export function ControlCenterVisuals({
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center text-xs leading-5 text-[rgb(var(--text-muted))]">
+              <div className="flex h-full items-center px-4 text-xs leading-5 text-[rgb(var(--text-muted))]">
                 Nu există expunere eligibilă pentru distribuția curentă.
               </div>
             )}
           </div>
 
-          <p className="mt-2 min-h-10 text-metadata leading-5 text-[rgb(var(--text-muted))]">
+          <p className="mt-2 text-metadata leading-5 text-[rgb(var(--text-muted))]">
             {monetary
               ? "Valoare estimată și număr de cazuri, pentru fiecare interval."
               : fx
                 ? "Sume neconfirmate: barele arată numărul de cazuri."
-                : "Conversie indisponibilă: barele arată numărul de cazuri."}{" "}
-            Fără termen, separat.
+                : "Conversie indisponibilă: barele arată numărul de cazuri."}
           </p>
         </figure>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 text-micro leading-5 text-[rgb(var(--text-muted))]">
-        {model.undatedCount > 0 ? (
-          <p>
-            Fără termen: {caseCountLabel(model.undatedCount)} ·{" "}
-            {model.undatedOriginals
-              .map((entry) =>
-                formatProductCurrency(
-                  entry.value,
-                  entry.currency,
-                ),
-              )
-              .join(" · ") || "Valoare neconfirmată"}
-          </p>
-        ) : null}
+      <details className="group mt-1 text-metadata text-[rgb(var(--text-muted))]">
+        <summary className="focus-ring inline-flex cursor-pointer list-none items-center gap-1.5 py-1.5 font-semibold text-[rgb(var(--text-secondary))] transition-colors hover:text-[rgb(var(--foreground))]">
+          <span>Vezi valorile graficului</span>
 
-        {excluded ? <p>{excluded}</p> : null}
-
-        <p>
-          Termene actuale, nu istoric al expunerii sau prognoză de încasare.
-        </p>
-      </div>
-
-      <details className="mt-1 text-metadata text-[rgb(var(--text-muted))]">
-        <summary className="focus-ring inline-block cursor-pointer py-1.5">
-          Vezi valorile graficului
+          <span
+            aria-hidden="true"
+            className="inline-block text-[11px] transition-transform duration-150 group-open:rotate-180"
+          >
+            ▾
+          </span>
         </summary>
 
         <div className="mt-2 grid gap-5 xl:grid-cols-[1.8fr_1fr]">
@@ -713,6 +804,7 @@ export function ControlCenterVisuals({
               <caption className="pb-2 text-left font-medium">
                 Cazuri cu termen · monedă originală și echivalent analitic
               </caption>
+
               <thead>
                 <tr>
                   <th className="py-2 pr-3">Caz / termen</th>
@@ -723,6 +815,7 @@ export function ControlCenterVisuals({
                   <th>Clasificare</th>
                 </tr>
               </thead>
+
               <tbody>
                 {points.flatMap((point) =>
                   point.cases.map((row) => (
@@ -733,19 +826,23 @@ export function ControlCenterVisuals({
                       <td className="max-w-[260px] py-2 pr-3">
                         {row.item.opportunityTitle ??
                           "Oportunitate"}
+
                         <span className="block text-micro">
                           {dateLabel(point.date, true)}
                         </span>
                       </td>
+
                       <td className="pr-3 tabular-nums">
                         {formatProductCurrency(
                           row.item.value,
                           row.item.currency,
                         )}
                       </td>
+
                       <td className="pr-3 tabular-nums">
                         {amount(row.converted)}
                       </td>
+
                       <td>{row.classification}</td>
                     </tr>
                   )),
@@ -766,6 +863,7 @@ export function ControlCenterVisuals({
                 Concentrarea expunerii ·{" "}
                 {monetary ? currency : "monede originale"}
               </caption>
+
               <thead>
                 <tr>
                   <th className="py-2 pr-3">Termen</th>
@@ -773,6 +871,7 @@ export function ControlCenterVisuals({
                   <th>Cazuri</th>
                 </tr>
               </thead>
+
               <tbody>
                 {model.buckets.map((entry) => (
                   <tr
@@ -782,6 +881,7 @@ export function ControlCenterVisuals({
                     <td className="py-2 pr-3">
                       {entry.label}
                     </td>
+
                     <td className="pr-3 tabular-nums">
                       {monetary
                         ? amount(sum(entry.values))
@@ -794,6 +894,7 @@ export function ControlCenterVisuals({
                             )
                             .join(" · ") || "—"}
                     </td>
+
                     <td>{sum(entry.counts)}</td>
                   </tr>
                 ))}
@@ -802,10 +903,6 @@ export function ControlCenterVisuals({
           </div>
         </div>
       </details>
-
-      <p className="mt-1 text-micro leading-5 text-[rgb(var(--text-muted))]">
-        Conversia este utilizată doar pentru analiză. Valorile originale rămân neschimbate.
-      </p>
     </section>
   );
 }

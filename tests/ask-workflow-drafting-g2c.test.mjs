@@ -137,10 +137,12 @@ test("prompt-like text cannot expand the canonical workflow contract", () => {
 test("Ask returns preview before provider retrieval and persistence happens only in confirmation API", () => {
   const orchestrator = read("src/lib/ai/copilot-orchestrator.ts");
   const runStart = orchestrator.indexOf("export async function runCopilot");
-  const run = orchestrator.slice(runStart, orchestrator.indexOf("if (prohibitedRequest", runStart));
-  assert.match(run, /isWorkflowDraftRequest\(request\.question\)/);
-  assert.match(run, /prepare_workflow_draft_preview/);
-  assert.doesNotMatch(run, /executeCopilotTool|provider\.createTurn/);
+  const workflowStart = orchestrator.indexOf("if (isWorkflowDraftRequest", runStart);
+  const workflowEnd = orchestrator.indexOf("const truthQuestion", workflowStart);
+  const workflowBranch = orchestrator.slice(workflowStart, workflowEnd);
+  assert.match(workflowBranch, /isWorkflowDraftRequest\(request\.question\)/);
+  assert.match(workflowBranch, /prepare_workflow_draft_preview/);
+  assert.doesNotMatch(workflowBranch, /executeCopilotTool|provider\.createTurn/);
 
   const api = read("src/app/api/ai/workflow-drafts/route.ts");
   assert.match(api, /hasPermission\(authorization, "settings\.update"\)/);
@@ -179,6 +181,8 @@ test("preview exposes canonical blocks, explicit confirmation and exact builder 
   assert.match(preview, /Continuă în builder/);
   assert.match(preview, /Ask ReveNew nu o activează, nu o rulează și nu trimite emailuri/);
   assert.match(conversation, /WorkflowDraftPreview/);
-  assert.match(newPage, /\/ai\?tab=ask&question=/);
+  assert.match(preview, /fetch\("\/api\/ai\/workflow-drafts"/);
+  assert.match(preview, /Draft creat\. Rămâne inactiv până la activarea explicită din builder/);
+  assert.match(newPage, /createWorkflowAndOpen/);
   assert.doesNotMatch(newPage, /action=\{createWorkflowWithAi\}/);
 });

@@ -158,7 +158,7 @@ function RecommendationCard({
 
       <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Sursă: {recommendation.trace.sourceTypeLabel} · {recommendation.evidenceCount} {recommendation.evidenceCount === 1 ? "dovadă" : "dovezi"}</p>
-        <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {recommendation.evidenceLabel}</span></p>
+        <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Bazat pe:</strong> {recommendation.evidenceLabel}</span></p>
         <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{recommendation.uncertainty}</p>
         <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">{recommendation.controlNote}</p>
       </div>
@@ -169,7 +169,7 @@ function RecommendationCard({
             <span className="block text-xs font-semibold text-[rgb(var(--foreground))]">Vezi de ce</span>
             <span className="mt-0.5 block text-[0.6875rem] text-[rgb(var(--text-muted))]">Reguli și dovezi</span>
           </span>
-          <span className="text-sm font-semibold text-[rgb(var(--primary))] group-open:hidden">+</span>
+          <span className="text-sm font-semibold text-[rgb(var(--intelligence-strong))] group-open:hidden dark:text-[rgb(var(--intelligence))]">+</span>
         </summary>
         <div className="grid gap-4 border-t border-[rgb(var(--border))] p-3 text-xs leading-5">
           <div>
@@ -206,7 +206,7 @@ function RecommendationCard({
       </details>
 
       <div className="mt-auto flex flex-wrap gap-2 pt-5">
-        <Button href={recommendation.trace.continueHref} size="small">{recommendation.trace.continueLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+        <Button href={recommendation.trace.continueHref} variant="intelligence" size="small">{recommendation.trace.continueLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
         <Button href={recommendation.trace.evidenceHref} variant="ghost" size="small">Deschide dovada</Button>
       </div>
     </article>
@@ -248,8 +248,9 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
     <PageShell
       eyebrow="Inteligență controlată"
       title="Inteligență operațională"
-      description="Întreabă ReveNew ce se întâmplă în activitatea comercială, ce merită atenție și ce poate pregăti pentru tine."
+      description="Întreabă ReveNew ce se întâmplă în activitatea comercială, ce merită atenție și ce poate pregăti pentru tine"
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
+      wide
     >
       <nav aria-label="Secțiunile inteligenței operaționale" className="flex gap-1 overflow-x-auto border-b border-[rgb(var(--border))]">
         {intelligenceTabs.map((tab) => (
@@ -258,7 +259,7 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
             href={`/ai?tab=${tab.id}`}
             aria-current={activeTab === tab.id ? "page" : undefined}
             {...(tab.id === "recommendations" && activeTab !== "recommendations" ? { "data-guide-anchor": "ai-recommendation" } : {})}
-            className="focus-ring whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--primary))] aria-[current=page]:text-[rgb(var(--foreground))]"
+            className="focus-ring whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--intelligence))] aria-[current=page]:text-[rgb(var(--foreground))]"
           >
             {tab.label}
           </Link>
@@ -279,11 +280,11 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{intelligence.observation}</p>
 
             <div className="ai-evidence-rail mt-4 rounded-card border border-[rgb(var(--border-strong)/0.78)] bg-[rgb(var(--surface-elevated))] p-4 pl-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">Decizia care merită atenție</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]">Decizia care merită atenție</p>
               <h3 className="mt-2 text-xl font-semibold tracking-[-0.02em]">{intelligence.decisionTitle}</h3>
-              <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Dovadă:</strong> {intelligence.evidenceLabel}</span></p>
+              <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-[rgb(var(--text-muted))]"><DocumentMagnifyingGlassIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" /><span><strong className="text-[rgb(var(--foreground))]">Dovadă:</strong> {intelligence.evidenceLabel}</span></p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button href={intelligence.safeActionHref}>{intelligence.safeActionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
+                <Button href={intelligence.safeActionHref} variant="intelligence">{intelligence.safeActionLabel}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>
                 {intelligence.evidenceHref ? <Button href={intelligence.evidenceHref} variant="secondary">Verifică dovada</Button> : null}
               </div>
             </div>
@@ -311,7 +312,7 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
             ) : null}
 
             <div className="mt-4 border-t border-[rgb(var(--border))] pt-4">
-              <p className="flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Nicio comunicare externă nu este trimisă automat. ReveNew nu execută acțiuni comerciale riscante fără aprobarea explicită a unei persoane.</p>
+              <p className="flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />Nicio comunicare externă nu este trimisă automat. ReveNew nu execută acțiuni comerciale riscante fără aprobarea explicită a unei persoane.</p>
             </div>
           </aside>
         </div>
@@ -319,7 +320,7 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
 
       <section aria-labelledby="operational-recommendations">
         <div className="mb-4 max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Priorități din datele existente</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]">Priorități din datele existente</p>
           <h2 id="operational-recommendations" className="mt-2 text-xl font-semibold tracking-[-0.02em]">Recomandări operaționale</h2>
           <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Cel mult trei decizii ordonate determinist după severitate, termen și valoare estimată. Nu sunt acțiuni executate.</p>
         </div>
@@ -377,7 +378,7 @@ export default async function AiControlCenterPage({ searchParams }: { searchPara
 
       <section className="border-y border-[rgb(var(--border))] py-5 sm:py-6" aria-labelledby="ai-governance-title">
         <div className="flex items-start gap-3">
-          <ShieldCheckIcon className="mt-0.5 h-6 w-6 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
+          <ShieldCheckIcon className="mt-0.5 h-6 w-6 shrink-0 text-[rgb(var(--intelligence))]" aria-hidden="true" />
           <div>
             <h2 id="ai-governance-title" className="font-semibold">Limita operațională este parte din produs</h2>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-[rgb(var(--text-muted))]">Gmail nu este conectat. Google Calendar nu este conectat. Telefonia și vocea nu sunt active. Capabilitățile cu efect extern rămân blocate până la autorizare minimă, stocare sigură, revocare, audit și aprobare umană verificabilă. Statutul afișat nu promite disponibilitate viitoare.</p>

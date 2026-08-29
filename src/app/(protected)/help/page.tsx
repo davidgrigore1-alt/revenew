@@ -52,27 +52,27 @@ const faqGroups = [
 
 export default function HelpPage() {
   return (
-    <PageShell eyebrow="Ajutor" title="Centru de orientare ReveNew" description="Răspunsuri practice pentru semnale, oportunități, follow-up, atribuirea responsabilului și controlul comercial." actions={<div className="flex flex-wrap gap-2"><Button href="/demo" variant="secondary">Traseu demo</Button><Button href="/demo/feedback" variant="ghost">După demo: notează feedbackul</Button><GuideReplayButton /></div>}>
+    <PageShell eyebrow="Ajutor" title="Ajutor" description="Ghiduri scurte pentru lucrul în ReveNew" actions={<GuideReplayButton />}>
       <div className="grid gap-8">
-        <section className="rounded-panel border border-[rgb(var(--rn-accent-border)/0.65)] bg-[rgb(var(--rn-accent-muted))] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6" aria-labelledby="controlled-audit-help-title">
+        <section className="border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] px-5 py-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6" aria-labelledby="controlled-audit-help-title">
           <div className="max-w-3xl"><p className="text-label text-[rgb(var(--primary))]">Audit controlat</p><h2 id="controlled-audit-help-title" className="mt-2 text-xl font-semibold">Cum începi un audit controlat</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Pregătește 20–50 de cazuri comerciale recente, confirmă câmpurile disponibile și anonimizează datele. Primul audit nu cere acces complet la inbox și nu trimite nimic automat.</p></div>
-          <Button href="/audit/start" className="mt-4 shrink-0 sm:mt-0">Deschide wizardul de audit</Button>
+          <Button href="/audit/start" variant="secondary" className="mt-4 shrink-0 sm:mt-0">Deschide wizardul de audit</Button>
         </section>
-        <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card" aria-labelledby="start-title">
-          <div className="grid gap-6 p-5 sm:p-7 xl:grid-cols-[0.72fr_1.28fr]">
-            <div><p className="text-label text-[rgb(var(--primary))]">Începe cu fluxul real</p><h2 id="start-title" className="mt-2 text-2xl font-semibold tracking-[-0.035em]">De la semnal la acțiune comercială controlată.</h2><p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew organizează informația și recomandă următorii pași. Echipa confirmă relevanța, atribuirea responsabilului, documentele și rezultatele.</p></div>
-            <ol className="grid gap-px overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--border))] sm:grid-cols-2">
-              {pathways.map((item) => <li key={item.step} className="bg-[rgb(var(--surface-subtle))] p-4"><p className="text-label text-[rgb(var(--primary))]">Pasul {item.step}</p><h3 className="mt-2 text-sm font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{item.description}</p><Link href={item.href} className="focus-ring mt-3 inline-flex min-h-10 items-center rounded-button text-sm font-semibold text-[rgb(var(--primary))]">{item.action} →</Link></li>)}
+        <section className="border-y border-[rgb(var(--border))] py-6 sm:py-7" aria-labelledby="start-title">
+          <div className="grid gap-7 xl:grid-cols-[0.72fr_1.28fr]">
+            <div><p className="text-label text-[rgb(var(--primary))]">Începe cu fluxul real</p><h2 id="start-title" className="mt-2 text-2xl font-semibold tracking-[-0.035em]">De la semnal la acțiune comercială controlată</h2><p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew organizează informația și recomandă următorii pași. Echipa confirmă relevanța, atribuirea responsabilului, documentele și rezultatele.</p></div>
+            <ol className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              {pathways.map((item) => <li key={item.step} className="border-t border-[rgb(var(--border))] pt-4"><p className="text-label text-[rgb(var(--primary))]">Pasul {item.step}</p><h3 className="mt-2 text-sm font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">{item.description}</p><Link href={item.href} className="focus-ring mt-3 inline-flex min-h-10 items-center rounded-button text-sm font-semibold text-[rgb(var(--primary))]">{item.action} →</Link></li>)}
             </ol>
           </div>
-          <div className="border-t border-[rgb(var(--border))] p-4 sm:px-7"><ReveNewFlowMap activeStep={0} compact /></div>
+          <div className="mt-6 border-t border-[rgb(var(--border))] pt-4"><ReveNewFlowMap activeStep={0} compact /></div>
         </section>
 
         <section aria-labelledby="faq-title">
           <div className="max-w-2xl"><p className="text-label text-[rgb(var(--primary))]">Ghid operațional</p><h2 id="faq-title" className="mt-2 text-xl font-semibold">Răspunsuri după decizia pe care trebuie să o iei</h2><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Deschide numai subiectul relevant. Explicațiile descriu comportamentul actual al produsului, fără promisiuni automate.</p></div>
           <div className="mt-5 grid items-start gap-5 xl:grid-cols-2">
             {faqGroups.map((group) => (
-              <section key={group.title} className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
+              <section key={group.title} className="border-t border-[rgb(var(--border))] pt-4">
                 <h3 className="text-base font-semibold">{group.title}</h3>
                 <div className="mt-3 divide-y divide-[rgb(var(--border))]">
                   {group.items.map(([question, answer]) => <details key={question} className="group"><summary className="focus-ring flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 rounded-button py-3 text-sm font-semibold marker:hidden"><span>{question}</span><span className="text-lg font-normal text-[rgb(var(--primary))] transition-transform group-open:rotate-45" aria-hidden="true">+</span></summary><p className="pb-4 pr-8 text-sm leading-6 text-[rgb(var(--text-muted))]">{answer}</p></details>)}

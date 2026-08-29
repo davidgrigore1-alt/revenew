@@ -164,7 +164,8 @@ test("recovery queue empty state contains no fake metrics and populated rows exp
   assert.match(route, /Coada se construiește din semnale aprobate/);
   assert.match(route, /href="\/inbox\?create=1"/);
   assert.match(route, /href="\/inbox\/import"/);
-  assert.match(route, /buildRevenueRecoveryQueue\(summary\.activeOpportunities, \{ linkedSignals: signals\.signals \}\)/);
+  assert.match(route, /const visibleOpportunities=summary\.viewer\.isManager\?summary\.activeOpportunities:summary\.activeOpportunities\.filter\(o=>o\.ownerProfileId===summary\.viewer\.profileId\)/);
+  assert.match(route, /buildRevenueRecoveryQueue\(visibleOpportunities, \{ linkedSignals: signals\.signals \}\)/);
   assert.match(route, /Responsabil/);
   assert.match(route, /Următoarea acțiune/);
   assert.match(route, /Ultima activitate/);

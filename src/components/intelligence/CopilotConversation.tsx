@@ -81,7 +81,7 @@ export function PreparedActionCard({ action, approvalEndpoint, approvalContext, 
   return (
     <section className="mt-5 overflow-hidden rounded-panel border border-[rgb(var(--primary-border))] bg-[rgb(var(--surface-elevated))]" aria-label={action.title}>
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgb(var(--border))] px-4 py-3.5">
-        <div className="flex min-w-0 items-start gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-[rgb(var(--primary-soft))] text-[rgb(var(--primary))]"><DocumentTextIcon className="h-4 w-4" aria-hidden="true" /></span><div className="min-w-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Acțiune pregătită</p><h4 className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{action.title}</h4><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-muted))]">{action.target?.label ?? "Context autorizat"}</p></div></div>
+        <div className="flex min-w-0 items-start gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-[rgb(var(--intelligence-tint))] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]"><DocumentTextIcon className="h-4 w-4" aria-hidden="true" /></span><div className="min-w-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]">Acțiune pregătită</p><h4 className="mt-1 text-sm font-semibold text-[rgb(var(--foreground))]">{action.title}</h4><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-muted))]">{action.target?.label ?? "Context autorizat"}</p></div></div>
         <span className="status-pill status-pill-warning">{action.riskLevel === "external" ? "Efect extern" : action.riskLevel === "review" ? "Necesită revizuire" : "Risc redus"}</span>
       </header>
       {provenance ? <Link href={provenance.href} className="focus-ring mx-4 mt-3 block text-xs text-[rgb(var(--text-muted))]">Generat de workflow · {provenance.label} →</Link> : null}
@@ -170,15 +170,15 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
 
   const previousCount = loading ? conversation.length : Math.max(0, conversation.length - 1);
   return (
-    <div className={cn("grid min-h-0 gap-3", className)}>
-      <form onSubmit={submit} className="grid gap-2 rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-2.5 transition-[background-color,border-color,box-shadow] duration-normal ease-standard focus-within:border-[rgb(var(--primary)/0.72)] focus-within:bg-[rgb(var(--surface))] focus-within:shadow-[0_0_0_3px_rgb(var(--primary)/0.08)]">
+    <div className={cn("grid min-h-0 gap-4", className)}>
+      <form onSubmit={submit} className="grid gap-2 rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-3.5 shadow-card transition-[background-color,border-color,box-shadow] duration-normal ease-standard focus-within:border-[rgb(var(--intelligence)/0.72)] focus-within:bg-[rgb(var(--surface))] focus-within:shadow-[0_0_0_3px_rgb(var(--intelligence)/0.08)]">
         <p className="px-2 pt-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Context activ · {context.contextLabel ?? (context.pageType === "opportunity" ? "Oportunitatea curentă" : context.pageType === "company" ? "Compania curentă" : context.pageType === "dashboard" ? "Control Center" : "Întregul spațiu de lucru")}</p>
         {pageContext.opportunityId||pageContext.organizationId?<div role="group" aria-label="Contextul verificării" className="flex flex-wrap items-center gap-1 px-2 text-xs text-[rgb(var(--text-muted))]">
          {(["current","workspace"] as const).map(value=><button key={value} type="button" disabled={loading} aria-pressed={scope===value} onClick={()=>{setScope(value);setConversation([]);setSelection(undefined);}} className="focus-ring inline-flex h-8 items-center rounded-button border border-[rgb(var(--border))] px-3 disabled:opacity-50 aria-pressed:border-[rgb(var(--primary))] aria-pressed:text-[rgb(var(--foreground))]">{value==="current"?(pageContext.opportunityId?"Această oportunitate":"Compania selectată"):"Workspace autorizat"}</button>)}
         </div>:null}
         <label htmlFor={inputId} className="sr-only">Întrebarea ta</label>
         <textarea ref={inputRef} data-copilot-input id={inputId} aria-describedby={`${inputId}-trust`} aria-keyshortcuts="Enter" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 3000))} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void ask(question); } }} rows={3} maxLength={3000} placeholder="Întreabă ReveNew…" className="focus-ring min-h-24 w-full resize-none rounded-control border-0 bg-transparent px-2 py-2 text-sm leading-5 outline-none placeholder:text-[rgb(var(--text-faint))]" />
-        <div className="flex items-center justify-between gap-3"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-[0.6875rem] leading-4 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Doar informații autorizate. Decizia și orice acțiune rămân la utilizator.</p><Button type="submit" size="small" loading={loading} disabled={question.trim().length < 2}>Analizează</Button></div>
+        <div className="flex items-center justify-between gap-3"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-[0.6875rem] leading-4 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />Doar informații autorizate. Decizia și orice acțiune rămân la utilizator.</p><Button type="submit" variant="intelligence" size="small" loading={loading} disabled={question.trim().length < 2}>Analizează</Button></div>
       </form>
 
       <div className="grid gap-5" aria-live="polite" aria-busy={loading}>
@@ -217,9 +217,9 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
             </div>
             <div className="mt-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Răspuns</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]">Răspuns</h4>
                 <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-medium text-[rgb(var(--text-faint))]">
-                  <ShieldCheckIcon className="h-3.5 w-3.5 text-[rgb(var(--primary))]" aria-hidden="true" />
+                  <ShieldCheckIcon className="h-3.5 w-3.5 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />
                   {item.answer.commercialTruth ? "Surse evaluate · verificare umană" : item.answer.summaryType === "product_help" ? "Context produs" : item.answer.summaryType === "insufficient_information" ? "Limită de date explicită" : "Context verificat"}
                   {item.answer.evidence.length ? ` · ${item.answer.evidence.length} ${item.answer.evidence.length === 1 ? "sursă" : "surse"}` : ""}
                 </span>

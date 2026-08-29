@@ -117,7 +117,10 @@ export function GoogleWorkspaceCard({ state, notice }: Props) {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-semibold text-[rgb(var(--foreground))]">Google Workspace</h3>
-              <CapabilityStatus status={provider.status} label={provider.label} className="rounded-full border border-[rgb(var(--border))] px-2" />
+              <CapabilityStatus
+                status={provider.status}
+                label={provider.label}
+              />
             </div>
             <p title={connection.email} className="mt-1 truncate text-sm font-medium text-[rgb(var(--text-secondary))]">{connection.email}</p>
             <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[rgb(var(--text-muted))]">

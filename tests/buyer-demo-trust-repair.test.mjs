@@ -17,11 +17,13 @@ const ai = read("src/app/(protected)/ai/page.tsx");
 const outreach = read("src/app/(protected)/outreach/page.tsx");
 const fixtures = read("scripts/demo/fixtures.mjs");
 
-test("documents is a protected alias to the existing document workflow", () => {
+test("documents is a protected commercial document workspace", () => {
   assert.equal(existsSync(new URL(`../${documentsRoute}`, import.meta.url)), true);
   const route = read(documentsRoute);
-  assert.match(route, /redirect\("\/outreach"\)/);
-  assert.match(navigation, /name: "Documente", href: "\/outreach".+permission: "documents\.read"/);
+  assert.match(route, /PageShell/);
+  assert.match(route, /DriveWorkspace/);
+  assert.doesNotMatch(route, /redirect\("\/outreach"\)/);
+  assert.match(navigation, /name: "Documente", href: "\/documents".+permission: "documents\.read"/);
   assert.match(outreach, /Studio de follow-up/);
   assert.match(outreach, /Niciun mesaj nu este trimis automat/);
 });
@@ -41,12 +43,12 @@ test("fixed Romanian surfaces avoid mixed operational terminology", () => {
   assert.match(navigation, /Inteligență operațională/);
   assert.match(ai, /Inteligență operațională/);
   assert.match(todayCard, /Valoare estimată, neconfirmată/);
-  assert.match(pipeline, /Valoare estimată în pipeline/);
+  assert.match(pipeline, /Estimările rămân distincte de venit/);
 });
 
 test("commercial safety claims remain explicit after the trust repair", () => {
   const safeSurfaces = `${pipeline}\n${access}\n${ai}\n${outreach}`;
-  assert.match(pipeline, /Nu este venit confirmat/);
+  assert.match(pipeline, /Estimările rămân distincte de venit/);
   assert.match(access, /nu inițiază plăți și nu creează abonamente/i);
   assert.match(access, /Nicio opțiune nu promite rezultate garantate/i);
   assert.match(ai, /nu execută acțiuni comerciale riscante fără aprobarea explicită/i);

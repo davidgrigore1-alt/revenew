@@ -37,7 +37,7 @@ export function OpportunitiesExplorer({
 
   return (
     <>
-      {selectedIds.size > 0 ? <div role="toolbar" aria-label="Acțiuni pentru oportunitățile selectate" className="product-floating-surface sticky top-2 z-20 mb-2 flex flex-wrap items-center justify-between gap-3 px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><div className="flex gap-2"><Button href="/ai" variant="secondary" size="small">Deschide Ask ReveNew</Button><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div></div> : null}
+      {selectedIds.size > 0 ? <div role="status" className="product-floating-surface sticky top-2 z-20 mb-2 flex flex-wrap items-center justify-between gap-3 px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
     <div className="overflow-x-auto border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]" role="region" aria-label="Registru oportunități" tabIndex={0}>
       <table className="w-full min-w-[1060px] table-fixed border-collapse text-left text-sm">
         <caption className="sr-only">Oportunitățile comerciale din selecția curentă</caption>

@@ -29,7 +29,7 @@ test("visual system keeps the Attio-led foundation restrained while using a bran
 
   assert.match(globals, /Controlled accent roles/);
   assert.match(globals, /--rn-accent-500: 76 151 129/);
-  assert.match(globals, /--focus-ring: var\(--rn-accent-ring\)/);
+  assert.match(globals, /--focus-ring: var\(--interaction\)/);
   assert.match(globals, /--brand-500: var\(--rn-accent-500\)/);
   assert.match(globals, /\.ai-evidence-rail/);
   assert.match(aiPage, /ai-evidence-rail/);

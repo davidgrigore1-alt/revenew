@@ -157,10 +157,10 @@ test("pipeline and opportunity actions preserve stored commercial values in the 
   const pipeline = read("src/components/revenue/PipelineBoard.tsx");
   const workflow = read("src/components/opportunities/OpportunityWorkflow.tsx");
 
-  assert.match(pipeline, /summarizeReportingAmounts\(rows, currency, fx\)/);
+  assert.match(pipeline, /summarizeReportingAmounts\(\s*rows,\s*currency,\s*fx,?\s*\)/);
   assert.match(pipeline, /opportunity\.currency \?\? "RON"/);
-  assert.match(pipeline, /won \? opportunity\.actualOutcomeAmount : opportunity\.estimatedValueHigh/);
-  assert.match(pipeline, /formatCurrency\(original\.value, original\.currency\)/);
+  assert.match(pipeline, /won\s*\?\s*opportunity\.actualOutcomeAmount\s*:\s*opportunity\.estimatedValueHigh/);
+  assert.match(pipeline, /formatCurrency\(\s*original\.value,\s*original\.currency,?\s*\)/);
   assert.match(workflow, />\{existing\.title\}</);
 });
 

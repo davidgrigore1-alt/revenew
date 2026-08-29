@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { SavedViewControls } from "@/components/filters/SavedViewControls";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
@@ -142,7 +144,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             Caută
             <span className="relative">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-3 h-5 w-5 text-[rgb(var(--muted-foreground))]" aria-hidden="true" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={view === "contacts" ? "Nume, companie, email sau telefon" : "Companie, industrie sau oraș"} className="focus-ring h-10 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] pl-10 pr-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]" />
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={view === "contacts" ? "Nume, companie, email sau telefon" : "Companie, industrie sau oraș"} className="min-h-10 pl-10 pr-3" />
             </span>
           </label>
           {view !== "contacts" ? <label className="grid gap-2 text-sm font-semibold">Relație<Select value={relationship} onChange={(event) => setRelationship(event.target.value)} className="focus-ring h-10 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]"><option value="all">Toate</option><option value="prospect">Prospect</option><option value="customer">Client</option><option value="partner">Partener</option><option value="inactive">Inactiv</option></Select></label> : <span />}
@@ -156,7 +158,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
 
       <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage={view === "contacts" ? "contacts" : "companies"} />
 
-      {selectedIds.size > 0 ? <div role="toolbar" aria-label="Acțiuni pentru selecție" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><div className="flex flex-wrap gap-2"><Button href="/ai" variant="secondary" size="small">Deschide Ask ReveNew</Button><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div></div> : null}
+      {selectedIds.size > 0 ? <div role="status" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
 
       {view !== "contacts" && panel === "organization" ? <div className="fixed inset-0 z-50 flex justify-end bg-black/45" role="dialog" aria-modal="true" aria-label={editingOrganization ? "Editează compania" : "Adaugă companie"} onKeyDown={(event) => { if (event.key === "Escape") setPanel(null); }}>
         <button type="button" className="absolute inset-0" aria-label="Închide formularul" onClick={() => setPanel(null)} />
@@ -224,7 +226,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           </label>
           <label className="grid gap-2 text-sm font-semibold md:col-span-2">
             Note
-            <textarea name="notes" rows={3} defaultValue={editingOrganization?.notes ?? ""} className="resize-y rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" />
+            <Textarea name="notes" rows={3} defaultValue={editingOrganization?.notes ?? ""} />
           </label>
           <div className="flex flex-wrap gap-2 md:col-span-2">
             <Button type="submit" disabled={isPending}>{editingOrganization ? "Salvează compania" : "Creează compania"}</Button>
@@ -293,7 +295,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           </label>
           <label className="grid gap-2 text-sm font-semibold md:col-span-2">
             Note
-            <textarea name="notes" rows={3} defaultValue={editingContact?.notes ?? ""} className="resize-y rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2" />
+            <Textarea name="notes" rows={3} defaultValue={editingContact?.notes ?? ""} />
           </label>
           <div className="flex flex-wrap gap-2 md:col-span-2">
             <Button type="submit" disabled={isPending}>{editingContact ? "Salvează contactul" : "Creează contactul"}</Button>
@@ -312,7 +314,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             <caption className="sr-only">Companiile accesibile în spațiul de lucru curent</caption>
             <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
               <tr className="border-b border-[rgb(var(--border-strong))]">
-                <th scope="col" className="w-[27%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează companiile vizibile" className="size-4" />Companie</span></th>
+                <th scope="col" className="w-[27%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează companiile vizibile" className="size-4 accent-[rgb(var(--interaction))]" />Companie</span></th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Relație</th>
                 <th scope="col" className="w-[22%] px-3 py-2.5">Contact principal</th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Oportunități</th>
@@ -327,7 +329,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
                 return (
                   <tr key={organization.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
                     <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--primary))] group-focus-within:border-l-[rgb(var(--primary))]">
-                      <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-0.5 size-4 shrink-0" />
+                      <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-0.5 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
                       <Link href={`/crm/organizations/${organization.id}`} className="focus-ring block min-w-0 flex-1 rounded-control">
                         <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--primary))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline">{organization.name}</span>
                         <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{[organization.industry, organization.city].filter(Boolean).join(" · ") || "Context necompletat"}</span>

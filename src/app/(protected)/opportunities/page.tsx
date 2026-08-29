@@ -69,11 +69,13 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         </p>
         <OpportunitiesExplorer
           opportunities={opportunities}
-          emptyTitle={isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}
+          emptyTitle={allOpportunities.length > 0 ? "Nicio oportunitate nu corespunde filtrelor." : isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}
           emptyDescription={
-            isSupabaseConfigured
-              ? "Oportunitățile apar manual sau prin convertirea semnalelor din Inbox Comercial. Începe cu un lead pierdut, o cerere veche sau un follow-up ratat."
-              : undefined
+            allOpportunities.length > 0
+              ? "Ajustează sau resetează filtrele pentru a vedea alte oportunități comerciale."
+              : isSupabaseConfigured
+                ? "Oportunitățile apar manual sau prin convertirea semnalelor din Inbox Comercial. Începe cu un lead pierdut, o cerere veche sau un follow-up ratat."
+                : undefined
           }
           emptyCtaLabel={isSupabaseConfigured ? "Deschide Inbox Comercial" : undefined}
           emptyCtaHref={isSupabaseConfigured ? "/inbox" : undefined}

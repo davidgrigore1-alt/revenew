@@ -65,15 +65,27 @@ function catalogGroups<T extends string>(items: Array<{ value: T; label: string;
   }));
 }
 
-function nodeClass(selected: boolean, role: "trigger" | "condition" | "guard" | "action") {
-  const roleClass = role === "trigger"
-    ? "border-l-[3px] border-l-blue-500"
-    : role === "condition"
-      ? "border-l-[3px] border-l-violet-500"
-      : role === "guard"
-        ? "border-l-[3px] border-l-emerald-500"
-        : "border-l-[3px] border-l-[rgb(var(--primary))]";
-  return "focus-ring w-full rounded-[10px] border bg-[rgb(var(--surface-elevated))] px-4 py-3 text-left shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition-[border-color,background-color,transform] duration-fast hover:-translate-y-px hover:border-[rgb(var(--border-strong))] " + roleClass + (selected ? " border-[rgb(var(--primary))] ring-1 ring-[rgb(var(--primary)/0.28)]" : " border-[rgb(var(--border))]");
+function nodeClass(
+  selected: boolean,
+  role: "trigger" | "condition" | "guard" | "action",
+) {
+  const roleClass =
+    role === "trigger"
+      ? "border-l-[3px] border-l-[rgb(var(--interaction))]"
+      : role === "condition"
+        ? "border-l-[3px] border-l-[rgb(var(--border-strong))]"
+        : role === "guard"
+          ? "border-l-[3px] border-l-[rgb(var(--intelligence))]"
+          : "border-l-[3px] border-l-[rgb(var(--primary))]";
+
+  return (
+    "focus-ring w-full rounded-[10px] border px-4 py-3 text-left " +
+    "transition-[border-color,background-color,box-shadow] duration-fast " +
+    roleClass +
+    (selected
+      ? " border-[rgb(var(--primary))] bg-[rgb(var(--intelligence-tint))] ring-1 ring-[rgb(var(--primary)/0.22)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+      : " border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] shadow-[0_1px_2px_rgba(0,0,0,0.035)] hover:border-[rgb(var(--border-strong))]")
+  );
 }
 
 function FlowConnector() {
@@ -197,8 +209,14 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
       </div>
 
       <div className="grid min-h-[660px] xl:grid-cols-[minmax(0,1fr)_21rem]">
-        <section aria-label="Canvas workflow" className="relative overflow-auto border-b border-[rgb(var(--border))] bg-[rgb(var(--background))] px-5 py-10 xl:border-b-0 xl:border-r">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-25 [background-image:radial-gradient(rgb(var(--border-strong))_0.7px,transparent_0.7px)] [background-size:18px_18px]" />
+        <section
+          aria-label="Canvas workflow"
+          className="relative overflow-auto border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-5 py-10 xl:border-b-0 xl:border-r"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:radial-gradient(rgb(var(--border-strong))_0.7px,transparent_0.7px)] [background-size:18px_18px]"
+          />
           <div className="relative mx-auto w-full max-w-[46rem]">
             <button type="button" onClick={() => setSelected("trigger")} className={nodeClass(selected === "trigger", "trigger")}>
               <span className="micro-label">Când · Declanșator</span>
@@ -243,7 +261,7 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
           </div>
         </section>
 
-        <aside aria-label="Inspector workflow" className="bg-[rgb(var(--surface-subtle))] px-4 py-5">
+        <aside aria-label="Inspector workflow" className="bg-[rgb(var(--surface-elevated))] px-4 py-5">
           <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-3">
             <div><p className="micro-label">Inspector</p><h2 className="mt-1 text-sm font-semibold">Configurare bloc</h2></div>
             <span className="status-pill status-pill-neutral">{state.label}</span>
@@ -291,7 +309,7 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
       </div>
     </form>
 
-    <div className="grid border-t border-[rgb(var(--border))] lg:grid-cols-3">
+    <div className="grid border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] lg:grid-cols-3">
       <section id="activation-review" className="scroll-mt-24 px-4 py-5 lg:border-r lg:border-[rgb(var(--border))]">
         <p className="micro-label">Revizuire de activare</p>
         <h2 className="mt-1 text-sm font-semibold">Confirmă fluxul înainte să devină activ</h2>

@@ -130,8 +130,8 @@ function itemKind(type: WorkspaceDecisionType): Pick<ExecutiveBriefPriority, "ki
 }
 
 function groupKey(item: WorkspaceDecisionItem) {
-  if (item.type === "pending_approval") return "approvals:pending";
   if (item.relatedOpportunityId) return `opportunity:${item.relatedOpportunityId}`;
+  if (item.type === "pending_approval") return "approvals:pending";
   if (item.relatedCompanyId) return `company:${item.relatedCompanyId}:${item.type}`;
   return `${item.evidence[0]?.sourceType}:${item.evidence[0]?.sourceId ?? item.id}`;
 }

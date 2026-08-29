@@ -84,6 +84,12 @@ test("migration integrity baseline covers the complete reviewed history", async 
   }
 });
 
+test("response-window service-role grant stays column-scoped and server-only", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20260829154828_allow_service_role_response_window_update.sql", import.meta.url), "utf8");
+  assert.match(migration, /grant\s+update\s*\(\s*response_window_business_days\s*,\s*updated_at\s*\)\s+on\s+table\s+public\.businesses\s+to\s+service_role\s*;/i);
+  assert.doesNotMatch(migration, /grant\s+(?:all|insert|delete|truncate|references|trigger)|to\s+(?:anon|authenticated|public)\b/i);
+});
+
 test("migration gate permits privilege revocation without permitting destructive truncate", () => {
   assert.deepEqual(scanMigration("20990101000002_revoke.sql", "revoke truncate on public.commercial_signals from authenticated;"), []);
   assert.match(scanMigration("20990101000003_truncate.sql", "truncate table public.commercial_signals;").join("\n"), /TRUNCATE/);

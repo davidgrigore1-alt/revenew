@@ -48,9 +48,9 @@ test("record tables expose stable sorting, selection, and safe contextual action
   const opportunities = read("src/components/opportunities/OpportunitiesExplorer.tsx");
   for (const source of [crm, opportunities]) {
     assert.match(source, /type="checkbox"/);
-    assert.match(source, /role="toolbar"/);
+    assert.match(source, /role="status"/);
     assert.match(source, /Șterge selecția/);
-    assert.match(source, /Deschide Ask ReveNew/);
+    assert.doesNotMatch(source, /Deschide Ask ReveNew/);
     assert.doesNotMatch(source, /bulk.*send|trimite toate/i);
   }
   assert.match(crm, /SavedViewControls/);

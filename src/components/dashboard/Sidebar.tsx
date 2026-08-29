@@ -25,7 +25,7 @@ export function Sidebar({
       </div>
       <div className="border-b border-[rgb(var(--border)/0.72)] px-2 py-1.5"><GlobalSearch /></div>
 
-      <div data-sidebar-primary className="app-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-1.5">
+      <div data-sidebar-primary className="app-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-1.5 pt-1.5">
         <ShellNavigation items={primaryItems} />
       </div>
 

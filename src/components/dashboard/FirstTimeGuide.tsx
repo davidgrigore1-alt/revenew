@@ -2,20 +2,20 @@ import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import type { FirstValueJourney } from "@/lib/first-value-journey";
 
-export function FirstTimeGuide({ journey }: { journey: FirstValueJourney }) {
+export function FirstTimeGuide({ journey, compact = false }: { journey: FirstValueJourney; compact?: boolean }) {
   return (
     <section
       aria-labelledby="first-value-journey-title"
-      className="overflow-hidden rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] shadow-card"
+      className={`overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] ${compact ? "" : "shadow-card"}`}
     >
       <div className="flex flex-col gap-4 border-b border-[rgb(var(--border))] p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Primul flux de valoare</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Primii pași</p>
           <h2 id="first-value-journey-title" className="mt-2 font-display text-2xl font-semibold tracking-tight text-[rgb(var(--foreground))]">
-            De la un semnal comercial la o decizie controlată
+            Configurează primul flux comercial
           </h2>
           <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">
-            ReveNew transformă contextul comercial într-o analiză explicabilă, o acțiune pregătită și o decizie umană auditabilă.
+            Stările sunt confirmate din datele existente. ReveNew nu trimite și nu aplică nimic automat.
           </p>
         </div>
         <Button href={journey.nextHref} className="shrink-0">

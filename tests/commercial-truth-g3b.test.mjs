@@ -203,7 +203,7 @@ test("G3C connected context includes Drive and uses truthful selection copy",()=
  const page=read("src/app/(protected)/dashboard/page.tsx");assert.match(page,/Google Drive/);assert.match(page,/driveStatus === "connected"/);assert.match(page,/document relevant/);
  assert.match(read("src/components/intelligence/CopilotConversation.tsx"),/>Analizează<\/Button>/);
  assert.match(read("src/components/apps/DriveWorkspace.tsx"),/files.length===1\?"document":"documente"/);
- assert.match(read("src/app/(protected)/documents/page.tsx"),/type="submit" aria-label="Caută documente"/);
+ assert.match(read("src/app/(protected)/documents/page.tsx"),/<button[\s\S]*?type="submit"[\s\S]*?aria-label="Caută documente"[\s\S]*?>/);
 });
 
 const currentEngine=loader()("src/lib/opportunity-commercial-state.ts");
@@ -314,7 +314,7 @@ test("G3C.1 commercial UI separates current/resolved/history and reuses shared c
  const history=read("src/components/recovery/ImpactSurface.tsx");
  assert.match(history,/Înainte · la detectare/);assert.match(history,/model.actorNames\[e.actor_profile_id\]/);
  assert.match(history,/<summary[^>]*>Detalii tehnice<\/summary><p>Actor:/);
- assert.match(read("src/components/ui/ActionToolbar.tsx"),/h-8/);assert.match(read("src/components/ui/Button.tsx"),/small: "h-8/);
+ assert.match(read("src/components/ui/ActionToolbar.tsx"),/h-8/);assert.match(read("src/components/ui/Button.tsx"),/small: "h-\[var\(--control-height-compact\)\]/);
 });
 
 test("G3C.1 current CRM facts do not expire with record age and an undated action is not a missing action",()=>{

@@ -132,7 +132,7 @@ test("meeting brief preserves the exact owner-scoped calendar event", () => {
   const conversation = read("src/components/intelligence/CopilotConversation.tsx");
   const tool = read("src/lib/ai/google-context-tool.ts");
   const repository = read("src/lib/google-workspace/repository.ts");
-  has(meetings, "&meeting=${encodeURIComponent(meeting.id)}");
+  assert.match(meetings, /&meeting=\$\{encodeURIComponent\(\s*meeting\.id,?\s*\)\}/);
   has(askPage, "selectedRecordId={searchParams?.meeting}");
   has(conversation, "lockedContext?.selectedRecordId");
   has(tool, 'eventId: view === "prepare_meeting_brief" && !emailId ? page.selectedRecordId : undefined');

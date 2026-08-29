@@ -35,7 +35,7 @@ test("opportunity secondary execution areas use progressive disclosure", async (
   assert.match(workbench, /<details[^>]*>[\s\S]*Alte intervenții controlate/);
   assert.match(page, /<details[^>]*>[\s\S]*Semnale asociate/);
   assert.match(workflow, /Evaluare și date operaționale/);
-  assert.match(workflow, /Context comercial complet/);
+  assert.match(workflow, /Scorurile susțin prioritizarea; nu confirmă venit/);
   assert.match(timeline, /<section id="opportunity-timeline"/);
   assert.match(workflow, /<details id="opportunity-documents"/);
   assert.match(workflow, /Documente și drafturi/);

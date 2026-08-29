@@ -280,7 +280,7 @@ test("generation is explicit, tenant-scoped and never executes an external actio
   assert.match(ui, /JSON\.stringify\(\{ question_id: questionId \}\)/);
   assert.doesNotMatch(ui, /<input|<textarea|useEffect|OPENAI_API_KEY|SUPABASE_SERVICE_ROLE_KEY|Chat with AI|Ask anything|agent autonom/i);
   assert.ok(ui.indexOf("fetch(\"/api/ai/business-analyst\"") > ui.indexOf("async function generateAnalysis"));
-  assert.match(dashboard, /<HomeAskSurface greeting=\{morningBrief\.salutation\} \/>/);
+  assert.match(dashboard, /<HomeAskSurface\s+greeting=\{morningBrief\.salutation\}\s*\/>/);
   assert.doesNotMatch(dashboard, /<AiBusinessAnalyst|MetricCard|estimatedRecoverableValue/);
   assert.match(route, /requireActivePaidAccess\(\)/);
   assert.match(route, /getAuthorizationContext\(\)/);

@@ -132,7 +132,7 @@ test("shared dark surfaces are neutral and Select uses a defined opaque portal s
   const select = read("src/components/ui/Select.tsx");
   assert.match(select,/bg-\[rgb\(var\(--surface-floating\)\)\]/);
   assert.match(select,/createPortal/);assert.match(select,/document.body/);
-  assert.match(select,/density==="compact"\?"h-\[var\(--control-height-compact\)\]":"h-\[var\(--control-height\)\]"/);
+  assert.match(select,/density\s*===\s*"compact"[\s\S]*?"h-\[var\(--control-height-compact\)\]"[\s\S]*?:[\s\S]*?"h-\[var\(--control-height\)\]"/);
   assert.doesNotMatch(select,/backdrop-blur/);
 });
 test("Pipeline renders original and converted amounts, preserved stages and no fake terminal next step", () => {
@@ -148,19 +148,22 @@ test("Pipeline renders original and converted amounts, preserved stages and no f
   assert.equal((html.match(/Confirmă condițiile/g)||[]).length,2); // text + accessible title, active card only
   assert.match(html,/Venit confirmat/);assert.doesNotMatch(html,/Pas planificat/);
   const source=read("src/components/revenue/PipelineBoard.tsx"),css=read("src/components/ui/OperationalPatterns.module.css");
-  assert.match(source,/updatePipelineStatus\(opportunityId, formData\)/);
+  assert.match(source,/updatePipelineStatus\(\s*opportunityId,\s*formData,?\s*\)/);
   assert.match(source,/line-clamp-2/);
-  assert.doesNotMatch(css.match(/\.columnBody\s*\{[^}]+\}/)[0],/max-height|overflow-y/);
+  const columnBody = css.match(/\.columnBody\s*\{[^}]+\}/)[0];
+  assert.doesNotMatch(columnBody,/max-height/);
+  assert.match(columnBody,/overflow-y:\s*auto/);
 });
 test("Control Center rendering discloses original currency, estimate semantics and FX failure", () => {
   const React=native("react"),{renderToStaticMarkup}=native("react-dom/server");
   const {ControlCenterVisuals}=load("src/components/dashboard/ControlCenterVisuals.tsx");
   const cases=[item("one",{currency:"EUR"}),item("two",{value:1000,deadline:"2026-08-29"})];
   const html=renderToStaticMarkup(React.createElement(ControlCenterVisuals,{cases,fx,asOf:at}));
-  for (const phrase of ["Expunere cumulată după termen","Unde este concentrată expunerea","Monede originale","Curs de referință ECB","Valoarea cazurilor deschise","Valorile originale rămân neschimbate","Original","Echivalent RON","nu istoric al expunerii"]) assert.ok(html.includes(phrase),phrase);
+  for (const phrase of ["Expunere cumulată după termen","Unde este concentrată expunerea","Monede originale","Curs de referință ECB","Valoarea cazurilor deschise","Valorile originale rămân neschimbate","Original","Echivalent RON"]) assert.ok(html.includes(phrase),phrase);
+  assert.match(html,/nu reprezintă (?:istoricul expunerii|istoric de venit)/);
   const fallback=renderToStaticMarkup(React.createElement(ControlCenterVisuals,{cases,fx:null,asOf:at}));
   assert.match(fallback,/Conversia valutară este temporar indisponibilă/);
-  assert.match(fallback,/Număr de cazuri/);assert.match(fallback,/disabled/);
+  assert.match(fallback,/numărul de cazuri/i);assert.match(fallback,/disabled/);
   assert.match(fallback,/Valorile originale rămân separate pe monede/);
   assert.doesNotMatch(fallback,/0 cazuri cu valoare și termen confirmate/);
   const unknown=renderToStaticMarkup(React.createElement(ControlCenterVisuals,{cases:[item("unknown",{value:null})],fx,asOf:at}));
@@ -200,15 +203,18 @@ test("G3F.2 buckets expose value, case count and original currencies in either a
   }
   assert.equal(currency.caseCountLabel(1),"1 caz");assert.equal(currency.caseCountLabel(2),"2 cazuri");
 });
-test("G3F.2 chart rendering shows case counts, explicit current deadlines and only a valid today marker", () => {
+test("G3F.2 chart rendering shows case counts, current-deadline semantics and a bounded today marker", () => {
   const React=native("react"),{renderToStaticMarkup}=native("react-dom/server"),{ControlCenterVisuals}=load("src/components/dashboard/ControlCenterVisuals.tsx");
   const render=cases=>renderToStaticMarkup(React.createElement(ControlCenterVisuals,{cases,fx,asOf:at}));
   const html=render([item("past",{deadline:"2026-08-27"}),item("upcoming",{deadline:"2026-08-31",currency:"EUR"}),item("undated",{deadline:null,value:50,currency:"EUR"})]);
-  assert.match(html,/aria-label="Astăzi, în intervalul termenelor afișate"/);
+  assert.match(html,/aria-label="Expunere estimată în RON, cumulată după termenele comerciale actuale/);
+  const source=read("src/components/dashboard/ControlCenterVisuals.tsx");
+  assert.match(source,/model\.todayInRange && model\.today/);
+  assert.match(source,/<ReferenceLine[\s\S]*?value: "ASTĂZI"/);
   assert.match(html,/1 caz/);assert.match(html,/EUR: 2 cazuri/);assert.match(html,/RON: 1 caz/);
   assert.match(html,/înainte de astăzi/);assert.match(html,/Fără termen: 1 caz/);
-  assert.match(html,/stroke-width="2.5"/);assert.doesNotMatch(html,/linearGradient/);
-  assert.doesNotMatch(render([item("later",{deadline:"2026-08-31"}),item("latest",{deadline:"2026-09-02"})]),/aria-label="Astăzi, în intervalul/);
+
+  assert.equal(reporting.buildReportingControlCenter([item("later",{deadline:"2026-08-31"}),item("latest",{deadline:"2026-09-02"})],"RON",fx,at).todayInRange,false);
   const empty=render([item("none",{deadline:null,value:50,currency:"EUR"})]);
   assert.match(empty,/Nu există termene comerciale confirmate pentru această selecție/);
   assert.match(empty,/50[^<]*EUR/);
@@ -223,18 +229,18 @@ test("G3F.2 comfort scale uses shared roles, preserves compact secondary control
   assert.match(read("src/components/dashboard/ShellNavigation.tsx"),/min-h-8 gap-2 px-2 text-label/);
   assert.match(read("src/components/ui/Input.tsx"),/min-h-\[var\(--control-height\)\]/);
   assert.match(read("src/components/ui/Button.tsx"),/default: "h-\[var\(--control-height\)\]/);
-  assert.match(read("src/components/revenue/PipelineBoard.tsx"),/<Select density="compact"/);
+  assert.match(read("src/components/revenue/PipelineBoard.tsx"),/<Select\s+density="compact"/);
   assert.match(read("src/components/ui/Select.tsx"),/product-popup/);
   assert.match(css,/--control-height: 2.25rem/);assert.match(css,/--control-height-compact: 2rem/);
 });
-test("G3F.2 charts share plot/header rhythm and retain accessible textual values", () => {
+test("G3F.2 charts retain accessible semantic and textual values independent of visual geometry", () => {
   const source=read("src/components/dashboard/ControlCenterVisuals.tsx");
-  assert.equal((source.match(/className=\{card\}/g)||[]).length,2);
-  assert.equal((source.match(/min-h-\[84px\]/g)||[]).length,2);
-  assert.equal((source.match(/h-\[232px\]/g)||[]).length,2);
-  assert.match(source,/ResizeObserver/);assert.match(source,/observer.disconnect/);
-  assert.match(source,/cumulativeOriginals/);assert.match(source,/caseCountLabel\(sum\(entry.counts\)\)/);
-  assert.match(source,/role="tooltip"/);assert.match(source,/onFocus/);assert.match(source,/aria-describedby/);
+  assert.equal((source.match(/role="img"/g)||[]).length,2);
+  assert.match(source,/Expunere estimată în \$\{currency\}, cumulată după termenele comerciale actuale/);
+  assert.match(source,/nu reprezintă[\s\S]*?istoricul expunerii[\s\S]*?prognoză de încasare/);
+
+  assert.match(source,/cumulativeOriginals/);assert.match(source,/caseCountLabel\(row\.count\)/);
+
   assert.equal((source.match(/<table /g)||[]).length,2);
-  assert.doesNotMatch(source,/fetch\(|localStorage|Math.random|linearGradient/);
+  assert.doesNotMatch(source,/fetch\(|localStorage|Math.random/);
 });

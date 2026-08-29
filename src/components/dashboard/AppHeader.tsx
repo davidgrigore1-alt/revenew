@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bars3Icon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ShellNavigation } from "@/components/dashboard/ShellNavigation";
 import { WorkspaceMenu } from "@/components/dashboard/WorkspaceMenu";
 import { AssistantButton } from "@/components/guidance/ContextualAssistant";
+import { ContextualHelpMenu } from "@/components/guidance/ContextualHelpMenu";
 import { GLOBAL_SEARCH_OPEN_EVENT } from "@/components/search/GlobalSearch";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { primaryNavigation, utilityNavigation, type NavigationItem } from "@/lib/navigation";
@@ -129,7 +129,7 @@ export function AppHeader({
                 canViewSettings={canViewSettings}
               />
             </div>
-            <Link href="/help" className="focus-ring hidden min-h-8 items-center rounded-control px-2 text-xs font-medium text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))] lg:inline-flex">Ajutor</Link>
+            <ContextualHelpMenu className="hidden lg:block" />
           </div>
         </div>
       </header>

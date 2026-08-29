@@ -70,7 +70,7 @@ export function ExecutionControlCenter({ model,impactLinks={},fx,asOf }: { model
   const selected = visible.find((item) => item.id === selectedId) ?? visible[0] ?? null;
   return <section aria-labelledby="execution-center-title" className="pt-6">
     <header className="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 id="execution-center-title" className="text-page-heading font-semibold tracking-tight">Control Center</h1><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Situațiile comerciale care necesită intervenție.</p></div>
+      <div><h1 id="execution-center-title" className="text-page-heading font-semibold tracking-tight">Control Center</h1><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Situațiile comerciale care necesită intervenție</p></div>
       <Link href="/opportunities" className="focus-ring rounded text-xs text-[rgb(var(--text-muted))] hover:underline">Toate oportunitățile →</Link>
     </header>
     <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-y border-[rgb(var(--border))] py-3 text-xs">

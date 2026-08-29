@@ -23,7 +23,7 @@ test("opportunity exposes semantic URL tabs and renders only the active panel", 
   assert.doesNotMatch(page, /target:block|className="hidden scroll-mt-24|\border-\d+|flex-row-reverse/);
   assert.match(timeline, /id="opportunity-timeline"/);
   assert.match(timeline, /Istoric comercial/);
-  assert.match(timeline, /Fapte înregistrate și interpretări ReveNew în ordine cronologică/);
+  assert.match(timeline, /Fapte înregistrate și interpretări cu momentul evaluării explicit/);
   assert.match(timeline, /tabIndex=\{-1\}/);
   assert.match(page, /aria-label="Secțiunile oportunității"/);
   assert.doesNotMatch(sidebar, /name: "(?:Timeline|Istoric comercial|Memorie companie|Ask Company)"/);

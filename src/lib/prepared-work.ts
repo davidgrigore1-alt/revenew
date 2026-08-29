@@ -27,6 +27,7 @@ export type PreparedWorkItem = {
   approver: string;
   reviewHref: string;
   editable: boolean;
+  preparedAt?: string;
 };
 
 function documentStatus(document: OpportunityDocument): PreparedWorkStatus | null {
@@ -61,7 +62,8 @@ export function preparedWorkForOpportunity(opportunity: Opportunity): PreparedWo
       willNotChange: ["Nu se trimite niciun mesaj automat.", "Oportunitatea nu este marcată câștigată automat."],
       approver: "Utilizator autorizat",
       reviewHref: href,
-      editable: true
+      editable: true,
+      preparedAt: document.readyAt ?? document.editedAt ?? document.createdAt
     }];
   });
 }

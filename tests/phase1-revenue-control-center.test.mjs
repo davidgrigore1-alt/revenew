@@ -53,7 +53,7 @@ test("dashboard and attention reads remain bounded and business scoped", () => {
 test("commercial events include trusted workspace and actor context", () => {
   assert.match(actions, /business_id: input\.businessId/);
   assert.match(actions, /actor_profile_id: input\.actorProfileId/);
-  assert.match(actions, /metadata: input\.metadata/);
+  assert.match(actions, /metadata: \{ \.\.\.input\.metadata, origin: "user" \}/);
 });
 
 test("outsiders and removed members cannot reach opportunity, outcome, contact or attention paths", () => {

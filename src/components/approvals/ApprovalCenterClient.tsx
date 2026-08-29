@@ -50,6 +50,13 @@ const filterLabels: Record<ApprovalCenterState | "all", string> = {
   rejected: "Respins"
 };
 
+const priorityLabels: Record<CommercialSignal["priority"], string> = {
+  low: "Prioritate redusă",
+  medium: "Prioritate medie",
+  high: "Prioritate ridicată",
+  urgent: "Urgent"
+};
+
 function formFor(signal: CommercialSignal): ReviewForm {
   return {
     organizationId: signal.matchedOrganizationId ?? "",
@@ -93,6 +100,15 @@ export function ApprovalCenterClient({
   useEffect(() => setSignals(initialSignals), [initialSignals]);
 
   const items = useMemo(() => approvalCenterSignals(signals, filter), [signals, filter]);
+  const stateCounts = useMemo(() => {
+    const all = approvalCenterSignals(signals);
+    return {
+      all: all.length,
+      pending: all.filter((item) => item.state === "pending").length,
+      applied: all.filter((item) => item.state === "applied").length,
+      rejected: all.filter((item) => item.state === "rejected").length
+    };
+  }, [signals]);
 
   useEffect(() => {
     if (items.some((item) => item.signal.id === selectedId)) return;
@@ -185,11 +201,17 @@ export function ApprovalCenterClient({
       {error ? <AlertBanner tone="danger" title="Acțiunea nu a fost aplicată">{error}</AlertBanner> : null}
       {notice ? <AlertBanner tone="success" title="Decizie înregistrată"><span>{notice}</span>{noticeHref ? <Link href={noticeHref} className="focus-ring ml-2 inline-flex rounded font-semibold underline underline-offset-4">Revizuiește oportunitatea</Link> : null}</AlertBanner> : null}
 
+      <section aria-label="Rezumat aprobări" className="grid border-y border-[rgb(var(--border))] sm:grid-cols-3">
+        <div className="px-3 py-2.5 sm:border-r sm:border-[rgb(var(--border))]"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Necesită decizie</p><p className="mt-1 text-lg font-semibold tabular-nums">{stateCounts.pending}</p></div>
+        <div className="border-t border-[rgb(var(--border))] px-3 py-2.5 sm:border-r sm:border-t-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Aplicate</p><p className="mt-1 text-lg font-semibold tabular-nums">{stateCounts.applied}</p></div>
+        <div className="border-t border-[rgb(var(--border))] px-3 py-2.5 sm:border-t-0"><p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Respinse</p><p className="mt-1 text-lg font-semibold tabular-nums">{stateCounts.rejected}</p></div>
+      </section>
+
       <section aria-label="Filtre aprobări" className="border-y border-[rgb(var(--border))]">
         <div className="flex min-w-0 flex-wrap" role="group" aria-label="Starea aprobărilor">
           {(Object.keys(filterLabels) as Array<ApprovalCenterState | "all">).map((value) => (
             <button key={value} type="button" onClick={() => setFilter(value)} aria-pressed={filter === value} className={`focus-ring min-h-10 border-b-2 px-3 text-xs font-semibold transition-colors ${filter === value ? "border-[rgb(var(--primary))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]"}`}>
-              {filterLabels[value]}
+              {filterLabels[value]} <span className="ml-1 tabular-nums text-[rgb(var(--text-faint))]">{stateCounts[value]}</span>
             </button>
           ))}
         </div>
@@ -213,7 +235,7 @@ export function ApprovalCenterClient({
                 >
                   <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold">{signal.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{signal.contactCompany || signal.contactName || "Context neconfirmat"}</p></div><StatusPill tone={toneForState(state)}>{approvalCenterStateLabels[state]}</StatusPill></div>
                   <p className="line-clamp-2 text-xs leading-5 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(signal)}</p>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[0.6875rem] text-[rgb(var(--text-faint))]"><span>{signal.sourceLabel ?? signal.source}</span><span>{formatDate(signal.createdAt ?? signal.occurredAt ?? undefined)}</span></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[0.6875rem] text-[rgb(var(--text-faint))]"><span>{priorityLabels[signal.priority]} · {signal.sourceLabel ?? signal.source}</span><span>{formatDate(signal.createdAt ?? signal.occurredAt ?? undefined)}</span></div>
                 </button>
               ))}
             </div>
@@ -239,7 +261,7 @@ export function ApprovalCenterClient({
                 <dl className="grid border-y border-[rgb(var(--border))] md:grid-cols-3">
                   <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 md:border-b-0 md:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Semnal</dt><dd className="mt-1 text-sm font-medium">{selectedSignal.sourceLabel ?? selectedSignal.source}</dd></div>
                   <div className="border-b border-[rgb(var(--border))] px-3 py-2.5 md:border-b-0 md:border-r"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Intenție detectată</dt><dd className="mt-1 text-sm font-medium">{selectedSignal.signalTypeLabel ?? selectedSignal.detectedCommercialIntent ?? "De clarificat"}</dd></div>
-                  <div className="px-3 py-2.5"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Motiv</dt><dd className="mt-1 text-sm leading-5">{approvalReasonForSignal(selectedSignal)}</dd></div>
+                  <div className="px-3 py-2.5"><dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-faint))]">Prioritate / motiv</dt><dd className="mt-1 text-sm leading-5"><span className="font-semibold">{priorityLabels[selectedSignal.priority]}.</span> {approvalReasonForSignal(selectedSignal)}</dd></div>
                 </dl>
                 <section aria-labelledby="approval-change-title" className="border-l-2 border-[rgb(var(--primary))] pl-3"><h3 id="approval-change-title" className="text-sm font-semibold">Ce se va schimba</h3><p className="mt-1 text-sm leading-6 text-[rgb(var(--text-secondary))]">{proposedChangeForSignal(selectedSignal)}</p><p className="mt-1 text-xs font-medium text-[rgb(var(--text-muted))]">Nimic nu este trimis extern.</p></section>
 

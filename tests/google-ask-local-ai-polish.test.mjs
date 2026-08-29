@@ -153,15 +153,17 @@ test("provider available with zero Calendar rows is a confirmed empty answer, no
   assert.equal(answer.answer.missingInformation.length, 0);
 });
 
-test("unavailable Ollama falls back to the useful deterministic retrieval result", async () => {
+test("deterministic retrieval remains useful without invoking the optional local provider", async () => {
   const orchestrator = orchestratorWith();
+  let providerCalled = false;
   const answer = await orchestrator.runCopilot(
     { question: "Ce emailuri recente am?", context: { route: "/ai", pageType: "ai" }, history: [] },
-    { kind: "ollama", deterministicFirst: true, available: () => true, model: () => "qwen-local", createTurn: async () => { throw new Error("offline"); } }
+    { kind: "ollama", deterministicFirst: true, available: () => true, model: () => "qwen-local", createTurn: async () => { providerCalled = true; throw new Error("offline"); } }
   );
   assert.equal(answer.answer.mode, "deterministic_fallback");
   assert.match(answer.answer.answer, /Am găsit 1 email recent/);
-  assert.match(answer.answer.caveats.join(" "), /Răspuns bazat pe date verificate/);
+  assert.equal(providerCalled, false);
+  assert.equal(answer.answer.caveats.length, 0);
 });
 
 test("Ollama receives bounded evidence only and cannot access tools or credentials", () => {
@@ -205,7 +207,7 @@ test("structured presentation excludes provider items without an authorized evid
 
 test("Ask history is newest-first, locally clearable and individually dismissible", () => {
   const conversation = read("src/components/intelligence/CopilotConversation.tsx");
-  assert.match(conversation, /\[\{ id: .*answer: payload \}, \.\.\.current\]\.slice\(0, 8\)/);
+  assert.match(conversation, /setConversation\(\(current\) => \[\{ id: `\$\{Date\.now\(\)\}-\$\{current\.length\}`, question: normalized, answer: payload/);
   assert.match(conversation, /Șterge conversația/);
   assert.match(conversation, /Istoric · \{previousCount\}/);
   assert.match(conversation, /current\.filter\(\(turn\) => turn\.id !== item\.id\)/);
@@ -241,6 +243,20 @@ test("Ask renders productized Gmail and Calendar result cards with honest empty 
 
 test("Apps keeps real Google health separate from planned providers", () => {
   const apps = read("src/app/(protected)/apps/page.tsx");
+  const hub = read("src/components/apps/IntegrationHub.tsx");
+  const catalog = read("src/lib/integrations/catalog.ts");
+  const google = read("src/components/apps/GoogleWorkspaceCard.tsx");
+  assert.match(apps, /getGoogleWorkspacePublicState/);
+  assert.match(apps, /IntegrationHub/);
+  assert.match(hub, /GoogleWorkspaceCard/);
+  assert.match(catalog, /Microsoft 365/);
+  assert.match(catalog, /Outlook Mail/);
+  assert.match(catalog, /Slack/);
+  assert.match(catalog, /stage: "next"/);
+  assert.match(google, /Gmail și Calendar pentru context comercial privat și controlat/);
+  assert.match(google, /trimiterea necesită confirmare finală/);
+});
+
 test("full Gmail detail stays behind an authenticated owner-scoped server endpoint", () => {
   const route = read("src/app/api/integrations/google/email/[messageId]/route.ts");
   const repository = read("src/lib/google-workspace/repository.ts");
@@ -268,17 +284,6 @@ test("email cards open a safe source-bound detail drawer with controlled send co
   assert.match(drawer, /Confirmă și trimite/);
   assert.doesNotMatch(drawer, /gmail\.send|sendEmail/i);
 });
-  const google = read("src/components/apps/GoogleWorkspaceCard.tsx");
-  assert.match(apps, /Microsoft 365/);
-  assert.match(apps, /Outlook/);
-  assert.match(apps, /Slack/);
-  assert.match(apps, /În pregătire/);
-  assert.match(google, /Context sincronizat/);
-  assert.match(google, /Reconectare necesară/);
-  assert.match(google, /GmailMark/);
-  assert.match(google, /CalendarMark/);
-});
-
 test("local provider stays JSON-validated and uses staged reveal rather than claiming token streaming", () => {
   const provider = read("src/lib/ai/ollama-provider.ts");
   const docs = read("docs/real-ai-copilot.md");

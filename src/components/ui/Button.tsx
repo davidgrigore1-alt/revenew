@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export type ButtonProps = {
   href?: string;
   children: ReactNode;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "intelligence" | "secondary" | "ghost" | "danger";
   size?: "small" | "default" | "large" | "icon";
   className?: string;
   type?: "button" | "submit" | "reset";
@@ -21,6 +21,7 @@ export type ButtonProps = {
 
 const variants = {
   primary: "bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] hover:bg-[rgb(var(--primary-hover))] active:bg-[rgb(var(--primary-active))]",
+  intelligence: "bg-[rgb(var(--intelligence))] text-[rgb(var(--intelligence-foreground))] hover:bg-[rgb(var(--intelligence-hover))] active:bg-[rgb(var(--intelligence-strong))]",
   secondary: "border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] text-[rgb(var(--foreground))] hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))]",
   ghost: "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]",
   danger: "bg-[rgb(var(--danger-solid))] text-white shadow-sm hover:bg-[rgb(var(--danger-solid-hover))] active:brightness-90"

@@ -37,6 +37,9 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
     language: "ro"
   });
   const [notice, setNotice] = useState("");
+  const [showOtherAccents, setShowOtherAccents] = useState(false);
+  const recommendedAccent = accentThemePresets.find((preset) => preset.id === defaultAccentTheme)!;
+  const secondaryAccents = accentThemePresets.filter((preset) => preset.id !== defaultAccentTheme);
 
   useEffect(() => setDraftAccent(accentTheme), [accentTheme]);
 
@@ -94,34 +97,25 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
           <div className="min-w-0">
             <fieldset>
               <legend className="sr-only">Alege culoarea accent</legend>
-              <div className="flex flex-wrap gap-2">
-                {accentThemePresets.map((preset) => {
-                  const selected = preset.id === draftAccent;
-                  return (
-                    <label
-                      key={preset.id}
-                      data-accent-preview={preset.id}
-                      style={accentThemeStyle(preset.id)}
-                      title={preset.description}
-                      className={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[rgb(var(--focus-ring))] cursor-pointer rounded-button border px-2.5 py-2 transition-colors ${selected ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}
-                    >
-                      <input className="sr-only" type="radio" name="accent-theme" value={preset.id} checked={selected} onChange={() => setDraftAccent(preset.id)} />
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 rounded-full border border-[rgb(var(--rn-accent-border))] bg-[rgb(var(--rn-accent))]" aria-hidden="true" />
-                        <span className="text-xs font-semibold">{preset.label}</span>
-                        {selected ? <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]" aria-label="Selectată"><CheckIcon className="h-3 w-3" aria-hidden="true" /></span> : null}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Identitatea recomandată ReveNew</p>
+              <label
+                data-accent-preview={recommendedAccent.id}
+                style={accentThemeStyle(recommendedAccent.id)}
+                title={recommendedAccent.description}
+                className={`mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-control border px-3 py-2.5 transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[rgb(var(--focus-ring))] ${draftAccent === recommendedAccent.id ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}
+              >
+                <span className="flex items-center gap-2"><input className="sr-only" type="radio" name="accent-theme" value={recommendedAccent.id} checked={draftAccent === recommendedAccent.id} onChange={() => setDraftAccent(recommendedAccent.id)} /><span className="h-4 w-4 rounded-full border border-[rgb(var(--rn-accent-border))] bg-[rgb(var(--rn-accent))]" aria-hidden="true" /><span className="text-xs font-semibold">Champagne Gold</span><span className="text-xs text-[rgb(var(--text-muted))]">Recomandat</span></span>
+                {draftAccent === recommendedAccent.id ? <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]" aria-label="Selectată"><CheckIcon className="h-3 w-3" aria-hidden="true" /></span> : null}
+              </label>
+              <button type="button" onClick={() => setShowOtherAccents((value) => !value)} aria-expanded={showOtherAccents || draftAccent !== defaultAccentTheme} className="focus-ring mt-3 inline-flex min-h-9 items-center rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]">{showOtherAccents || draftAccent !== defaultAccentTheme ? "Ascunde culorile alternative" : "Alte culori"}</button>
+              {showOtherAccents || draftAccent !== defaultAccentTheme ? <div className="mt-2 flex flex-wrap gap-2">{secondaryAccents.map((preset) => { const selected = preset.id === draftAccent; return <label key={preset.id} data-accent-preview={preset.id} style={accentThemeStyle(preset.id)} title={preset.description} className={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[rgb(var(--focus-ring))] cursor-pointer rounded-button border px-2.5 py-2 transition-colors ${selected ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><input className="sr-only" type="radio" name="accent-theme" value={preset.id} checked={selected} onChange={() => setDraftAccent(preset.id)} /><span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border border-[rgb(var(--rn-accent-border))] bg-[rgb(var(--rn-accent))]" aria-hidden="true" /><span className="text-xs font-semibold">{preset.label}</span>{selected ? <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))]" aria-label="Selectată"><CheckIcon className="h-3 w-3" aria-hidden="true" /></span> : null}</span></label>; })}</div> : null}
             </fieldset>
             <div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="small" onClick={applyAccent}>Aplică tema</Button><Button type="button" size="small" variant="secondary" onClick={resetAccent}>Revino la implicit</Button></div>
             <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Preferința se aplică în acest browser.</p>
             <div data-accent-preview={draftAccent} style={accentThemeStyle(draftAccent)} className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-l-2 border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5" aria-label="Previzualizare temă">
-              <span className="text-xs font-semibold text-[rgb(var(--primary))]">Previzualizare temă</span>
-              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Recomandare explicată</span>
-              <span className="status-pill status-pill-neutral">În revizuire</span>
+              <span className="text-xs font-semibold text-[rgb(var(--primary))]">Accent în interfață</span>
+              <span className="text-sm font-medium text-[rgb(var(--foreground))]">Exemplu de prezentare</span>
+              <span className="status-pill status-pill-neutral">Previzualizare</span>
             </div>
             <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Claritate păstrată.</strong> Culorile de status — critic, succes, eroare și avertizare — rămân independente de accent.</p>
           </div>

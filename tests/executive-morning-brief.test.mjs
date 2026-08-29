@@ -49,12 +49,12 @@ test("multiple blockers for one opportunity collapse into supporting facts witho
   assert.equal(brief.primaryPriority.valueKind, "estimated_unconfirmed");
 });
 
-test("pending approvals aggregate into one human decision while separate issues remain separate", () => {
+test("pending approvals for distinct opportunities remain separate human decisions", () => {
   const approval = (id) => item({ id, type: "pending_approval", title: "Aprobare în așteptare", relatedOpportunityId: `opportunity-${id}`, actionLabel: "Verifică aprobarea", actionHref: `/approvals?signal=${id}`, estimatedValue: undefined, currency: undefined });
   const brief = buildExecutiveMorningBrief(queue({ items: [approval("a"), approval("b"), item({ id: "other", relatedOpportunityId: "other" })] }), { now });
-  assert.equal(brief.primaryPriority.title, "2 aprobări așteaptă decizie");
-  assert.equal(brief.primaryPriority.safeAction.href, "/approvals");
-  assert.equal(brief.secondaryPriorities.length, 1);
+  assert.equal(brief.primaryPriority.title, "Aprobare în așteptare");
+  assert.equal(brief.primaryPriority.safeAction.href, "/approvals?signal=a");
+  assert.equal(brief.secondaryPriorities.length, 2);
 });
 
 test("recent changes are meaningful, bounded to 24 hours and capped at three", () => {
@@ -99,7 +99,7 @@ test("implementation is server-only, role-scoped in the dashboard and restrained
   assert.match(model, /import "server-only"/);
   assert.doesNotMatch(model, /openai|anthropic|llm|fetch\s*\(|createSupabase|supabase\.from\(/i);
   assert.match(dashboard, /summary\.viewer\.isManager/);
-  assert.match(dashboard, /opportunity\.ownerProfileId === summary\.viewer\.profileId/);
+  assert.match(dashboard, /opportunity\.ownerProfileId\s*===\s*summary\.viewer\.profileId/);
   assert.ok(dashboard.indexOf("<HomeAskSurface") < dashboard.indexOf('aria-labelledby="home-today-title"'));
   assert.match(ui, /De ce este prioritar\?/);
   assert.match(ui, /ExplanationDisclosure/);

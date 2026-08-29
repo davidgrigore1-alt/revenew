@@ -66,7 +66,7 @@ export const accentThemePresets: AccentThemePreset[] = [
     label: "Champagne Gold",
     shortLabel: "Champagne Gold",
     description: "Auriu editorial pentru contexte formale și prezentări executive.",
-    tokens: tokens({ deepest: "39 33 9", deep: "59 49 12", strong: "92 75 17", action: "128 103 24", ring: "171 139 43", accent: "214 183 74", softAccent: "226 201 104", pale: "235 218 155", soft: "249 241 207", surface: "253 250 239" })
+    tokens: tokens({ deepest: "77 56 0", deep: "140 101 0", strong: "167 122 10", action: "183 138 19", ring: "167 122 10", accent: "183 138 19", softAccent: "220 197 126", pale: "242 228 181", soft: "242 228 181", surface: "250 245 228" })
   },
   {
     id: "executive-blue",

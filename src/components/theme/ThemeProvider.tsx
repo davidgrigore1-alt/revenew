@@ -63,8 +63,8 @@ function applyAccentTheme(theme: AccentThemeId) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
   const [accentTheme, setAccentThemeState] = useState<AccentThemeId>(defaultAccentTheme);
   const [identityPreview, setIdentityPreviewState] = useState<WorkspaceIdentityPreview | null>(null);
   const [workspaceLogo, setWorkspaceLogoState] = useState<WorkspaceLogo | null>(null);
@@ -72,7 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem(storageKey) as Theme | null;
-    const initialTheme = storedTheme && ["light", "dark", "system"].includes(storedTheme) ? storedTheme : "system";
+    const initialTheme = storedTheme && ["light", "dark", "system"].includes(storedTheme) ? storedTheme : "light";
     const storedAccent = window.localStorage.getItem(ACCENT_THEME_STORAGE_KEY);
     const initialAccent = isAccentThemeId(storedAccent) ? storedAccent : defaultAccentTheme;
     let storedIdentity: WorkspaceIdentityPreview | null = null;

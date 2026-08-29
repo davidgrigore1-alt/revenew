@@ -193,7 +193,7 @@ function Field({ label, required = false, hint, className = "", children }: { la
   return <label className={`grid gap-1.5 text-xs font-semibold text-[rgb(var(--text-secondary))] ${className}`}>
     <span className="flex flex-wrap items-center justify-between gap-2">
       <span>{label}</span>
-      {required ? <span className="text-[10px] font-normal text-[rgb(var(--text-muted))]">Obligatoriu</span> : null}
+      {<span className="text-[10px] font-normal text-[rgb(var(--text-muted))]">{required ? "Obligatoriu" : "Opțional"}</span>}
     </span>
     {hint ? <span className="text-xs font-normal leading-5 text-[rgb(var(--text-muted))]">{hint}</span> : null}
     {children}
@@ -278,7 +278,12 @@ export function CommercialInboxClient({
     || new Date(a.lastInteractionAt ?? a.createdAt ?? 0).getTime() - new Date(b.lastInteractionAt ?? b.createdAt ?? 0).getTime()), [confidence, duplicateFilter, initialBatchId, matchFilter, minimumValue, ownerFilter, query, queueFilter, reviewStatus, signals, source, urgency]);
 
   const advancedFilterCount = [confidence !== "all", source !== "all", Boolean(minimumValue), matchFilter !== "all", duplicateFilter !== "all" || ownerFilter !== "all"].filter(Boolean).length;
+  const hasActiveFilters = Boolean(query) || reviewStatus !== "all" || urgency !== "all" || queueFilter !== "all" || advancedFilterCount > 0;
 
+  function resetFilters() {
+    setQuery(""); setReviewStatus("all"); setUrgency("all"); setQueueFilter("all"); setConfidence("all"); setSource(initialSource);
+    setMinimumValue(""); setMatchFilter("all"); setDuplicateFilter("all"); setOwnerFilter("all");
+  }
   function replaceSignal(signal: CommercialSignal) {
     setSignals((items) => items.map((item) => {
       if (item.id !== signal.id) return item;
@@ -461,10 +466,10 @@ export function CommercialInboxClient({
           <div className="flex min-w-0 flex-wrap" role="group" aria-label="Starea semnalelor">
             {queueFilters.map((filter) => <button key={filter.id} type="button" onClick={() => setQueueFilter(filter.id)} aria-pressed={queueFilter === filter.id} className={`focus-ring min-h-10 border-b-2 px-3 text-xs font-semibold transition-colors ${queueFilter === filter.id ? "border-[rgb(var(--primary))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))]"}`}>{filter.label}</button>)}
           </div>
-          <Button size="small" onClick={() => setCreateOpen((open) => !open)}>{createOpen ? "Închide formularul" : "Adaugă semnal"}</Button>
+          <div className="flex items-center gap-2">{hasActiveFilters ? <Button size="small" variant="ghost" onClick={resetFilters}>Resetează filtrele</Button> : null}<Button size="small" onClick={() => setCreateOpen((open) => !open)}>{createOpen ? "Închide formularul" : "Adaugă semnal"}</Button></div>
         </div>
         <div aria-label="Filtre semnale" className="flex snap-x gap-2 overflow-x-auto border-t border-[rgb(var(--border))] py-2 md:grid md:overflow-visible md:grid-cols-[minmax(14rem,1fr)_11rem_11rem]">
-          <Field label="Caută" className="min-w-[15rem] snap-start md:min-w-0"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className={fieldClasses()} /></Field>
+          <Field label="Caută" className="min-w-[15rem] snap-start md:min-w-0"><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Titlu, companie, contact" className="bg-[rgb(var(--surface-elevated))]" /></Field>
           <Field label="Revizuire" className="min-w-[10.5rem] snap-start md:min-w-0"><Select value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value as CommercialSignalReviewStatus | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></Field>
           <Field label="Urgență" className="min-w-[10.5rem] snap-start md:min-w-0"><Select value={urgency} onChange={(event) => setUrgency(event.target.value as RecoverabilityUrgency | "all")} className={fieldClasses()}><option value="all">Toate</option>{Object.entries(urgencyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></Field>
         </div>

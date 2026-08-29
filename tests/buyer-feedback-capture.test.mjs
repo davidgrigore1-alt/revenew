@@ -47,7 +47,7 @@ function complete(overrides = {}) {
   };
 }
 
-test("feedback route is protected and connected from Demo and Help", () => {
+test("feedback route is protected and connected from the controlled demo", () => {
   const page = read("src/app/(protected)/demo/feedback/page.tsx");
   const demo = read("src/app/(protected)/demo/page.tsx");
   const help = read("src/app/(protected)/help/page.tsx");
@@ -56,8 +56,8 @@ test("feedback route is protected and connected from Demo and Help", () => {
   assert.match(page, /Concluzii după demo/);
   assert.match(demo, /href="\/demo\/feedback"/);
   assert.match(demo, /Notează feedbackul după demo/);
-  assert.match(help, /href="\/demo\/feedback"/);
-  assert.match(help, /După demo: notează feedbackul/);
+  assert.doesNotMatch(help, /href="\/demo\/feedback"/);
+  assert.doesNotMatch(help, /După demo: notează feedbackul/);
 });
 
 test("capture includes buyer context, discovery, comprehension, objections and data readiness", () => {

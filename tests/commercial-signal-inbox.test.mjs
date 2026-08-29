@@ -76,7 +76,7 @@ test("signals are visible in Company 360 and opportunity context with inbox wayf
   assert.match(intelligence, /Deschide semnalul/);
   assert.match(opportunity, /Semnale asociate/);
   assert.match(opportunity, /getCommercialSignalsForOpportunity/);
-  assert.match(opportunity, /Context pentru execuție:/);
+  assert.match(opportunity, /Execuție și înregistrări CRM/);
   assert.match(navigation, /href: "\/inbox"/);
   assert.match(navigation, /matchesRoutePrefix\(pathname, item\.href\)/);
 });

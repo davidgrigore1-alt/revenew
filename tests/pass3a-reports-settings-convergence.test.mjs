@@ -23,7 +23,7 @@ test("personalization keeps real controls in compact semantic rows", () => {
 
   assert.match(panel, /type="radio"/);
   assert.match(panel, /aria-label="Previzualizare temă"/);
-  assert.match(panel, /lg:grid-cols-\[minmax\(0,14rem\)_minmax\(0,1fr\)\]/);
+  assert.match(panel, /lg:grid-cols-\[minmax\(0,12rem\)_minmax\(0,1fr\)\]/);
   assert.doesNotMatch(panel, /type="color"|flex-(?:row|col)-reverse|:target/);
 });
 

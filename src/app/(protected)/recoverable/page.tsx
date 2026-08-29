@@ -54,7 +54,7 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
     <PageShell
       eyebrow="Execuție comercială"
       title="Impact comercial"
-      description="Valoarea comercială detectată, intervențiile confirmate și rezultatele verificabile."
+      description="Valoarea comercială detectată, intervențiile confirmate și rezultatele verificabile"
       actions={<><Button href="/inbox" variant="secondary">Vezi Inbox comercial</Button><Button href="/opportunities/analyze">Adaugă oportunitate</Button></>}
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Recuperare venituri" }]}
     >

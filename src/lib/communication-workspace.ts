@@ -21,8 +21,26 @@ export async function saveResponseWindow(formData: FormData) {
   const actor = await requireGoogleConnectorActor();
   const value = Number(formData.get("businessDays"));
   if (!Number.isInteger(value) || value < 1 || value > 20) throw new Error("Fereastra trebuie să fie între 1 și 20 de zile lucrătoare.");
-  const { error } = await adminClient().from("businesses").update({ response_window_business_days: value, updated_at: new Date().toISOString() }).eq("id", actor.businessId);
-  if (error) throw new Error("Fereastra de răspuns nu a putut fi salvată.");
+  const { error } = await adminClient()
+  .from("businesses")
+  .update({
+    response_window_business_days: value,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("id", actor.businessId);
+
+if (error) {
+  console.error("saveResponseWindow database error", {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+    businessId: actor.businessId,
+    value,
+  });
+
+  throw new Error("Fereastra de răspuns nu a putut fi salvată.");
+}
   revalidatePath("/sequences");
   revalidatePath("/inbox");
 }
@@ -35,7 +53,16 @@ export async function saveCommunicationSignature(formData: FormData) {
     signature_text: signature || null,
     updated_at: new Date().toISOString()
   }, { onConflict: "profile_id,business_id" });
-  if (error) throw new Error("Semnătura nu a putut fi salvată.");
+  if (error) {
+    console.error("saveCommunicationSignature database error", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    throw new Error("Semnătura nu a putut fi salvată.");
+  }
   revalidatePath("/sequences");
 }
 

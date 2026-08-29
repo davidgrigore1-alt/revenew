@@ -39,7 +39,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
     <PageShell
       eyebrow="Semnale și conversații"
       title="Inbox Comercial"
-      description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide."
+      description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide"
       actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button><InboxIngestionActions showDetection={inbox.signals.length > 0} /></>}
     >
       <CommercialInboxClient

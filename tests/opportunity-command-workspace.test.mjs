@@ -40,7 +40,8 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
     readFile(workflowUrl, "utf8"),
     readFile(intelligenceTimelineUrl, "utf8")
   ]);
-  assert.match(page, /const evidenceBackedDescription = sourceSignal\?\.primaryRecoveryReason/);
+  assert.match(page, /const evidenceBackedDescription = currentFacts\.blocker/);
+  assert.doesNotMatch(page, /const evidenceBackedDescription = sourceSignal/);
   assert.match(page, /description=\{evidenceBackedDescription\}/);
   assert.match(controlCenter, /Dovezi disponibile/);
   assert.match(controlCenter, /Verifică dovada/);
@@ -49,7 +50,7 @@ test("the first opportunity screen exposes evidence without opening a raw feed",
   assert.match(controlCenter, /attention\.reasons\.slice\(0, 2\)/);
   assert.match(controlCenter, /Aprobarea umană rămâne obligatorie/);
   assert.match(intelligenceTimeline, /Istoric comercial/);
-  assert.match(intelligenceTimeline, /Fapte înregistrate și interpretări ReveNew în ordine cronologică/);
+  assert.match(intelligenceTimeline, /Fapte înregistrate și interpretări cu momentul evaluării explicit/);
   assert.match(intelligenceTimeline, /Fapt înregistrat/);
   assert.match(intelligenceTimeline, /Interpretare ReveNew/);
   assert.match(workflow, /Contextul sursă al oportunității/);

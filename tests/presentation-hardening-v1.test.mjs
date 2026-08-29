@@ -39,7 +39,7 @@ test("G3F visual aggregates have honest empty states and exclude invalid amounts
  const model=buildControlCenterVisuals([{id:"unknown",currency:"RON",deadline:null,value:NaN,overdue:false,severity:"informative"}]);
  assert.equal(model.exposure.length,0);assert.equal(model.unknownCount,1);
  const chart=read("src/components/dashboard/ControlCenterVisuals.tsx");
- assert.match(chart,/nu istoric al expunerii sau prognoză/);assert.match(chart,/Vezi valorile graficului/);assert.match(chart,/<table/);
+ assert.match(chart,/nu reprezintă[\s\S]*?istoricul expunerii[\s\S]*?prognoză de încasare/);assert.match(chart,/Vezi valorile graficului/);assert.match(chart,/<table/);
  assert.doesNotMatch(chart,/Math.random|fetch\(|localStorage/);
 });
 test("G3F select navigation skips disabled options, supports boundaries and empty lists",()=>{
@@ -52,8 +52,9 @@ test("G3F select navigation skips disabled options, supports boundaries and empt
 });
 test("G3F select retains a hidden form bridge and custom accessible popup; visible native dropdowns are absent",()=>{
  const source=read("src/components/ui/Select.tsx");
- for(const part of ['role="combobox"','role="listbox"','role="option"','aria-activedescendant','aria-required','aria-invalid','onInvalid','type="button"','createPortal','form?.addEventListener("reset"','new Event("change"','event.key==="Escape"','event.key==="Tab"','search.current'])has(source,part);
- assert.match(source,/tabIndex=\{-1\} aria-hidden="true"/);assert.match(source,/onClick=\{\(\)=>choose\(index\)\}/);
+ for(const part of ['role="combobox"','role="listbox"','role="option"','aria-activedescendant','aria-required','aria-invalid','onInvalid','type="button"','createPortal','form?.addEventListener("reset"','new Event("change"','search.current'])has(source,part);
+ assert.match(source,/event\.key\s*===\s*"Escape"/);assert.match(source,/event\.key\s*===\s*"Tab"/);
+ assert.match(source,/tabIndex=\{-1\}[\s\S]*?aria-hidden="true"/);assert.match(source,/onClick=\{\(\)\s*=>\s*choose\(index\)\}/);
  for(const file of ["workflows/WorkflowBuilder","settings/PersonalizationSettingsPanel","crm/CrmWorkspaceClient","inbox/CommercialInboxClient","revenue/PipelineBoard","apps/DriveWorkspace","opportunities/OpportunityControlCenter"])assert.doesNotMatch(read("src/components/"+file+".tsx"),/<select\b/);
 });
 test("G3F workflow geometry uses one shared contract and fixes action width",()=>{

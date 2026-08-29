@@ -19,7 +19,7 @@ function DefinitionList({ items }: { items: Array<[string, string]> }) {
       {items.map(([label, value]) => (
         <div key={label} className="grid min-w-0 gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-4">
           <dt className="text-[rgb(var(--muted-foreground))]">{label}</dt>
-          <dd className="min-w-0 break-all font-semibold text-[rgb(var(--foreground))] sm:text-right">{value}</dd>
+          <dd className="min-w-0 break-words font-semibold text-[rgb(var(--foreground))] sm:text-right">{value || "Necompletat"}</dd>
         </div>
       ))}
     </dl>
@@ -89,7 +89,8 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
   }
 
   const navigationGroups: Array<{ label: string; items: Array<[SettingsTab, string]> }> = [
-    { label: "Spațiu de lucru", items: [["workspace", "Aspect și identitate"], ["integrations", "Integrări și implementare"], ["control", "Acces și recomandări"]] },
+    { label: "Spațiu de lucru", items: [["workspace", "Aspect și identitate"]] },
+    { label: "Operare", items: [["integrations", "Integrări și implementare"], ["control", "Acces, AI și confidențialitate"]] },
     { label: "Administrare", items: [["usage", "Plan și utilizare"]] },
     ...(isDevelopmentMode && !isPreviewMode ? [{ label: "Sistem", items: [["development", "Dezvoltare"]] as Array<[SettingsTab, string]> }] : [])
   ];
@@ -98,7 +99,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
     <PageShell
       eyebrow="Administrare"
       title="Setări"
-      description="Preferințe, acces și capacitate pentru spațiul de lucru activ."
+      description="Preferințe, acces și capacitate pentru spațiul de lucru activ"
     >
       <div className="grid gap-7 lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:items-start">
         <aside className="lg:sticky lg:top-20">
@@ -138,7 +139,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
                       ["CUI", business?.cui ?? ""],
                       ["Website", business?.website ?? ""],
                       ["Industrie", business?.industry ?? ""],
-                      ["Oraș / județ", `${business?.city ?? ""}, ${business?.county ?? ""}`],
+                      ["Oraș / județ", [business?.city, business?.county].filter(Boolean).join(", ")],
                       ["Email notificări", business?.notificationEmail ?? ""]
                     ]}
                   />

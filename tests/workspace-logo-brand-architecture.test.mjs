@@ -102,7 +102,7 @@ test("desktop sidebar compacts every navigation group without hiding routes", ()
   assert.doesNotMatch(sidebar, /items=\{\[\.\.\.primaryItems, \.\.\.utilityItems\]\}/);
   assert.match(sidebar, /overflow-y-auto px-2 pb-1\.5/);
   assert.match(shellNavigation, /variant === "sidebar" \? "mt-0\.5 gap-0"/);
-  assert.match(shellNavigation, /min-h-7/);
+  assert.match(shellNavigation, /min-h-8/);
   assert.doesNotMatch(shellNavigation, /variant === "sidebar"[^\n]+hidden/);
   for (const route of ["/dashboard", "/today", "/inbox", "/approvals", "/opportunities", "/recoverable", "/pipeline", "/ai", "/companies", "/contacts", "/outreach", "/reports", "/settings", "/help"]) {
     assert.match(navigation, new RegExp(route.replace("/", "\\/")), route);

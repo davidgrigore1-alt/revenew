@@ -7,6 +7,7 @@ import { ReveNewFlowMap } from "@/components/guidance/ReveNewFlowMap";
 import { BUYER_DEMO_STARTED_EVENT, BUYER_DEMO_STORAGE_KEY } from "@/lib/buyer-demo";
 import { dismissGuide, GUIDE_RESET_EVENT, isGuideDismissed } from "@/lib/guide-persistence";
 import { cn } from "@/lib/utils";
+import { pageGuideForPath } from "@/lib/guidance/page-guides";
 
 type Guidance = {
   id: string;

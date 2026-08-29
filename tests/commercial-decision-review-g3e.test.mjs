@@ -243,7 +243,8 @@ test("Ask history states interval/checkpoint and impact cannot promote detected 
 test("ordinary page assembly has no AI/provider/download/body parsing path and existing mutations invalidate dashboard",()=>{
  const server=read("src/lib/revenue-command-server.ts"),projection=read("src/lib/commercial-decision-review.ts"),page=read("src/app/(protected)/dashboard/page.tsx");
  for(const source of [server,projection])assert.doesNotMatch(source,/fetch\(|getCommercialTruth|openai|refreshGoogle|download|embedding|Picker|parseDocument/);
- assert.ok(page.indexOf('searchParams.view==="review"')<page.indexOf("const [summary, currentProfile"));
+ const compactPage=page.replace(/\s+/g,"");
+ assert.ok(compactPage.indexOf('searchParams.view==="review"')<compactPage.indexOf("const[summary,currentProfile"));
  assert.match(read("src/lib/commercial-state-invalidation.ts"),/"\/dashboard"/);
  assert.match(read("src/lib/revenue-impact-actions.ts"),/revalidatePath\("\/dashboard"\)/);
 });

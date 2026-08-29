@@ -71,11 +71,11 @@ export const advancedNavigation = [
 export const dashboardNavigation = [...primaryNavigation, ...utilityNavigation, ...advancedNavigation] satisfies NavigationItem[];
 
 const groupDefinitions: Array<{ id: NavigationGroupId; label: string; hrefs: string[] }> = [
-  { id: "home", label: "Acasă", hrefs: ["/dashboard", "/ai", "/today", "/inbox", "/approvals", "/prepared"] },
-  { id: "records", label: "Înregistrări", hrefs: ["/companies", "/contacts", "/opportunities"] },
-  { id: "commercial", label: "Comercial", hrefs: ["/recoverable", "/pipeline", "/documents", "/meetings", "/sequences", "/workflows"] },
+  { id: "home", label: "", hrefs: ["/dashboard", "/ai", "/today", "/inbox", "/approvals", "/prepared"] },
+  { id: "records", label: "Relații comerciale", hrefs: ["/companies", "/contacts", "/opportunities"] },
+  { id: "commercial", label: "Execuție", hrefs: ["/recoverable", "/pipeline", "/documents", "/meetings", "/sequences", "/workflows"] },
   { id: "management", label: "Management", hrefs: ["/reports", "/apps"] },
-  { id: "utility", label: "Utilitare", hrefs: ["/settings", "/help"] }
+  { id: "utility", label: "", hrefs: ["/settings", "/help"] }
 ];
 
 export function groupNavigationItems(items: NavigationItem[]): NavigationGroup[] {

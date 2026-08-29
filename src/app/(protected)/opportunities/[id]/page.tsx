@@ -121,7 +121,9 @@ export default async function OpportunityDetailPage({ params, searchParams }: { 
         {!isSupabaseConfigured ? <DemoNotice /> : null}
         <section aria-label="Situația acum" className="border-y border-[rgb(var(--border))] py-3">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4">
-            {[["Valoare estimată",commercialState.financial.estimatedValue?formatCurrency(commercialState.financial.estimatedValue,commercialState.financial.currency):"Neconfirmată"],
+            {[["Companie",opportunity.contact?.company ?? opportunity.contacts?.[0]?.contact.organization?.name ?? "Neconfirmată"],
+              ["Etapă",getOpportunityTypeLabel(opportunity.type)],
+              ["Valoare estimată",commercialState.financial.estimatedValue?formatCurrency(commercialState.financial.estimatedValue,commercialState.financial.currency):"Neconfirmată"],
               ["Responsabil",commercialState.ownership.ownerName??(commercialState.ownership.ownerProfileId?"Atribuit · nume indisponibil":"Neatribuit")],
               ["Următorul termen",commercialState.nextAction?.dueAt?formatProductDateTime(commercialState.nextAction.dueAt):"Neconfirmat"],
               ["Stare curentă",currentFacts.blocker]].map(([label,value])=><div key={label}><dt className="text-xs text-[rgb(var(--text-muted))]">{label}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}

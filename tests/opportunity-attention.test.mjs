@@ -97,7 +97,7 @@ test("metadata updates do not reset staleness, while meaningful commercial event
   const metadataOnly = opportunity({
     createdAt: "2026-06-01T09:00:00.000Z",
     updatedAt: "2026-07-13T09:00:00.000Z",
-    timeline: [{ id: "event-1", type: "commercial_details_changed", date: "2026-07-13T09:00:00.000Z" }]
+    timeline: [{ id: "event-1", type: "metadata_refreshed", date: "2026-07-13T09:00:00.000Z" }]
   });
   const stale = attention.assessOpportunityAttention(metadataOnly, { now });
   assert.equal(stale.reasons.some((item) => item.code === "stale_activity"), true);
