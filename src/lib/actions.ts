@@ -227,7 +227,7 @@ export async function updateGeneratedDocument(
 
   const { data: currentDocument, error: currentError } = await supabase
     .from("opportunity_documents")
-    .select("id,status,title,body,document_type,approved_content_fingerprint")
+    .select("id,status,title,body,document_type,approved_content_fingerprint,updated_at")
     .eq("id", documentId)
     .eq("opportunity_id", opportunityId)
     .eq("business_id", business.id)
@@ -264,7 +264,7 @@ export async function updateGeneratedDocument(
   }
 
   const now = new Date().toISOString();
-  const payload: Record<string, string | null> = {};
+  const payload: Record<string, string | null> = { updated_at: now };
   const hasContentChanges = (updates.title !== undefined && validated.subject !== (currentDocument.title ?? ""))
     || (updates.content !== undefined && validated.body !== (currentDocument.body ?? ""));
   const approvalInvalidated = ["approved", "ready_to_send"].includes(currentDocument.status)
@@ -293,10 +293,11 @@ export async function updateGeneratedDocument(
     .eq("id", documentId)
     .eq("opportunity_id", opportunityId)
     .eq("business_id", business.id)
+    .eq("updated_at", currentDocument.updated_at)
     .select("id")
     .maybeSingle();
   if (error || !updatedDocument) {
-    return { ok: false, error: "Documentul nu a putut fi salvat în workspace-ul curent." };
+    return { ok: false, error: error ? "Documentul nu a putut fi salvat în workspace-ul curent." : "Documentul a fost modificat între timp. Reîncarcă pagina înainte de a salva din nou." };
   }
 
   const eventType = approvalInvalidated && updates.status !== "approved"

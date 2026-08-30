@@ -16,6 +16,47 @@ test("Prepared separates review, prepared and approved work from execution", () 
   assert.doesNotMatch(registry, /activeStatuses[^\n]+executed/);
 });
 
+test("Prepared projects current persisted state and routes each real document type safely", () => {
+  const domain = read("src/lib/prepared-work.ts");
+  const actions = read("src/lib/actions.ts");
+  assert.match(domain, /if \(document\.status === "approved"\) return "approved"/);
+  assert.match(domain, /if \(document\.status === "ready_to_send"\) return "ready_for_review"/);
+  assert.match(domain, /\["draft", "edited", "copied"\]\.includes\(document\.status\)/);
+  assert.doesNotMatch(domain, /ready_to_send" \|\| document\.readyAt/);
+  for (const type of ["outreach_email", "follow_up_email", "linkedin_message", "whatsapp_message"]) assert.ok(domain.includes(`"${type}"`));
+  for (const type of ["offer_draft", "procurement_checklist", "grant_summary"]) assert.ok(domain.includes(`"${type}"`));
+  assert.match(actions, /select\("id,status,title,body,document_type,approved_content_fingerprint,updated_at"\)/);
+  assert.match(actions, /\.eq\("updated_at", currentDocument\.updated_at\)/);
+  assert.match(actions, /Documentul a fost modificat între timp/);
+});
+
+test("Prepared decision UX is URL-selected, evidence-only and has no execution action", () => {
+  const page = read("src/app/(protected)/prepared/page.tsx");
+  const preview = read("src/components/intelligence/ActionPreview.tsx");
+  const registry = read("src/lib/prepared-work-registry.ts");
+  assert.match(page, /searchParams\?\.item/);
+  assert.match(page, /Coadă de decizie/);
+  assert.match(page, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(page, /href=\{`\/prepared\?item=\$\{encodeURIComponent\(item\.id\)\}`\}\s+scroll=\{false\}/);
+  assert.match(page, /items-start/);
+  assert.match(page, /xl:max-h-\[calc\(100dvh-17rem\)\]/);
+  assert.doesNotMatch(page, /xl:h-\[min\(|xl:min-h-\[/);
+  assert.match(page, /xl:grid-cols-\[minmax\(17rem,21rem\)_minmax\(0,1fr\)\]/);
+  assert.match(page, /active \? "border-\[rgb\(var\(--interaction\)\)\] bg-\[rgb\(var\(--interaction\)\/0\.08\)\]" : "border-transparent"/);
+  assert.match(preview, /xl:max-h-\[calc\(100dvh-17rem\)\] xl:flex-col/);
+  assert.match(preview, /min-h-0 gap-0[\s\S]*?xl:overflow-y-auto xl:overscroll-contain/);
+  assert.doesNotMatch(preview, /xl:h-full|xl:flex-1/);
+  for (const label of ["Ce a pregătit ReveNew", "De ce există", "Susținut de", "Context autorizat", "Neexecutat · necesită acțiune umană"]) assert.ok(preview.includes(label));
+  assert.match(preview, /Nu există un motiv persistent asociat direct/);
+  assert.match(preview, /Nu există dovezi persistente asociate direct/);
+  assert.match(preview, /Documentul este rezultatul pregătit, nu dovada motivului comercial/);
+  assert.match(preview, /Valoare estimată, neconfirmată/);
+  assert.match(preview, /Moneda originală/);
+  assert.match(registry, /business_assignable_profiles/);
+  assert.doesNotMatch(page + preview + registry, /sendEmail|gmail\.send|updateGeneratedDocument|<form/i);
+  assert.doesNotMatch(page + preview, /confidence/i);
+});
+
 test("Approvals exposes decision counts, priority, consequence and audit", () => {
   const source = read("src/components/approvals/ApprovalCenterClient.tsx");
   assert.match(source, /Rezumat aprobări/);

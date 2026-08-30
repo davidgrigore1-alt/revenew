@@ -68,12 +68,22 @@ test("quick actions are real routes and remain separate from tenant-scoped searc
 
 test("prepared work center is derived from persistent opportunity documents and never executes work", () => {
   const registry = read("src/lib/prepared-work-registry.ts");
+  const domain = read("src/lib/prepared-work.ts");
   const page = read("src/app/(protected)/prepared/page.tsx");
-  assert.match(registry, /getOpportunitiesForCurrentBusiness/);
-  assert.match(registry, /flatMap\(preparedWorkForOpportunity\)/);
   assert.match(registry, /requirePermission\("documents\.read"\)/);
+  assert.match(registry, /hasPermission\(authorization, "documents\.update"\)/);
+  assert.match(registry, /from\("opportunity_documents"\)[\s\S]+?\.eq\("business_id", businessId\)[\s\S]+?\.limit\(documentLimit\)/);
+  assert.match(registry, /from\("opportunities"\)[\s\S]+?\.eq\("business_id", businessId\)[\s\S]+?\.in\("id", opportunityIds\)/);
+  assert.match(registry, /metadata\?\.document_id/);
+  assert.match(registry, /business_assignable_profiles/);
+  assert.match(registry, /crm_contacts!inner\(id,full_name,business_id\)/);
+  assert.match(domain, /document\.status === "ready_to_send"/);
+  assert.doesNotMatch(domain, /document\.status === "ready_to_send" \|\| document\.readyAt/);
+  assert.match(domain, /\/documents\/\$\{document\.id\}/);
+  assert.match(domain, /\/opportunities\/\$\{opportunityId\}\?tab=files/);
   assert.doesNotMatch(registry + page, /\.insert\(|\.update\(|\.delete\(|sendEmail|gmail\.send/i);
   assert.match(page, /Nimic nu este executat automat/);
+  assert.match(page, /searchParams\?\.item/);
 });
 
 test("Company, Opportunity, and Contact 360 expose collaborative notes without merging private connector data", () => {

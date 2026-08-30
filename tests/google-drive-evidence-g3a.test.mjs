@@ -293,6 +293,17 @@ test("Picker GIS requests exactly drive.file, no prior scopes, with connected lo
  assert.match(read("src/components/apps/DriveWorkspace.tsx"),/action:"review"/);
  assert.match(read("src/components/apps/DriveWorkspace.tsx"),/action:"ingest",connectionId:model\.connectionId,confirmed:true/);
 });
+test("Drive review preserves viewport and owns its Select popup above the native dialog",()=>{
+ const source=read("src/components/apps/DriveWorkspace.tsx"),select=read("src/components/ui/Select.tsx");
+ assert.match(source,/pageScroll\.current=\{left:window\.scrollX,top:window\.scrollY\}/);
+ assert.match(source,/window\.scrollTo\(pageScroll\.current\.left,pageScroll\.current\.top\)/);
+ assert.match(source,/focus\(\{preventScroll:true\}\)/);
+ assert.match(source,/onClose=\{\(\)=>\{setFiles\(\[\]\);restoreReviewOrigin\(\);\}\}/);
+ assert.match(source,/portalContainer=\{review\.current\}/);
+ assert.match(source,/overflow-visible[\s\S]*?overflow-y-auto overscroll-contain/);
+ assert.match(select,/portalContainer \? 2 : 100/);
+ assert.match(select,/portalContainer \?\? document\.body/);
+});
 test("Picker rejects a combined browser token without changing persistent server authorization",async()=>{
  const h=pickerHarness({scope:core.DRIVE_SCOPE+" https://www.googleapis.com/auth/gmail.readonly"});
  await assert.rejects(h.picker.selectDriveFiles(ids.connection));assert.equal(h.tokenUsed,undefined);assert.equal(h.delivered.access_token,"");

@@ -22,6 +22,8 @@ export function DriveWorkspace({opportunityId,authorized=false,compact=false,sel
  const router=useRouter();const [expanded,setExpanded]=useState(!compact);const [model,setModel]=useState<Model|null>(null);
  const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");const [files,setFiles]=useState<ReviewFile[]>([]);
  const trust=useRef<HTMLDialogElement>(null);const review=useRef<HTMLDialogElement>(null);
+ const reviewTitle=useRef<HTMLHeadingElement>(null);const returnFocus=useRef<HTMLElement|null>(null);
+ const pageScroll=useRef({left:0,top:0});
  const activePicker=useRef<AbortController|null>(null);
  const refresh=useCallback(async()=>{
   const response=await fetch("/api/integrations/google/drive"+(opportunityId?"?opportunity="+encodeURIComponent(opportunityId):""),{cache:"no-store"});
@@ -32,14 +34,24 @@ export function DriveWorkspace({opportunityId,authorized=false,compact=false,sel
  // Preload public Picker configuration and SDKs only; GIS requests a token exclusively on click.
  useEffect(()=>{if(model?.authorized&&model.connectionId)void prepareDrivePicker(model.connectionId).catch(()=>{});},[model?.authorized,model?.connectionId]);
  const enabled=model?.authorized??authorized;
+ const restorePagePosition=useCallback(()=>window.scrollTo(pageScroll.current.left,pageScroll.current.top),[]);
+ const restoreReviewOrigin=useCallback(()=>{
+  restorePagePosition();
+  requestAnimationFrame(()=>{restorePagePosition();returnFocus.current?.focus({preventScroll:true});});
+ },[restorePagePosition]);
  async function pick(){
-  if(!model?.connectionId)return;setBusy(true);setMessage("");
+  if(!model?.connectionId)return;
+  returnFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
+  pageScroll.current={left:window.scrollX,top:window.scrollY};
+  setBusy(true);setMessage("");
   try{
    activePicker.current=new AbortController();const picked=await selectDriveFiles(model.connectionId,activePicker.current.signal);
    if(!picked.length)return;
    const result=await post({action:"review",connectionId:model.connectionId,files:picked});
    setFiles(result.files.map((file:ReviewFile)=>({...file,opportunityId:opportunityId??file.existingOpportunityId??"",kind:"other"})));
    review.current?.showModal();
+   restorePagePosition();
+   requestAnimationFrame(()=>{restorePagePosition();reviewTitle.current?.focus({preventScroll:true});});
   }catch{setMessage("Selecția nu este disponibilă. Verifică autorizarea Google Drive și configurarea Picker.");}
   finally{activePicker.current=null;setBusy(false);}
  }
@@ -88,16 +100,29 @@ export function DriveWorkspace({opportunityId,authorized=false,compact=false,sel
     <div><dt className="font-medium">Control</dt><dd>Documentele pot fi eliminate ulterior din ReveNew.</dd></div></dl>
    <div className="mt-5 flex justify-end gap-2"><button className={actionClass} onClick={()=>trust.current?.close()}>Anulează</button><a className={primaryClass} href="/api/integrations/google/connect?capability=drive">Continuă cu Google Drive</a></div>
   </dialog>
-  <dialog ref={review} onCancel={event=>{if(busy)event.preventDefault();else setFiles([]);}} className="max-h-[85vh] w-[min(62rem,95vw)] overflow-y-auto rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 text-[rgb(var(--foreground))] backdrop:bg-black/50" aria-labelledby="drive-review-title">
-   <h3 id="drive-review-title" className="text-base font-semibold">Documente selectate</h3><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Confirmă ce documente devin context comercial în ReveNew.</p>
-   <div className="mt-4 divide-y divide-[rgb(var(--border))]">{files.map(file=><div key={file.fileId} className="grid items-center gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem_auto]">
-    <div className="min-w-0"><p className="truncate text-sm font-medium">{file.name}</p><p className="text-xs text-[rgb(var(--text-muted))]">{format(file.mime)}{file.modifiedAt?" · "+new Date(file.modifiedAt).toLocaleDateString("ro-RO"):""}</p><p className="text-xs">{file.existing?"Deja adăugat · sursa va fi actualizată":file.state==="ready"?"Pregătit pentru confirmare":sourceStateLabels[file.state as SourceState]??"Necesită atenție"}</p></div>
-    <label className="text-xs">Oportunitate<Select disabled={busy} className="focus-ring mt-1 h-8 w-full rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2" value={file.opportunityId} onChange={event=>setFiles(rows=>rows.map(row=>row.fileId===file.fileId?{...row,opportunityId:event.target.value}:row))}><option value="">Selectează contextul</option>{model?.opportunities.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</Select></label>
-    <label className="text-xs">Tip<Select disabled={busy} className="focus-ring mt-1 h-8 w-full rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2" value={file.kind} onChange={event=>setFiles(rows=>rows.map(row=>row.fileId===file.fileId?{...row,kind:event.target.value as DocumentKind}:row))}>{Object.entries(documentKinds).map(([key,label])=><option key={key} value={key}>{label}</option>)}</Select></label>
-    <button disabled={busy} className={actionClass+" sm:mt-5"} aria-label={"Elimină din selecție "+file.name} onClick={()=>setFiles(rows=>rows.filter(row=>row.fileId!==file.fileId))}>Elimină</button>
-   </div>)}</div>
-   {model&&model.opportunities.length>=100?<p className="mt-2 text-xs">Sunt afișate primele 100 de oportunități. Pentru alt context, pornește din pagina oportunității.</p>:null}
-   <div className="mt-4 flex justify-end gap-2"><button disabled={busy} className={actionClass} onClick={()=>{review.current?.close();setFiles([]);}}>Anulează</button><button className={primaryClass} disabled={busy||!files.length||files.some(file=>!file.opportunityId||!["ready","metadata_only"].includes(file.state))} onClick={confirm}>{busy?"Se adaugă…":`Adaugă ${files.length} ${files.length===1?"document":"documente"}`}</button></div>
+  <dialog ref={review} tabIndex={-1} onClose={()=>{setFiles([]);restoreReviewOrigin();}} onCancel={event=>{if(busy)event.preventDefault();}} className="w-[min(56rem,calc(100vw-2rem))] overflow-visible rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-0 text-[rgb(var(--foreground))] shadow-none backdrop:bg-[rgb(12_14_16/0.62)]" aria-labelledby="drive-review-title">
+   <div className="max-h-[min(42rem,calc(100dvh-2rem))] overflow-y-auto overscroll-contain rounded-[inherit]">
+    <header className="sticky top-0 z-[1] border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-5 py-4 sm:px-6">
+     <p className="micro-label">Google Drive · selecție controlată</p>
+     <h3 ref={reviewTitle} tabIndex={-1} id="drive-review-title" className="mt-1 text-lg font-semibold tracking-[-0.015em] outline-none">Documente selectate</h3>
+     <p className="mt-1 max-w-[42rem] text-sm leading-5 text-[rgb(var(--text-muted))]">Confirmă contextul și tipul fiecărui document înainte ca acesta să devină sursă comercială în ReveNew.</p>
+    </header>
+    <div className="grid gap-3 bg-[rgb(var(--surface-subtle))] p-4 sm:p-5">{files.map(file=><section key={file.fileId} className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4">
+     <div className="flex min-w-0 items-start justify-between gap-4 border-b border-[rgb(var(--border))] pb-3">
+      <div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{format(file.mime)}{file.modifiedAt?" · modificat "+new Date(file.modifiedAt).toLocaleDateString("ro-RO"):""}</p><p className="mt-1 text-xs font-medium text-[rgb(var(--text-secondary))]">{file.existing?"Deja adăugat · sursa va fi actualizată":file.state==="ready"?"Pregătit pentru confirmare":sourceStateLabels[file.state as SourceState]??"Necesită atenție"}</p></div>
+      <button disabled={busy} className={actionClass} aria-label={"Elimină din selecție "+file.name} onClick={()=>setFiles(rows=>rows.filter(row=>row.fileId!==file.fileId))}>Elimină</button>
+     </div>
+     <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,.42fr)]">
+      <label className="text-xs font-semibold text-[rgb(var(--text-secondary))]">Oportunitate<Select portalContainer={review.current} disabled={busy} density="compact" className="mt-1.5 w-full" value={file.opportunityId} onChange={event=>setFiles(rows=>rows.map(row=>row.fileId===file.fileId?{...row,opportunityId:event.target.value}:row))}><option value="">Selectează contextul comercial</option>{model?.opportunities.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</Select></label>
+      <label className="text-xs font-semibold text-[rgb(var(--text-secondary))]">Tip document<Select portalContainer={review.current} disabled={busy} density="compact" className="mt-1.5 w-full" value={file.kind} onChange={event=>setFiles(rows=>rows.map(row=>row.fileId===file.fileId?{...row,kind:event.target.value as DocumentKind}:row))}>{Object.entries(documentKinds).map(([key,label])=><option key={key} value={key}>{label}</option>)}</Select></label>
+     </div>
+    </section>)}</div>
+    {model&&model.opportunities.length>=100?<p className="border-t border-[rgb(var(--border))] px-5 py-3 text-xs text-[rgb(var(--text-muted))] sm:px-6">Sunt afișate primele 100 de oportunități. Pentru alt context, pornește din pagina oportunității.</p>:null}
+    <footer className="sticky bottom-0 z-[1] flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-5 py-3.5 sm:px-6">
+     <p className="text-xs text-[rgb(var(--text-muted))]">Niciun document nu este folosit înainte de confirmare.</p>
+     <div className="flex items-center gap-2"><button disabled={busy} className={actionClass} onClick={()=>review.current?.close()}>Anulează</button><button className={primaryClass} disabled={busy||!files.length||files.some(file=>!file.opportunityId||!["ready","metadata_only"].includes(file.state))} onClick={confirm}>{busy?"Se adaugă…":`Adaugă ${files.length} ${files.length===1?"document":"documente"}`}</button></div>
+    </footer>
+   </div>
   </dialog>
  </div>;
 }

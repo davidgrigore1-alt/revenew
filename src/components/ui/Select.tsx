@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   invalid?: boolean;
   density?: "default" | "compact";
+  portalContainer?: HTMLElement | null;
 };
 
 type Choice = {
@@ -100,6 +101,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       className,
       invalid = false,
       density = "default",
+      portalContainer,
       children,
       id,
       value,
@@ -341,7 +343,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       setValidationError(false);
       setOpen(false);
 
-      button.current?.focus();
+      button.current?.focus({ preventScroll: true });
     }
 
     function show(direction = 1) {
@@ -579,7 +581,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   top: position.top,
                   width: position.width,
                   maxHeight: position.maxHeight,
-                  zIndex: 10000,
+                  zIndex: portalContainer ? 2 : 100,
                 }}
                 className="product-popup overflow-y-auto overscroll-contain rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-floating))] p-1 shadow-none"
               >
@@ -644,7 +646,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   </p>
                 ) : null}
               </div>,
-              document.body,
+              portalContainer ?? document.body,
             )
           : null}
       </span>
