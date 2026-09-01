@@ -76,7 +76,7 @@ export async function importCsvBatch(entityType: ImportEntityType, rawRows: Impo
   return { ...result, batchId: batch.id };
 }
 
-async function importOrganizations(rows: ImportRow[], mode: string, businessId: string, supabase: ReturnType<typeof createSupabaseServerClient> extends infer T ? Exclude<T, null> : never): Promise<ImportResult> {
+async function importOrganizations(rows: ImportRow[], mode: string, businessId: string, supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>): Promise<ImportResult> {
   const { data: existing, error } = await supabase.from("crm_organizations").select("id,normalized_name,website").eq("business_id", businessId).eq("is_archived", false).limit(2000);
   if (error) throw error;
   const organizationByName = new Map((existing ?? []).map((item) => [item.normalized_name, item.id]));
@@ -102,7 +102,7 @@ async function importOrganizations(rows: ImportRow[], mode: string, businessId: 
   return { ok: true, created: inserts.length + updates.length, skipped, rejected: errors.length, errors };
 }
 
-async function importContacts(rows: ImportRow[], mode: string, businessId: string, supabase: Exclude<ReturnType<typeof createSupabaseServerClient>, null>): Promise<ImportResult> {
+async function importContacts(rows: ImportRow[], mode: string, businessId: string, supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>): Promise<ImportResult> {
   const [{ data: organizations, error: orgError }, { data: contacts, error: contactError }] = await Promise.all([
     supabase.from("crm_organizations").select("id,normalized_name").eq("business_id", businessId).eq("is_archived", false).limit(2000),
     supabase.from("crm_contacts").select("id,normalized_email").eq("business_id", businessId).eq("is_active", true).not("normalized_email", "is", null).limit(2000)
@@ -129,7 +129,7 @@ async function importContacts(rows: ImportRow[], mode: string, businessId: strin
   return { ok: true, created: inserts.length + updates.length, skipped, rejected: errors.length, errors };
 }
 
-async function importOpportunities(rows: ImportRow[], mode: string, businessId: string, supabase: Exclude<ReturnType<typeof createSupabaseServerClient>, null>): Promise<ImportResult> {
+async function importOpportunities(rows: ImportRow[], mode: string, businessId: string, supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>): Promise<ImportResult> {
   const [{ data: existing, error }, { data: assignable, error: assignableError }] = await Promise.all([
     supabase.from("opportunities").select("id,title").eq("business_id", businessId).limit(2000),
     supabase.rpc("business_assignable_profiles", { target_business_id: businessId })

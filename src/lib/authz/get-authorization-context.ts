@@ -27,7 +27,7 @@ function uniquePermissions(values: Permission[]) {
 }
 
 async function getPlatformRoles(profileId: string): Promise<PlatformRole[]> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return [];
 
   const { data, error } = await supabase
@@ -62,7 +62,7 @@ async function getBusinessRole(profileId: string): Promise<BusinessRole | null> 
     return "business_owner";
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase

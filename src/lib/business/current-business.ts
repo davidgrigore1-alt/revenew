@@ -82,7 +82,7 @@ const getCurrentBusinessForUserCached = cache(async function getCurrentBusinessF
     redirect("/login");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     throw new Error("Supabase nu este disponibil pe server.");
   }

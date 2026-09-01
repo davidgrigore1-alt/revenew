@@ -1,3 +1,5 @@
+import "server-only";
+
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
@@ -18,14 +20,19 @@ export function getSupabaseServerConfig() {
   };
 }
 
-export function createSupabaseServerClient(): SupabaseClient | null {
+export async function createSupabaseServerClient(): Promise<SupabaseClient | null> {
   if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) {
     return null;
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: {
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -48,12 +55,12 @@ export function createSupabaseServerClient(): SupabaseClient | null {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return null;
   }
 
-  const hasPersistedSession = hasPersistedSupabaseAuthCookie(cookies().getAll());
+  const hasPersistedSession = hasPersistedSupabaseAuthCookie((await cookies()).getAll());
 
   const {
     data: { user },

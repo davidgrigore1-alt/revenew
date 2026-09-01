@@ -6,9 +6,12 @@ import { getSavedViews } from "@/lib/saved-views/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function CompaniesPage({ searchParams }: { searchParams?: { q?: string; relationship?: string; sort?: string; create?: string } }) {
+export default async function CompaniesPage(
+  props: { searchParams?: Promise<{ q?: string; relationship?: string; sort?: string; create?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const [crm, organizationStats, savedViews] = await Promise.all([getCrmWorkspaceForCurrentBusiness(), getCrmOrganizationStats(), getSavedViews("companies")]);
-  return <PageShell eyebrow="Relații comerciale" title="Companii" description="Registrul unic pentru clienți, prospecți și organizațiile implicate în recuperarea comercială">
+  return <PageShell wide eyebrow="Relații comerciale" title="Companii" description="Portofoliul comercial: relația curentă, oamenii implicați și oportunitățile care cer atenție.">
     <div className="grid gap-4">
     <div id="companies-register" className="scroll-mt-24" data-guide-anchor="companies-register">
       {crm.ready ? <CrmWorkspaceClient organizations={crm.organizations} contacts={crm.contacts} view="companies" organizationStats={organizationStats} savedViews={savedViews} initialQuery={searchParams?.q} initialRelationship={searchParams?.relationship} initialSort={searchParams?.sort} initialCreate={searchParams?.create === "1"} /> : <ErrorState title="Companiile nu pot fi încărcate" description={crm.error ?? "Reîncearcă după verificarea conexiunii."} />}

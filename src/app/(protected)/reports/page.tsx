@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { ReportActions } from "@/components/reports/ReportActions";
 import { Button } from "@/components/ui/Button";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
@@ -139,7 +140,7 @@ async function loadWorkflowData(opportunities: Opportunity[]) {
   }
 
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) {
     return { actions: [], documents: [], events: [] };
   }
@@ -258,7 +259,7 @@ function MetricRows({ items }: { items: ReportMetric[] }) {
 
 function ReportBlock({ title, description, children, action }: { title: string; description?: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className="rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] p-5 sm:p-6">
+    <section className="border-y border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] px-1 py-5 sm:px-2 sm:py-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div><h2 className="text-lg font-semibold text-[rgb(var(--foreground))]">{title}</h2>{description ? <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p> : null}</div>
         {action ? <div className="shrink-0">{action}</div> : null}
@@ -365,6 +366,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
 
   return (
     <PageShell
+      wide
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
@@ -390,22 +392,18 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
               <p className="text-label text-[rgb(var(--primary))]">Rezumat executiv</p>
               <h2 id="executive-summary-title" className="mt-1 text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Ce necesită o decizie acum</h2>
               <p className="mt-3 max-w-4xl text-sm leading-6 text-[rgb(var(--text-muted))]">{executiveSummary}</p>
-              <dl className="mt-5 grid border-y border-[rgb(var(--border))] sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  ["Valoare estimată în pipeline · RON", formatCurrency(pipelineValue, "RON"), "Toate oportunitățile active; nu este venit confirmat."],
-                  ["Oportunități active", String(activeOpportunities.length), "Cazuri deschise în spațiul de lucru."],
-                  ["Acțiuni urgente", String(urgentActions.length), "Scadente sau apropiate, deduplicate."],
-                  ["Venit recuperat confirmat", formatCurrency(responseLoop.confirmedRevenueRon, "RON"), "Numai rezultate confirmate explicit."]
-                ].map(([label, value, detail], index) => (
-                  <div key={label} className={`py-4 sm:px-4 ${index % 2 === 0 ? "sm:pl-0" : "sm:border-l sm:border-[rgb(var(--border))]"} ${index === 2 ? "sm:border-t sm:border-[rgb(var(--border))] xl:border-l xl:border-t-0 xl:pl-4" : ""} ${index === 3 ? "sm:border-t sm:border-[rgb(var(--border))] xl:border-t-0" : ""}`}>
-                    <dt className="text-xs font-medium text-[rgb(var(--text-muted))]">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{value}</dd><dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-faint))]">{detail}</dd>
-                  </div>
-                ))}
-              </dl>
+              <div className="mt-5">
+                <RecordSummaryBar label="Adevărul executiv al raportului" items={[
+                  { label: "Valoare estimată în pipeline · RON", value: formatCurrency(pipelineValue, "RON"), detail: "Nu este venit confirmat." },
+                  { label: "Oportunități active", value: String(activeOpportunities.length), detail: "Cazuri deschise." },
+                  { label: "Acțiuni urgente", value: String(urgentActions.length), detail: "Scadente sau apropiate.", tone: urgentActions.length ? "attention" : "default" },
+                  { label: "Venit recuperat confirmat", value: formatCurrency(responseLoop.confirmedRevenueRon, "RON"), detail: "Confirmat explicit.", tone: responseLoop.confirmedRevenueRon ? "success" : "default" }
+                ]} />
+              </div>
             </section>
 
             <div className="grid gap-7 lg:grid-cols-2">
-              <section aria-labelledby="distribution-title" className="rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] p-5"><h2 id="distribution-title" className="text-base font-semibold">Distribuția pipeline-ului</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Număr și valoare estimată în RON, fără a combina monede.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[28rem] text-left text-sm"><thead className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-xs text-[rgb(var(--text-secondary))]"><tr><th className="py-2 pr-3 font-medium">Etapă</th><th className="px-3 py-2 text-right font-medium">Oportunități</th><th className="py-2 pl-3 text-right font-medium">Valoare estimată</th></tr></thead><tbody className="divide-y divide-[rgb(var(--border))]">{reportDistribution.map((stage) => <tr key={stage.label} className="transition-colors hover:bg-[rgb(var(--surface-subtle))]"><th scope="row" className="py-2.5 pr-3 font-medium">{stage.label}</th><td className="px-3 py-2.5 text-right tabular-nums text-[rgb(var(--text-muted))]">{stage.count}</td><td className="py-2.5 pl-3 text-right font-semibold tabular-nums">{stage.value}</td></tr>)}</tbody></table></div></section>
+              <section aria-labelledby="distribution-title" className="border-y border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] px-1 py-5 sm:px-2"><h2 id="distribution-title" className="text-base font-semibold">Distribuția pipeline-ului</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Număr și valoare estimată în RON, fără a combina monede.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[28rem] text-left text-sm"><caption className="sr-only">Distribuția oportunităților și a valorii estimate pe etape</caption><thead className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-xs text-[rgb(var(--text-secondary))]"><tr><th scope="col" className="py-2 pr-3 font-medium">Etapă</th><th scope="col" className="px-3 py-2 text-right font-medium">Oportunități</th><th scope="col" className="py-2 pl-3 text-right font-medium">Valoare estimată</th></tr></thead><tbody className="divide-y divide-[rgb(var(--border))]">{reportDistribution.map((stage) => <tr key={stage.label} className="transition-colors hover:bg-[rgb(var(--surface-subtle))]"><th scope="row" className="py-2.5 pr-3 font-medium">{stage.label}</th><td className="px-3 py-2.5 text-right tabular-nums text-[rgb(var(--text-muted))]">{stage.count}</td><td className="py-2.5 pl-3 text-right font-semibold tabular-nums">{stage.value}</td></tr>)}</tbody></table></div></section>
               <section aria-labelledby="agenda-title" className="rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] p-5"><h2 id="agenda-title" className="text-base font-semibold">Agenda managerială</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Excepții curente derivate din acțiuni și oportunități.</p><div className="mt-3 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">{managementAgenda.map((item) => <Link key={item.label} href={item.href} className="focus-ring -mx-2 flex min-h-11 items-center justify-between gap-4 px-3 py-2.5 text-sm transition-colors hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><span className="font-medium">{item.label}</span><span className={`status-pill ${item.tone === "danger" ? "status-pill-danger" : item.tone === "warning" ? "status-pill-warning" : "status-pill-neutral"}`}>{item.value}</span></Link>)}</div></section>
             </div>
 

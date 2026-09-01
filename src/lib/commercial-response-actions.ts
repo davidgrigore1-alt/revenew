@@ -45,7 +45,7 @@ function validDateTime(value: string) {
 }
 
 async function addEvent(input: { opportunityId: string; businessId: string; profileId: string; type: string; label: string; description: string; metadata?: Record<string, unknown> }) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return;
   await supabase.from("opportunity_events").insert({
     opportunity_id: input.opportunityId, business_id: input.businessId, actor_profile_id: input.profileId,
@@ -60,7 +60,7 @@ export async function recordCommercialResponse(opportunityId: string, input: Rec
   const [business, opportunity] = await Promise.all([
     getCurrentBusinessOrDemo({ redirectIfMissing: true }), getOpportunityForCurrentBusiness(opportunityId)
   ]);
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!profileId || !business || !opportunity || !supabase) return { ok: false as const, error: "Oportunitatea nu este disponibilă în workspace-ul curent." };
 
   if (!responseCategories.includes(input.category) || !responseChannels.includes(input.channel)) return { ok: false as const, error: "Categoria sau canalul răspunsului nu este valid." };

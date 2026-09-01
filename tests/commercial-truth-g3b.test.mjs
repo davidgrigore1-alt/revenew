@@ -308,8 +308,8 @@ test("G3C.1 mutation invalidation covers dependent surfaces and client postpone 
 });
 
 test("G3C.1 commercial UI separates current/resolved/history and reuses shared controls",()=>{
- const page=read("src/app/(protected)/opportunities/[id]/page.tsx"),card=read("src/components/intelligence/RecommendationExplanationCard.tsx");
- assert.match(page,/aria-label="Situația acum"/);assert.doesNotMatch(page,/const evidenceBackedDescription = sourceSignal/);
+ const page=read("src/app/(protected)/opportunities/[id]/page.tsx"),card=read("src/components/intelligence/RecommendationExplanationCard.tsx"),summary=read("src/components/records/RecordSummaryBar.tsx");
+ assert.match(page,/RecordSummaryBar label="Situația acum"/);assert.match(summary,/<section[^>]*aria-label=\{label\}/);assert.doesNotMatch(page,/const evidenceBackedDescription = sourceSignal/);
  assert.match(card,/Ce s-a rezolvat/);assert.match(card,/Ce rămâne/);assert.match(card,/currentState.resolvedSinceDetection/);assert.match(card,/<Button size="small"/);
  const history=read("src/components/recovery/ImpactSurface.tsx");
  assert.match(history,/Înainte · la detectare/);assert.match(history,/model.actorNames\[e.actor_profile_id\]/);

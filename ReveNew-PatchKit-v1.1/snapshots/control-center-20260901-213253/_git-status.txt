@@ -1,0 +1,225 @@
+﻿ M .env.example
+ D .eslintrc.json
+ M .github/workflows/safety-gates.yml
+ M next-env.d.ts
+ M next.config.mjs
+ M package-lock.json
+ M package.json
+ M scripts/demo/verify-local-demo.mjs
+ M scripts/validation/migration-integrity-baseline.json
+ M src/app/(account)/access/page.tsx
+ M src/app/(account)/invite/accept/page.tsx
+ M src/app/(auth)/login/page.tsx
+ M src/app/(auth)/signup/page.tsx
+ M src/app/(auth)/verify-email/page.tsx
+ M src/app/(marketing)/page.tsx
+ M src/app/(protected)/activation/page.tsx
+ M src/app/(protected)/admin/audit/page.tsx
+ M src/app/(protected)/admin/businesses/[id]/page.tsx
+ M src/app/(protected)/admin/businesses/page.tsx
+ M src/app/(protected)/admin/costs/page.tsx
+ M src/app/(protected)/admin/page.tsx
+ M src/app/(protected)/admin/usage/page.tsx
+ M src/app/(protected)/ai/page.tsx
+ M src/app/(protected)/approvals/page.tsx
+ M src/app/(protected)/apps/page.tsx
+ M src/app/(protected)/companies/page.tsx
+ M src/app/(protected)/contacts/page.tsx
+ M src/app/(protected)/crm/contacts/[id]/page.tsx
+ M src/app/(protected)/crm/organizations/[id]/page.tsx
+ M src/app/(protected)/dashboard/page.tsx
+ M src/app/(protected)/documents/[id]/page.tsx
+ M src/app/(protected)/documents/page.tsx
+ M src/app/(protected)/inbox/page.tsx
+ M src/app/(protected)/leads/page.tsx
+ M src/app/(protected)/meetings/page.tsx
+ M src/app/(protected)/opportunities/[id]/page.tsx
+ M src/app/(protected)/opportunities/[id]/sources/[sourceId]/page.tsx
+ M src/app/(protected)/opportunities/page.tsx
+ M src/app/(protected)/outreach/[id]/page.tsx
+ M src/app/(protected)/outreach/page.tsx
+ M src/app/(protected)/pipeline/page.tsx
+ M src/app/(protected)/prepared/page.tsx
+ M src/app/(protected)/recoverable/page.tsx
+ M src/app/(protected)/reports/page.tsx
+ M src/app/(protected)/reports/pilot-proof-of-value/page.tsx
+ M src/app/(protected)/sequences/page.tsx
+ M src/app/(protected)/settings/page.tsx
+ M src/app/(protected)/workflows/[workflowId]/page.tsx
+ M src/app/(protected)/workflows/new/page.tsx
+ M src/app/(protected)/workflows/page.tsx
+ M src/app/(setup)/onboarding/page.tsx
+ M src/app/api/ai/action-plans/[planId]/approve/route.ts
+ M src/app/api/integrations/google/callback/route.ts
+ M src/app/api/integrations/google/connect/route.ts
+ M src/app/api/integrations/google/drafts/[draftId]/route.ts
+ M src/app/api/integrations/google/email/[messageId]/route.ts
+ M src/app/auth/callback/route.ts
+ M src/app/debug/supabase/page.tsx
+ M src/app/globals.css
+ M src/components/approvals/ApprovalCenterClient.tsx
+ M src/components/apps/IntegrationCatalog.tsx
+ M src/components/apps/IntegrationDetailDrawer.tsx
+ M src/components/apps/IntegrationHub.tsx
+ M src/components/crm/CrmWorkspaceClient.tsx
+ M src/components/dashboard/AppHeader.tsx
+ M src/components/dashboard/ControlCenterViews.tsx
+ M src/components/dashboard/ControlCenterVisuals.tsx
+ M src/components/dashboard/ExecutionControlCenter.tsx
+ M src/components/dashboard/HomeAskSurface.tsx
+ M src/components/dashboard/MobileNav.tsx
+ M src/components/dashboard/PageHeader.tsx
+ M src/components/dashboard/PageShell.tsx
+ M src/components/dashboard/ShellNavigation.tsx
+ M src/components/dashboard/Sidebar.tsx
+ M src/components/inbox/CommercialInboxClient.tsx
+ M src/components/inbox/ConnectedEmailInbox.tsx
+ M src/components/intelligence/AskReveNew.tsx
+ M src/components/intelligence/CopilotConversation.tsx
+ M src/components/marketing/MarketingNav.tsx
+ M src/components/marketing/MarketingPricingGrid.tsx
+ M src/components/marketing/ProductPreview.tsx
+ M src/components/opportunities/OpportunitiesExplorer.tsx
+ M src/components/opportunities/OpportunityActionWorkbench.tsx
+ M src/components/recovery/ImpactSurface.tsx
+ M src/components/revenue/PipelineBoard.tsx
+ M src/components/ui/Button.tsx
+ M src/components/workflows/WorkflowBuilder.tsx
+ M src/lib/actions.ts
+ M src/lib/approval-center.ts
+ M src/lib/auth/auth-state.ts
+ M src/lib/auth/profile.ts
+ M src/lib/auth/session-cleanup.ts
+ M src/lib/authz/get-authorization-context.ts
+ M src/lib/billing/actions.ts
+ M src/lib/billing/paid-access.ts
+ M src/lib/business/current-business.ts
+ M src/lib/business/provision-business.ts
+ M src/lib/commercial-inbox-actions.ts
+ M src/lib/commercial-inbox.ts
+ M src/lib/commercial-ingestion.ts
+ M src/lib/commercial-response-actions.ts
+ M src/lib/commercial-response-summary.ts
+ M src/lib/commercial-truth-server.ts
+ M src/lib/company-intelligence.ts
+ M src/lib/crm/contact-actions.ts
+ M src/lib/crm/workspace-actions.ts
+ M src/lib/enterprise-governance-internal.ts
+ M src/lib/follow-up-send-actions.ts
+ M src/lib/follow-up-summary.ts
+ M src/lib/imports/actions.ts
+ M src/lib/marketing/navigation.ts
+ M src/lib/onboarding/progress-actions.ts
+ M src/lib/pilot-measurement-actions.ts
+ M src/lib/pilot-measurement.ts
+ M src/lib/recovery.ts
+ M src/lib/revenue-command-server.ts
+ M src/lib/revenue-impact-server.ts
+ M src/lib/revenue-workspace.ts
+ M src/lib/revenue-workspace/actions.ts
+ M src/lib/supabase/client.ts
+ M src/lib/supabase/data.ts
+ M src/lib/supabase/server.ts
+ M src/lib/ui/email-reader.ts
+ M src/lib/usage/reserve-usage.ts
+ M tests/ai-buyer-execution-polish.test.mjs
+ M tests/applications-provider-model.test.mjs
+ M tests/approval-center.test.mjs
+ M tests/auth-session-recovery.test.mjs
+ M tests/commercial-email-workspace-v1.test.mjs
+ M tests/commercial-signal-conversion-security.test.mjs
+ M tests/commercial-signal-inbox.test.mjs
+ M tests/commercial-truth-g3b.test.mjs
+ M tests/contextual-revenew-assistant.test.mjs
+ M tests/core-execution-progressive-disclosure.test.mjs
+ M tests/execution-control-center.test.mjs
+ M tests/google-ask-local-ai-polish.test.mjs
+ M tests/information-architecture-v1.test.mjs
+ M tests/marketing-and-validation.test.mjs
+ M tests/operational-surfaces-convergence-a3-2.test.mjs
+ M tests/opportunity-command-workspace.test.mjs
+ M tests/phase2-positioning-activation.test.mjs
+ M tests/premium-ux-search-hardening.test.mjs
+ M tests/presentation-hardening-v1.test.mjs
+ M tests/product-hardening.test.mjs
+ M tests/real-ai-copilot-v1.test.mjs
+ M tests/recoverable-revenue-engine.test.mjs
+ M tests/structural-ux-repair-v1.test.mjs
+ M tests/universal-business-context.test.mjs
+ M tests/universal-commercial-search.test.mjs
+ M tests/usage-control-plane.test.mjs
+ M tests/visual-excellence.test.mjs
+?? "-files --others --exclude-standard"
+?? .manual-ui-backups/
+?? .revenew-backups/
+?? ReveNew-PatchKit-v1.1.zip
+?? ReveNew-PatchKit-v1.1/
+?? docs/a4-design-system.md
+?? docs/a4-final-certification.md
+?? docs/a4-reference-library.md
+?? docs/b1-functional-release-audit.md
+?? ecurity
+?? end
+?? eslint.config.mjs
+?? formatProductCurrency(value
+?? index
+?? item.currency+
+?? middleware.ts
+?? monetary
+?? new
+?? observer.disconnect()
+?? pnpm-lock.yaml
+?? pnpm-workspace.yaml
+?? point.cumulative))
+?? point.date
+?? point.date))
+?? powershell
+?? revenew-control-center-premium-resume-v3.ps1
+?? revenew-control-center-premium-resume.ps1
+?? revenew-control-center-premium.ps1
+?? "s D commercial operating system v2\357\200\242"
+?? "s E workspace foundation v2\357\200\242"
+?? setActiveBucket(index)}
+?? setActiveDate(point.date)}
+?? src/app/(protected)/apps/page.tsx.j1-backup-20260827-182716
+?? src/app/(protected)/apps/page.tsx.j1-typefix-backup-20260827-182959
+?? src/app/(protected)/dashboard/page.tsx.backup-before-connected-context-ui
+?? src/app/(protected)/dashboard/page.tsx.backup-premium-batch1
+?? src/app/globals.css.backup-before-dark-restore
+?? src/app/globals.css.backup-before-definitive-hero-gap
+?? src/app/globals.css.backup-before-floating-stability
+?? src/app/globals.css.backup-before-hero-full-stability
+?? src/app/globals.css.backup-before-hero-stability
+?? src/app/globals.css.backup-final-hero-polish
+?? src/app/globals.css.backup-premium-batch1
+?? src/components/apps/GoogleWorkspaceCard.tsx.j1-backup-20260827-182716
+?? src/components/apps/GoogleWorkspaceCard.tsx.j1-typefix-backup-20260827-182959
+?? src/components/apps/IntegrationCatalog.tsx.j1-typefix-backup-20260827-182959
+?? src/components/dashboard/ControlCenterVisuals.tsx.backup-premium-batch1
+?? src/components/dashboard/ExecutionControlCenter.tsx.backup-before-analytics-reorder
+?? src/components/dashboard/ExecutionControlCenter.tsx.backup-before-dashboard-layout
+?? src/components/dashboard/ExecutionControlCenter.tsx.backup-premium-batch4
+?? src/components/dashboard/ShellNavigation.tsx.backup-before-dark-restore
+?? src/components/dashboard/Sidebar.tsx.backup-before-dark-restore
+?? src/components/intelligence/CopilotConversation.tsx.j1-backup-20260827-182716
+?? src/components/intelligence/EmailDetailDrawer-fixed.tsx
+?? src/components/marketing/LandingV3Visuals.tsx
+?? src/components/marketing/LandingV3Visuals.tsx.backup-before-conversion-pass
+?? src/components/marketing/ProductPreview.tsx.backup-final-hero-polish
+?? src/components/records/
+?? src/components/ui/SegmentedFilter.tsx
+?? src/lib/ai/copilot-orchestrator.ts.encoding-backup-20260827-181218
+?? src/lib/ai/copilot-orchestrator.ts.j1-backup-20260827-182716
+?? src/lib/ai/universal-business-context.ts.encoding-backup-20260827-181218
+?? src/lib/supabase/middleware.ts
+?? supabase/migrations/20260830090801_commercial_signal_decision_security.sql
+?? supabase/snippets/
+?? tests/a4-commercial-orchestration-system.test.mjs
+?? tests/a4-commercial-record-system.test.mjs
+?? tests/a4-executive-trust-system.test.mjs
+?? tests/a4-final-consistency.test.mjs
+?? tests/a4-revenue-execution-system.test.mjs
+?? tests/b1-functional-release-audit.test.mjs
+?? tests/framework-security-baseline.test.mjs
+?? total
+?? {

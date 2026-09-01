@@ -60,7 +60,7 @@ async function policyFor(businessId: string): Promise<GovernancePolicy> {
 export async function getEnterpriseWorkspaceSnapshot() {
   const authorization = await getAuthorizationContext();
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!current || !supabase) return null;
   const dataClient = createSupabaseAdminClient() ?? supabase;
   const businessId = current.business.id;
@@ -140,7 +140,7 @@ export async function revokeWorkspaceInvitation(invitationId: string) {
 export async function acceptWorkspaceInvitation(token: string) {
   const { profile } = await getCurrentProfile();
   if (!profile) return { ok: false as const, error: "Invitația necesită un cont autentificat valid." };
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { ok: false as const, error: "Invitația nu este disponibilă." };
   const { data, error } = await supabase.rpc("accept_business_invitation", { invitation_token: token });
   if (error || !data?.[0]) return { ok: false as const, error: "Invitația este invalidă, expirată, utilizată sau nu corespunde contului autentificat." };

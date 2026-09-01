@@ -47,7 +47,8 @@ test("email actions and HTML retrieval stay bound to an owned internal source", 
   const repository = read("src/lib/google-workspace/repository.ts");
   const runtime = read("src/lib/google-workspace/email-runtime.ts");
   assert.match(route, /requireGoogleConnectorActor/);
-  assert.match(route, /runOwnedGoogleEmailAction\(actor, context\.params\.messageId/);
+  assert.match(route, /const \{ messageId \} = await context\.params/);
+  assert.match(route, /runOwnedGoogleEmailAction\(actor, messageId/);
   assert.match(repository, /\.eq\("business_id", actor\.businessId\)/);
   assert.match(repository, /\.eq\("owner_profile_id", actor\.profileId\)/);
   assert.match(repository, /\.eq\("connection_id", connection\.id\)/);

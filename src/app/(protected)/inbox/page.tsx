@@ -26,7 +26,10 @@ async function getPrivateConnectedEmails() {
   }
 }
 
-export default async function CommercialInboxPage({ searchParams }: { searchParams?: { source?: string; batch?: string; signal?: string; create?: string; email?: string } }) {
+export default async function CommercialInboxPage(
+  props: { searchParams?: Promise<{ source?: string; batch?: string; signal?: string; create?: string; email?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const [inbox, crm, assignableProfiles, opportunities, privateContext] = await Promise.all([
     getCommercialSignalsForCurrentBusiness(),
     getCrmWorkspaceForCurrentBusiness(),
@@ -39,7 +42,7 @@ export default async function CommercialInboxPage({ searchParams }: { searchPara
     <PageShell
       eyebrow="Semnale și conversații"
       title="Inbox Comercial"
-      description="Revizuiește semnalele înainte de a le transforma în oportunități. ReveNew recomandă, iar echipa decide"
+      description="Prioritizează ce s-a schimbat, verifică sursa și aplică numai următorul pas comercial aprobat"
       actions={<><Button href="/approvals" variant="secondary">Deschide Aprobări</Button><InboxIngestionActions showDetection={inbox.signals.length > 0} /></>}
     >
       <CommercialInboxClient

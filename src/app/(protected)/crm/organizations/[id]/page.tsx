@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { RecordNotes } from "@/components/workspace/RecordNotes";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
+import { RecordTabs } from "@/components/records/RecordTabs";
 import { getCompanyIntelligenceSnapshot } from "@/lib/company-intelligence";
 import { suggestedCompanyQuestions } from "@/lib/company-commercial-memory";
 import { getExternalContextForCompany } from "@/lib/ai/google-context-tool";
@@ -33,7 +35,11 @@ const companyTabs = [
 ] as const;
 type CompanyTab = typeof companyTabs[number]["id"];
 
-export default async function CrmOrganizationDetailPage({ params, searchParams }: { params: { id: string }; searchParams?: { tab?: string } }) {
+export default async function CrmOrganizationDetailPage(
+  props: { params: Promise<{ id: string }>; searchParams?: Promise<{ tab?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const result = await getCompanyIntelligenceSnapshot(params.id);
   if (!result.ready) return <PageShell eyebrow="CRM" title="Datele companiei nu sunt disponibile" description={result.error ?? "Compania nu poate fi încărcată."}><DataCard title="Acces indisponibil" description={result.error ?? "Verifică configurarea workspace-ului și încearcă din nou."} /></PageShell>;
   if (!result.snapshot) notFound();
@@ -49,32 +55,32 @@ export default async function CrmOrganizationDetailPage({ params, searchParams }
   const activeTab: CompanyTab = companyTabs.some((tab) => tab.id === searchParams?.tab) ? searchParams!.tab as CompanyTab : "overview";
 
   return (
-    <PageShell eyebrow="Company 360" title={organization.name} description={[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Context comercial centralizat pentru această companie."} actions={<CreateOpportunityPanel organizations={[organization]} />} breadcrumbs={[{ label: "Companii", href: "/companies" }, { label: organization.name }]}>
-      <nav aria-label="Secțiunile companiei" className="flex gap-1 overflow-x-auto border-b border-[rgb(var(--border))]">
-        {companyTabs.map((tab) => <Link key={tab.id} href={`?tab=${tab.id}`} aria-current={activeTab === tab.id ? "page" : undefined} className="focus-ring whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--primary))] aria-[current=page]:text-[rgb(var(--foreground))]">{tab.label}</Link>)}
-      </nav>
+    <PageShell wide eyebrow="Company 360" title={organization.name} description={[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Context comercial centralizat pentru această companie."} actions={<CreateOpportunityPanel organizations={[organization]} />} breadcrumbs={[{ label: "Companii", href: "/companies" }, { label: organization.name }]}>
+      <RecordSummaryBar label="Identitatea comercială a companiei" items={[
+        { label: "Relație", value: relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Neconfirmată" },
+        { label: "Responsabil", value: identity.owner ?? "Neatribuit", tone: identity.owner ? "default" : "attention" },
+        { label: "Contact principal", value: identity.primaryContact?.fullName ?? "Neconfirmat", tone: identity.primaryContact ? "default" : "attention" },
+        { label: "Oportunități active", value: snapshot.opportunities.length },
+        { label: "Localizare", value: identity.location ?? "Necompletată" },
+        { label: "Website", value: websiteHref ? <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="focus-ring inline-flex max-w-full items-center gap-1 text-[rgb(var(--primary))] hover:underline">{organization.website}<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></a> : "Necompletat" }
+      ]} />
+      <RecordTabs tabs={companyTabs} activeTab={activeTab} label="Secțiunile companiei" />
 
       {activeTab === "overview" ? (
         <section aria-label="Contextul companiei" className="grid items-start gap-4 xl:grid-cols-12">
           <div className="min-w-0 xl:col-span-8"><CompanyBusinessMemory memory={snapshot.memory} executiveDecision={snapshot.executiveDecision} recoverableValueByCurrency={snapshot.commercial.recoverableValueByCurrency} /></div>
           <Card variant="subtle" padding="default" className="overflow-hidden xl:sticky xl:top-4 xl:col-span-4">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">Relația pe scurt</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2"><StatusPill tone="brand">{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Relație neconfirmată"}</StatusPill>{organization.industry ? <span className="text-sm text-[rgb(var(--text-muted))]">{organization.industry}</span> : null}</div>
-            <p className="mt-4 text-sm leading-6 text-[rgb(var(--text-secondary))]">{organization.notes || "Context comun pentru responsabilitate, follow-up și deciziile comerciale legate de companie."}</p>
-            <dl className="mt-4 grid gap-3 border-t border-[rgb(var(--border))] pt-4 text-sm sm:grid-cols-2">
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Contact principal</dt><dd className="mt-1 font-semibold">{identity.primaryContact?.fullName ?? "Neconfirmat"}</dd></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Responsabil comercial</dt><dd className="mt-1 font-semibold">{identity.owner ?? "Neatribuit"}</dd></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Localizare</dt><dd className="mt-1 font-semibold">{identity.location ?? "Necompletată"}</dd></div>
-              <div><dt className="text-xs text-[rgb(var(--text-muted))]">Website</dt><dd className="mt-1 font-semibold">{websiteHref ? <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="focus-ring inline-flex max-w-full items-center gap-1.5 break-all text-[rgb(var(--primary))] hover:underline">{organization.website}<ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0" aria-hidden="true" /></a> : "Necompletat"}</dd></div>
-            </dl>
-            <p className="mt-5 border-t border-[rgb(var(--border))] pt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Bazat numai pe relații explicite. Nicio acțiune externă automată.</p>
+            <p className="text-micro font-semibold text-[rgb(var(--text-faint))]">CONTEXT ÎNREGISTRAT</p>
+            <h2 className="mt-2 text-sm font-semibold">Relația comercială</h2>
+            <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-secondary))]">{organization.notes || "Nu există încă note persistente despre relația comercială."}</p>
+            <p className="mt-4 border-t border-[rgb(var(--border))] pt-4 text-xs leading-5 text-[rgb(var(--text-muted))]">Bazat numai pe relații explicite și date autorizate. Nicio acțiune externă automată.</p>
           </Card>
         </section>
       ) : null}
 
       {activeTab === "execution" ? <CompanyExecutionWorkspace memory={snapshot.memory} opportunities={snapshot.opportunities} emails={privateExternalContext.emails} events={privateExternalContext.events} /> : null}
 
-      {activeTab === "contacts" ? <section id="company-contacts" className="max-w-[1100px]"><DataCard title="Relații comerciale" description="Persoanele și rolurile conectate explicit la companie și oportunități.">{snapshot.contacts.length > 0 ? <div className="divide-y divide-[rgb(var(--border))]">{snapshot.contacts.map((contact) => <article key={contact.id} className="py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{contact.fullName}</h3>{contact.isPrimary ? <StatusPill tone="success">Principal</StatusPill> : null}</div><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{[contact.jobTitle, contact.decisionRole, ...contact.opportunityRoles].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">{contact.opportunityCount > 0 ? `${contact.opportunityCount} oportunități conectate` : "Fără oportunitate conectată"}</p></article>)}</div> : <EmptyState title="Nicio persoană asociată" description="Adaugă persoana cu care discuți pentru a păstra continuitatea relației." actions={<Button href="/contacts" variant="secondary">Adaugă contact</Button>} />}</DataCard></section> : null}
+      {activeTab === "contacts" ? <section id="company-contacts" className="max-w-[1100px]"><DataCard title="Relații comerciale" description="Persoanele și rolurile conectate explicit la companie și oportunități.">{snapshot.contacts.length > 0 ? <div className="divide-y divide-[rgb(var(--border))]">{snapshot.contacts.map((contact) => <article key={contact.id} className="py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap items-center gap-2"><Link href={`/crm/contacts/${contact.id}`} className="focus-ring rounded-control font-semibold hover:text-[rgb(var(--primary))] hover:underline">{contact.fullName}</Link>{contact.isPrimary ? <StatusPill tone="success">Principal</StatusPill> : null}</div><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{[contact.jobTitle, contact.decisionRole, ...contact.opportunityRoles].filter(Boolean).join(" · ") || "Rol neconfirmat"}</p><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">{contact.opportunityCount > 0 ? `${contact.opportunityCount} oportunități conectate explicit` : "Fără oportunitate conectată"}</p></article>)}</div> : <EmptyState title="Nicio persoană asociată" description="Adaugă persoana cu care discuți pentru a păstra continuitatea relației." actions={<Button href="/contacts" variant="secondary">Adaugă contact</Button>} />}</DataCard></section> : null}
 
       {activeTab === "opportunities" ? <section id="company-opportunities" className="max-w-[1100px]"><DataCard title="Oportunități asociate" description="Valoare estimată, responsabil și pas următor pentru fiecare context comercial.">{snapshot.opportunities.length > 0 ? <div className="divide-y divide-[rgb(var(--border))]">{snapshot.opportunities.map((opportunity) => <Link key={opportunity.id} href={opportunity.href} className="focus-ring group grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate font-semibold group-hover:text-[rgb(var(--primary))]">{opportunity.title}</h3><StatusPill tone={opportunity.nextActionTitle && opportunity.ownerName ? "neutral" : "warning"}>{getStatusLabel(opportunity.status)}</StatusPill></div><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{opportunity.ownerName ?? "Fără responsabil"} · {opportunity.nextActionTitle ?? "Fără acțiune următoare"}{opportunity.nextActionDueAt ? ` · ${formatDate(opportunity.nextActionDueAt)}` : ""}</p></div><p className="font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValue, opportunity.currency)}</p></Link>)}</div> : <EmptyState title="Nicio oportunitate asociată" description="Creează prima oportunitate pentru a urmări valoarea, responsabilul și următorul pas." />}</DataCard></section> : null}
 

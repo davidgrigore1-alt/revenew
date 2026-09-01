@@ -15,7 +15,7 @@ export default async function PipelinePage() {
     <PageShell wide
       eyebrow="Flux comercial"
       title="Pipeline"
-      description="Vezi valoarea, blocajele de execuție și următorul pas pentru fiecare oportunitate. Estimările rămân distincte de venit"
+      description="Vezi unde se află munca comercială, unde execuția se rupe și ce intervenție umană urmează. Estimările rămân distincte de venit."
       actions={
         <div className="flex flex-wrap gap-2">
           <Button href="/opportunities" variant="secondary">Vezi oportunitățile</Button>

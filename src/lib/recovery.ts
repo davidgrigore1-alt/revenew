@@ -103,7 +103,7 @@ export async function getRecoverySummary(): Promise<RecoverySummary> {
   }
 
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) {
     return { opportunities, signals, actions: [], documents: [], events: [] };
   }

@@ -224,7 +224,7 @@ test("assistant UI is structured, contextual, accessible and does not render uns
   assert.match(drawer, /event\.key === "Escape"/);
   assert.match(drawer, /returnFocusRef\.current\?\.focus/);
   assert.match(conversation, /Dovezi ·/);
-  assert.match(conversation, /Ce nu pot confirma/);
+  assert.match(conversation, /Informații lipsă sau neconfirmate/);
   assert.match(conversation, /Verific contextul autorizat/);
   assert.match(conversation, /Reîncearcă/);
   assert.match(conversation, /event\.key === "Enter"/);

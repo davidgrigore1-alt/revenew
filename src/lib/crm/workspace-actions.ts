@@ -45,7 +45,7 @@ async function getCrmContext() {
     return { ok: false as const, error: "CRM-ul real este disponibil doar când Supabase este configurat.", schemaMissing: true };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = current?.business;
   if (!supabase || !business) {
@@ -237,7 +237,7 @@ export async function createCrmOpportunity(formData: FormData): Promise<CrmActio
     return { ok: false, error: "Oportunitățile reale sunt disponibile doar când Supabase este configurat." };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = current?.business;
   if (!supabase || !business) return { ok: false, error: "Nu am găsit workspace-ul curent." };

@@ -55,7 +55,7 @@ export default async function OnboardingPage() {
   let hasBusiness = false;
 
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (!supabase) {
       throw new Error("Supabase nu este disponibil pe server.");
     }
@@ -101,7 +101,7 @@ export default async function OnboardingPage() {
   type SavedDraft = { current_step: number; entry_mode: "manual" | "import"; draft: Partial<OnboardingDraft> };
   let savedDraft: SavedDraft | null = null;
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = supabase ? await supabase.from("onboarding_drafts").select("current_step,entry_mode,draft").eq("profile_id", profileId).maybeSingle() : { data: null, error: null };
     if (error) console.warn("onboarding_draft_load_failed", { code: error.code });
     if (data) savedDraft = data as unknown as SavedDraft;

@@ -39,7 +39,7 @@ function isConfirmed(user: User) {
 }
 
 async function findAccessibleBusinessId(profileId: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return null;
   }

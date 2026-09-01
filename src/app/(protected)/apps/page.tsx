@@ -4,7 +4,8 @@ import { requirePermission } from "@/lib/authz/require-permission";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppsPage({ searchParams }: { searchParams?: { google?: string } }) {
+export default async function AppsPage(props: { searchParams?: Promise<{ google?: string }> }) {
+  const searchParams = await props.searchParams;
   await requirePermission("workspace.read");
   const state = await getGoogleWorkspacePublicState();
 

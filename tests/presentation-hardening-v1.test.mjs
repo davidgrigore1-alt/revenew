@@ -64,11 +64,15 @@ test("G3F workflow geometry uses one shared contract and fixes action width",()=
  assert.match(page,/grid-cols-\[82px_128px\]/);assert.match(page,/changeWorkflowStatus/);assert.match(page,/#activation-review/);
 });
 test("G3F reader suppresses only an entire known sentinel, never source phrases or HTML security",()=>{
- const {readableEmailBody}=purePresentation("src/lib/ui/email-reader.ts");
+ const {readableEmailBody,readableEmailSnippet}=purePresentation("src/lib/ui/email-reader.ts");
  assert.equal(readableEmailBody("  TEXT_FORMAT_BODY\n"),null);assert.equal(readableEmailBody(""),null);
  const message="Contractul conține TEXT_FORMAT_BODY ca exemplu.";
  assert.equal(readableEmailBody(message),message);
  assert.equal(readableEmailBody("<script>not executable</script>"),"<script>not executable</script>");
+ assert.equal(readableEmailSnippet("Oferta &amp; suport &zwj; &#8199; acum"),"Oferta & suport acum");
+ assert.equal(readableEmailSnippet("<table><tr><td>  Noutăți   comerciale </td></tr></table>"),"Noutăți comerciale");
+ assert.equal(readableEmailSnippet("&amp;zwj; Bună ziua"),"Bună ziua");
+ assert.equal(readableEmailSnippet("123456789",5),"12345");
  const source=read("src/components/intelligence/EmailDetailDrawer.tsx");
  assert.match(source,/readableEmailBody\(email.body\)/);assert.match(source,/sandbox=""/);assert.match(source,/referrerPolicy="no-referrer"/);
  assert.doesNotMatch(source,/dangerouslySetInnerHTML/);
@@ -111,7 +115,9 @@ test("email presentation is source-bound, strips transport noise and keeps one o
   has(cards, 'provider="gmail"');
   has(cards, "formatUserFacingText(email.excerpt, { stripUrls: true })");
   has(cards, "Deschide conversația");
-  has(inbox, "formatUserFacingText(email.excerpt, { stripUrls: true })");
+  has(inbox, "readableEmailSnippet(formatUserFacingText(email.excerpt, { stripUrls: true }))");
+  has(inbox, "Asocierea comercială este indicată separat");
+  has(inbox, 'aria-label="Conversații Gmail conectate"');
   has(inbox, "formatProductDateTime(email.sentAt)");
   assert.doesNotMatch(cards, /tracking_url|raw_mime|dangerouslySetInnerHTML/);
 });

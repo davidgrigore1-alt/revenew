@@ -5,7 +5,7 @@
 :root {
   color-scheme: light;
 
-  /* Light V2 experiment: true white with cool, low-chroma operational layers. */
+  /* A4 neutral operational foundation. */
   --background: 255 255 255;
   --background-soft: 244 247 251;
   --surface: 255 255 255;
@@ -132,6 +132,13 @@
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
+
+  /* Product axes and density */
+  --page-gutter: clamp(1rem, 2vw, 2rem);
+  --content-axis: 92.5rem;
+  --workspace-axis: 110rem;
+  --row-height-compact: 2.5rem;
+  --row-height-comfortable: 3rem;
 
   /* Shape, borders and elevation */
   --radius-control: 0.5rem;
@@ -397,6 +404,7 @@ body {
 
 /* Product grammar: content carries hierarchy; chrome and containment stay quiet. */
 .product-work-surface { border: 1px solid rgb(var(--border) / .78); border-radius: var(--radius-panel); background: rgb(var(--surface)); }
+.product-grouping-surface { border: 1px solid rgb(var(--border-subtle)); border-radius: var(--radius-panel); background: rgb(var(--surface-subtle)); }
 .product-floating-surface { border: 1px solid rgb(var(--border-strong) / .82); border-radius: var(--radius-overlay); background: rgb(var(--surface-elevated)); box-shadow: var(--shadow-modal); }
 .product-interactive-row {
   transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
@@ -426,6 +434,476 @@ body {
 
 .app-page {
   animation: revenew-page-reveal var(--motion-page) var(--ease-standard) both;
+}
+
+/* Authenticated shell: graphite navigation stays stable across product surfaces. */
+:root:not(.dark) .authenticated-sidebar {
+  --sidebar: 46 49 58;
+  --background: 46 49 58;
+  --background-soft: 52 56 65;
+  --surface: 52 56 65;
+  --surface-raised: 57 61 71;
+  --surface-subtle: 60 64 74;
+  --surface-muted: 66 70 81;
+  --surface-selected: 64 69 80;
+  --border: 97 102 113;
+  --border-subtle: 78 83 94;
+  --border-strong: 130 136 148;
+  --foreground: 247 248 250;
+  --text-secondary: 224 227 232;
+  --text-muted: 197 202 210;
+  --text-faint: 164 171 181;
+  --sidebar-foreground: 247 248 250;
+  --interaction-tint: 58 70 88;
+  --interaction-border: 88 124 170;
+  --shadow-card: none;
+  color: rgb(var(--foreground));
+  border-right-color: rgb(30 33 40);
+  box-shadow: inset -1px 0 0 rgb(255 255 255 / .045);
+}
+
+/* Control Center: white application canvas with neutral structural depth. */
+:root:not(.dark) .product-desktop:has(.control-center-canvas) {
+  --background: 255 255 255;
+  --background-soft: 247 247 248;
+  --surface: 255 255 255;
+  --surface-raised: 255 255 255;
+  --surface-subtle: 247 247 248;
+  --surface-muted: 234 234 234;
+  --surface-selected: 231 238 245;
+  --surface-elevated: 255 255 255;
+  --surface-floating: 255 255 255;
+  --border: 226 228 231;
+  --border-subtle: 234 234 234;
+  --divider: 234 234 234;
+  --border-strong: 192 192 192;
+  --foreground: 25 29 36;
+  --text-secondary: 76 84 96;
+  --text-muted: 108 116 128;
+  --text-faint: 142 149 160;
+  --shadow-card: 0 1px 2px rgb(20 25 34 / .035), 0 8px 20px rgb(20 25 34 / .028);
+}
+
+.control-center-canvas {
+  position: relative;
+  min-height: calc(100dvh - 3rem);
+  padding-top: .125rem;
+}
+
+.control-center-primary > header,
+.control-center-truth-strip,
+.control-center-analysis,
+.control-center-interventions,
+.control-center-disclosure,
+.control-center-sources-band,
+.control-center-lower-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.control-center-truth-strip {
+  margin-inline: calc(var(--page-gutter) * -.28);
+  padding-inline: calc(var(--page-gutter) * .28);
+  background: rgb(var(--surface-subtle));
+}
+
+.control-center-metric {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .42);
+}
+
+.dark .control-center-metric {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .025);
+}
+
+.control-center-analysis {
+  margin-inline: calc(var(--page-gutter) * -.45);
+  padding: 1.25rem calc(var(--page-gutter) * .45) 1.5rem;
+  border-top: 1px solid rgb(var(--border-subtle));
+  background: rgb(var(--surface-subtle));
+}
+
+.control-center-chart-card {
+  box-shadow: var(--shadow-card);
+}
+
+.control-center-chart-plot {
+  overflow: hidden;
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: var(--radius-control);
+  background: rgb(var(--surface));
+}
+
+.control-center-chart-plot .recharts-cartesian-grid-horizontal line {
+  stroke-opacity: .42;
+}
+
+.control-center-workbench {
+  border-color: rgb(var(--border-strong) / .7);
+  background: rgb(var(--surface-raised));
+  box-shadow: var(--shadow-card);
+}
+
+.control-center-case-list {
+  background: rgb(var(--surface-subtle));
+}
+
+.control-center-case-list > div:first-child {
+  background: rgb(var(--surface-muted));
+}
+
+.control-center-case-list button:not(.control-center-case-selected):hover {
+  background: rgb(var(--surface-raised));
+}
+
+.control-center-case-selected {
+  box-shadow: inset 0 0 0 1px rgb(var(--interaction-border) / .18);
+}
+
+.control-center-case-inspector {
+  background: rgb(var(--surface-raised));
+}
+
+.control-center-next-action {
+  border-color: rgb(var(--gold-300) / .75);
+  background: rgb(var(--gold-50) / .34);
+  box-shadow: inset 3px 0 0 rgb(var(--gold-500) / .76);
+}
+
+.dark .control-center-next-action {
+  border-color: rgb(var(--gold-700) / .46);
+  background: rgb(var(--warning-background) / .38);
+}
+
+.control-center-disclosure {
+  overflow: clip;
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-panel);
+  background: rgb(var(--surface) / .72);
+  transition: border-color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
+}
+
+.control-center-disclosure:hover,
+.control-center-disclosure[open] {
+  border-color: rgb(var(--border-strong) / .8);
+  background: rgb(var(--surface));
+}
+
+.control-center-disclosure[open] {
+  box-shadow: inset 3px 0 0 rgb(var(--interaction) / .72);
+}
+
+.control-center-disclosure-summary {
+  display: flex;
+  min-height: 3rem;
+  width: 100%;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: .875rem;
+  padding: .625rem .875rem;
+  border-radius: calc(var(--radius-panel) - 1px);
+  transition:
+    background-color var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+
+.control-center-disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+
+.control-center-disclosure-summary:hover {
+  background: rgb(var(--surface-subtle) / .78);
+}
+
+.control-center-disclosure-chevron {
+  display: inline-flex;
+  position: relative;
+  height: 1.625rem;
+  width: 1.625rem;
+  flex: 0 0 1.625rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgb(var(--border));
+  border-radius: .5rem;
+  background: rgb(var(--surface-raised));
+  color: rgb(var(--text-secondary));
+  font-size: 0;
+  line-height: 0;
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+
+.control-center-disclosure-chevron::before {
+  content: "";
+  display: block;
+  width: .4rem;
+  height: .4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+  transform-origin: 50% 50%;
+  transition: transform var(--motion-content) var(--ease-standard);
+}
+
+.control-center-disclosure-summary:hover .control-center-disclosure-chevron {
+  border-color: rgb(var(--border-strong));
+  color: rgb(var(--foreground));
+}
+
+.control-center-disclosure[open]
+  > .control-center-disclosure-summary
+  .control-center-disclosure-chevron {
+  border-color: rgb(var(--primary) / .38);
+}
+
+.control-center-disclosure[open]
+  > .control-center-disclosure-summary
+  .control-center-disclosure-chevron::before {
+  transform: translateY(1px) rotate(225deg);
+}
+
+:root:not(.dark) .control-center-disclosure {
+  border-color: rgb(222 225 229);
+  background: rgb(255 255 255);
+  box-shadow: 0 1px 2px rgb(20 25 34 / .018);
+}
+
+:root:not(.dark) .control-center-disclosure:hover {
+  border-color: rgb(192 196 202);
+  background: rgb(255 255 255);
+}
+
+:root:not(.dark) .control-center-disclosure[open] {
+  border-color: rgb(190 197 207);
+  background: rgb(255 255 255);
+  box-shadow:
+    inset 2px 0 0 rgb(var(--interaction) / .68),
+    0 4px 14px rgb(20 25 34 / .025);
+}
+
+:root:not(.dark) .control-center-disclosure-summary:hover {
+  background: rgb(247 248 249);
+}
+
+:root:not(.dark) .control-center-disclosure-content {
+  background: rgb(255 255 255);
+}
+
+.control-center-disclosure-content {
+  border-top: 1px solid rgb(var(--border-subtle));
+  padding: 1rem;
+  background: rgb(var(--surface-raised));
+}
+
+.control-center-chart-detail-grid {
+  display: grid;
+  gap: 1rem;
+  padding: .25rem;
+}
+
+.control-center-chart-detail-table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+  overflow: hidden;
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: .625rem;
+}
+
+.control-center-chart-detail-table caption {
+  padding: .25rem .75rem .75rem;
+  color: rgb(var(--text-secondary));
+  font-size: var(--font-size-metadata);
+  font-weight: 600;
+  text-align: left;
+}
+
+.control-center-chart-detail-table thead {
+  background: rgb(var(--surface-subtle));
+}
+
+.control-center-chart-detail-table th {
+  padding: .625rem .75rem;
+  border-bottom: 1px solid rgb(var(--border));
+  color: rgb(var(--text-muted));
+  font-size: var(--font-size-metadata);
+  font-weight: 600;
+  text-align: left;
+}
+
+.control-center-chart-detail-table td {
+  padding: .625rem .75rem;
+  border-bottom: 1px solid rgb(var(--border-subtle));
+  color: rgb(var(--text-secondary));
+  vertical-align: top;
+}
+
+.control-center-chart-detail-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.control-center-chart-detail-table tbody tr {
+  transition: background-color var(--motion-fast) var(--ease-standard);
+}
+
+.control-center-chart-detail-table tbody tr:hover {
+  background: rgb(var(--surface-subtle) / .72);
+}
+
+.control-center-chart-detail-table td:nth-child(n + 2),
+.control-center-chart-detail-table th:nth-child(n + 2) {
+  font-variant-numeric: tabular-nums;
+}
+
+.control-center-ask-surface {
+  width: min(100%, 68rem);
+  margin-inline: auto;
+  padding: .25rem 0 .125rem;
+}
+
+.control-center-ask-surface .product-work-surface {
+  box-shadow: none;
+}
+
+:root:not(.dark) .control-center-ask-surface .product-work-surface {
+  border-color: rgb(220 224 229);
+  background: rgb(255 255 255);
+}
+
+.control-center-sources-band {
+  overflow: hidden;
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-panel);
+  background: rgb(var(--surface-subtle));
+  padding-inline: 1.125rem;
+}
+
+.control-center-source-grid {
+  max-width: 68rem;
+}
+
+.control-center-source-card {
+  min-height: 7.5rem;
+  background: rgb(var(--surface-raised));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35);
+}
+
+.dark .control-center-source-card {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .02);
+}
+
+/* Control Center premium light-mode refinements — intentionally light-only */
+:root:not(.dark) .control-center-source-card {
+  min-height: 7.25rem;
+  border-color: rgb(197 221 212);
+  background: rgb(255 255 255);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255),
+    0 2px 10px rgb(20 25 34 / .024);
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+
+:root:not(.dark) .control-center-source-card:hover {
+  border-color: rgb(158 205 187);
+  transform: translateY(-1px);
+}
+
+:root:not(.dark) .control-center-next-action {
+  border-color: rgb(217 183 94 / .62);
+  background: linear-gradient(180deg, rgb(255 252 243), rgb(255 249 232));
+  box-shadow:
+    inset 3px 0 0 rgb(var(--gold-500) / .82),
+    0 4px 16px rgb(108 79 19 / .035);
+}
+
+:root:not(.dark) .control-center-lower-panel {
+  border-color: rgb(221 224 228);
+  background: rgb(255 255 255);
+  box-shadow: 0 2px 10px rgb(20 25 34 / .018);
+}
+
+:root:not(.dark) .control-center-truth-strip .control-center-metric:first-child {
+  min-width: 11rem;
+  border-color: rgb(var(--interaction-border) / .56);
+  background: rgb(255 255 255);
+  box-shadow: inset 0 0 0 1px rgb(var(--interaction) / .025);
+}
+
+:root:not(.dark) .control-center-truth-strip .control-center-metric:nth-child(2) {
+  border-color: rgb(214 166 107 / .48);
+  background: rgb(255 252 247);
+}
+
+:root:not(.dark) .control-center-truth-strip .control-center-metric:nth-child(3),
+:root:not(.dark) .control-center-truth-strip .control-center-metric:nth-child(4) {
+  background: rgb(255 255 255);
+}
+
+:root:not(.dark) .control-center-disclosure-summary {
+  min-height: 3.35rem;
+}
+
+:root:not(.dark) .control-center-disclosure[open] > .control-center-disclosure-summary {
+  background: rgb(249 250 251);
+}
+
+:root:not(.dark) .control-center-disclosure-content {
+  border-top-color: rgb(226 229 233);
+}
+
+@media (max-width: 767px) {
+  :root:not(.dark) .control-center-source-card:hover {
+    transform: none;
+  }
+}
+
+.control-center-lower-panel {
+  min-width: 0;
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-panel);
+  background: rgb(var(--surface) / .78);
+  padding: 1rem;
+}
+
+.control-center-lower-panel ul {
+  border-top-color: rgb(var(--border-subtle));
+}
+
+@media (max-width: 767px) {
+  .control-center-analysis {
+    margin-inline: calc(var(--page-gutter) * -.22);
+    padding-inline: calc(var(--page-gutter) * .22);
+  }
+
+  .control-center-chart-card {
+    padding: 1rem;
+  }
+
+  .control-center-chart-plot {
+    min-width: 0;
+  }
+
+  .control-center-disclosure-summary,
+  .control-center-disclosure-content,
+  .control-center-sources-band,
+  .control-center-lower-panel {
+    padding-inline: .875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-center-disclosure,
+  .control-center-disclosure-summary,
+  .control-center-disclosure-chevron {
+    transition: none;
+  }
 }
 
 .subtle-grid {
@@ -559,6 +1037,145 @@ body {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Landing V3: restrained motion communicates flow and priority without hiding content. */
+.marketing-canvas .landing-v3-hero-glow {
+  background:
+    radial-gradient(circle at 50% 6%, rgb(216 189 118 / .13), transparent 34%),
+    linear-gradient(90deg, transparent, rgb(255 255 255 / .018), transparent);
+}
+
+.marketing-canvas .landing-v3-scan {
+  background:
+    linear-gradient(115deg, transparent 28%, rgb(216 189 118 / .1) 48%, transparent 68%),
+    repeating-linear-gradient(90deg, transparent 0 72px, rgb(255 255 255 / .025) 72px 73px);
+  background-size: 220% 100%, auto;
+  animation: landing-v3-scan 7s ease-in-out infinite;
+}
+
+.marketing-canvas .landing-v3-process-line::after {
+  position: absolute;
+  inset: -2px auto auto 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #a66e1a;
+  box-shadow: 0 0 0 5px rgb(216 189 118 / .16);
+  content: "";
+  animation: landing-v3-route 5.5s cubic-bezier(.22, 1, .36, 1) infinite;
+}
+
+.marketing-canvas .landing-v3-workflow-grid {
+  background-image:
+    linear-gradient(rgb(128 116 93 / .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(128 116 93 / .07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.marketing-canvas .landing-v3-workflow-field {
+  background-image: radial-gradient(rgb(123 108 79 / .16) .65px, transparent .65px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / .72), transparent 94%);
+}
+
+.marketing-canvas .landing-v3-workflow-connectors path {
+  fill: none;
+  stroke: #9e875d;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  marker-end: url(#workflowArrow);
+}
+
+@media (min-width: 1024px) {
+  .marketing-canvas .landing-v3-workflow-build-node {
+    position: absolute;
+    width: 17.5%;
+  }
+
+  .marketing-canvas .landing-v3-workflow-node-trigger { left: 1.5%; top: 26px; }
+  .marketing-canvas .landing-v3-workflow-node-condition { left: 24%; top: 26px; }
+  .marketing-canvas .landing-v3-workflow-node-context { left: 46.5%; top: 26px; }
+  .marketing-canvas .landing-v3-workflow-node-review { left: 69%; top: 26px; width: 20%; }
+  .marketing-canvas .landing-v3-workflow-node-prepared { left: 59%; top: 193px; width: 22%; }
+  .marketing-canvas .landing-v3-workflow-node-missing { left: 82.5%; top: 193px; width: 16%; }
+}
+
+@media (max-width: 1023px) {
+  .marketing-canvas .landing-v3-workflow-build-node:not(:last-child)::after {
+    position: absolute;
+    bottom: -13px;
+    left: 1.65rem;
+    width: 1px;
+    height: 13px;
+    background: #b9aa8e;
+    content: "";
+  }
+}
+
+.marketing-reveal[data-visible="true"] .landing-v3-diagnostic-row,
+.marketing-reveal[data-visible="true"] .landing-v3-flow-step,
+.marketing-reveal[data-visible="true"] .landing-v3-queue-row,
+.marketing-reveal[data-visible="true"] .landing-v3-context-node,
+.marketing-reveal[data-visible="true"] .landing-v3-workflow-node {
+  animation: landing-v3-enter 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.marketing-reveal[data-visible="true"] .landing-v3-workflow-build-node {
+  animation: landing-v3-workflow-build-enter 460ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.marketing-reveal[data-visible="true"] .landing-v3-workflow-connectors path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: landing-v3-workflow-draw 900ms cubic-bezier(.22, 1, .36, 1) 180ms forwards;
+}
+
+@keyframes landing-v3-enter {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes landing-v3-workflow-build-enter {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes landing-v3-workflow-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes landing-v3-scan {
+  0%, 18% { background-position: 115% 0, 0 0; }
+  70%, 100% { background-position: -115% 0, 0 0; }
+}
+
+@keyframes landing-v3-route {
+  0%, 12% { left: 0; opacity: 0; }
+  20% { opacity: 1; }
+  82% { opacity: 1; }
+  92%, 100% { left: calc(100% - 5px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-canvas .landing-v3-scan,
+  .marketing-canvas .landing-v3-process-line::after,
+  .marketing-canvas .landing-v3-diagnostic-row,
+  .marketing-canvas .landing-v3-flow-step,
+  .marketing-canvas .landing-v3-queue-row,
+  .marketing-canvas .landing-v3-context-node,
+  .marketing-canvas .landing-v3-workflow-node {
+    animation: none !important;
+  }
+
+  .marketing-canvas .landing-v3-workflow-build-node {
+    animation: none !important;
+  }
+
+  .marketing-canvas .landing-v3-workflow-connectors path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
   }
 }
 
@@ -1205,4 +1822,720 @@ body {
 
 @keyframes slide-in-right {
   from { opacity: 0; transform: translateX(18px); }
+}
+
+/* Landing V3 premium stage and pricing are scoped to the public marketing canvas. */
+.marketing-canvas .landing-v3-hero-stage {
+  isolation: isolate;
+}
+
+.marketing-canvas .landing-v3-hero-orbit {
+  background:
+    radial-gradient(ellipse at center, rgb(58 91 155 / .2), transparent 58%),
+    radial-gradient(ellipse at 50% 100%, rgb(216 189 118 / .12), transparent 48%);
+  filter: blur(18px);
+}
+
+.marketing-canvas .landing-v3-hero-product {
+  filter: drop-shadow(0 32px 60px rgb(0 0 0 / .36));
+  transform: perspective(1800px) rotateX(.35deg);
+  transform-origin: center bottom;
+}
+
+.marketing-reveal[data-visible="true"] .landing-v3-hero-signal {
+  animation: landing-v3-stage-left 680ms cubic-bezier(.22, 1, .36, 1) 180ms both;
+}
+
+.marketing-reveal[data-visible="true"] .landing-v3-hero-control {
+  animation: landing-v3-stage-right 680ms cubic-bezier(.22, 1, .36, 1) 280ms both;
+}
+
+.landing-v3-pricing {
+  --surface: 21 22 25;
+  --surface-subtle: 16 17 20;
+  --surface-elevated: 25 26 30;
+  --foreground: 248 248 246;
+  --text-secondary: 218 218 212;
+  --text-muted: 155 158 164;
+  --muted-foreground: 160 164 172;
+  --border: 52 54 60;
+  --border-strong: 76 78 85;
+  --primary: 216 189 118;
+  --primary-strong: 235 211 148;
+  --primary-foreground: 23 19 11;
+  --brand-50: 47 41 27;
+}
+
+.landing-v3-pricing .marketing-pricing-card {
+  border-color: rgb(255 255 255 / .12);
+  background: linear-gradient(150deg, rgb(24 25 29), rgb(14 15 18) 72%);
+  box-shadow: 0 24px 58px rgb(0 0 0 / .3), inset 0 1px rgb(255 255 255 / .035);
+}
+
+.landing-v3-pricing .marketing-pricing-card-featured {
+  border-color: rgb(216 189 118 / .62);
+  background: linear-gradient(150deg, rgb(40 35 24), rgb(18 18 20) 68%);
+  box-shadow: 0 30px 72px rgb(0 0 0 / .46), 0 0 0 1px rgb(216 189 118 / .08);
+}
+
+.landing-v3-pricing .marketing-pricing-card:hover {
+  border-color: rgb(216 189 118 / .5);
+  box-shadow: 0 30px 72px rgb(0 0 0 / .42);
+}
+
+.landing-v3-pricing .marketing-pricing-badge {
+  border-color: rgb(216 189 118 / .55);
+  background: rgb(216 189 118 / .12);
+  color: rgb(235 211 148);
+}
+
+@keyframes landing-v3-stage-left {
+  from { opacity: 0; transform: translate3d(16px, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes landing-v3-stage-right {
+  from { opacity: 0; transform: translate3d(-16px, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 1023px) {
+  .marketing-canvas .landing-v3-hero-product {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-reveal[data-visible="true"] .landing-v3-hero-signal,
+  .marketing-reveal[data-visible="true"] .landing-v3-hero-control {
+    animation: none !important;
+  }
+}
+
+/* Landing V3 hero stability: core commercial rows must never disappear. */
+.marketing-canvas .marketing-product-demo .marketing-demo-result-row {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Landing V3 full hero stability: supporting evidence must remain visible. */
+.marketing-canvas .marketing-product-demo .marketing-demo-answer,
+.marketing-canvas .marketing-product-demo .marketing-demo-context-answer,
+.marketing-canvas .marketing-product-demo .marketing-demo-proof,
+.marketing-canvas .marketing-product-demo .marketing-demo-source-row,
+.marketing-canvas .marketing-product-demo .marketing-demo-source-ready,
+.marketing-canvas .marketing-product-demo .marketing-demo-email,
+.marketing-canvas .marketing-product-demo .marketing-demo-log-step,
+.marketing-canvas .marketing-product-demo .marketing-demo-log-ready,
+.marketing-canvas .marketing-product-demo .marketing-demo-metrics {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Landing V3 final hero: one settled, readable enterprise product scene. */
+.marketing-canvas .landing-v3-hero-orbit {
+  background: radial-gradient(ellipse at center, rgb(93 108 137 / .14), transparent 64%);
+  filter: blur(24px);
+}
+
+.marketing-canvas .landing-v3-hero-product {
+  filter: none;
+  transform: none;
+}
+
+.marketing-canvas .landing-v3-device-frame {
+  box-shadow:
+    0 42px 90px rgb(0 0 0 / .46),
+    0 8px 24px rgb(0 0 0 / .3),
+    0 0 0 1px rgb(255 255 255 / .12),
+    inset 0 1px rgb(255 255 255 / .1);
+}
+
+.marketing-canvas .landing-v3-browser-chrome {
+  background: linear-gradient(180deg, #fbfcfe, #f1f4f8);
+  box-shadow: inset 0 -1px rgb(148 163 184 / .12);
+}
+
+.marketing-canvas .landing-v3-floating-surface {
+  overflow: hidden;
+  border: 1px solid rgb(203 211 222 / .96);
+  border-radius: .9rem;
+  background: rgb(255 255 255 / .985);
+  box-shadow:
+    0 24px 56px rgb(0 0 0 / .3),
+    0 0 0 1px rgb(255 255 255 / .08),
+    inset 0 1px rgb(255 255 255 / .9);
+}
+
+.marketing-canvas .landing-v3-audit-surface {
+  border: 1px solid rgb(71 85 105 / .82);
+  border-radius: .9rem;
+  background: linear-gradient(150deg, #0f131b, #080b11 78%);
+  box-shadow:
+    0 26px 58px rgb(0 0 0 / .4),
+    0 0 0 1px rgb(96 165 250 / .06),
+    inset 0 1px rgb(255 255 255 / .045);
+}
+
+.marketing-reveal[data-visible="true"] .marketing-demo-conversation,
+.marketing-reveal[data-visible="true"] .marketing-demo-sources,
+.marketing-reveal[data-visible="true"] .marketing-demo-log {
+  animation: landing-v3-hero-surface-enter 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.marketing-reveal[data-visible="true"] .marketing-demo-conversation { animation-delay: 120ms; }
+.marketing-reveal[data-visible="true"] .marketing-demo-sources { animation-delay: 210ms; }
+.marketing-reveal[data-visible="true"] .marketing-demo-log { animation-delay: 300ms; }
+
+@keyframes landing-v3-hero-surface-enter {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (min-width: 1280px) and (max-width: 1399px) {
+  .marketing-canvas .marketing-demo-conversation { left: -4rem !important; top: 8.75rem !important; width: 10.25rem !important; }
+  .marketing-canvas .marketing-demo-sources { right: -4rem !important; top: 5.5rem !important; width: 9.75rem !important; }
+  .marketing-canvas .marketing-demo-log { right: -4.25rem !important; bottom: 1.75rem !important; width: 11.5rem !important; }
+}
+
+@media (min-width: 1400px) and (max-width: 1599px) {
+  .marketing-canvas .marketing-demo-conversation { left: -7rem !important; top: 9rem !important; width: 12.5rem !important; }
+  .marketing-canvas .marketing-demo-sources { right: -7.25rem !important; top: 5.75rem !important; width: 12.25rem !important; }
+  .marketing-canvas .marketing-demo-log { right: -8rem !important; bottom: 2rem !important; width: 13.75rem !important; }
+}
+
+@media (min-width: 1600px) {
+  .marketing-canvas .marketing-demo-conversation { left: -13.5rem !important; width: 13.75rem !important; }
+  .marketing-canvas .marketing-demo-sources { right: -11.75rem !important; width: 12rem !important; }
+  .marketing-canvas .marketing-demo-log { right: -14.5rem !important; width: 15rem !important; }
+}
+
+/* Every piece of commercial evidence remains stable after the entrance. */
+.marketing-canvas .marketing-product-demo .marketing-demo-question,
+.marketing-canvas .marketing-product-demo .marketing-demo-analyzing,
+.marketing-canvas .marketing-product-demo .marketing-demo-processing,
+.marketing-canvas .marketing-product-demo .marketing-demo-answer,
+.marketing-canvas .marketing-product-demo .marketing-demo-context-answer,
+.marketing-canvas .marketing-product-demo .marketing-demo-command-text,
+.marketing-canvas .marketing-product-demo .marketing-demo-result-row,
+.marketing-canvas .marketing-product-demo .marketing-demo-proof,
+.marketing-canvas .marketing-product-demo .marketing-demo-source-row,
+.marketing-canvas .marketing-product-demo .marketing-demo-source-ready,
+.marketing-canvas .marketing-product-demo .marketing-demo-email,
+.marketing-canvas .marketing-product-demo .marketing-demo-log-step,
+.marketing-canvas .marketing-product-demo .marketing-demo-log-ready,
+.marketing-canvas .marketing-product-demo .marketing-demo-stage,
+.marketing-canvas .marketing-product-demo .marketing-demo-metrics,
+.marketing-canvas .marketing-product-demo .marketing-demo-chart-bar {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.marketing-canvas .marketing-product-demo .marketing-demo-command-text { clip-path: none !important; }
+.marketing-canvas .marketing-product-demo .marketing-demo-chart-bar { transform: scaleY(1) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-reveal[data-visible="true"] .marketing-demo-conversation,
+  .marketing-reveal[data-visible="true"] .marketing-demo-sources,
+  .marketing-reveal[data-visible="true"] .marketing-demo-log {
+    animation: none !important;
+  }
+}
+
+/* === Landing V3 cleanup: remove decorative square grids === */
+
+.marketing-grid,
+.subtle-grid,
+.marketing-workflow-canvas,
+.marketing-canvas .landing-v3-workflow-grid {
+  background-image: none !important;
+}
+
+.marketing-canvas .landing-v3-scan {
+  background:
+    linear-gradient(
+      115deg,
+      transparent 28%,
+      rgb(216 189 118 / 0.11) 48%,
+      transparent 68%
+    ) !important;
+  background-size: 220% 100% !important;
+}
+
+/* optional: if any pseudo-grid still leaks through */
+.marketing-canvas [class*="grid-pattern"],
+.marketing-canvas [class*="square-grid"] {
+  background-image: none !important;
+}
+/* Landing V3 floating hero surfaces: always capture-safe and visible. */
+.marketing-canvas .marketing-demo-conversation,
+.marketing-canvas .marketing-demo-sources,
+.marketing-canvas .marketing-demo-log {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Landing V3 hero polish — less shadow, more breathing room around floating cards */
+.marketing-canvas .marketing-product-stage .marketing-demo-conversation,
+.marketing-canvas .marketing-product-stage .marketing-demo-sources,
+.marketing-canvas .marketing-product-stage .marketing-demo-log {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* keep the floating cards fully visible and slightly detached from the main demo */
+.marketing-canvas .marketing-product-stage {
+  overflow: visible !important;
+}
+
+.marketing-canvas .landing-v3-hero-product,
+.marketing-canvas .marketing-product-stage .marketing-product-demo {
+  overflow: visible !important;
+}
+
+/* active-state transforms: keep subtle motion, but do not visually push cards into the MacBook */
+.marketing-canvas .marketing-product-story[data-active="true"] .marketing-demo-conversation {
+  transform: translate3d(-6px, -2px, 0) !important;
+}
+
+.marketing-canvas .marketing-product-story[data-active="true"] .marketing-demo-sources {
+  transform: translate3d(6px, -2px, 0) !important;
+}
+
+.marketing-canvas .marketing-product-story[data-active="true"] .marketing-demo-log {
+  transform: translate3d(6px, 3px, 0) !important;
+}
+
+/* desktop / laptop large */
+@media (min-width: 1280px) and (max-width: 1599px) {
+  .marketing-demo-conversation {
+    left: -10.75rem !important;
+    width: 9rem !important;
+  }
+
+  .marketing-demo-sources {
+    right: -10.75rem !important;
+    width: 9rem !important;
+  }
+
+  .marketing-demo-log {
+    right: -12.5rem !important;
+    width: 10.5rem !important;
+  }
+}
+
+/* very large desktop */
+@media (min-width: 1600px) {
+  .marketing-product-stage .marketing-product-demo {
+    width: min(74vw, 1320px);
+  }
+
+  .marketing-demo-conversation {
+    left: -16rem !important;
+    width: 13.5rem !important;
+  }
+
+  .marketing-demo-sources {
+    right: -15rem !important;
+    width: 12rem !important;
+  }
+
+  .marketing-demo-log {
+    right: -18rem !important;
+    width: 15rem !important;
+  }
+}
+
+/* Landing V3 hero separation — clearly detach floating surfaces from main product frame */
+.marketing-canvas .marketing-product-stage .marketing-demo-conversation,
+.marketing-canvas .marketing-product-stage .marketing-demo-sources,
+.marketing-canvas .marketing-product-stage .marketing-demo-log,
+.marketing-canvas .marketing-product-stage .marketing-demo-conversation > *,
+.marketing-canvas .marketing-product-stage .marketing-demo-sources > *,
+.marketing-canvas .marketing-product-stage .marketing-demo-log > * {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* Create an obvious black breathing gap around the MacBook/product frame */
+.marketing-canvas .marketing-product-stage .marketing-demo-conversation {
+  transform: translate3d(-32px, 0, 0) !important;
+}
+
+.marketing-canvas .marketing-product-stage .marketing-demo-sources {
+  transform: translate3d(32px, 0, 0) !important;
+}
+
+.marketing-canvas .marketing-product-stage .marketing-demo-log {
+  transform: translate3d(36px, 6px, 0) !important;
+}
+
+/* Give the composition a little more breathing room on very large screens */
+@media (min-width: 1600px) {
+  .marketing-canvas .marketing-product-stage .marketing-demo-conversation {
+    transform: translate3d(-40px, 0, 0) !important;
+  }
+
+  .marketing-canvas .marketing-product-stage .marketing-demo-sources {
+    transform: translate3d(40px, 0, 0) !important;
+  }
+
+  .marketing-canvas .marketing-product-stage .marketing-demo-log {
+    transform: translate3d(44px, 6px, 0) !important;
+  }
+}
+/* Landing V3 definitive hero separation */
+.marketing-canvas .landing-v3-hero-product {
+  filter: none !important;
+}
+
+.marketing-canvas .landing-v3-device-frame,
+.marketing-canvas .landing-v3-floating-surface,
+.marketing-canvas .landing-v3-audit-surface {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+@media (min-width: 1600px) {
+  .marketing-canvas .marketing-demo-conversation {
+    left: -15.25rem !important;
+  }
+
+  .marketing-canvas .marketing-demo-sources {
+    right: -13.5rem !important;
+  }
+
+  .marketing-canvas .marketing-demo-log {
+    right: -16.5rem !important;
+  }
+}
+
+/* Landing V3 definitive positioning: disable legacy transform offsets */
+.marketing-canvas .marketing-product-stage .marketing-demo-conversation,
+.marketing-canvas .marketing-product-stage .marketing-demo-sources,
+.marketing-canvas .marketing-product-stage .marketing-demo-log {
+  transform: none !important;
+}
+
+/* Landing V3 final hero micro-polish */
+.marketing-canvas .landing-v3-conversation-surface,
+.marketing-canvas .landing-v3-context-surface {
+  border: 1px solid rgb(203 213 225 / 0.62) !important;
+  background: rgb(255 255 255 / 0.985) !important;
+  box-shadow: none !important;
+}
+
+.marketing-canvas .landing-v3-audit-surface {
+  border-color: rgb(100 116 139 / 0.34) !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 1600px) {
+  .marketing-canvas .marketing-demo-conversation {
+    left: -15.625rem !important;
+  }
+
+  .marketing-canvas .marketing-demo-log {
+    bottom: 1rem !important;
+  }
+}
+
+/* === REVENEW CONTROL CENTER LIGHT POLISH V4 START === */
+/*
+   Intent:
+   - pure-white application canvas remains untouched
+   - graphite sidebar remains untouched
+   - dark palette remains untouched
+   - improve hierarchy, density, connected context and empty-state legibility
+*/
+
+:root:not(.dark) .control-center-source-grid {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+@media (min-width: 640px) {
+  :root:not(.dark) .control-center-source-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+:root:not(.dark) .control-center-source-card {
+  min-width: 0;
+  min-height: 7.7rem;
+  border-color: rgb(206 224 217);
+  background: rgb(255 255 255);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255),
+    0 1px 2px rgb(18 24 34 / .018);
+}
+
+:root:not(.dark) .control-center-source-card:hover {
+  border-color: rgb(164 205 190);
+  background: rgb(253 255 254);
+}
+
+:root:not(.dark) .control-center-lower-panel {
+  border-color: rgb(220 224 229);
+  background: rgb(255 255 255);
+  box-shadow: 0 1px 2px rgb(18 24 34 / .016);
+}
+
+:root:not(.dark) .control-center-empty-state {
+  display: flex;
+  min-height: 8.75rem;
+  align-items: flex-start;
+  gap: .8rem;
+  border-top: 1px solid rgb(var(--border-subtle));
+  border-radius: 0 0 .62rem .62rem;
+  background: rgb(249 250 251);
+  padding: 1rem;
+}
+
+:root:not(.dark) .control-center-empty-state-mark {
+  display: inline-flex;
+  height: 2rem;
+  width: 2rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(216 221 227);
+  border-radius: .58rem;
+  background: rgb(255 255 255);
+}
+
+:root:not(.dark) .control-center-empty-state-mark > span {
+  height: .42rem;
+  width: .42rem;
+  border-radius: 999px;
+  background: rgb(var(--interaction) / .72);
+  box-shadow: 0 0 0 4px rgb(var(--interaction) / .075);
+}
+
+:root:not(.dark) .control-center-case-facts {
+  border-color: rgb(219 223 228);
+  background: rgb(249 250 251);
+}
+
+:root:not(.dark) .control-center-case-facts > div {
+  min-height: 3.55rem;
+}
+
+:root:not(.dark) .control-center-disclosure-summary {
+  min-height: 3.1rem;
+}
+
+:root:not(.dark) .control-center-disclosure-summary:hover {
+  background: rgb(248 249 250);
+}
+
+:root:not(.dark) .control-center-disclosure[open] {
+  border-color: rgb(207 214 222);
+}
+
+:root:not(.dark) .control-center-disclosure[open]
+  > .control-center-disclosure-summary {
+  background: rgb(250 251 252);
+}
+
+:root:not(.dark) .control-center-ask-surface {
+  width: min(100%, 72rem);
+}
+
+@media (max-width: 639px) {
+  :root:not(.dark) .control-center-empty-state {
+    min-height: 0;
+    padding: .875rem;
+  }
+}
+
+/* === REVENEW CONTROL CENTER LIGHT POLISH V4 END === */
+/* ========================================================================== */
+/* REVENew FINALIZE PHASE 1A - SECONDARY CONTROL CENTER VIEWS                 */
+/* Brief executiv + Revizuire comerciala: depth/layering convergence only.    */
+/* No business semantics. No dark palette token redefinition.                 */
+/* ========================================================================== */
+
+.control-center-secondary-canvas {
+  --secondary-view-radius: 1rem;
+  --secondary-view-inner-radius: 0.8rem;
+  isolation: isolate;
+}
+
+.control-center-secondary-canvas > nav {
+  position: relative;
+  z-index: 2;
+}
+
+.control-center-secondary-canvas > nav + * {
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: var(--secondary-view-radius);
+  background: rgb(var(--surface-subtle));
+  padding: 1rem;
+}
+
+.control-center-secondary-canvas > nav + * h1 {
+  letter-spacing: -0.025em;
+}
+
+.control-center-secondary-canvas > nav + * :where(section, article, aside)[class*="border"]:not([class*="bg-"]) {
+  background-color: rgb(var(--surface));
+}
+
+.control-center-secondary-canvas > nav + * :where(section, article, aside) {
+  border-color: rgb(var(--border));
+}
+
+.control-center-secondary-canvas > nav + * :where(button, a) {
+  text-underline-offset: 0.18em;
+}
+
+.control-center-secondary-canvas > nav + * :where(button, a):focus-visible {
+  outline-offset: 2px;
+}
+
+.control-center-secondary-review > nav + * {
+  padding-bottom: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .control-center-secondary-canvas > nav + * {
+    padding: 1.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .control-center-secondary-canvas > nav + * {
+    padding: 1.375rem;
+  }
+}
+
+/* Light mode receives the same white-canvas / cool-neutral depth contract as
+   the main Control Center. The authenticated sidebar keeps its own scoped
+   graphite variables. Dark mode intentionally keeps the existing palette. */
+:root:not(.dark) .product-desktop:has(.control-center-secondary-canvas) {
+  --background: 255 255 255;
+  --background-soft: 247 247 248;
+  --surface: 255 255 255;
+  --surface-raised: 255 255 255;
+  --surface-subtle: 247 247 248;
+  --surface-muted: 234 234 234;
+  --surface-selected: 231 238 245;
+  --surface-elevated: 255 255 255;
+  --surface-floating: 255 255 255;
+  --border: 226 228 231;
+  --border-subtle: 234 234 234;
+  --divider: 234 234 234;
+  --border-strong: 192 192 192;
+  --foreground: 25 29 36;
+  --text-secondary: 76 84 96;
+  --text-muted: 108 116 128;
+  --text-faint: 142 149 160;
+  --shadow-card: 0 1px 2px rgb(20 25 34 / .035), 0 8px 20px rgb(20 25 34 / .028);
+}
+
+:root:not(.dark) .control-center-secondary-canvas > nav + * {
+  border-color: rgb(226 228 231);
+  background: rgb(247 247 248);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .72);
+}
+
+:root:not(.dark) .control-center-secondary-canvas > nav + * :where(section, article, aside)[class*="border"]:not([class*="bg-"]) {
+  background-color: rgb(255 255 255);
+}
+
+/* Keep selected/interactive states visually distinct from depth surfaces. */
+:root:not(.dark) .control-center-secondary-canvas [aria-current="true"],
+:root:not(.dark) .control-center-secondary-canvas [aria-selected="true"],
+:root:not(.dark) .control-center-secondary-canvas [aria-pressed="true"] {
+  border-color: rgb(var(--interaction-border));
+}
+
+/* END REVENew FINALIZE PHASE 1A - SECONDARY CONTROL CENTER VIEWS */
+
+/* Final secondary-view closure: uses the established token contract in both themes. */
+.executive-kpi-band {
+  border-radius: var(--secondary-view-inner-radius);
+  background: rgb(var(--border-subtle));
+}
+
+.executive-kpi-item {
+  background: rgb(var(--surface-subtle));
+}
+
+.executive-decision-workbench {
+  border-color: rgb(var(--border));
+}
+
+.executive-master-pane {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--text-faint) / .55) transparent;
+}
+
+.executive-master-pane::-webkit-scrollbar { width: .5rem; }
+.executive-master-pane::-webkit-scrollbar-track { background: transparent; }
+.executive-master-pane::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--text-faint) / .48);
+  background-clip: padding-box;
+}
+
+.executive-decision-selected {
+  background: rgb(var(--surface-selected)) !important;
+}
+
+:root:not(.dark) .executive-decision-selected {
+  background: rgb(var(--surface-subtle)) !important;
+}
+
+.executive-decision-selected,
+.commercial-review-current {
+  border-left-color: rgb(var(--primary)) !important;
+}
+
+.executive-lower-summary {
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid rgb(var(--border-subtle));
+  padding-top: 1rem;
+}
+
+.executive-summary-section > :is(p, ul):empty { display: none; }
+.executive-summary-section > p:last-child {
+  margin-bottom: 0;
+}
+
+.commercial-review-summary {
+  border-color: rgb(var(--border-subtle));
+  border-radius: var(--secondary-view-inner-radius);
+  background: rgb(var(--surface-subtle));
+}
+
+.commercial-review-agenda-row {
+  column-gap: .75rem;
+}
+
+.commercial-review-current {
+  background: rgb(var(--surface-selected)) !important;
+}
+
+.commercial-review-action > a {
+  justify-content: space-between;
+  width: 100%;
+  min-width: 10.75rem;
+}
+
+@media (min-width: 1280px) {
+  .commercial-review-agenda-row { min-height: 7.15rem; }
+}
+
+@media (max-width: 1279px) {
+  .commercial-review-action > a { min-width: 0; }
 }

@@ -49,7 +49,7 @@ export function CommercialDecisionReview({model}:{model:RevenueCommandModel}) {
  const empty = incomplete
   ? "Datele disponibile nu permit confirmarea unei agende complete. Verifică înregistrările înainte de decizie."
   : "Nu există decizii comerciale care necesită atenție acum.";
- return <section aria-labelledby="commercial-review-title" className="py-6">
+ return <section aria-labelledby="commercial-review-title" className="commercial-decision-review py-6">
   <header className="flex flex-wrap items-start justify-between gap-4">
    <div className="min-w-0">
     <h1 id="commercial-review-title" className="text-xl font-semibold">Revizuire comercială</h1>
@@ -63,7 +63,7 @@ export function CommercialDecisionReview({model}:{model:RevenueCommandModel}) {
    </ActionToolbar>
   </header>
 
-  <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-y border-[rgb(var(--border))] py-4">
+  <div className="commercial-review-summary mt-5 flex flex-wrap items-center justify-between gap-4 border-y border-[rgb(var(--border))] px-4 py-3.5">
    <div className="min-w-0">
     <p className="text-sm font-medium">{model.currentComplete&&agenda.length
      ? model.decisionCount+" decizii necesită atenție. Prima: "+(agenda[0].state.organization.name??agenda[0].state.title)+"."
@@ -86,7 +86,7 @@ export function CommercialDecisionReview({model}:{model:RevenueCommandModel}) {
    <section aria-labelledby="decision-agenda-title" className={"min-w-0 " + (phase==="during"?patterns.reviewPane:"")}>
     <div className="flex items-center justify-between gap-3 pb-3"><h2 id="decision-agenda-title" className="text-sm font-semibold">Agenda de decizie</h2><span className={muted}>{phase==="during"&&selected?selectedIndex+1+" din "+agenda.length:"Primele "+agenda.length}</span></div>
     <div aria-hidden="true" className={agendaGrid+" hidden border-l-transparent border-y border-[rgb(var(--border))] px-3 py-2 text-xs text-[rgb(var(--text-muted))] xl:grid"}><span>Decizie · de ce acum</span><span>Responsabil</span><span>Termen</span><span>Următorul pas</span></div>
-    {agenda.length?<ul className="divide-y divide-[rgb(var(--border))]">{agenda.map(item=><li key={item.id} className={agendaGrid+" px-3 py-4 "+(phase==="during"&&item.id===selected?.id?"border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"border-l-transparent")}>
+    {agenda.length?<ul className="commercial-review-agenda divide-y divide-[rgb(var(--border))]">{agenda.map(item=><li key={item.id} className={agendaGrid+" commercial-review-agenda-row px-3 py-3 "+(phase==="during"&&item.id===selected?.id?"commercial-review-current border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"border-l-transparent")}>
      <button type="button" onClick={()=>select(item.id)} aria-pressed={phase==="during"&&item.id===selected?.id} aria-controls="commercial-review-detail" className="focus-ring min-w-0 text-left">
       <span className="block break-words text-sm font-semibold">{item.state.organization.name??item.state.title}</span>
       {item.state.organization.name?<span className={"mt-1 block break-words "+muted}>{item.state.title}</span>:null}
@@ -97,7 +97,7 @@ export function CommercialDecisionReview({model}:{model:RevenueCommandModel}) {
      </button>
      <span className={"min-w-0 break-words "+muted}>{item.state.ownership.ownerName??(item.state.ownership.ownerProfileId?"Responsabil atribuit":"Fără responsabil")}</span>
      <span className={muted+(item.state.nextAction?.overdue?" text-[rgb(var(--danger-text))]":"")}>{item.state.nextAction?.dueAt?formatProductDateTime(item.state.nextAction.dueAt):"De stabilit"}</span>
-     <div className="min-w-0"><Button href={item.action.href} variant="secondary" size="small" className="h-auto min-h-8 max-w-full py-1.5"><span className="whitespace-normal text-left leading-4">{item.action.label}</span><ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden="true"/></Button></div>
+     <div className="commercial-review-action min-w-0"><Button href={item.action.href} variant="secondary" size="small" className="h-auto min-h-8 max-w-full py-1.5"><span className="whitespace-normal text-left leading-4">{item.action.label}</span><ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden="true"/></Button></div>
     </li>)}</ul>:<div className={agendaGrid+" border-l-transparent border-b border-[rgb(var(--border))] px-3 py-5"}><p className={"xl:col-span-4 "+muted}>{empty}</p></div>}
     {model.decisionCount>agenda.length?<p className={"mt-3 "+muted}>Sunt afișate primele opt decizii. După rezolvarea lor, actualizează agenda pentru următoarele.</p>:null}
    </section>

@@ -58,8 +58,8 @@ export function getReveNewAccessMode(): ReveNewAccessMode {
   return process.env.NODE_ENV === "production" ? "paid" : "preview";
 }
 
-export function getPreviewPlan(): PreviewPlanId | null {
-  const value = cookies().get(previewPlanCookieName)?.value;
+export async function getPreviewPlan(): Promise<PreviewPlanId | null> {
+  const value = (await cookies()).get(previewPlanCookieName)?.value;
   return isPreviewPlanId(value) ? value : null;
 }
 
@@ -106,7 +106,7 @@ const getCurrentPaidAccessContextCached = cache(async function getCurrentPaidAcc
   }
 
   const accessMode = getReveNewAccessMode();
-  const previewPlan = getPreviewPlanById(getPreviewPlan());
+  const previewPlan = getPreviewPlanById(await getPreviewPlan());
 
   if (accessMode === "preview") {
     return {
@@ -132,7 +132,7 @@ const getCurrentPaidAccessContextCached = cache(async function getCurrentPaidAcc
     };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     throw new Error("Nu am putut verifica statutul. Încearcă din nou.");
   }

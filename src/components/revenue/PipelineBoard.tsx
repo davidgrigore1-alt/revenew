@@ -269,7 +269,7 @@ function OpportunityCard({
       : null;
 
   return (
-    <article className="group min-w-0 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-[var(--card-padding)] transition-colors duration-fast hover:border-[rgb(var(--border-strong))]">
+    <article className="group min-w-0 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-3 transition-colors duration-fast hover:bg-[rgb(var(--surface-hover))]">
       <Link
         href={`/opportunities/${opportunity.id}`}
         title={opportunity.title}
@@ -767,11 +767,11 @@ export function PipelineBoard({
   return (
     <section
       aria-labelledby="pipeline-work-title"
-      className="min-w-0 overflow-hidden rounded-[1.1rem] border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))]"
+      className="min-w-0 overflow-hidden border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]"
     >
       {/* Commercial control */}
-      <header className="border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]">
-        <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
+      <header className="border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
+        <div className="flex flex-wrap items-start justify-between gap-4 px-4 py-3">
           <div>
             <p className="micro-label">
               Control comercial
@@ -807,11 +807,7 @@ export function PipelineBoard({
             </p>
           </div>
 
-          <ReportingCurrencyControl
-            currency={currency}
-            onChange={setCurrency}
-            fx={fx}
-          />
+          <p className="text-micro font-semibold tracking-[0.08em] text-[rgb(var(--text-muted))]">BANI → EXECUȚIE → ACȚIUNE</p>
         </div>
 
         {/* Executive pulse */}
@@ -957,7 +953,7 @@ export function PipelineBoard({
 
       {/* ReveNew Focus */}
       <div className="px-4 pt-4">
-        <section className="overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]">
+        <section className="overflow-hidden border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
           <div className="flex flex-wrap items-start justify-between gap-4 px-4 py-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1100,7 +1096,7 @@ export function PipelineBoard({
         id="pipeline-filter-region"
         className="scroll-mt-24 px-4 pt-4"
       >
-        <section className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-4 py-3">
+        <section className="product-grouping-surface px-4 py-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="micro-label">
@@ -1180,6 +1176,7 @@ export function PipelineBoard({
                 </button>
               );
             })}
+            <div className="ml-auto"><ReportingCurrencyControl currency={currency} onChange={setCurrency} fx={fx} /></div>
           </div>
         </section>
       </div>
@@ -1230,7 +1227,7 @@ export function PipelineBoard({
                   key={column.id}
                   className={patterns.column}
                 >
-                  <header className="min-h-[118px] border-b border-[rgb(var(--border))] px-3.5 py-3.5">
+                  <header className="min-h-[94px] border-b border-[rgb(var(--border))] px-3.5 py-3">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="min-w-0 text-sm font-semibold text-[rgb(var(--foreground))]">
                         <span className="mr-2 text-micro font-normal text-[rgb(var(--text-muted))]">

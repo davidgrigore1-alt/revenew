@@ -162,7 +162,7 @@ export async function getPilotMeasurementWorkspace(selectedPilotId?: string): Pr
     currency: item.currency ?? "RON", estimatedValue: Number(item.estimatedValueHigh ?? 0),
     active: item.lifecycleStatus ? item.lifecycleStatus === "open" : !["won", "lost", "ignored"].includes(item.status)
   }));
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const canManage = hasPermission(authorization, "reports.view_team");
   if (!supabase || current.source !== "supabase") return { available: false, canManage, workspaceName: current.business.name, pilots: [], pilot: null, baseline: null, final: null, livePreview: null, comparison: null, candidates, error: "Pilotul persistent necesită mediul Supabase autorizat." };
 

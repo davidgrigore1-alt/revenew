@@ -1,5 +1,6 @@
 import patterns from "@/components/ui/OperationalPatterns.module.css";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { WorkflowPlaybooks } from "@/components/workflows/WorkflowPlaybooks";
 import { Button } from "@/components/ui/Button";
 import { changeWorkflowStatus } from "@/lib/workflow-actions";
@@ -28,16 +29,21 @@ export default async function WorkflowsPage() {
   for (const run of workspace.runs) if (!lastRunByWorkflow.has(run.workflow_id)) lastRunByWorkflow.set(run.workflow_id, run);
 
   return <PageShell
+    wide
     eyebrow="Execuție comercială"
     title="Workflow-uri"
     description="Transformă semnalele comerciale în verificări controlate, lucru pregătit și decizii explicabile"
     actions={<Button href="/workflows/new">Workflow nou</Button>}
   >
-    <section aria-label="Rezumat workflow-uri" className="grid border-y border-[rgb(var(--border))] sm:grid-cols-3">
-      <div className="px-4 py-3 sm:border-r sm:border-[rgb(var(--border))]"><p className="micro-label">Active</p><p className="mt-1 text-lg font-semibold tabular-nums">{activeCount}</p><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Evaluează semnale conform regulilor definite</p></div>
-      <div className="border-t border-[rgb(var(--border))] px-4 py-3 sm:border-r sm:border-t-0"><p className="micro-label">Draft / pauză</p><p className="mt-1 text-lg font-semibold tabular-nums">{draftCount}</p><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Nu rulează până la activare explicită</p></div>
-      <div className="border-t border-[rgb(var(--border))] px-4 py-3 sm:border-t-0"><p className="micro-label">Necesită atenție</p><p className="mt-1 text-lg font-semibold tabular-nums">{attentionCount}</p><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Evaluări eșuate disponibile în audit</p></div>
-    </section>
+    <RecordSummaryBar
+      label="Rezumat workflow-uri"
+      items={[
+        { label: "Active", value: activeCount, detail: "Definiții activate" },
+        { label: "Draft / pauză", value: draftCount, detail: "Nu rulează până la activare explicită" },
+        { label: "Necesită atenție", value: attentionCount, detail: "Rulări eșuate", tone: attentionCount ? "attention" : "default" },
+        { label: "Evaluări", value: workspace.runs.length, detail: "Teste și rulări reale" },
+      ]}
+    />
     <section aria-labelledby="workflow-list-title" className="overflow-hidden border-y border-[rgb(var(--border))]">
       <div className="flex items-center justify-between gap-4 bg-[rgb(var(--surface-subtle))] px-4 py-3">
         <div><h2 id="workflow-list-title" className="text-sm font-semibold">Workflow-uri comerciale</h2><p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">Drafturile rămân inactive până la o activare explicită.</p></div>
@@ -55,7 +61,7 @@ export default async function WorkflowsPage() {
             return <article key={workflow.id} className={patterns.workflowGrid + " group border-t border-[rgb(var(--border))] px-4 py-4 transition-colors duration-fast hover:bg-[rgb(var(--surface-hover))]"}>
               <div className="min-w-0"><a href={`/workflows/${workflow.id}`} className="focus-ring block truncate text-sm font-semibold hover:text-[rgb(var(--primary))]">{workflow.name}</a><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{workflow.actions.map((action) => presentWorkflowAction(action.type)).join(" · ")}</p></div>
               <div><span className={statusClass(state.tone)}>{state.label}</span></div>
-              <div className="text-xs text-[rgb(var(--text-secondary))]"><p>{presentWorkflowTrigger(workflow.trigger)}</p><p className="mt-1 text-[rgb(var(--text-muted))]">Oportunitate · {workflowTriggerCapability(workflow.trigger).label}</p><p className="mt-1 font-medium text-[rgb(var(--text-muted))]">Acțiunile externe rămân sub control uman</p></div>
+              <div className="text-xs text-[rgb(var(--text-secondary))]"><p className="font-medium">Când · {presentWorkflowTrigger(workflow.trigger)}</p><p className="mt-1 text-[rgb(var(--text-muted))]">Control · {workflowTriggerCapability(workflow.trigger).label}</p><p className="mt-1 font-medium text-[rgb(var(--text-muted))]">Acțiunile externe rămân sub control uman</p></div>
               <span className="text-xs tabular-nums text-[rgb(var(--text-muted))]">{run ? formatProductDateTime(run.created_at, { year: false }) : "Fără evaluare recentă"}</span>
               <div className="text-xs"><span className={runState?.tone === "danger" ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-secondary))]"}>{runState?.label ?? "—"}</span>{run?.status === "failed" ? <p className="mt-1 text-[rgb(var(--danger-text))]">{workflowRunTrace(run).failure || "Necesită verificare"}</p> : null}</div>
               <div className="grid grid-cols-[82px_128px] items-center gap-2">

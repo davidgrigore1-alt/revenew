@@ -62,7 +62,7 @@ test("shared compact section rhythm separates major modules on AI and Inbox", ()
   assert.match(globals, /\.app-section-stack\s*\{[\s\S]*gap: clamp\(1\.5rem, 2vw, 2rem\)/);
   assert.match(ai, /Priorități din datele existente/);
   assert.match(ai, /Registrul complet de capabilități și limite/);
-  assert.match(inbox, /xl:grid-cols-\[minmax\(18rem,0\.72fr\)_minmax\(0,1\.55fr\)\]/);
+  assert.match(inbox, /lg:grid-cols-\[minmax\(20rem,0\.78fr\)_minmax\(0,1\.45fr\)\]/);
   assert.match(inbox, /id="signal-review-panel"/);
 });
 

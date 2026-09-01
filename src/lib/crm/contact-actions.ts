@@ -14,7 +14,7 @@ type ContactActionResult =
 
 type ContactMutationContext = {
   ok: true;
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>;
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
   businessId: string;
   actorProfileId: string;
 };
@@ -132,7 +132,7 @@ function validateContactForm(formData: FormData): ValidatedContactInput {
 }
 
 async function verifyExistingContact(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   businessId: string,
   contactId: string
 ) {
@@ -161,7 +161,7 @@ async function getMutationContext(opportunityId: string): Promise<ContactMutatio
     return { ok: false, error: "Contactele CRM sunt disponibile doar când Supabase este configurat.", crmReady: false };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = current?.business;
 
@@ -189,7 +189,7 @@ async function getMutationContext(opportunityId: string): Promise<ContactMutatio
 }
 
 async function ensureOrganization(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   businessId: string,
   input: ValidatedContactInput
 ) {
@@ -220,7 +220,7 @@ async function ensureOrganization(
 }
 
 async function findContactByEmail(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   businessId: string,
   normalizedEmail: string | null
 ) {
@@ -238,7 +238,7 @@ async function findContactByEmail(
 }
 
 async function ensureContact(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   businessId: string,
   input: ValidatedContactInput,
   organizationId: string | null
@@ -294,7 +294,7 @@ async function ensureContact(
 }
 
 async function existingOpportunityContact(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   businessId: string,
   opportunityId: string,
   contactId: string
@@ -312,7 +312,7 @@ async function existingOpportunityContact(
 }
 
 async function insertTimelineEvent(
-  supabase: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   opportunityId: string,
   businessId: string,
   actorProfileId: string,

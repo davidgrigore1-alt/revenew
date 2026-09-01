@@ -12,7 +12,8 @@ import { getDocumentSourceDetail } from "@/lib/google-workspace/drive";
 import { documentKinds,sourceStateLabels } from "@/lib/google-workspace/drive-types";
 import { metadataEvidence, safeOriginalEvidenceHref } from "@/lib/evidence-reference";
 export const dynamic="force-dynamic";
-export default async function SourcePage({params}:{params:{id:string;sourceId:string}}){
+export default async function SourcePage(props:{params: Promise<{id:string;sourceId:string}>}) {
+ const params = await props.params;
  await requirePermission("documents.read");
  const detail=await getDocumentSourceDetail(params.sourceId);
  if(!detail||detail.source.opportunity_id!==params.id)notFound();

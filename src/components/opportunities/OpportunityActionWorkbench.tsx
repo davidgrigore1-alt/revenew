@@ -104,7 +104,7 @@ export function OpportunityActionWorkbench({
         </summary>
         <div className={`grid gap-3 border-t border-[rgb(var(--border))] p-4 ${compact ? "" : "md:grid-cols-2 xl:grid-cols-3"}`}>
           {secondaryActions.map((action) => (
-            <article key={action.href} className="flex min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
+            <article key={`${action.href}:${action.title}`} className="flex min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4">
               <span className="text-xs font-semibold text-[rgb(var(--text-muted))]">{action.status}</span>
               <h3 className="mt-2 text-base font-semibold">{action.title}</h3>
               <p className="mt-2 flex-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{action.reason}</p>

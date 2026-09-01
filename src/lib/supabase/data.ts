@@ -306,7 +306,7 @@ export async function getOpportunitiesForCurrentBusiness() {
 
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = current?.business;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     throw new Error("Supabase nu este disponibil pe server.");
   }
@@ -403,7 +403,7 @@ export async function getOpportunityForCurrentBusiness(id: string, options: { in
 
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const business = current?.business;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     throw new Error("Supabase nu este disponibil pe server.");
   }

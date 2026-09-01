@@ -7,13 +7,14 @@ import { formatMicros, loadAdminInsights, resolveAdminDateRange } from "@/lib/ad
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminBusinessDetailPage({
-  params,
-  searchParams
-}: {
-  params: { id: string };
-  searchParams?: { range?: string };
-}) {
+export default async function AdminBusinessDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams?: Promise<{ range?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const authorization = await getAuthorizationContext();
   if (!hasPermission(authorization, "platform.businesses.read_all")) {
     return <div className="px-4 py-8 sm:px-6 xl:px-8"><ForbiddenState /></div>;

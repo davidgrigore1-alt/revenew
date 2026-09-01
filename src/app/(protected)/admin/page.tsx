@@ -6,11 +6,12 @@ import { formatMicros, loadAdminInsights, resolveAdminDateRange } from "@/lib/ad
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage({
-  searchParams
-}: {
-  searchParams?: { range?: string };
-}) {
+export default async function AdminPage(
+  props: {
+    searchParams?: Promise<{ range?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const authorization = await getAuthorizationContext();
   const canAccessAdmin = hasPermission(authorization, "platform.admin.access");
 

@@ -16,7 +16,7 @@ type PageShellProps = {
 
 export function PageShell({ title, eyebrow, description, children, actions, breadcrumbs, showGuide = false, wide = false }: PageShellProps) {
   return (
-    <div className={`app-page mx-auto min-w-0 w-full ${wide ? "max-w-[1760px]" : "max-w-[1480px]"} px-4 py-4 pb-24 sm:px-6 sm:py-5 lg:px-8 lg:pb-8`}>
+    <div className={`app-page mx-auto min-w-0 w-full ${wide ? "max-w-[var(--workspace-axis)]" : "max-w-[var(--content-axis)]"} px-[var(--page-gutter)] py-4 pb-24 sm:py-5 lg:pb-8`}>
       {breadcrumbs ? <Breadcrumbs items={breadcrumbs} /> : null}
       <PageHeader eyebrow={eyebrow} title={title} description={description}>
         {actions}

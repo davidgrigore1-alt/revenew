@@ -16,7 +16,7 @@ function clean(value: FormDataEntryValue | null, max: number) {
 async function context() {
   const authorization = await requirePermission("reports.view_team");
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!current || current.source !== "supabase" || !authorization.profileId || !supabase) throw new Error("Administrarea pilotului nu este disponibilă în acest mediu.");
   return { current, supabase, profileId: authorization.profileId, businessId: current.business.id };
 }

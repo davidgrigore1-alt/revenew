@@ -194,7 +194,7 @@ test("global search remains deterministic while Ask ReveNew can reuse it as an a
   assert.match(globalSearch, /searchWorkspace/);
   assert.match(tools, /searchWorkspace/);
   assert.match(aiPage, /AskReveNew/);
-  assert.match(ask, /Întreabă ReveNew/);
+  assert.match(ask, /Ce vrei să verifici\?/);
   assert.match(ask, /CopilotConversation/);
   assert.match(globalSearch, /De ce apare/);
   assert.match(conversation, /Dovezi/);

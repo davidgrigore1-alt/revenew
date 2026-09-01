@@ -15,7 +15,8 @@ const groups = [
   { key: "prepared", title: "Drafturi pregătite", description: "Fără aprobare și fără execuție externă." }
 ] as const;
 
-export default async function PreparedWorkPage({ searchParams }: { searchParams?: { item?: string } }) {
+export default async function PreparedWorkPage(props: { searchParams?: Promise<{ item?: string }> }) {
+  const searchParams = await props.searchParams;
   const registry = await getPreparedWorkRegistry();
   const requestedId = typeof searchParams?.item === "string" ? searchParams.item : undefined;
   const selected = registry.items.find((item) => item.id === requestedId) ?? registry.items[0];

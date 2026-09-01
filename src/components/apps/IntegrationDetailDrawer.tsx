@@ -66,9 +66,9 @@ export function IntegrationDetailDrawer({
           const bounds = event.currentTarget.getBoundingClientRect();
           if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose();
         }}
-        className="fixed inset-0 z-[200] m-auto max-h-[calc(100dvh-48px)] w-[min(920px,calc(100vw-48px))] max-w-none overflow-hidden rounded-[16px] border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-0 text-[rgb(var(--foreground))] shadow-modal backdrop:bg-black/[0.65] open:flex open:flex-col"
+        className="fixed inset-0 z-[200] m-auto max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-hidden rounded-overlay border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-0 text-[rgb(var(--foreground))] shadow-modal backdrop:bg-black/[0.65] open:flex open:flex-col sm:max-h-[calc(100dvh-3rem)] sm:w-[min(920px,calc(100vw-3rem))]"
       >
-        <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-5">
+        <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-3 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] p-4 sm:gap-4 sm:p-5">
           <div className="flex min-w-0 items-start gap-4">
             <IntegrationLogo item={item} size="large" />
             <div className="min-w-0">
@@ -78,7 +78,7 @@ export function IntegrationDetailDrawer({
                   {item.stage === "next" ? "În curând" : "Planificat"}
                 </StatusPill>}
               </div>
-              <h2 id="integration-detail-title" className="mt-2 text-xl font-semibold tracking-[-0.025em] text-[rgb(var(--foreground))]">
+              <h2 id="integration-detail-title" className="mt-2 break-words text-xl font-semibold tracking-[-0.025em] text-[rgb(var(--foreground))]">
                 {item.name}
               </h2>
               {provider && state.connection ? <p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]" title={state.connection.email}>{state.connection.email}</p> : null}

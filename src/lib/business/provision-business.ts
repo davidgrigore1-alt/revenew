@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 import { parseOnboardingForm, splitList, type ParsedOnboardingInput } from "@/lib/business/onboarding-normalization";
 
-type SupabaseServerClient = NonNullable<ReturnType<typeof createSupabaseServerClient>>;
+type SupabaseServerClient = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
 
 type OnboardingSetupResult =
   | { ok: true }
@@ -94,7 +94,7 @@ export async function provisionBusinessFromOnboarding(formData: FormData) {
     return { ok: true, mode: "demo", step: "success" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return { ok: false, step: "auth_check", error: "Nu am putut verifica sesiunea. Încearcă din nou." };
   }

@@ -1,9 +1,9 @@
 export const marketingSections = [
+  { id: "produs", label: "Produs", href: "#produs" },
   { id: "cum-functioneaza", label: "Cum funcționează", href: "#cum-functioneaza" },
-  { id: "pentru-cine", label: "Pentru cine", href: "#pentru-cine" },
-  { id: "ce-primesti", label: "Inteligență", href: "#ce-primesti" },
-  { id: "control", label: "Control și siguranță", href: "#control" },
+  { id: "integrari", label: "Integrări", href: "#integrari" },
   { id: "preturi", label: "Prețuri", href: "#preturi" },
+  { id: "securitate", label: "Securitate", href: "#securitate" },
   { id: "intrebari", label: "Întrebări", href: "#intrebari" }
 ] as const;
 

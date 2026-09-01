@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { getCurrentAuthUser } from "@/lib/auth/profile";
 import { acceptWorkspaceInvitation } from "@/lib/enterprise-governance-internal";
 
-export default async function InviteAcceptPage({ searchParams }: { searchParams: { token?: string; error?: string } }) {
+export default async function InviteAcceptPage(props: { searchParams: Promise<{ token?: string; error?: string }> }) {
+  const searchParams = await props.searchParams;
   const token = String(searchParams.token ?? "");
   const user = await getCurrentAuthUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/invite/accept?token=${encodeURIComponent(token)}`)}`);

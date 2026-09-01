@@ -31,6 +31,8 @@ test("recommended action and precise safe CTAs remain visible", async () => {
   assert.match(workbench, /Adaugă contact principal/);
   assert.doesNotMatch(workbench, />Continuă</);
   assert.doesNotMatch(workbench, />Vezi detalii</);
+  assert.match(workbench, /key=\{`\$\{action\.href\}:\$\{action\.title\}`\}/);
+  assert.doesNotMatch(workbench, /key=\{action\.href\}/);
 });
 
 test("the first opportunity screen exposes evidence without opening a raw feed", async () => {

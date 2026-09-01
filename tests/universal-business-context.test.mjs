@@ -104,7 +104,7 @@ test("tool layer prepares but never executes an external action", () => {
 
 test("Ask ReveNew renders visible context, checked source states and editable prepared work", () => {
   const conversation = read("src/components/intelligence/CopilotConversation.tsx");
-  assert.match(conversation, /Context activ/);
+  assert.match(conversation, /Context autorizat/);
   assert.match(conversation, /Surse verificate/);
   assert.match(conversation, /Pregătit · neexecutat · editabil/);
   assert.match(conversation, /setSubject/);

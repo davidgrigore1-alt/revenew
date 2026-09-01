@@ -46,7 +46,8 @@ function reasonMessage(reason?: string) {
   return "Contul este creat, iar activarea funcțiilor comerciale necesită confirmarea unui plan sau a implementării.";
 }
 
-export default async function AccessPage({ searchParams }: { searchParams?: { reason?: string } }) {
+export default async function AccessPage(props: { searchParams?: Promise<{ reason?: string }> }) {
+  const searchParams = await props.searchParams;
   const context = await getCurrentPaidAccessContext({ redirectIfMissingBusiness: false });
 
   if (!context) redirect("/onboarding");

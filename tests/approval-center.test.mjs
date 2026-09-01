@@ -43,9 +43,11 @@ test("approval center maps existing signal states without inventing a new busine
 });
 
 test("proposed changes distinguish new opportunities from actions on existing opportunities", () => {
-  const { proposedChangeForSignal } = loadApprovalCenter();
+  const { proposedChangeForSignal, rejectionConsequenceForSignal } = loadApprovalCenter();
   assert.match(proposedChangeForSignal(signal()), /oportunitate/i);
   assert.match(proposedChangeForSignal(signal({ detectedFromOpportunityId: "opportunity-1" })), /acțiune internă/i);
+  assert.match(rejectionConsequenceForSignal(), /istoricul de audit/i);
+  assert.match(rejectionConsequenceForSignal(), /nu creează nicio acțiune externă/i);
 });
 
 test("approval page reads only current-workspace data and retains existing permission gates", () => {
@@ -54,6 +56,8 @@ test("approval page reads only current-workspace data and retains existing permi
   const inbox = read("src/lib/commercial-inbox.ts");
   assert.match(page, /getCommercialSignalsForCurrentBusiness/);
   assert.match(page, /getCrmWorkspaceForCurrentBusiness/);
+  assert.match(page, /hasPermission\(authorization, "signals\.convert"\)/);
+  assert.match(page, /hasPermission\(authorization, "signals\.archive"\)/);
   assert.match(actions + inbox, /requireActivePaidAccess/);
   assert.match(actions + inbox, /requirePermission\("signals\.convert"\)/);
   assert.match(inbox, /validateWorkspaceLinks/);
@@ -63,12 +67,25 @@ test("approval page reads only current-workspace data and retains existing permi
 test("approval and rejection reuse audited server actions and require a rejection reason", () => {
   const client = read("src/components/approvals/ApprovalCenterClient.tsx");
   const inbox = read("src/lib/commercial-inbox.ts");
+  const migration = read("supabase/migrations/20260830090801_commercial_signal_decision_security.sql");
   assert.match(client, /approveCommercialSignal/);
-  assert.match(client, /setCommercialSignalReviewDecision/);
+  assert.match(client, /rejectCommercialSignal/);
+  assert.match(client, /expectedUpdatedAt: selectedSignal\.updatedAt/);
   assert.match(client, /Motivul respingerii este obligatoriu/);
   assert.match(client, /Nimic nu este trimis extern/);
-  assert.match(inbox, /commercial_signal_events/);
+  assert.match(inbox, /reject_commercial_signal/);
+  assert.match(migration, /insert into public\.commercial_signal_events[\s\S]+?'signal_dismissed'/i);
   assert.match(inbox, /revalidatePath\("\/approvals"\)/);
+});
+
+test("approval replay and stale decisions are reported truthfully", () => {
+  const client = read("src/components/approvals/ApprovalCenterClient.tsx");
+  const inbox = read("src/lib/commercial-inbox.ts");
+  assert.match(client, /result\.outcome === "already_applied"/);
+  assert.match(client, /result\.outcome === "conflict"[\s\S]+?setForm\(formFor\(result\.signal\)\)[\s\S]+?router\.refresh\(\)/);
+  assert.match(client, /acțiunea curentă nu a repetat conversia/);
+  assert.match(inbox, /outcome\?: "applied" \| "already_applied" \| "conflict"/);
+  assert.match(inbox, /reason === "stale_version"/);
 });
 
 test("approval center exposes local filters before one semantic master-detail surface", () => {
@@ -80,7 +97,23 @@ test("approval center exposes local filters before one semantic master-detail su
   assert.ok(filtersIndex > 0 && filtersIndex < listIndex && listIndex < detailIndex);
   assert.match(client, /aria-pressed=\{filter === value\}/);
   assert.match(client, /aria-current=\{signal\.id === selectedId/);
+  assert.match(client, /role="listbox"/);
+  assert.match(client, /role="option"/);
+  assert.match(client, /ArrowDown/);
   assert.doesNotMatch(client, /flex-col-reverse|grid-flow-dense|\border-\d+\b/);
+});
+
+test("selection is URL-backed without page scroll and the decision remains first", () => {
+  const client = read("src/components/approvals/ApprovalCenterClient.tsx");
+  const consequence = client.indexOf('id="approval-change-title"');
+  const preparation = client.indexOf("<SignalPreparationPanel");
+  assert.match(client, /params\.set\("signal", signal\.id\)/);
+  assert.match(client, /router\.replace\([\s\S]+?\{ scroll: false \}\)/);
+  assert.ok(consequence > 0 && consequence < preparation);
+  assert.match(client, /Aprobă și aplică intern/);
+  assert.match(client, /aria-expanded=\{rejectionOpen\}/);
+  assert.match(client, /Doar vizualizare/);
+  assert.match(client, /Valoare estimată, neconfirmată/);
 });
 
 test("approval of an existing opportunity uses the stored tenant-validated link", () => {

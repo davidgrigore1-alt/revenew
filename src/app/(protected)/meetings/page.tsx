@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { PageShell } from "@/components/dashboard/PageShell";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { Button } from "@/components/ui/Button";
 import {
   getOwnedExternalContext,
@@ -21,10 +22,10 @@ import {
 export const dynamic = "force-dynamic";
 
 const regionClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
+  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
 
 const innerSurfaceClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
+  "border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
 
 async function getMeetings() {
   try {
@@ -66,7 +67,7 @@ function meetingState(
 ) {
   if (new Date(endsAt).getTime() < now) {
     return {
-      label: "Încheiată",
+      label: "Ora a trecut",
       tone: "status-pill-neutral",
     };
   }
@@ -129,7 +130,7 @@ export default async function MeetingsPage() {
       ? `/opportunities/${meeting.linked_opportunity_id}`
       : null;
 
-    const completedMeeting = state.label === "Încheiată";
+    const completedMeeting = new Date(meeting.ends_at).getTime() < now;
 
     return (
       <article
@@ -250,6 +251,7 @@ export default async function MeetingsPage() {
 
   return (
     <PageShell
+      wide
       eyebrow="Calendar comercial"
       title="Întâlniri"
       description="Context comercial înainte de conversație și următorul pas după întâlnire"
@@ -263,58 +265,20 @@ export default async function MeetingsPage() {
       }
     >
       <div className="grid gap-6">
-        {/* Summary */}
-        <section
-          aria-label="Rezumat întâlniri"
-          className={`${regionClass} grid overflow-hidden sm:grid-cols-3`}
-        >
-          <div className="px-4 py-3.5 sm:border-r sm:border-[rgb(var(--border))]">
-            <p className="micro-label">
-              Urmează
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {upcoming.length}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              În următoarele 30 de zile
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-r sm:border-t-0">
-            <p className="micro-label">
-              Încheiate recent
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {completed.length}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Disponibile pentru follow-up
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-t-0">
-            <p className="micro-label">
-              Cu oportunitate
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {linkedCount}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Legături CRM confirmate
-            </p>
-          </div>
-        </section>
+        <RecordSummaryBar
+          label="Rezumat întâlniri"
+          items={[
+            { label: "Urmează", value: upcoming.length, detail: "Următoarele 30 de zile" },
+            { label: "Context anterior", value: completed.length, detail: "Fără rezultat presupus" },
+            { label: "Cu oportunitate", value: linkedCount, detail: "Asocieri CRM confirmate" },
+            { label: "Sursă", value: connected ? "Calendar conectat" : "Indisponibil", detail: "Context autorizat" },
+          ]}
+        />
 
         {/* Agenda + meeting intelligence */}
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
           <div className="grid gap-4">
-            <section className={`${regionClass} p-4 sm:p-5`}>
+            <section className={`${regionClass} px-4 py-4 sm:px-5`}>
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="micro-label">
@@ -417,11 +381,11 @@ export default async function MeetingsPage() {
                       id="completed-meetings-title"
                       className="mt-1 text-base font-semibold text-[rgb(var(--foreground))]"
                     >
-                      Întâlniri încheiate recent
+                      Intervale trecute recent
                     </h2>
 
                     <p className="mt-1 max-w-2xl text-xs leading-5 text-[rgb(var(--text-muted))]">
-                      Revizuiește contextul și pregătește următorul pas; ReveNew nu presupune automat rezultatul.
+                      Revizuiește contextul și pregătește următorul pas; ora trecută nu confirmă participarea sau un rezultat comercial.
                     </p>
                   </div>
 
@@ -441,7 +405,7 @@ export default async function MeetingsPage() {
 
           {/* Brief rail */}
           <aside
-            className={`${regionClass} p-4 sm:p-5`}
+            className={`${regionClass} px-4 py-4 sm:px-5`}
           >
             <p className="micro-label">
               Brief de întâlnire

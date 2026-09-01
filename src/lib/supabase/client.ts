@@ -17,5 +17,11 @@ export function createSupabaseBrowserClient(): SupabaseClient | null {
     return null;
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: {
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    }
+  });
 }

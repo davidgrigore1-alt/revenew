@@ -14,7 +14,7 @@ export default async function LeadsPage() {
 
   if (isSupabaseConfigured) {
     const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (business && supabase) {
       const { data, error } = await supabase.from("lead_contacts").select("*").eq("business_id", business.id).order("created_at", { ascending: false });
       if (error) {

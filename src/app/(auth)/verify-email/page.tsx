@@ -1,7 +1,8 @@
 import { AuthCardShell } from "@/components/auth/AuthCardShell";
 import { EmailVerificationPanel } from "@/components/auth/EmailVerificationPanel";
 
-export default function VerifyEmailPage({ searchParams }: { searchParams?: { reason?: string } }) {
+export default async function VerifyEmailPage(props: { searchParams?: Promise<{ reason?: string }> }) {
+  const searchParams = await props.searchParams;
   return (
     <AuthCardShell
       eyebrow="CONFIRMARE"

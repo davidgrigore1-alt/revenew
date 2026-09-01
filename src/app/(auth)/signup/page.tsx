@@ -18,7 +18,8 @@ function RetryAuthState() {
   );
 }
 
-export default async function SignupPage({ searchParams }: { searchParams?: { intent?: string; reason?: string } }) {
+export default async function SignupPage(props: { searchParams?: Promise<{ intent?: string; reason?: string }> }) {
+  const searchParams = await props.searchParams;
   const intent = sanitizeAuthIntent(searchParams?.intent, "create_account");
   const state = await resolveAuthPageState();
 

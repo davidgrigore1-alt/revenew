@@ -11,7 +11,7 @@ const eventFields="id,case_id,business_id,opportunity_id,revision,kind,actor_pro
 export async function getRevenueImpact(input:{range?:string;from?:string;to?:string;opportunityId?:string;opportunityIds?:string[];includeOutsidePeriod?:boolean}={}){
  const auth=await requirePermission("opportunities.read");
  const current=await getCurrentBusinessForUser({redirectIfMissing:true});
- const client=createSupabaseServerClient(),period=impactPeriod(input);
+ const client=await createSupabaseServerClient(),period=impactPeriod(input);
  const empty={actorNames:{} as Record<string,string>,proofs:[],summary:summarizeImpact([],period.from,period.to),period,limited:false,available:false,canVerify:false,canTrack:false};
  if(!client||!current||current.source!=="supabase")return empty;
  if(input.opportunityId&&!uuidPattern.test(input.opportunityId))return empty;
@@ -36,14 +36,14 @@ export type RevenueImpactModel=Awaited<ReturnType<typeof getRevenueImpact>>;
 /** One bounded RLS query for compact links; no truth evaluation or document bodies. */
 export const getImpactLinks=cache(async(opportunityIds:string[])=>{
  await requirePermission("opportunities.read");
- const current=await getCurrentBusinessForUser({redirectIfMissing:true}),client=createSupabaseServerClient();
+ const current=await getCurrentBusinessForUser({redirectIfMissing:true}),client=await createSupabaseServerClient();
  if(!client||!current||current.source!=="supabase"||!opportunityIds.length)return {} as Record<string,string>;
  const result=await client.from("commercial_impact_cases").select("id,opportunity_id").eq("business_id",current.business.id).in("opportunity_id",opportunityIds.slice(0,250)).limit(250);
  return Object.fromEntries((result.data??[]).map(row=>[row.opportunity_id,"/recoverable?opportunity="+row.opportunity_id+"&case="+row.id]));
 });
 export async function getImpactReferences(opportunityId:string){
  await requirePermission("opportunities.read");
- const current=await getCurrentBusinessForUser({redirectIfMissing:true}),client=createSupabaseServerClient();
+ const current=await getCurrentBusinessForUser({redirectIfMissing:true}),client=await createSupabaseServerClient();
  if(!client||!current||!uuidPattern.test(opportunityId))return {actions:[],prepared:[]};
  const [actions,prepared,plans]=await Promise.all([
   client.from("opportunity_events").select("id,label,occurred_at").eq("business_id",current.business.id).eq("opportunity_id",opportunityId)

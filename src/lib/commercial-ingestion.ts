@@ -57,7 +57,7 @@ export type CommercialImportHistoryItem = {
 
 async function ingestionContext() {
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!current?.business || !supabase) throw new Error("Workspace-ul curent nu este disponibil.");
   return { current, business: current.business, supabase };
 }

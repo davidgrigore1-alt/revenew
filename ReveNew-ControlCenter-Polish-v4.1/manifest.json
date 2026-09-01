@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "package": "ReveNew-ControlCenter-Polish-v4.1",
+  "scope": "Control Center focused premium refinement",
+  "targets": [
+    "src/components/dashboard/ExecutionControlCenter.tsx",
+    "src/app/(protected)/dashboard/page.tsx",
+    "src/app/globals.css",
+    "tests/control-center-polish-v4.test.mjs"
+  ],
+  "does_not_touch": [
+    "package.json",
+    "package-lock.json",
+    "SQL/migrations",
+    "auth",
+    "RLS",
+    "Google OAuth state",
+    "pricing",
+    "landing page",
+    "dark palette definitions"
+  ],
+  "validation": [
+    "node --test tests/control-center-polish-v4.test.mjs",
+    "node --test tests/execution-control-center.test.mjs",
+    "npm run typecheck",
+    "npm run lint",
+    "git diff --check",
+    "optional npm run build"
+  ]
+}

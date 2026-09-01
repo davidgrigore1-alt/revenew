@@ -59,7 +59,8 @@ test("Prepared decision UX is URL-selected, evidence-only and has no execution a
 
 test("Approvals exposes decision counts, priority, consequence and audit", () => {
   const source = read("src/components/approvals/ApprovalCenterClient.tsx");
-  assert.match(source, /Rezumat aprobări/);
+  assert.match(source, /stateCounts\[value\]/);
+  assert.match(source, /aria-label="Filtre aprobări"/);
   assert.match(source, /Necesită decizie/);
   assert.match(source, /priorityLabels/);
   assert.match(source, /Ce se va schimba/);
@@ -78,7 +79,7 @@ test("Workflows show operational state, attention and human-control boundaries",
 test("Sequences expose truthful preparation, activation and enrollment state", () => {
   const source = read("src/app/(protected)/sequences/page.tsx");
   assert.match(source, /Rezumat secvențe/);
-  assert.match(source, /fără trimitere autonomă/);
+  assert.match(source, /nu le trimite autonom/);
   assert.match(source, /Activează pregătirea/);
   assert.match(source, /următorul pas/);
   assert.match(source, /sequence.status === "draft" \|\| sequence.status === "paused"/);
@@ -89,9 +90,9 @@ test("Meetings distinguish upcoming and completed commercial context truthfully"
   const source = read("src/app/(protected)/meetings/page.tsx");
   assert.match(source, /Rezumat întâlniri/);
   assert.match(source, /În desfășurare/);
-  assert.match(source, /Întâlniri încheiate recent/);
+  assert.match(source, /Intervale trecute recent/);
   assert.match(source, /Oportunitate asociată/);
-  assert.match(source, /ReveNew nu presupune automat rezultatul/);
+  assert.match(source, /ora trecută nu confirmă participarea sau un rezultat comercial/);
   assert.match(source, /result\.connection/);
 });
 

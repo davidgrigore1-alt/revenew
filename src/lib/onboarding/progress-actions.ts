@@ -8,7 +8,7 @@ const allowedKeys = new Set(["businessName", "legalName", "cui", "website", "ind
 
 export async function saveOnboardingProgress(currentStep: number, entryMode: "manual" | "import", rawDraft: Record<string, unknown>) {
   const { authUser, profile } = await getCurrentProfile();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!authUser || !profile || !supabase) return { ok: false, error: "Progresul nu poate fi salvat momentan." };
   const draft = Object.fromEntries(Object.entries(rawDraft).filter(([key, value]) => allowedKeys.has(key) && (typeof value === "string" || Array.isArray(value))));
   if (JSON.stringify(draft).length > 12_000) return { ok: false, error: "Datele introduse depășesc limita permisă." };

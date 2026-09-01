@@ -9,7 +9,8 @@ import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 
 export const dynamic = "force-dynamic";
 
-export default async function ActivationPage({ searchParams }: { searchParams: { mode?: string } }) {
+export default async function ActivationPage(props: { searchParams: Promise<{ mode?: string }> }) {
+  const searchParams = await props.searchParams;
   const [current, inbox] = await Promise.all([
     getCurrentBusinessForUser({ redirectIfMissing: true }),
     getCommercialSignalsForCurrentBusiness()

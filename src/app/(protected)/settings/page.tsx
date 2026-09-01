@@ -66,13 +66,13 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
   const activeTab: SettingsTab = requestedTab === "integrations" || requestedTab === "control" || requestedTab === "usage" || (requestedTab === "development" && isDevelopmentMode && !isPreviewMode)
     ? requestedTab
     : "workspace";
-  const usageSnapshot = business
+  const usageSnapshot = activeTab === "usage" && business
     ? await getUsageSnapshotForBusiness(business.id, resolveUsagePlanId(paidAccess?.previewPlan?.id ?? paidAccess?.subscription?.plan))
     : null;
   let ownedBusinesses: Array<{ id: string; name: string; created_at: string | null }> = [];
 
   if (isDevelopmentMode && !isPreviewMode && isSupabaseConfigured && currentProfile.profile?.id) {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (supabase) {
       const { data, error } = await supabase
         .from("businesses")
@@ -97,11 +97,12 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
 
   return (
     <PageShell
+      wide
       eyebrow="Administrare"
       title="Setări"
       description="Preferințe, acces și capacitate pentru spațiul de lucru activ"
     >
-      <div className="grid gap-7 lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-7 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:items-start">
         <aside className="lg:sticky lg:top-20">
           <nav className="grid gap-5" aria-label="Secțiuni setări">
             {navigationGroups.map((group) => (
@@ -113,7 +114,7 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
                       key={tab}
                       href={`/settings?tab=${tab}`}
                       aria-current={activeTab === tab ? "page" : undefined}
-                      className={`focus-ring flex min-h-9 items-center rounded-control px-2.5 py-2 text-sm font-medium transition-colors ${activeTab === tab ? "bg-[rgb(var(--surface-muted))] text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"}`}
+                      className={`focus-ring flex min-h-9 items-center border-l-2 px-2.5 py-2 text-sm font-medium transition-colors ${activeTab === tab ? "border-[rgb(var(--primary))] bg-[rgb(var(--surface-subtle))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"}`}
                     >
                       {label}
                     </Link>
@@ -125,6 +126,9 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
         </aside>
 
         <div className="grid min-w-0 max-w-5xl gap-8">
+          <div className="break-words border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2.5 text-xs leading-5 text-[rgb(var(--text-muted))] [overflow-wrap:anywhere]">
+            Configurezi spațiul de lucru <strong className="font-semibold text-[rgb(var(--foreground))]">{business?.name ?? "Nedenumit"}</strong>. Secțiunea activă: <strong className="font-semibold text-[rgb(var(--foreground))]">{navigationGroups.flatMap((group) => group.items).find(([tab]) => tab === activeTab)?.[1]}</strong>.
+          </div>
           {activeTab === "workspace" ? (
             <>
               {!isSupabaseConfigured ? <DemoNotice /> : null}

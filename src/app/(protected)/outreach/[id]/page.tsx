@@ -8,8 +8,9 @@ import { getFollowUpSendReadiness } from "@/lib/follow-up-send-actions";
 
 export const dynamic="force-dynamic";
 
-export default async function FollowUpStudioPage({params}:{params:{id:string}}){
- const business=await getCurrentBusinessOrDemo({redirectIfMissing:true});const supabase=createSupabaseServerClient();if(!business||!supabase)notFound();
+export default async function FollowUpStudioPage(props:{params: Promise<{id:string}>}) {
+ const params = await props.params;
+ const business=await getCurrentBusinessOrDemo({redirectIfMissing:true});const supabase=await createSupabaseServerClient();if(!business||!supabase)notFound();
  const{data:document,error}=await supabase.from("opportunity_documents").select("id,opportunity_id,title,body,status,generation_mode,created_at,document_type").eq("id",params.id).eq("business_id",business.id).maybeSingle();
  if(error||!document||!["outreach_email","follow_up_email","linkedin_message","whatsapp_message"].includes(document.document_type))notFound();
  const[{data:opportunity},{data:action},{data:events}]=await Promise.all([

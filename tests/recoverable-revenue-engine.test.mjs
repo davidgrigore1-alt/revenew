@@ -78,7 +78,8 @@ test("signal operations derive the workspace server-side and prevent cross-tenan
   assert.match(source, /\.eq\("business_id", business\.id\)/);
   assert.match(source, /\.from\("crm_organizations"\).*\.eq\("business_id", business\.id\)/s);
   assert.match(source, /\.from\("crm_contacts"\).*\.eq\("business_id", business\.id\)/s);
-  assert.match(source, /supabase\.rpc\("approve_recoverable_signal"/);
+  assert.match(source, /supabase\.rpc\("approve_recoverable_signal_v2"/);
+  assert.match(source, /expected_updated_at: toNullString\(input\.expectedUpdatedAt\)/);
   assert.match(source, /activeOpportunityTitle/);
   assert.doesNotMatch(source, /\.from\("opportunities"\)\s*\.insert/s);
   assert.match(actions, /requirePermission\("opportunities\.analyze"\)/);
@@ -97,7 +98,7 @@ test("review UI requires human approval and supports all decision paths", async 
   assert.match(source, /Responsabil/);
   assert.match(source, /Draft recomandat/);
   assert.match(source, /Triere asistată/);
-  assert.match(source, /date și reguli vizibile/);
+  assert.match(source, /Triere asistată · reguli vizibile/);
   assert.match(preparationPanel, /Ce a detectat ReveNew/);
   assert.match(preparationPanel, /Informații lipsă/);
   assert.match(preparationPanel, /Nu se aplică și nu se trimite nimic fără aprobare/);

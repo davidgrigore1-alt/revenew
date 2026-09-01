@@ -88,7 +88,7 @@ export function AppHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-11 border-b border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface)/0.98)]">
+      <header className="sticky top-0 z-30 h-12 border-b border-[rgb(var(--border-subtle))] bg-[rgb(var(--surface)/0.98)]">
         <div className="flex h-full items-center justify-between gap-2 px-3 sm:gap-4 sm:px-5 lg:justify-end lg:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button

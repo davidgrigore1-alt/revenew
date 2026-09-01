@@ -55,7 +55,7 @@ async function loadSendContext(documentId: string) {
     requirePermission("documents.mark_sent"),
     getCurrentBusinessOrDemo({ redirectIfMissing: true })
   ]);
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const admin = createSupabaseAdminClient();
   if (!business || !supabase || !admin) throw new Error("Trimiterea securizată nu este configurată pe server.");
 

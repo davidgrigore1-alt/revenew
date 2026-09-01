@@ -27,21 +27,21 @@ export function RevenueCommandBrief({model}:{model:RevenueCommandModel}){
   if(!result.ok){setError(result.error);return;}
   showToast({title:"Brief marcat ca revizuit",description:"Aprobările, acțiunile și impactul nu au fost modificate.",tone:"success"});router.refresh();
  });}
- return <section className="py-6" aria-labelledby="executive-brief-title">
+ return <section className="executive-command-brief py-6" aria-labelledby="executive-brief-title">
   <header className="flex flex-wrap items-end justify-between gap-4">
    <div><p className="text-xs font-medium text-[rgb(var(--text-muted))]">Control Center</p><h1 id="executive-brief-title" className="mt-1 text-xl font-semibold">Brief comercial</h1><p className={"mt-1 "+muted}>Actualizat {formatProductDateTime(model.generatedAt)} · {model.scope==="business"?"Workspace autorizat":"Oportunitățile tale"}</p></div>
    <ActionToolbar label="Perioada brief-ului">{[["today","Astăzi"],["7","7 zile"],["30","30 zile"]].map(([id,label])=><Link key={id} href={"/dashboard?view=executive&range="+id} aria-current={model.period.key===id?"page":undefined} className={toolbarActionClass+" aria-[current=page]:border-[rgb(var(--primary))]"}>{label}</Link>)}</ActionToolbar>
   </header>
-  <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-[rgb(var(--border))] py-4 xl:grid-cols-4">
-   {[["Necesită decizie",model.detected===null?"Informație insuficientă":String(model.decisionCount)],["Valoare detectată · acum",money(model.detected,model.detected===null?"Informație insuficientă":"Fără valoare detectată")],["Intervenții confirmate · interval",model.impact?String(model.impact.interventions):"Informație insuficientă"],["Venit recuperat verificat · interval",money(model.impact?.recovered??null,model.impact?"Încă neverificat":"Informație insuficientă")]].map(([label,value])=><div key={label}><p className={muted}>{label}</p><p className="mt-1 text-base font-semibold tabular-nums">{value}</p></div>)}
+  <div className="executive-kpi-band mt-5 grid grid-cols-2 gap-px overflow-hidden border border-[rgb(var(--border))] xl:grid-cols-4">
+   {[["Necesită decizie",model.detected===null?"Informație insuficientă":String(model.decisionCount)],["Valoare detectată · acum",money(model.detected,model.detected===null?"Informație insuficientă":"Fără valoare detectată")],["Intervenții confirmate · interval",model.impact?String(model.impact.interventions):"Informație insuficientă"],["Venit recuperat verificat · interval",money(model.impact?.recovered??null,model.impact?"Încă neverificat":"Informație insuficientă")]].map(([label,value])=><div key={label} className="executive-kpi-item min-w-0 px-4 py-3"><p className={muted}>{label}</p><p className="mt-1 truncate text-base font-semibold tabular-nums">{value}</p></div>)}
   </div>
   <p className="py-4 text-sm leading-6">{model.narrative}</p>
   <p className={muted}>Brieful arată deciziile curente și schimbările din interval. Valoarea detectată nu este venit recuperat; monedele nu se adună.</p>
   {model.limited?<p role="status" className="mt-2 text-xs text-[rgb(var(--warning-text))]">Selecție limitată la cele mai recente 80 de oportunități autorizate și istoricul disponibil. Numerele nu reprezintă întregul workspace.</p>:null}
-  <div className="mt-4 grid min-w-0 border-y border-[rgb(var(--border))] lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
-   <section aria-label="Decizii executive" className={"min-w-0 " + patterns.reviewPane}>
+  <div className="executive-decision-workbench mt-4 grid min-w-0 border-y border-[rgb(var(--border))] lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
+   <section aria-label="Decizii executive" className={"executive-master-pane min-w-0 " + patterns.reviewPane}>
     <h2 className="px-3 py-3 text-sm font-semibold">Ce necesită decizie <span className="font-normal text-[rgb(var(--text-muted))]">· primele {model.decisions.length}</span></h2>
-    {model.decisions.length?<ul className="divide-y divide-[rgb(var(--border))]">{model.decisions.map((d,i)=><li key={d.id} className={selected?.id===d.id?"border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"border-l-2 border-transparent"}>
+    {model.decisions.length?<ul className="divide-y divide-[rgb(var(--border))]">{model.decisions.map((d,i)=><li key={d.id} className={selected?.id===d.id?"executive-decision-selected border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"border-l-2 border-transparent"}>
      <button type="button" aria-pressed={selected?.id===d.id} aria-controls="executive-decision-detail" onClick={()=>setSelectedId(d.id)} className="focus-ring block w-full px-3 py-3 text-left hover:bg-[rgb(var(--surface-subtle))]">
       <span className="flex items-baseline gap-2"><span className={muted}>{i+1}</span><span className="min-w-0 break-words text-sm font-semibold">{d.state.title}</span></span>
       <span className={"mt-1 block "+muted}>{d.state.organization.name??"Companie neconfirmată"}</span>
@@ -65,14 +65,14 @@ export function RevenueCommandBrief({model}:{model:RevenueCommandModel}){
     </>:<p className={muted}>Selectează o decizie pentru context și dovezi.</p>}
    </aside>
   </div>
-  <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-   <section aria-labelledby="executive-changes"><h2 id="executive-changes" className="text-sm font-semibold">{model.checkpoint?"De la ultima revizuire":"Ce s-a schimbat în interval"}</h2>
+  <div className="executive-lower-summary mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+   <section className="executive-summary-section" aria-labelledby="executive-changes"><h2 id="executive-changes" className="text-sm font-semibold">{model.checkpoint?"De la ultima revizuire":"Ce s-a schimbat în interval"}</h2>
     <p className={"mt-1 "+muted}>{model.checkpoint?"Revizuit până la "+formatProductDateTime(model.checkpoint):"Nu există încă o revizuire înregistrată pentru acest context."}</p>
     {model.historyClipped?<p className={muted}>Revizuirea este anterioară intervalului ales; sunt afișate numai schimbările din {model.period.label.toLowerCase()}.</p>:null}
     {model.changes.length?<ul className="mt-3 divide-y divide-[rgb(var(--border))] border-t border-[rgb(var(--border))]">{model.changes.map(c=><li key={c.id} className="grid gap-1 py-3 sm:grid-cols-[minmax(0,1fr)_auto]"><div><Link href={evidenceHref(c.evidence.entityHref)??"/opportunities/"+c.opportunityId} className="focus-ring text-sm font-medium hover:underline">{c.title}</Link><p className="mt-1 text-xs">{c.label}</p><p className={muted}>{c.detail}</p></div><time className={muted} dateTime={c.at}>{formatProductDateTime(c.at)}</time></li>)}</ul>:<p className={"py-4 "+muted}>{!model.changesComplete?"Istoricul nu este complet; absența schimbărilor nu poate fi confirmată.":model.checkpoint&&!model.historyClipped&&!model.limited?"Nu există schimbări comerciale materiale de la ultima revizuire.":"Nu există schimbări comerciale materiale în intervalul și selecția disponibile."}</p>}
     {model.changeCount>20?<p className={muted}>Primele 20 din {model.changeCount} schimbări disponibile. Istoricul complet se consultă în oportunitate.</p>:null}
    </section>
-   <section><h2 className="text-sm font-semibold">Ce a avansat</h2>{model.progress.length?<ul className="mt-3 space-y-3">{model.progress.map(c=><li key={c.id} className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--success-text))]" aria-hidden="true"/><div><p className="text-xs font-medium">{c.label}</p><Link href={"/opportunities/"+c.opportunityId} className={"focus-ring hover:underline "+muted}>{c.title}</Link></div></li>)}</ul>:<p className={"mt-3 "+muted}>Niciun progres confirmat în selecția acestui interval.</p>}
+   <section className="executive-summary-section"><h2 className="text-sm font-semibold">Ce a avansat</h2>{model.progress.length?<ul className="mt-3 space-y-3">{model.progress.map(c=><li key={c.id} className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--success-text))]" aria-hidden="true"/><div><p className="text-xs font-medium">{c.label}</p><Link href={"/opportunities/"+c.opportunityId} className={"focus-ring hover:underline "+muted}>{c.title}</Link></div></li>)}</ul>:<p className={"mt-3 "+muted}>Niciun progres confirmat în selecția acestui interval.</p>}
     <div className="mt-5 border-t border-[rgb(var(--border))] pt-4"><h3 className="text-xs font-semibold">Dovada impactului</h3><p className={"mt-2 "+muted}>Valoare protejată: {money(model.impact?.protected??null,"Încă neverificată")}</p><p className={muted}>Venit recuperat: {money(model.impact?.recovered??null,model.impact?"Încă neverificat":"Informație insuficientă")}</p><Link href="/recoverable" className="focus-ring mt-2 inline-block text-xs hover:underline">Vezi dovada →</Link></div>
    </section>
   </div>

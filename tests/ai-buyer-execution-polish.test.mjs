@@ -50,6 +50,31 @@ test("Inbox keeps compact operational intelligence inside the selected detail be
   assert.match(panel, /Nimic nu este trimis extern/);
 });
 
+test("A4.1 keeps AI truth explicit and turns Inbox into a compact decision queue", () => {
+  const aiPage = read("src/app/(protected)/ai/page.tsx");
+  const ask = read("src/components/intelligence/AskReveNew.tsx");
+  const conversation = read("src/components/intelligence/CopilotConversation.tsx");
+  const inbox = read("src/components/inbox/CommercialInboxClient.tsx");
+  const connectedEmail = read("src/components/inbox/ConnectedEmailInbox.tsx");
+
+  assert.match(aiPage, /aria-\[current=page\]:border-\[rgb\(var\(--interaction\)\)\]/);
+  assert.match(ask, /contextul autorizat/);
+  assert.match(conversation, /Context autorizat/);
+  assert.match(conversation, /Concluzie ReveNew/);
+  assert.match(conversation, /Informații lipsă sau neconfirmate/);
+  assert.match(conversation, /Nu este executată nicio acțiune externă/);
+  assert.doesNotMatch(conversation, /focus-within:shadow|shadow-card/);
+
+  assert.match(inbox, /<SegmentedFilter/);
+  assert.match(inbox, /aria-label="Coada de semnale comerciale"/);
+  assert.match(inbox, /aria-controls="signal-review-panel"/);
+  assert.match(inbox, /Următoarea decizie sigură/);
+  assert.match(inbox, /Fără responsabil/);
+  assert.ok(inbox.indexOf("Următoarea decizie sigură") < inbox.indexOf('id="signal-essential-title"'));
+  assert.match(connectedEmail, /<SegmentedFilter/);
+  assert.match(connectedEmail, /aria-label="Conversații Gmail conectate"/);
+});
+
 test("mobile execution surfaces keep precise actions and responsibility visible", () => {
   const today = read("src/components/dashboard/TodayActionCard.tsx");
   const opportunity = read("src/components/opportunities/OpportunityControlCenter.tsx");

@@ -30,7 +30,7 @@ const tabs: Array<{ id: Tab; label: string }> = [
 ];
 
 const operationalRegion =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
+  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
 
 export function IntegrationHub({
   state,
@@ -55,6 +55,7 @@ export function IntegrationHub({
   return (
     <>
       <PageShell
+        wide
         eyebrow="Aplicații"
         title="Integrări"
         description="Conexiuni autorizate, capabilități disponibile și surse planificate"
@@ -122,7 +123,7 @@ export function IntegrationHub({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
+          <div className="flex items-center gap-3 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2 py-3 sm:px-4">
             <ShieldCheckIcon
               className="h-4 w-4 shrink-0 text-[rgb(var(--interaction))]"
               aria-hidden="true"
@@ -192,7 +193,7 @@ export function IntegrationHub({
                 ) : null}
               </div>
 
-              <div className="rounded-panel bg-[rgb(var(--surface-elevated))]">
+              <div className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]">
                 <GoogleWorkspaceCard
                   state={state}
                   notice={notice}
@@ -254,7 +255,7 @@ export function IntegrationHub({
                 </p>
               </div>
 
-              <div className="rounded-panel bg-[rgb(var(--surface-elevated))]">
+              <div className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]">
                 <IntegrationActivity state={state} />
               </div>
             </section>

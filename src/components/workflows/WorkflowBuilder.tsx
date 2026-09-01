@@ -208,10 +208,10 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
         </div>
       </div>
 
-      <div className="grid min-h-[660px] xl:grid-cols-[minmax(0,1fr)_21rem]">
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_21rem]">
         <section
           aria-label="Canvas workflow"
-          className="relative overflow-auto border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-5 py-10 xl:border-b-0 xl:border-r"
+          className="relative overflow-auto border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-6 sm:px-5 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:border-b-0 xl:border-r"
         >
           <div
             aria-hidden="true"
@@ -254,14 +254,14 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
             </div>
             <button type="button" onClick={() => addAction()} disabled={!editable || actions.length >= 6} className="focus-ring mx-auto mt-3 flex h-8 items-center rounded-[8px] px-3 text-xs font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-40">+ Adaugă acțiune</button>
 
-            <div className="mx-auto mt-8 flex w-fit items-center gap-2 rounded-[8px] border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-[0.6875rem] text-[rgb(var(--text-muted))]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--success-solid))]" />
+            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-[8px] border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-[0.6875rem] text-[rgb(var(--text-muted))]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--text-subtle))]" />
               Execuție controlată · salvare explicită · fără acțiuni externe automate
             </div>
           </div>
         </section>
 
-        <aside aria-label="Inspector workflow" className="bg-[rgb(var(--surface-elevated))] px-4 py-5">
+        <aside aria-label="Inspector workflow" className="bg-[rgb(var(--surface-elevated))] px-4 py-5 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:overflow-y-auto">
           <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-3">
             <div><p className="micro-label">Inspector</p><h2 className="mt-1 text-sm font-semibold">Configurare bloc</h2></div>
             <span className="status-pill status-pill-neutral">{state.label}</span>

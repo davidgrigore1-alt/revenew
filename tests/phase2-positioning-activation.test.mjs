@@ -7,10 +7,13 @@ const read = (file) => fs.readFileSync(path.resolve(file), "utf8");
 
 test("Phase 2 positioning defines commercial recovery without debt ambiguity", () => {
   const landing = read("src/app/(marketing)/page.tsx");
+  const visuals = read("src/components/marketing/LandingV3Visuals.tsx");
   const plans = read("src/lib/billing/plans.ts");
-  assert.match(landing, /nu datorii/i);
-  assert.match(landing, /Nu este recuperare de creanțe/);
-  assert.match(landing, /ReveNew recomandă, iar echipa ta decide/);
+  assert.match(landing, /este construit în primul rând pentru execuție comercială/);
+  assert.match(landing, /CRM-ul îți spune ce ai\. ReveNew îți arată unde se rupe execuția/);
+  assert.match(landing, /AI-ul explică\. Echipa decide\./);
+  assert.match(visuals, /Nicio trimitere automată/);
+  assert.match(visuals, /Pregătit pentru revizuire/);
   for (const plan of ["Start", "Growth", "Scale", "Enterprise"]) assert.match(plans, new RegExp(`title: "${plan}"`));
   assert.match(plans, /monthlyPrice: 59/);
   assert.match(plans, /annualPrice: 103/);

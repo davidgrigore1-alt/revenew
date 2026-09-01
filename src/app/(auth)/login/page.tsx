@@ -65,7 +65,8 @@ function RetryAuthState() {
   );
 }
 
-export default async function LoginPage({ searchParams }: { searchParams?: { intent?: string; reason?: string } }) {
+export default async function LoginPage(props: { searchParams?: Promise<{ intent?: string; reason?: string }> }) {
+  const searchParams = await props.searchParams;
   const intent = sanitizeAuthIntent(searchParams?.intent, "login");
   const state = await resolveAuthPageState();
 

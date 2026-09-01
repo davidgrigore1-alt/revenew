@@ -169,7 +169,8 @@ test("Application modal retains portal, top-layer focus isolation, scroll and re
   for (const fragment of ["createPortal(", "document.body", "dialog.showModal()", "dialog.close()",
     'aria-modal="true"', "onCancel=", "onClose()", "overflow-y-auto overscroll-contain",
     "returnFocus.focus({ preventScroll: true })", "document.body.style.overflow = previousOverflow",
-    "document.documentElement.style.overflow = previousRootOverflow", "max-h-[calc(100dvh-48px)]"]) {
+    "document.documentElement.style.overflow = previousRootOverflow", "max-h-[calc(100dvh-1rem)]",
+    "sm:max-h-[calc(100dvh-3rem)]", "w-[calc(100vw-1rem)]", "rounded-overlay"]) {
     assert.ok(modal.includes(fragment), fragment);
   }
   assert.match(modal, /onManageGoogle/);

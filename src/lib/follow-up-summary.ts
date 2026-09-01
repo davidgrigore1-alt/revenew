@@ -18,7 +18,7 @@ const messageTypes = ["outreach_email", "follow_up_email", "linkedin_message", "
 export async function getFollowUpWorkspaceSummary(): Promise<FollowUpWorkspaceSummary> {
   if (!isSupabaseConfigured) return emptySummary;
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) return emptySummary;
   const now = new Date().toISOString();
   const [review, approved, due, testAttempts, delivered, failed] = await Promise.all([

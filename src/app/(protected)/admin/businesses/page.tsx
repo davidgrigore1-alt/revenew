@@ -6,7 +6,8 @@ import { loadAdminInsights, resolveAdminDateRange } from "@/lib/admin/insights";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminBusinessesPage({ searchParams }: { searchParams?: { range?: string } }) {
+export default async function AdminBusinessesPage(props: { searchParams?: Promise<{ range?: string }> }) {
+  const searchParams = await props.searchParams;
   const authorization = await getAuthorizationContext();
   if (!hasPermission(authorization, "platform.businesses.read_all")) {
     return <div className="px-4 py-8 sm:px-6 xl:px-8"><ForbiddenState /></div>;

@@ -539,7 +539,7 @@ function mapOpportunity(row: Row, actions: OpportunityAction[], documents: Oppor
 export async function getCompanyIntelligenceSnapshot(organizationId: string): Promise<{ ready: boolean; snapshot: CompanyIntelligenceSnapshot | null; error?: string }> {
   if (!isSupabaseConfigured) return { ready: false, snapshot: null, error: "Inteligența companiei este disponibilă după configurarea Supabase." };
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!current?.business || !supabase) return { ready: false, snapshot: null, error: "Nu am putut încărca workspace-ul curent." };
   const businessId = current.business.id;
 

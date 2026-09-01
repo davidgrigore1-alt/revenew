@@ -205,7 +205,12 @@ export async function getUsageSnapshotForBusiness(businessId: string, planId: Us
     .eq("period_start", period.periodStart);
 
   if (error) {
-    console.error("Usage snapshot error", redactForLog({ code: error.code, message: error.message }));
+    const detail = redactForLog({ code: error.code, message: error.message });
+    if (mode === "enforce") {
+      console.error("Usage snapshot error", detail);
+    } else {
+      console.warn("Usage snapshot unavailable in observe mode", detail);
+    }
     return unavailableSnapshot(planId);
   }
 

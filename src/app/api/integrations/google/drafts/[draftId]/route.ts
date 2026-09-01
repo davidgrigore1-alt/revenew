@@ -23,10 +23,11 @@ function safeError(error: unknown) {
   return NextResponse.json({ error: message, code }, { status, headers: privateHeaders });
 }
 
-export async function GET(_: Request, context: { params: { draftId: string } }) {
+export async function GET(_: Request, context: { params: Promise<{ draftId: string }> }) {
   try {
     const actor = await requireGoogleConnectorActor();
-    const draft = await getOwnedCommunicationDraft(actor, context.params.draftId);
+    const { draftId } = await context.params;
+    const draft = await getOwnedCommunicationDraft(actor, draftId);
     if (!draft) return NextResponse.json({ error: "Draftul nu este disponibil." }, { status: 404, headers: privateHeaders });
     return NextResponse.json({ draft }, { headers: privateHeaders });
   } catch (error) {
@@ -34,9 +35,10 @@ export async function GET(_: Request, context: { params: { draftId: string } }) 
   }
 }
 
-export async function POST(request: Request, context: { params: { draftId: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ draftId: string }> }) {
   try {
     const actor = await requireGoogleConnectorActor();
+    const { draftId } = await context.params;
     const body = await request.json() as {
       action?: "save" | "ready" | "send" | "refine" | "discard";
       mode?: "rewrite" | "shorten" | "formal" | "concise";
@@ -47,24 +49,24 @@ export async function POST(request: Request, context: { params: { draftId: strin
       finalConfirmation?: boolean;
     };
     if (body.action === "save") {
-      const draft = await updateCommunicationDraft(actor, context.params.draftId, body);
+      const draft = await updateCommunicationDraft(actor, draftId, body);
       return NextResponse.json({ draft }, { headers: privateHeaders });
     }
     if (body.action === "ready") {
-      const draft = await markCommunicationDraftReady(actor, context.params.draftId);
+      const draft = await markCommunicationDraftReady(actor, draftId);
       return NextResponse.json({ draft }, { headers: privateHeaders });
     }
     if (body.action === "refine") {
       if (!body.mode || !["rewrite", "shorten", "formal", "concise"].includes(body.mode)) return NextResponse.json({ error: "Mod de rescriere invalid." }, { status: 400, headers: privateHeaders });
-      const result = await refineCommunicationDraft(actor, context.params.draftId, body.mode);
+      const result = await refineCommunicationDraft(actor, draftId, body.mode);
       return NextResponse.json(result, { headers: privateHeaders });
     }
     if (body.action === "discard") {
-      const draft = await discardCommunicationDraft(actor, context.params.draftId);
+      const draft = await discardCommunicationDraft(actor, draftId);
       return NextResponse.json({ draft }, { headers: privateHeaders });
     }
     if (body.action === "send") {
-      const result = await sendApprovedGmailDraft(actor, context.params.draftId, body.finalConfirmation === true);
+      const result = await sendApprovedGmailDraft(actor, draftId, body.finalConfirmation === true);
       return NextResponse.json(result, { headers: privateHeaders });
     }
     return NextResponse.json({ error: "Acțiune invalidă." }, { status: 400, headers: privateHeaders });

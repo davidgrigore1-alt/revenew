@@ -28,7 +28,10 @@ function companyName(opportunity: Opportunity) {
     ?? "Companie neasociată";
 }
 
-export default async function RecoverablePage({searchParams={}}:{searchParams?:{range?:string;from?:string;to?:string;case?:string;proof?:string;opportunity?:string}}) {
+export default async function RecoverablePage(
+  props:{searchParams?: Promise<{range?:string;from?:string;to?:string;case?:string;proof?:string;opportunity?:string}>}
+) {
+  const searchParams = (await props.searchParams) ?? {};
   const impact=await getRevenueImpact({...searchParams,opportunityId:searchParams.opportunity});
   const selected=searchParams.case?impact.proofs.find(p=>p.id===searchParams.case):impact.proofs[0];
   const references=selected?await getImpactReferences(selected.opportunity_id):undefined;
@@ -44,7 +47,8 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
       .filter((signal) => approvalStateForSignal(signal) === "pending" && signal.detectedFromOpportunityId)
       .map((signal) => [signal.detectedFromOpportunityId as string, signal])
   );
-  const first = queue[0] ?? null;
+  const focusedOpportunityId = selected?.opportunity_id ?? searchParams.opportunity;
+  const first = queue.find((item) => item.opportunity.id === focusedOpportunityId) ?? queue[0] ?? null;
   const recommendation = first ? {action:first.state.recommendedSafeIntervention.label,reason:first.primaryReason.explanation,missingInformation:first.state.missingInformation} : null;
   const firstPendingApproval = first?.state.approval.signalId
     ? pendingApprovalByOpportunity.get(first.opportunity.id)
@@ -52,6 +56,7 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
 
   return (
     <PageShell
+      wide
       eyebrow="Execuție comercială"
       title="Impact comercial"
       description="Valoarea comercială detectată, intervențiile confirmate și rezultatele verificabile"
@@ -66,7 +71,6 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
         <button className={toolbarActionClass} type="submit">Aplică</button>
       </form>
       {searchParams.range==="custom"&&impact.period.label==="30 zile"?<p role="status" className="mb-3 text-xs">Intervalul personalizat nu este valid. Sunt afișate ultimele 30 de zile; alege date valide, maximum 366 de zile, până astăzi.</p>:null}
-      <ImpactSurface model={impact} selectedId={searchParams.case} baseQuery={baseQuery} print={searchParams.proof==="1"} references={references} currentDetected={sumImpactMoney(queue.filter(item=>!searchParams.opportunity||item.opportunity.id===searchParams.opportunity).map(item=>({amount:item.opportunity.estimatedValueHigh,currency:item.opportunity.currency??null})))}/>
       <div className={"mt-6 grid gap-6 print:hidden "+(searchParams.proof==="1"?"hidden":"")}>
         <section aria-labelledby="recovery-queue-heading" className="overflow-hidden border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]">
           <div className="flex flex-col gap-3 border-b border-[rgb(var(--border))] p-4 sm:flex-row sm:items-start sm:justify-between">
@@ -86,18 +90,30 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
                 actions={<><Button href="/inbox?create=1">Adaugă primul semnal</Button><Button href="/inbox/import" variant="secondary">Importă semnale comerciale</Button></>}
               />
             </div>
-          ) : (
-              <div className="app-scrollbar max-w-full overflow-x-auto">
+          ) : (<>
+              <ul className="divide-y divide-[rgb(var(--border))] lg:hidden" aria-label="Cazuri de recuperare">
+                {queue.map(({ opportunity, state, primaryReason }) => {
+                  const pendingApproval = pendingApprovalByOpportunity.get(opportunity.id);
+                  return <li key={opportunity.id} className="grid gap-3 px-4 py-4">
+                    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><Link href={`/opportunities/${opportunity.id}`} className="focus-ring block truncate font-semibold">{opportunity.title}</Link><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{companyName(opportunity)} · {getStatusLabel(opportunity.status)}</p></div><p className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p></div>
+                    <div><p className="text-xs font-semibold text-[rgb(var(--warning-text))]">{primaryReason.label}</p><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{primaryReason.explanation}</p></div>
+                    <dl className="grid grid-cols-2 gap-3 text-xs"><div><dt className="text-[rgb(var(--text-muted))]">Responsabil</dt><dd className="mt-1 font-medium">{state.ownership.ownerName ?? (state.ownership.ownerProfileId ? "Atribuit · nume indisponibil" : "Neatribuit")}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Următoarea acțiune</dt><dd className="mt-1 font-medium">{state.nextAction?.title ?? "Lipsește"}</dd><dd className="mt-1 text-[rgb(var(--text-muted))]">{state.nextAction?.dueAt ? formatDate(state.nextAction.dueAt) : "Fără termen"}</dd></div></dl>
+                    <div>{pendingApproval ? <Button href={`/approvals?signal=${pendingApproval.id}`} variant="secondary" size="small">Revizuiește aprobarea</Button> : <Button href={`/opportunities/${opportunity.id}?tab=workflow#workflow-actions`} variant="secondary" size="small">Continuă intervenția</Button>}</div>
+                  </li>;
+                })}
+              </ul>
+              <div className="app-scrollbar hidden max-w-full overflow-x-auto lg:block">
                 <table className="w-full min-w-[980px] table-fixed border-collapse text-left text-sm">
+                  <caption className="sr-only">Oportunități care necesită intervenție pentru recuperarea valorii comerciale</caption>
                   <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] text-[rgb(var(--text-secondary))]">
-                    <tr className="border-b border-[rgb(var(--border-strong))]"><th className="w-[18%] px-4 py-2.5 font-semibold">Companie / oportunitate</th><th className="w-[11%] px-4 py-2.5 font-semibold">Valoare estimată</th><th className="w-[21%] px-4 py-2.5 font-semibold">Motiv</th><th className="w-[11%] px-4 py-2.5 font-semibold">Responsabil</th><th className="w-[17%] px-4 py-2.5 font-semibold">Următoarea acțiune</th><th className="w-[13%] px-4 py-2.5 font-semibold">Ultima activitate</th><th className="w-[9%] px-4 py-2.5"><span className="sr-only">Acțiune</span></th></tr>
+                    <tr className="border-b border-[rgb(var(--border-strong))]"><th scope="col" className="w-[18%] px-4 py-2.5 font-semibold">Companie / oportunitate</th><th scope="col" className="w-[11%] px-4 py-2.5 text-right font-semibold">Valoare estimată</th><th scope="col" className="w-[21%] px-4 py-2.5 font-semibold">Motiv</th><th scope="col" className="w-[11%] px-4 py-2.5 font-semibold">Responsabil</th><th scope="col" className="w-[17%] px-4 py-2.5 font-semibold">Următoarea acțiune</th><th scope="col" className="w-[13%] px-4 py-2.5 font-semibold">Ultima activitate</th><th scope="col" className="w-[9%] px-4 py-2.5"><span className="sr-only">Acțiune</span></th></tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--border))]">
                     {queue.map(({ opportunity, state, primaryReason }) => {
                       const pendingApproval = pendingApprovalByOpportunity.get(opportunity.id);
                       return <tr key={opportunity.id} className="bg-[rgb(var(--surface))] transition-colors duration-fast hover:bg-[rgb(var(--surface-elevated))]">
                         <td className="px-4 py-3"><Link href={`/opportunities/${opportunity.id}`} className="focus-ring font-semibold hover:text-[rgb(var(--primary))]">{opportunity.title}</Link><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{companyName(opportunity)} · {getStatusLabel(opportunity.status)}</p></td>
-                        <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</td>
                         <td className="px-4 py-3"><StatusPill tone={primaryReason.severity === "critical" ? "danger" : "warning"}>{primaryReason.label}</StatusPill><p className="mt-1.5 max-w-xs text-xs leading-5 text-[rgb(var(--text-muted))]">{primaryReason.explanation}</p></td>
                         <td className="px-4 py-3">{state.ownership.ownerName ?? (state.ownership.ownerProfileId ? "Atribuit · nume indisponibil" : "Neatribuit")}</td>
                         <td className="px-4 py-3"><p className="font-medium">{state.nextAction?.title ?? "Lipsește"}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{state.nextAction?.dueAt ? formatDate(state.nextAction.dueAt) : "Fără termen"}</p></td>
@@ -111,7 +127,7 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
                   </tbody>
                 </table>
               </div>
-          )}
+          </>)}
         </section>
 
         {first && recommendation ? (
@@ -132,8 +148,14 @@ export default async function RecoverablePage({searchParams={}}:{searchParams?:{
           </section>
         ) : null}
 
+        <section aria-labelledby="recovery-proof-heading" className="grid gap-3">
+          <div><p className="text-micro font-semibold text-[rgb(var(--text-muted))]">DOVADĂ ȘI REZULTAT</p><h2 id="recovery-proof-heading" className="mt-1 text-section-title font-semibold">Ce s-a observat și ce a fost confirmat</h2><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Potențialul, intervenția și venitul recuperat rămân categorii separate și auditabile.</p></div>
+          <ImpactSurface model={impact} selectedId={searchParams.case} baseQuery={baseQuery} print={false} references={references} currentDetected={sumImpactMoney(queue.filter(item=>!searchParams.opportunity||item.opportunity.id===searchParams.opportunity).map(item=>({amount:item.opportunity.estimatedValueHigh,currency:item.opportunity.currency??null})))}/>
+        </section>
+
         <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Coada include numai oportunitățile accesibile în spațiul de lucru curent. Estimările rămân separate de venitul confirmat și nu există acțiuni externe automate.</p>
       </div>
+      {searchParams.proof === "1" ? <ImpactSurface model={impact} selectedId={searchParams.case} baseQuery={baseQuery} print references={references} currentDetected={sumImpactMoney(queue.filter(item=>!searchParams.opportunity||item.opportunity.id===searchParams.opportunity).map(item=>({amount:item.opportunity.estimatedValueHigh,currency:item.opportunity.currency??null})))}/> : null}
     </PageShell>
   );
 }

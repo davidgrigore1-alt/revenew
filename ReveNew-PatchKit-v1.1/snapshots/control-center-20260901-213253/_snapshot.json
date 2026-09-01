@@ -1,0 +1,24 @@
+﻿{
+    "generated_at":  "2026-09-01T21:32:54.1403909+03:00",
+    "repo":  "C:\\Projects\\ReveNew",
+    "purpose":  "ReveNew Control Center exact-source snapshot for safe UI patching",
+    "excludes_secrets":  true,
+    "no_env_files":  true,
+    "targets":  [
+                    "src\\app\\(protected)\\dashboard\\page.tsx",
+                    "src\\app\\globals.css",
+                    "src\\components\\dashboard\\ExecutionControlCenter.tsx",
+                    "src\\components\\dashboard\\ControlCenterVisuals.tsx",
+                    "src\\components\\dashboard\\HomeAskSurface.tsx",
+                    "src\\components\\dashboard\\Sidebar.tsx",
+                    "src\\components\\dashboard\\ShellNavigation.tsx",
+                    "src\\components\\dashboard\\ControlCenterViews.tsx",
+                    "src\\components\\ui\\SegmentedFilter.tsx",
+                    "tests\\execution-control-center.test.mjs",
+                    "tests\\visual-excellence.test.mjs",
+                    "package.json",
+                    "package-lock.json",
+                    "docs\\a4-design-system.md",
+                    "docs\\a4-reference-library.md"
+                ]
+}

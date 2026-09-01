@@ -184,18 +184,28 @@ async function verifySourceIntakeAuthorization(admin, local) {
 async function verifySignalConversionAuthorization(admin, local) {
   const suffix = randomBytes(8).toString("hex");
   const email = `conversion-${suffix}@revenew-demo.test`;
+  const memberEmail = `conversion-member-${suffix}@revenew-demo.test`;
+  const viewerEmail = `conversion-viewer-${suffix}@revenew-demo.test`;
   const password = randomBytes(24).toString("base64url");
   const profileId = randomUUID();
+  const memberProfileId = randomUUID();
+  const viewerProfileId = randomUUID();
   const businessId = randomUUID();
   const newSignalId = randomUUID();
   const detectedSignalId = randomUUID();
+  const rejectedSignalId = randomUUID();
+  const staleApproveSignalId = randomUUID();
+  const staleRejectSignalId = randomUUID();
   const foreignOrganizationSignalId = randomUUID();
   const foreignContactSignalId = randomUUID();
   const foreignOpportunitySignalId = randomUUID();
   let userId;
+  let memberUserId;
+  let viewerUserId;
 
   const foreign = runLocalSql(`select json_build_object(
     'signal_id', (select id from public.commercial_signals where business_id='${DEMO.businessId}' and analysis_status='completed' and review_status='ready_for_review' limit 1),
+    'signal_updated_at', (select updated_at from public.commercial_signals where business_id='${DEMO.businessId}' and analysis_status='completed' and review_status='ready_for_review' limit 1),
     'organization_id', (select id from public.crm_organizations where business_id='${DEMO.businessId}' limit 1),
     'contact_id', (select id from public.crm_contacts where business_id='${DEMO.businessId}' limit 1),
     'opportunity_id', (select id from public.opportunities where business_id='${DEMO.businessId}' and lifecycle_status='open' limit 1)
@@ -206,14 +216,26 @@ async function verifySignalConversionAuthorization(admin, local) {
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
     if (created.error || !created.data.user) throw new Error(created.error?.message ?? "utilizator temporar invalid");
     userId = created.data.user.id;
+    const memberCreated = await admin.auth.admin.createUser({ email: memberEmail, password, email_confirm: true });
+    if (memberCreated.error || !memberCreated.data.user) throw new Error(memberCreated.error?.message ?? "membru temporar invalid");
+    memberUserId = memberCreated.data.user.id;
+    const viewerCreated = await admin.auth.admin.createUser({ email: viewerEmail, password, email_confirm: true });
+    if (viewerCreated.error || !viewerCreated.data.user) throw new Error(viewerCreated.error?.message ?? "viewer temporar invalid");
+    viewerUserId = viewerCreated.data.user.id;
 
     runLocalSql(`begin;
       insert into public.profiles(id,user_id,full_name,email,role)
       values ('${profileId}','${userId}','Signal Conversion Test','${email}',null);
+      insert into public.profiles(id,user_id,full_name,email,role) values
+        ('${memberProfileId}','${memberUserId}','Signal Decision Member','${memberEmail}',null),
+        ('${viewerProfileId}','${viewerUserId}','Signal Decision Viewer','${viewerEmail}',null);
       insert into public.businesses(id,owner_profile_id,name)
       values ('${businessId}','${profileId}','[TEST] Signal Conversion');
       insert into public.business_members(business_id,profile_id,role,status)
-      values ('${businessId}','${profileId}','owner','active');
+      values
+        ('${businessId}','${profileId}','owner','active'),
+        ('${businessId}','${memberProfileId}','member','active'),
+        ('${businessId}','${viewerProfileId}','viewer','active');
       insert into public.commercial_signals(
         id,business_id,title,source,status,review_status,analysis_status,analysis_mode,
         raw_message,recommended_action,currency,recoverability_score,urgency_level,
@@ -222,7 +244,10 @@ async function verifySignalConversionAuthorization(admin, local) {
         ('${newSignalId}','${businessId}','Semnal pentru oportunitate nouă','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Context verificabil pentru conversie.','Confirmă următorul pas.','RON',72,'medium','${profileId}','${profileId}'),
         ('${foreignOrganizationSignalId}','${businessId}','Companie din alt workspace','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test izolare companie.','Verifică asocierea.','RON',60,'low','${profileId}','${profileId}'),
         ('${foreignContactSignalId}','${businessId}','Contact din alt workspace','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test izolare contact.','Verifică asocierea.','RON',60,'low','${profileId}','${profileId}'),
-        ('${foreignOpportunitySignalId}','${businessId}','Oportunitate din alt workspace','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test izolare oportunitate.','Verifică asocierea.','RON',60,'low','${profileId}','${profileId}');
+        ('${foreignOpportunitySignalId}','${businessId}','Oportunitate din alt workspace','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test izolare oportunitate.','Verifică asocierea.','RON',60,'low','${profileId}','${profileId}'),
+        ('${rejectedSignalId}','${businessId}','Semnal pentru respingere','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test respingere atomică.','Verifică respingerea.','RON',60,'low','${profileId}','${profileId}'),
+        ('${staleApproveSignalId}','${businessId}','Semnal stale approval','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test versiune stale.','Versiune inițială.','RON',60,'low','${profileId}','${profileId}'),
+        ('${staleRejectSignalId}','${businessId}','Semnal stale rejection','manual','ready_for_review','ready_for_review','completed','deterministic_fallback','Test respingere stale.','Versiune inițială.','RON',60,'low','${profileId}','${profileId}');
       update public.commercial_signals
       set detected_from_opportunity_id='${foreign.opportunity_id}'
       where id='${foreignOpportunitySignalId}';
@@ -231,9 +256,44 @@ async function verifySignalConversionAuthorization(admin, local) {
     const userClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const login = await userClient.auth.signInWithPassword({ email, password });
     if (login.error) throw new Error(`Autentificarea verificării de conversie a eșuat: ${login.error.message}`);
+    const memberClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+    const memberLogin = await memberClient.auth.signInWithPassword({ email: memberEmail, password });
+    if (memberLogin.error) throw new Error(`Autentificarea membrului de verificare a eșuat: ${memberLogin.error.message}`);
+    const viewerClient = createClient(local.apiUrl, local.anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
+    const viewerLogin = await viewerClient.auth.signInWithPassword({ email: viewerEmail, password });
+    if (viewerLogin.error) throw new Error(`Autentificarea viewer-ului de verificare a eșuat: ${viewerLogin.error.message}`);
 
-    const approveNew = await userClient.rpc("approve_recoverable_signal", {
+    const versions = runLocalSql(`select json_build_object(
+      'new_signal', (select updated_at from public.commercial_signals where id='${newSignalId}'),
+      'foreign_organization', (select updated_at from public.commercial_signals where id='${foreignOrganizationSignalId}'),
+      'foreign_contact', (select updated_at from public.commercial_signals where id='${foreignContactSignalId}'),
+      'foreign_opportunity', (select updated_at from public.commercial_signals where id='${foreignOpportunitySignalId}'),
+      'rejected', (select updated_at from public.commercial_signals where id='${rejectedSignalId}'),
+      'stale_approve', (select updated_at from public.commercial_signals where id='${staleApproveSignalId}'),
+      'stale_reject', (select updated_at from public.commercial_signals where id='${staleRejectSignalId}')
+    );`, { json: true });
+
+    const viewerApprove = await viewerClient.rpc("approve_recoverable_signal_v2", {
+      target_signal_id: staleApproveSignalId,
+      expected_updated_at: versions.stale_approve
+    });
+    const viewerReject = await viewerClient.rpc("reject_commercial_signal", {
+      target_signal_id: rejectedSignalId,
+      expected_updated_at: versions.rejected,
+      rejection_reason: "Viewer-ul nu poate decide."
+    });
+    const viewerDirectUpdate = await viewerClient.from("commercial_signals")
+      .update({ recommended_action: "viewer write" })
+      .eq("id", staleApproveSignalId)
+      .select("id")
+      .single();
+    assert(Boolean(viewerApprove.error), "Un same-tenant viewer a putut aproba un semnal.");
+    assert(Boolean(viewerReject.error), "Un same-tenant viewer a putut respinge un semnal.");
+    assert(Boolean(viewerDirectUpdate.error), "Politica UPDATE a permis unui same-tenant viewer să modifice semnalul.");
+
+    const approveNew = await userClient.rpc("approve_recoverable_signal_v2", {
       target_signal_id: newSignalId,
+      expected_updated_at: versions.new_signal,
       selected_organization_id: null,
       selected_contact_id: null,
       new_organization_name: "[TEST] Companie conversie",
@@ -245,7 +305,7 @@ async function verifySignalConversionAuthorization(admin, local) {
       reviewed_action: "Confirmă următorul pas comercial.",
       reviewed_draft: null
     });
-    assert(!approveNew.error && approveNew.data?.opportunity_id, `Membrul autorizat nu a putut crea oportunitatea: ${approveNew.error?.message ?? "răspuns invalid"}`);
+    assert(!approveNew.error && approveNew.data?.outcome === "applied" && approveNew.data?.opportunity_id, `Membrul autorizat nu a putut crea oportunitatea: ${approveNew.error?.message ?? "răspuns invalid"}`);
     const opportunityId = approveNew.data.opportunity_id;
     const successfulNew = runLocalSql(`select json_build_object(
       'opportunity_count', (select count(*) from public.opportunities where id='${opportunityId}' and business_id='${businessId}'),
@@ -256,6 +316,31 @@ async function verifySignalConversionAuthorization(admin, local) {
     assert(Number(successfulNew.opportunity_count) === 1 && Number(successfulNew.action_count) === 1, "Conversia autorizată nu a creat oportunitatea și acțiunea în același workspace.");
     assert(Number(successfulNew.signal_converted) === 1 && Number(successfulNew.audit_count) === 2, "Starea și auditul conversiei autorizate sunt incomplete.");
 
+    const replayBefore = runLocalSql(`select json_build_object(
+      'opportunity_count', (select count(*) from public.opportunities where business_id='${businessId}'),
+      'action_count', (select count(*) from public.opportunity_actions where business_id='${businessId}'),
+      'audit_count', (select count(*) from public.commercial_signal_events where signal_id='${newSignalId}')
+    );`, { json: true });
+    const replay = await memberClient.rpc("approve_recoverable_signal_v2", {
+      target_signal_id: newSignalId,
+      expected_updated_at: versions.new_signal
+    });
+    const replayAfter = runLocalSql(`select json_build_object(
+      'opportunity_count', (select count(*) from public.opportunities where business_id='${businessId}'),
+      'action_count', (select count(*) from public.opportunity_actions where business_id='${businessId}'),
+      'audit_count', (select count(*) from public.commercial_signal_events where signal_id='${newSignalId}')
+    );`, { json: true });
+    assert(!replay.error && replay.data?.outcome === "already_applied", "Replay-ul aprobării nu a raportat truthful already_applied.");
+    assert(JSON.stringify(replayBefore) === JSON.stringify(replayAfter), "Replay-ul aprobării a duplicat efecte sau audit.");
+
+    const convertedVersion = runLocalSql(`select updated_at from public.commercial_signals where id='${newSignalId}';`);
+    const rejectConverted = await memberClient.rpc("reject_commercial_signal", {
+      target_signal_id: newSignalId,
+      expected_updated_at: convertedVersion,
+      rejection_reason: "Nu poate suprascrie conversia."
+    });
+    assert(!rejectConverted.error && rejectConverted.data?.outcome === "conflict" && rejectConverted.data?.reason === "already_applied", "Un semnal convertit a putut fi respins ulterior.");
+
     runLocalSql(`insert into public.commercial_signals(
       id,business_id,title,source,status,review_status,analysis_status,analysis_mode,
       raw_message,recommended_action,currency,recoverability_score,urgency_level,
@@ -264,8 +349,10 @@ async function verifySignalConversionAuthorization(admin, local) {
       '${detectedSignalId}','${businessId}','Semnal pentru acțiune nouă','manual','ready_for_review','ready_for_review','completed','deterministic_fallback',
       'Context pentru oportunitatea existentă.','Continuă follow-up-ul.','RON',68,'medium','${profileId}','${profileId}','${opportunityId}'
     );`);
-    const approveDetected = await userClient.rpc("approve_detected_recoverable_signal", {
+    const detectedVersion = runLocalSql(`select updated_at from public.commercial_signals where id='${detectedSignalId}';`);
+    const approveDetected = await userClient.rpc("approve_detected_recoverable_signal_v2", {
       target_signal_id: detectedSignalId,
+      expected_updated_at: detectedVersion,
       selected_owner_profile_id: profileId,
       selected_due_at: new Date(Date.now() + 172_800_000).toISOString(),
       reviewed_action: "Continuă follow-up-ul verificat.",
@@ -284,40 +371,82 @@ async function verifySignalConversionAuthorization(admin, local) {
       'status', (select status from public.commercial_signals where id='${foreign.signal_id}'),
       'event_count', (select count(*) from public.commercial_signal_events where signal_id='${foreign.signal_id}')
     );`, { json: true });
-    const crossTenantSignal = await userClient.rpc("approve_recoverable_signal", { target_signal_id: foreign.signal_id });
+    const crossTenantSignal = await userClient.rpc("approve_recoverable_signal_v2", { target_signal_id: foreign.signal_id, expected_updated_at: foreign.signal_updated_at });
+    const crossTenantReject = await userClient.rpc("reject_commercial_signal", { target_signal_id: foreign.signal_id, expected_updated_at: foreign.signal_updated_at, rejection_reason: "Cross tenant" });
     assert(Boolean(crossTenantSignal.error), "Un utilizator neautorizat a convertit semnalul altui tenant.");
+    assert(Boolean(crossTenantReject.error), "Un utilizator neautorizat a respins semnalul altui tenant.");
 
-    const crossOrganization = await userClient.rpc("approve_recoverable_signal", {
+    const crossOrganization = await userClient.rpc("approve_recoverable_signal_v2", {
       target_signal_id: foreignOrganizationSignalId,
+      expected_updated_at: versions.foreign_organization,
       selected_organization_id: foreign.organization_id
     });
-    const crossContact = await userClient.rpc("approve_recoverable_signal", {
+    const crossContact = await userClient.rpc("approve_recoverable_signal_v2", {
       target_signal_id: foreignContactSignalId,
+      expected_updated_at: versions.foreign_contact,
       selected_contact_id: foreign.contact_id
     });
-    const crossOpportunity = await userClient.rpc("approve_detected_recoverable_signal", {
-      target_signal_id: foreignOpportunitySignalId
+    const crossOpportunity = await userClient.rpc("approve_detected_recoverable_signal_v2", {
+      target_signal_id: foreignOpportunitySignalId,
+      expected_updated_at: versions.foreign_opportunity
     });
     assert(Boolean(crossOrganization.error), "RPC-ul a acceptat o companie din alt workspace.");
     assert(Boolean(crossContact.error), "RPC-ul a acceptat un contact din alt workspace.");
-    assert(Boolean(crossOpportunity.error), "RPC-ul a acceptat o oportunitate din alt workspace.");
+    assert(Boolean(crossOpportunity.error) || crossOpportunity.data?.outcome === "conflict", "RPC-ul a acceptat o oportunitate din alt workspace.");
+
+    const rejected = await userClient.rpc("reject_commercial_signal", {
+      target_signal_id: rejectedSignalId,
+      expected_updated_at: versions.rejected,
+      rejection_reason: "Motiv verificat pentru respingere."
+    });
+    assert(!rejected.error && rejected.data?.outcome === "applied", "Respingerea atomică autorizată a eșuat.");
+    const rejectedAgain = await memberClient.rpc("reject_commercial_signal", {
+      target_signal_id: rejectedSignalId,
+      expected_updated_at: versions.rejected,
+      rejection_reason: "Al doilea actor nu poate repeta decizia."
+    });
+    assert(!rejectedAgain.error && rejectedAgain.data?.outcome === "conflict", "Un al doilea actor a putut repeta respingerea.");
+
+    await userClient.from("commercial_signals").update({ recommended_action: "Versiune modificată înainte de decizie." }).eq("id", staleApproveSignalId);
+    const staleApproval = await userClient.rpc("approve_recoverable_signal_v2", {
+      target_signal_id: staleApproveSignalId,
+      expected_updated_at: versions.stale_approve
+    });
+    await userClient.from("commercial_signals").update({ recommended_action: "Versiune modificată înainte de respingere." }).eq("id", staleRejectSignalId);
+    const staleRejection = await userClient.rpc("reject_commercial_signal", {
+      target_signal_id: staleRejectSignalId,
+      expected_updated_at: versions.stale_reject,
+      rejection_reason: "Versiune veche"
+    });
+    assert(!staleApproval.error && staleApproval.data?.outcome === "conflict" && staleApproval.data?.reason === "stale_version", "Un reviewer stale a aprobat o recomandare modificată.");
+    assert(!staleRejection.error && staleRejection.data?.outcome === "conflict" && staleRejection.data?.reason === "stale_version", "Un reviewer stale a respins o recomandare modificată.");
 
     const failedState = runLocalSql(`select json_build_object(
-      'unchanged_signals', (select count(*) from public.commercial_signals where id in ('${foreignOrganizationSignalId}','${foreignContactSignalId}','${foreignOpportunitySignalId}') and business_id='${businessId}' and status='ready_for_review' and review_status='ready_for_review' and converted_opportunity_id is null),
-      'failed_event_count', (select count(*) from public.commercial_signal_events where signal_id in ('${foreignOrganizationSignalId}','${foreignContactSignalId}','${foreignOpportunitySignalId}')),
+      'unchanged_signals', (select count(*) from public.commercial_signals where id in ('${foreignOrganizationSignalId}','${foreignContactSignalId}','${foreignOpportunitySignalId}','${staleApproveSignalId}','${staleRejectSignalId}') and business_id='${businessId}' and status='ready_for_review' and review_status='ready_for_review' and converted_opportunity_id is null),
+      'failed_event_count', (select count(*) from public.commercial_signal_events where signal_id in ('${foreignOrganizationSignalId}','${foreignContactSignalId}','${foreignOpportunitySignalId}','${staleApproveSignalId}','${staleRejectSignalId}')),
+      'rejection_event_count', (select count(*) from public.commercial_signal_events where signal_id='${rejectedSignalId}' and event_type='signal_dismissed'),
+      'rejected_state_count', (select count(*) from public.commercial_signals where id='${rejectedSignalId}' and status='dismissed' and review_status='dismissed'),
       'demo_status', (select status from public.commercial_signals where id='${foreign.signal_id}'),
       'demo_event_count', (select count(*) from public.commercial_signal_events where signal_id='${foreign.signal_id}')
     );`, { json: true });
-    assert(Number(failedState.unchanged_signals) === 3 && Number(failedState.failed_event_count) === 0, "O conversie eșuată a modificat starea sau auditul semnalului.");
+    assert(Number(failedState.unchanged_signals) === 5 && Number(failedState.failed_event_count) === 0, "O conversie eșuată a modificat starea sau auditul semnalului.");
+    assert(Number(failedState.rejection_event_count) === 1 && Number(failedState.rejected_state_count) === 1, "Respingerea nu a păstrat exact o tranziție și un eveniment de audit.");
     assert(failedState.demo_status === demoBefore.status && Number(failedState.demo_event_count) === Number(demoBefore.event_count), "Încercarea cross-tenant a modificat semnalul sau auditul workspace-ului demo.");
   } finally {
-    runLocalSql(`delete from public.businesses where id='${businessId}'; delete from public.profiles where id='${profileId}';`);
+    runLocalSql(`delete from public.businesses where id='${businessId}'; delete from public.profiles where id in ('${profileId}','${memberProfileId}','${viewerProfileId}');`);
     if (userId) await admin.auth.admin.deleteUser(userId);
+    if (memberUserId) await admin.auth.admin.deleteUser(memberUserId);
+    if (viewerUserId) await admin.auth.admin.deleteUser(viewerUserId);
   }
 }
 
 async function main() {
   const { client: admin, local } = createLocalAdminClient();
+  if (process.argv.includes("--signal-decisions-only")) {
+    await verifySignalConversionAuthorization(admin, local);
+    console.log("Verificare locală reușită: autoritatea, CAS, respingerea atomică și replay-ul deciziilor sunt coerente.");
+    return;
+  }
   const verificationNow = new Date();
   assertDemoStoryInvariants(buildFixtures("de900000-0000-4000-8000-000000000001", verificationNow), verificationNow);
   const baseStats = runLocalSql(`

@@ -82,6 +82,7 @@ export default async function WorkflowEditorPage({ params, searchParams }: {
   const baseHref = "/workflows/" + workflow.id;
 
   return <PageShell
+    wide
     eyebrow="Workflow Studio"
     title={workflow.name}
     description="Definește, testează și urmărește o automatizare comercială controlată."
@@ -100,7 +101,7 @@ export default async function WorkflowEditorPage({ params, searchParams }: {
 
     {query?.created === "playbook" ? <p role="status" className="mt-3 text-sm text-[rgb(var(--text-secondary))]">Draft creat din playbook. Revizuiește, testează și activează separat.</p> : null}
     {query?.activation === "blocked" ? <p role="alert" className="mt-3 text-sm text-[rgb(var(--danger-text))]">Activarea nu a fost efectuată. Verifică preflight-ul, permisiunile și eventualele modificări concurente.</p> : null}
-    {view === "editor" ? <div className="mt-4 overflow-hidden rounded-[12px] border border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
+    {view === "editor" ? <div className="mt-4 overflow-hidden border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]">
       <WorkflowBuilder workflow={workflow} opportunities={opportunities} preflight={preflight} />
     </div> : null}
 
@@ -109,7 +110,7 @@ export default async function WorkflowEditorPage({ params, searchParams }: {
         <div><p className="micro-label">Trasabilitate</p><h2 id="workflow-runs-title" className="mt-1 text-base font-semibold">Istoric de rulare</h2><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Evaluări reale și teste înregistrate, fără payload-uri tehnice în interfață.</p></div>
         <span className="text-xs tabular-nums text-[rgb(var(--text-muted))]">{runs.length}</span>
       </div>
-      <div className={selectedRun ? "grid min-h-[600px] xl:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)]" : "min-h-[420px]"}>
+      <div className={selectedRun ? "grid xl:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)]" : ""}>
         {runs.length ? <div className="divide-y divide-[rgb(var(--border))] xl:border-r xl:border-[rgb(var(--border))]">{runs.map((run) => {
           const runState = presentWorkflowRunState(run.status);
           const guard = presentGuardDecision(run.guard_decision);
@@ -119,9 +120,9 @@ export default async function WorkflowEditorPage({ params, searchParams }: {
             <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className={statusClass(runState.tone)}>{run.is_test_run ? "Test · " : ""}{runState.label}</span><span className="truncate text-xs font-semibold">{target?.title || "Oportunitate indisponibilă"}</span></div><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{guard.label} · {formatUserFacingText(String(run.guard_reason || "Evaluare înregistrată.").replace("TEST RUN · ", ""))}</p></div>
             <time dateTime={run.created_at} className="text-xs tabular-nums text-[rgb(var(--text-muted))]">{formatProductDateTime(run.created_at)}</time>
           </a>;
-        })}</div> : <div className="grid min-h-[420px] place-items-center text-center"><div><p className="text-sm font-semibold">Nicio rulare încă</p><p className="mt-2 max-w-sm text-xs leading-5 text-[rgb(var(--text-muted))]">Rulează un test din Editor pentru a verifica logica fără mutații. Rulările automate vor apărea numai pentru trigger-ele conectate real.</p><a href={baseHref} className="focus-ring mt-4 inline-flex h-9 items-center rounded-[8px] border border-[rgb(var(--border))] px-3 text-xs font-semibold hover:bg-[rgb(var(--surface-elevated))]">Deschide Editor</a></div></div>}
+        })}</div> : <div className="grid place-items-center px-5 py-12 text-center"><div><p className="text-sm font-semibold">Nicio rulare încă</p><p className="mt-2 max-w-sm text-xs leading-5 text-[rgb(var(--text-muted))]">Rulează un test din Editor pentru a verifica logica fără mutații. Rulările automate vor apărea numai pentru trigger-ele conectate real.</p><a href={baseHref} className="focus-ring mt-4 inline-flex h-9 items-center rounded-[8px] border border-[rgb(var(--border))] px-3 text-xs font-semibold hover:bg-[rgb(var(--surface-elevated))]">Deschide Editor</a></div></div>}
 
-        {selectedRun && trace ? <aside aria-labelledby="run-detail-title" className="bg-[rgb(var(--surface-subtle))] px-5 py-5">
+        {selectedRun && trace ? <aside aria-labelledby="run-detail-title" className="bg-[rgb(var(--surface-subtle))] px-5 py-5 xl:max-h-[min(46rem,calc(100dvh-13rem))] xl:overflow-y-auto">
           <div className="flex items-start justify-between gap-3 border-b border-[rgb(var(--border))] pb-4"><div><p className="micro-label">{selectedRun.is_test_run ? "Test fără mutații" : "Rulare workflow"}</p><h3 id="run-detail-title" className="mt-1 text-base font-semibold">Detaliul deciziei</h3></div><a href={baseHref + "?view=runs"} aria-label="Închide detaliul rulării" className="focus-ring text-xs font-semibold text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]">Închide</a></div>
           <ol className="mt-1 divide-y divide-[rgb(var(--border))]">
             <li className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-4 py-4"><span className="micro-label">01 · Trigger</span><div><p className="text-sm font-semibold">{presentWorkflowTrigger(selectedRun.trigger_type as WorkflowTrigger)}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{opportunities.find((item) => item.id === selectedRun.target_id)?.title || "Țintă indisponibilă"}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{trace.origin}</p>{trace.source ? <><p className="mt-1 text-xs">{formatProductDateTime(trace.source.occurredAt)}</p><p className="mt-1 break-all font-mono text-xs text-[rgb(var(--text-muted))]">Eveniment {trace.source.id}</p>{trace.source.previousStage ? <p className="mt-1 text-xs">{workflowStageLabels[trace.source.previousStage]} → {workflowStageLabels[trace.source.nextStage ?? ""]}</p> : null}</> : <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Sursa istorică nu a fost înregistrată.</p>}</div></li>

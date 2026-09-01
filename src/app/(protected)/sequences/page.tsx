@@ -1,5 +1,6 @@
 import { Select } from "@/components/ui/Select";
 import { PageShell } from "@/components/dashboard/PageShell";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import {
   formatProductDateTime,
   presentSequenceState,
@@ -44,10 +45,10 @@ type SequenceStep = {
 };
 
 const regionClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
+  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
 
 const innerSurfaceClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
+  "border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
 
 function sequenceLabel(value: string) {
   return sequenceStates.has(
@@ -94,6 +95,7 @@ export default async function SequencesPage() {
 
   return (
     <PageShell
+      wide
       eyebrow="Comunicare controlată"
       title="Secvențe și mesaje"
       description="Pregătește comunicarea repetabilă, păstrează controlul uman și oprește secvența când contextul comercial se schimbă"
@@ -104,50 +106,18 @@ export default async function SequencesPage() {
       }
     >
       <div className="grid gap-6">
-        {/* Summary */}
-        <section
-          aria-label="Rezumat secvențe"
-          className={`${regionClass} grid overflow-hidden sm:grid-cols-3`}
-        >
-          <div className="px-4 py-3.5 sm:border-r sm:border-[rgb(var(--border))]">
-            <p className="micro-label">Active</p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {activeSequences}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Pregătesc pașii, fără trimitere autonomă
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-r sm:border-t-0">
-            <p className="micro-label">Draft / pauză</p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {draftSequences}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Inactive până la activare explicită
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-t-0">
-            <p className="micro-label">Înrolări curente</p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {activeEnrollments}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Pot fi oprite manual în orice moment
-            </p>
-          </div>
-        </section>
+        <RecordSummaryBar
+          label="Rezumat secvențe"
+          items={[
+            { label: "Active", value: activeSequences, detail: "Pregătire controlată" },
+            { label: "Draft / pauză", value: draftSequences, detail: "Nu pregătesc pași" },
+            { label: "Înrolări curente", value: activeEnrollments, detail: "Oprire manuală disponibilă" },
+            { label: "Expeditor", value: workspace.senderEmail || "De confirmat", detail: "Disponibilitate reală" },
+          ]}
+        />
 
         {/* Sequences */}
-        <section className={`${regionClass} p-4 sm:p-5`}>
+        <section className={`${regionClass} px-4 py-4 sm:px-5`}>
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="micro-label">Execuție controlată</p>
@@ -196,18 +166,18 @@ export default async function SequencesPage() {
                         {sequence.description || "Fără descriere."}
                       </p>
 
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[0.6875rem] text-[rgb(var(--text-subtle))]">
+                      <ol aria-label={`Pașii secvenței ${sequence.name}`} className="mt-3 flex flex-wrap items-center gap-2 text-[0.6875rem] text-[rgb(var(--text-subtle))]">
                         {steps.map((step, index) => (
-                          <span key={index}>
-                            {index + 1}.{" "}
-                            {step.label || stepLabels[step.type]}
-                          </span>
+                          <li key={index} className="flex items-center gap-2">
+                            {index ? <span aria-hidden="true">→</span> : null}
+                            <span className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2 py-1">
+                              <span className="font-semibold tabular-nums">{String(index + 1).padStart(2, "0")}</span>{" · "}
+                              {step.label || stepLabels[step.type]}
+                            </span>
+                          </li>
                         ))}
-
-                        <span>
-                          {enrollmentsBySequence.get(sequence.id) ?? 0} înrolări
-                        </span>
-                      </div>
+                        <li className="ml-auto font-medium">{enrollmentsBySequence.get(sequence.id) ?? 0} înrolări</li>
+                      </ol>
 
                       <details className="mt-3">
                         <summary className="focus-ring w-fit cursor-pointer list-none text-xs font-semibold text-[rgb(var(--primary))]">

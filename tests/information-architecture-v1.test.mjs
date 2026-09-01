@@ -37,6 +37,27 @@ test("shared page hierarchy is compact and contextual guidance uses progressive 
   assert.doesNotMatch(guide, /<details[^>]*\sopen(?:=|\s|>)/);
 });
 
+test("A4 foundation keeps one interaction language and a durable reference register", () => {
+  const system = read("docs/a4-design-system.md");
+  const references = read("docs/a4-reference-library.md");
+  const css = read("src/app/globals.css");
+  const navigation = read("src/components/dashboard/ShellNavigation.tsx");
+  const filter = read("src/components/ui/SegmentedFilter.tsx");
+
+  for (const contract of ["Typography", "Density", "Master-detail", "Accessibility baseline"]) {
+    assert.ok(system.includes(contract), contract);
+  }
+  assert.match(references, /No external component code was copied or adapted/);
+  assert.match(references, /Twenty[\s\S]*AGPL-3\.0/);
+  for (const token of ["--page-gutter", "--content-axis", "--workspace-axis", "--row-height-compact", "--row-height-comfortable"]) {
+    assert.ok(css.includes(token), token);
+  }
+  assert.match(navigation, /before:bg-\[rgb\(var\(--interaction\)\)\]/);
+  assert.doesNotMatch(navigation, /before:bg-\[rgb\(var\(--intelligence\)\)\]/);
+  assert.match(filter, /role="group"/);
+  assert.match(filter, /aria-pressed=\{selected\}/);
+});
+
 test("desktop shell avoids repeating workspace context while mobile retains it", () => {
   const header = read("src/components/dashboard/AppHeader.tsx");
   const sidebar = read("src/components/dashboard/Sidebar.tsx");

@@ -57,25 +57,25 @@ function IntegrationCard({
       type="button"
       onClick={() => onSelect(item)}
       aria-haspopup="dialog"
-      className="focus-ring group grid min-w-0 w-full grid-rows-[40px_auto_1fr_auto_auto] rounded-xl border border-[rgb(var(--border)/0.65)] bg-[rgb(var(--surface))] p-5 text-left transition-[background-color,border-color] duration-fast hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))] active:bg-[rgb(var(--surface-muted))]"
+      className="focus-ring group grid min-w-0 w-full gap-x-5 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2 py-4 text-left transition-colors duration-fast last:border-b-0 hover:bg-[rgb(var(--surface-elevated))] active:bg-[rgb(var(--surface-muted))] sm:grid-cols-[minmax(12rem,0.8fr)_minmax(16rem,1.4fr)_auto] sm:items-center"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 sm:justify-start">
         <IntegrationLogo item={item} />
         {provider ? <CapabilityStatus status={provider.status} label={provider.label} /> : <StatusPill tone={item.stage === "next" ? "gold" : "neutral"}>
           {integrationStageLabels[item.stage]}
         </StatusPill>}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-0">
         <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-[rgb(var(--foreground))]">{item.name}</h3>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-[rgb(var(--text-muted))]">
           <CategoryIcon className="h-3.5 w-3.5" aria-hidden="true" />
           {item.category}
         </p>
       </div>
-      <p className="mt-3 text-[13px] leading-5 text-[rgb(var(--text-muted))]">{item.description}</p>
+      <p className="mt-2 text-[13px] leading-5 text-[rgb(var(--text-muted))] sm:col-start-2">{item.description}</p>
 
-      <div className="mt-3 flex min-h-[22px] items-start gap-2 overflow-hidden" aria-label={provider ? "Servicii Google; Drive necesită autorizare și selecție explicită; Meet este planificat" : "Capabilități planificate"}>
+      <div className="mt-3 flex min-h-[22px] items-start gap-2 overflow-hidden sm:col-start-2" aria-label={provider ? "Servicii Google; Drive necesită autorizare și selecție explicită; Meet este planificat" : "Capabilități planificate"}>
         {item.capabilities.slice(0, 3).map((capability) => (
           <span key={capability} title={provider && capability === "Drive" ? "Drive · documente selectate" : capability} className="inline-flex h-[22px] min-w-0 items-center text-[11px] text-[rgb(var(--text-secondary))]">
             <span className="truncate">{capability}{provider && capability === "Drive" ? " · selecție explicită" : ""}</span>
@@ -86,7 +86,7 @@ function IntegrationCard({
         ) : null}
       </div>
 
-      <span className="mt-4 inline-flex items-center gap-1.5 border-t border-[rgb(var(--border))] pt-3 text-xs font-semibold text-[rgb(var(--text-secondary))] transition-colors group-hover:text-[rgb(var(--foreground))]">
+      <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[rgb(var(--text-secondary))] transition-colors group-hover:text-[rgb(var(--foreground))] sm:col-start-3 sm:row-start-1 sm:mt-0">
         {provider ? "Vezi conexiunea și permisiunile" : "Vezi integrarea planificată"}
         <ArrowRightIcon className="h-3.5 w-3.5 transition-transform duration-fast group-hover:translate-x-0.5 motion-reduce:transform-none" aria-hidden="true" />
       </span>
@@ -162,7 +162,7 @@ export function IntegrationCatalog({
               Furnizori și capabilități
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="border-y border-[rgb(var(--border))]">
             {recommended.map((item) => <IntegrationCard key={item.id} item={item} state={state} onSelect={onSelect} />)}
           </div>
         </section>
@@ -176,7 +176,7 @@ export function IntegrationCatalog({
               Documente, contracte și infrastructură enterprise
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="border-y border-[rgb(var(--border))]">
             {more.map((item) => <IntegrationCard key={item.id} item={item} state={state} onSelect={onSelect} />)}
           </div>
         </section>

@@ -50,7 +50,7 @@ type TrustedEvent = {
 
 async function eventForOpportunity(input: TrustedEvent) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (!supabase) return { failed: true };
     const { data, error } = await supabase.from("opportunity_events").insert({
       opportunity_id: input.opportunityId,
@@ -84,7 +84,7 @@ export async function updatePipelineStatus(opportunityId: string, formData: Form
   }
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
@@ -125,7 +125,7 @@ export async function createOpportunityTask(opportunityId: string, formData: For
   const authorization = await requirePermission("actions.create");
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
@@ -184,7 +184,7 @@ export async function completeOpportunityTask(opportunityId: string, actionId: s
   const authorization = await requirePermission("actions.complete");
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu a fost găsită în workspace-ul curent." };
@@ -215,7 +215,7 @@ export async function completeOpportunityTask(opportunityId: string, actionId: s
 }
 
 async function verifyAssignableProfile(businessId: string, profileId: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return false;
   const { data, error } = await supabase.rpc("business_assignable_profiles", { target_business_id: businessId });
   return !error && (data ?? []).some((row: { profile_id?: string }) => row.profile_id === profileId);
@@ -226,7 +226,7 @@ export async function updateOpportunityCommercialDetails(opportunityId: string, 
   const authorization = await requirePermission("opportunities.update");
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu este disponibilă." };
@@ -270,7 +270,7 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
   const authorization = await requirePermission("opportunities.update");
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu este disponibilă." };
@@ -354,7 +354,7 @@ export async function reopenOpportunity(opportunityId: string) {
   await requireActivePaidAccess();
   const authorization = await requirePermission("opportunities.update");
   if (!isSupabaseConfigured) return { ok: true, mode: "demo" };
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   if (!supabase || !business || !opportunity) return { ok: false, error: "Oportunitatea nu este disponibilă." };

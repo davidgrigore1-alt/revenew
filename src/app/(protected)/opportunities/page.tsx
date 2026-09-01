@@ -13,7 +13,10 @@ import Link from "next/link";
 import { CreateOpportunityPanel } from "@/components/opportunities/CreateOpportunityPanel";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 
-export default async function OpportunitiesPage({ searchParams }: { searchParams: OpportunityFilterState & { page?: string; create?: string } }) {
+export default async function OpportunitiesPage(
+  props: { searchParams: Promise<OpportunityFilterState & { page?: string; create?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   const [allOpportunities, savedViews, crm, assignableProfiles] = await Promise.all([getOpportunitiesForCurrentBusiness(), getSavedViews("opportunities"), getCrmWorkspaceForCurrentBusiness(), getAssignableProfilesForCurrentBusiness()]);
   const today = applicationDateKey();
@@ -51,22 +54,20 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 
   return (
     <PageShell
+      wide
       eyebrow="Oportunități"
       title="Oportunități comerciale"
-      description={`Cazuri aprobate și accesibile echipei ${business?.name ?? "firmei tale"}, pregătite pentru atribuirea responsabilului, următoarea acțiune și decizie.`}
+      description={`Portofoliul de execuție al ${business?.name ?? "firmei tale"}: stare, responsabil, termen și următoarea acțiune sigură.`}
       actions={<div className="flex flex-wrap gap-2"><Button href="/opportunities/import" variant="secondary">Importă CSV</Button>{crm.ready && crm.organizations.length > 0 ? <CreateOpportunityPanel organizations={crm.organizations} assignableProfiles={assignableProfiles} initialOpen={searchParams.create === "1"} /> : <Button href="/companies">Adaugă prima companie</Button>}<Button href="/opportunities/analyze" variant="secondary">{firstOpportunityCta ? "Analizează prima oportunitate" : "Analizează oportunitate"}</Button></div>}
     >
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <section aria-labelledby="registry-controls-heading" className="grid gap-3 border-y border-[rgb(var(--border))] py-4">
-          <div className="flex items-center justify-between gap-4"><h2 id="registry-controls-heading" className="text-sm font-semibold">Filtre și vizualizări</h2><p className="text-xs text-[rgb(var(--text-muted))]">Restrânge registrul la excepțiile relevante.</p></div>
+        <section aria-labelledby="registry-controls-heading" className="product-grouping-surface grid gap-3 p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-4"><h2 id="registry-controls-heading" className="text-label font-semibold">Instrumente registru</h2><p className="hidden text-micro text-[rgb(var(--text-muted))] md:block">Restrânge portofoliul la excepțiile care cer intervenție.</p></div>
           <OpportunityFilters filters={searchParams} />
           <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="opportunities" />
         </section>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-[rgb(var(--text-muted))]"><span><strong className="text-[rgb(var(--foreground))]">{allOpportunities.length}</strong> accesibile</span><span><strong className="text-[rgb(var(--warning-text))]">{attentionCount}</strong> necesită atenție</span><span><strong className="text-[rgb(var(--foreground))]">{missingOwnerCount}</strong> fără responsabil</span><span><strong className="text-[rgb(var(--foreground))]">{dueCount}</strong> scadente sau restante</span></div>
-        <p className="border-b border-[rgb(var(--border))] pb-3 text-sm text-[rgb(var(--text-muted))]">
-          {filtered.length} {filtered.length === 1 ? "oportunitate" : "oportunități"} în selecția curentă · pagina {page}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[rgb(var(--border))] pb-3 text-xs text-[rgb(var(--text-muted))]"><span><strong className="text-[rgb(var(--foreground))]">{filtered.length}</strong> în selecția curentă</span><span><strong className="text-[rgb(var(--warning-text))]">{attentionCount}</strong> necesită atenție</span><span><strong className="text-[rgb(var(--foreground))]">{missingOwnerCount}</strong> fără responsabil</span><span><strong className="text-[rgb(var(--foreground))]">{dueCount}</strong> scadente sau restante</span><span className="ml-auto">{allOpportunities.length} accesibile · pagina {page}</span></div>
         <OpportunitiesExplorer
           opportunities={opportunities}
           emptyTitle={allOpportunities.length > 0 ? "Nicio oportunitate nu corespunde filtrelor." : isSupabaseConfigured ? "Nu ai oportunități reale încă." : undefined}

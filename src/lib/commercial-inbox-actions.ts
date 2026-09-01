@@ -8,6 +8,7 @@ import {
   convertSignalToOpportunity as convertSignalToOpportunityData,
   createCommercialSignal as createCommercialSignalData,
   ignoreCommercialSignal as ignoreCommercialSignalData,
+  rejectCommercialSignal as rejectCommercialSignalData,
   setCommercialSignalReviewDecision as setCommercialSignalReviewDecisionData,
   updateCommercialSignal as updateCommercialSignalData,
   type CommercialSignalInput,
@@ -36,13 +37,19 @@ export async function approveCommercialSignal(signalId: string, input: SignalApp
 
 export async function setCommercialSignalReviewDecision(
   signalId: string,
-  decision: "dismissed" | "duplicate" | "postponed",
+  decision: "duplicate" | "postponed",
   reason: string,
   reviewDueAt?: string
 ) {
   await requireActivePaidAccess();
   await requirePermission(decision === "postponed" ? "signals.update" : "signals.archive");
   return setCommercialSignalReviewDecisionData(signalId, decision, reason, reviewDueAt);
+}
+
+export async function rejectCommercialSignal(signalId: string, expectedUpdatedAt: string, reason: string) {
+  await requireActivePaidAccess();
+  await requirePermission("signals.archive");
+  return rejectCommercialSignalData(signalId, expectedUpdatedAt, reason);
 }
 
 export async function updateCommercialSignal(id: string, input: CommercialSignalInput) {
@@ -63,10 +70,10 @@ export async function archiveCommercialSignal(id: string, reason?: string) {
   return archiveCommercialSignalData(id, reason);
 }
 
-export async function convertSignalToOpportunity(signalId: string) {
+export async function convertSignalToOpportunity(signalId: string, expectedUpdatedAt: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.convert");
-  return convertSignalToOpportunityData(signalId);
+  return convertSignalToOpportunityData(signalId, expectedUpdatedAt);
 }
 
 export async function addCommercialSignalEvent(signalId: string, eventType: string, description: string, metadata: Record<string, unknown> = {}) {

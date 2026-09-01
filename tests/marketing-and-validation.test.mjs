@@ -44,9 +44,9 @@ function loadTsModule(relativePath) {
 test("marketing registry defines the approved anchors in order", () => {
   const { marketingSections } = loadTsModule("src/lib/marketing/navigation.ts");
 
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.id)), JSON.stringify(["cum-functioneaza", "pentru-cine", "ce-primesti", "control", "preturi", "intrebari"]));
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.href)), JSON.stringify(["#cum-functioneaza", "#pentru-cine", "#ce-primesti", "#control", "#preturi", "#intrebari"]));
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Cum funcționează", "Pentru cine", "Inteligență", "Control și siguranță", "Prețuri", "Întrebări"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.id)), JSON.stringify(["produs", "cum-functioneaza", "integrari", "preturi", "securitate", "intrebari"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.href)), JSON.stringify(["#produs", "#cum-functioneaza", "#integrari", "#preturi", "#securitate", "#intrebari"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Produs", "Cum funcționează", "Integrări", "Prețuri", "Securitate", "Întrebări"]));
 });
 
 test("landing page uses centralized navigation and truthful pricing/copy", () => {
@@ -55,13 +55,9 @@ test("landing page uses centralized navigation and truthful pricing/copy", () =>
   const plans = fs.readFileSync(path.resolve("src/lib/billing/plans.ts"), "utf8");
 
   assert.equal(nav.includes("marketingSections.map"), true);
-  assert.equal(page.includes("marketingSections.map"), true);
-  assert.equal(page.includes('id="cum-functioneaza"'), true);
-  assert.equal(page.includes('id="pentru-cine"'), true);
-  assert.equal(page.includes('id="ce-primesti"'), true);
-  assert.equal(page.includes('id="control"'), true);
-  assert.equal(page.includes('id="preturi"'), true);
-  assert.equal(page.includes('id="intrebari"'), true);
+  for (const anchor of ["produs", "cum-functioneaza", "integrari", "preturi", "securitate", "intrebari"]) {
+    assert.equal(page.includes(`id="${anchor}"`), true, `landing must expose the ${anchor} navigation target`);
+  }
   assert.equal(plans.includes('title: "Start"'), true);
   assert.equal(plans.includes('title: "Growth"'), true);
   assert.equal(plans.includes('title: "Scale"'), true);
@@ -69,6 +65,9 @@ test("landing page uses centralized navigation and truthful pricing/copy", () =>
   assert.equal(page.includes("MarketingPricingGrid"), true, "pricing uses the interactive monthly/annual grid");
   assert.equal(page.includes("FAQPage"), false);
   assert.equal(page.includes("fake"), false);
+  assert.equal(page.includes("Estimările rămân separate de venitul confirmat"), true);
+  assert.equal(page.includes("AI-ul explică. Echipa decide."), true);
+  assert.equal(page.includes("Aprobarea rămâne explicit umană."), true);
 });
 
 test("marketing hero keeps a semantic work surface and progressive motion", () => {

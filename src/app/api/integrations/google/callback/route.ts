@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     await requirePermission("workspace.read");
     const actor = await requireGoogleConnectorActor();
     const url = new URL(request.url);
-    const store = cookies();
+    const store = await cookies();
     const state = store.get("revenew_google_oauth_state")?.value;
     const verifier = store.get("revenew_google_oauth_verifier")?.value;
     const purpose = store.get("revenew_google_oauth_purpose")?.value;

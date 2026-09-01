@@ -193,7 +193,7 @@ export async function getCrmWorkspaceForCurrentBusiness(): Promise<{
   }
 
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) {
     return { ready: false, organizations: [], contacts: [], error: "Nu am putut încărca workspace-ul curent." };
   }
@@ -417,7 +417,7 @@ export async function getPipelineOpportunities() {
 export async function getAssignableProfilesForCurrentBusiness(): Promise<Array<{ id: string; fullName: string }>> {
   if (!isSupabaseConfigured) return [];
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) return [];
   const { data, error } = await supabase.rpc("business_assignable_profiles", { target_business_id: business.id });
   if (error) {

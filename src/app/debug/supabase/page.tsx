@@ -13,7 +13,7 @@ export default async function SupabaseDebugPage() {
     notFound();
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   let authUserId = "";
   let authUserEmail = "";
   let profileId = "";

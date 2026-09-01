@@ -20,7 +20,7 @@ export async function revenueCommandActor(){
 }
 /** Request-local only. Fixed batches; no model, provider requests or evidence content. */
 export const getRevenueCommand=cache(async(range?:string)=>{
- const actor=await revenueCommandActor(),client=createSupabaseServerClient();if(!client)throw new Error("command_unavailable");
+ const actor=await revenueCommandActor(),client=await createSupabaseServerClient();if(!client)throw new Error("command_unavailable");
  const canRead=(permission:Parameters<typeof hasPermission>[1])=>hasPermission(actor.authorization,permission);
  const now=new Date(),oldest=new Date(now.getTime()-30*86400000).toISOString();
  let candidates=client.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,created_at,updated_at,actual_outcome_amount,outcome_recorded_at,outcome_recorded_by_profile_id,outreach_restricted_at,outreach_restriction_reason")

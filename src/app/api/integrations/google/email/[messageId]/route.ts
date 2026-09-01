@@ -16,18 +16,19 @@ function errorResponse(error: unknown) {
   );
 }
 
-export async function GET(request: Request, context: { params: { messageId: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ messageId: string }> }) {
   try {
     const actor = await requireGoogleConnectorActor();
+    const { messageId } = await context.params;
     const url = new URL(request.url);
     if (url.searchParams.get("view") === "html") {
-      const result = await getOwnedGoogleEmailHtml(actor, context.params.messageId, url.searchParams.get("images") === "1");
+      const result = await getOwnedGoogleEmailHtml(actor, messageId, url.searchParams.get("images") === "1");
       if (!result) return NextResponse.json({ error: "Emailul nu este disponibil." }, { status: 404, headers: privateHeaders });
       return NextResponse.json(result, { headers: privateHeaders });
     }
     const [email, thread] = await Promise.all([
-      getOwnedGoogleEmailDetail(actor, context.params.messageId),
-      getOwnedGoogleEmailThread(actor, context.params.messageId)
+      getOwnedGoogleEmailDetail(actor, messageId),
+      getOwnedGoogleEmailThread(actor, messageId)
     ]);
     if (!email) return NextResponse.json({ error: "Emailul nu este disponibil." }, { status: 404 });
     return NextResponse.json({ email, thread: thread ?? [] }, { headers: privateHeaders });
@@ -36,19 +37,20 @@ export async function GET(request: Request, context: { params: { messageId: stri
   }
 }
 
-export async function POST(request: Request, context: { params: { messageId: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ messageId: string }> }) {
   try {
     const actor = await requireGoogleConnectorActor();
+    const { messageId } = await context.params;
     const body = await request.json() as { action?: string; question?: string };
     if (!body.action || !actions.has(body.action)) return NextResponse.json({ error: "Acțiune invalidă." }, { status: 400, headers: privateHeaders });
     if (body.action === "prepare_reply_draft") {
       const [draft, templates] = await Promise.all([
-        prepareReplyDraft(actor, context.params.messageId, "human"),
+        prepareReplyDraft(actor, messageId, "human"),
         listOwnedCommunicationTemplates(actor)
       ]);
       return NextResponse.json({ draft, templates }, { headers: privateHeaders });
     }
-    const result = await runOwnedGoogleEmailAction(actor, context.params.messageId, body.action as "summarize_email" | "explain_email_relevance" | "prepare_email_followup" | "ask_about_email", body.question);
+    const result = await runOwnedGoogleEmailAction(actor, messageId, body.action as "summarize_email" | "explain_email_relevance" | "prepare_email_followup" | "ask_about_email", body.question);
     if (!result) return NextResponse.json({ error: "Emailul nu este disponibil." }, { status: 404, headers: privateHeaders });
     return NextResponse.json({ result }, { headers: privateHeaders });
   } catch (error) {

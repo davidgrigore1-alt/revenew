@@ -22,6 +22,10 @@ export function proposedChangeForSignal(signal: CommercialSignal) {
   return "Creează o oportunitate și prima acțiune internă din datele revizuite.";
 }
 
+export function rejectionConsequenceForSignal() {
+  return "Marchează recomandarea ca respinsă și păstrează motivul în istoricul de audit. Nu creează nicio acțiune externă.";
+}
+
 export function approvalReasonForSignal(signal: CommercialSignal) {
   return signal.primaryRecoveryReason
     || signal.analysisExplanation

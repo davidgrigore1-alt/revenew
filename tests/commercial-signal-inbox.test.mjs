@@ -37,6 +37,9 @@ test("signal operations remain tenant-scoped and AI preparation is explicit", as
   assert.match(actions, /requirePermission\("signals\.create"\)/);
   assert.match(actions, /requirePermission\("signals\.convert"\)/);
   assert.match(actions, /requirePermission\("signals\.archive"\)/);
+  assert.match(actions, /rejectCommercialSignal/);
+  assert.match(inbox, /expected_updated_at/);
+  assert.match(await read("../src/components/inbox/CommercialInboxClient.tsx"), /result\.outcome === "conflict"[\s\S]+?router\.refresh\(\)/);
 });
 
 test("inbox supports linking, conversion, next action and reasoned archive without external execution", async () => {
@@ -47,7 +50,7 @@ test("inbox supports linking, conversion, next action and reasoned archive witho
   assert.match(client, /Companie CRM/);
   assert.match(client, /Oportunitate existentă/);
   assert.match(client, /Aprobă și creează acțiunea/);
-  assert.match(client, /xl:grid-cols-\[minmax\(18rem,0\.72fr\)_minmax\(0,1\.55fr\)\]/);
+  assert.match(client, /lg:grid-cols-\[minmax\(20rem,0\.78fr\)_minmax\(0,1\.45fr\)\]/);
   assert.match(client, /id="signal-review-panel"/);
   assert.match(client, /Revizuiește semnalul/);
   assert.match(client, /acțiunea internă a fost creată în oportunitatea selectată/);

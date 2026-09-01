@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const confirmation = getAuthConfirmationInput(request.nextUrl.searchParams);
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   if (confirmation.method === "invalid" || !supabase) {
     return NextResponse.redirect(browserSafeRedirectUrl(request.url, "/verify-email?reason=invalid_link"));

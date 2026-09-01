@@ -149,12 +149,12 @@ export const resolveCurrentAuthUser = cache(async function resolveCurrentAuthUse
     return { status: "anonymous" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return { status: "anonymous" };
   }
 
-  const hasPersistedSession = hasPersistedSupabaseAuthCookie(cookies().getAll());
+  const hasPersistedSession = hasPersistedSupabaseAuthCookie((await cookies()).getAll());
 
   const {
     data: { user },
@@ -198,7 +198,7 @@ export async function getCurrentAuthUser() {
   throw new Error("Autentificarea nu este disponibilă momentan. Încearcă din nou în câteva momente.");
 }
 
-async function findProfileByUserId(client: NonNullable<ReturnType<typeof createSupabaseServerClient>>, userId: string) {
+async function findProfileByUserId(client: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>, userId: string) {
   return client.from("profiles").select("id,user_id,full_name,email").eq("user_id", userId).maybeSingle();
 }
 
@@ -254,7 +254,7 @@ async function repairLegacyProfileByEmail(authUser: User, fullName?: string) {
   return data as ProfileRow;
 }
 
-async function rereadProfileAfterConflict(client: NonNullable<ReturnType<typeof createSupabaseServerClient>>, authUser: User, fullName: string | undefined) {
+async function rereadProfileAfterConflict(client: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>, authUser: User, fullName: string | undefined) {
   const retry = await findProfileByUserId(client, authUser.id);
   if (!retry.error && retry.data) {
     return retry.data as ProfileRow;
@@ -264,7 +264,7 @@ async function rereadProfileAfterConflict(client: NonNullable<ReturnType<typeof 
 }
 
 async function insertProfile(
-  client: NonNullable<ReturnType<typeof createSupabaseServerClient>>,
+  client: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
   authUser: User,
   fullName: string | undefined,
   referenceId: string
@@ -303,7 +303,7 @@ async function insertProfile(
 }
 
 export async function getOrCreateProfile(authUser: User, fullName?: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const referenceId = randomUUID();
 
   if (!supabase) {

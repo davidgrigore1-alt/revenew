@@ -15,7 +15,7 @@ const empty: CommercialResponseSummary = { responsesReceived: 0, positiveRespons
 export async function getCommercialResponseSummary(): Promise<CommercialResponseSummary> {
   if (!isSupabaseConfigured) return empty;
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!business || !supabase) return empty;
   const [responsesResult, opportunitiesResult, documentsResult] = await Promise.all([
     supabase.from("commercial_responses").select("opportunity_id,response_category,milestone,responded_at").eq("business_id", business.id).order("responded_at", { ascending: false }).limit(1000),

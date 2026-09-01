@@ -131,9 +131,9 @@ test("assistant is accessible, evidence-grounded, actionable and keeps the exist
   assert.match(assistant, /role="dialog"/);
   assert.match(assistant, /aria-modal="true"/);
   assert.match(assistant, /event\.key === "Escape"/);
-  assert.match(conversation, /Întreabă ReveNew…/);
+  assert.match(conversation, /Ce necesită atenție astăzi și pe ce dovezi se bazează/);
   assert.match(conversation, /Dovezi ·/);
-  assert.match(conversation, /Ce nu pot confirma/);
+  assert.match(conversation, /Informații lipsă sau neconfirmate/);
   assert.match(assistant, /Revezi turul introductiv/);
   assert.match(assistant, /Resetează ghidurile închise/);
   assert.doesNotMatch(assistant, /notice \? <p className="sr-only"/);

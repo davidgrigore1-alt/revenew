@@ -1,0 +1,111 @@
+ReveNew Finalize Phase 1 snapshot
+Created: 2026-09-02T00:35:01
+Repo: C:\Projects\ReveNew
+
+FILES
+package.json
+src\app\(marketing)\page.tsx
+src\app\(protected)\ai\page.tsx
+src\app\(protected)\dashboard\page.tsx
+src\app\(protected)\opportunities\[id]\page.tsx
+src\app\(protected)\today\page.tsx
+src\app\(protected)\workflows\new\page.tsx
+src\app\globals.css
+src\components\dashboard\CommercialDecisionReview.tsx
+src\components\dashboard\ControlCenterViews.tsx
+src\components\dashboard\ControlCenterVisuals.tsx
+src\components\dashboard\ExecutionControlCenter.tsx
+src\components\dashboard\ExecutiveMorningBrief.tsx
+src\components\dashboard\HomeAskSurface.tsx
+src\components\dashboard\RevenueCommandBrief.tsx
+src\components\dashboard\ShellNavigation.tsx
+src\components\dashboard\Sidebar.tsx
+src\components\inbox\CommercialInboxClient.tsx
+src\components\marketing\LandingV3Visuals.tsx
+src\components\marketing\ProductPreview.tsx
+src\components\onboarding\OnboardingForm.tsx
+src\components\opportunities\CommercialResponsePanel.tsx
+src\components\opportunities\OpportunityControlCenter.tsx
+src\components\opportunities\OpportunityWorkflow.tsx
+src\components\revenue\TaskControls.tsx
+src\lib\ai\action-planner.ts
+src\lib\ai\copilot-orchestrator.ts
+src\lib\ai\copilot-tools.ts
+src\lib\ai\copilot-types.ts
+src\lib\ai\universal-business-context.ts
+src\lib\app-section-search.ts
+src\lib\contextual-help.ts
+src\lib\control-center-reporting.ts
+src\lib\control-center-visuals.ts
+src\lib\execution-control-center.ts
+src\lib\navigation.ts
+src\lib\workflow-drafting.ts
+tests\a4-executive-trust-system.test.mjs
+tests\ai-control-center-ux.test.mjs
+tests\appointment-control-validation-protocol.test.mjs
+tests\commercial-decision-review-g3e.test.mjs
+tests\control-center-polish-v4.test.mjs
+tests\controlled-buyer-demo-mode.test.mjs
+tests\execution-control-center.test.mjs
+tests\executive-morning-brief.test.mjs
+tests\light-v2-visual-system.test.mjs
+tests\phase1-revenue-control-center.test.mjs
+tests\usage-control-plane.test.mjs
+tests\visual-excellence.test.mjs
+tests\visual-palette-readiness.test.mjs
+tsconfig.json
+
+DISCOVERY MATCHES
+src\app\(marketing)\page.tsx :: ControlCenter
+src\app\(protected)\ai\page.tsx :: ControlCenter
+src\app\(protected)\dashboard\page.tsx :: ControlCenter
+src\app\(protected)\dashboard\page.tsx :: ExecutionControlCenter
+src\app\(protected)\dashboard\page.tsx :: HomeAskSurface
+src\app\(protected)\dashboard\page.tsx :: searchParams.view
+src\app\(protected)\opportunities\[id]\page.tsx :: ControlCenter
+src\app\(protected)\today\page.tsx :: Activitatea mea
+src\app\(protected)\workflows\new\page.tsx :: Revizuire comercial
+src\components\dashboard\CommercialDecisionReview.tsx :: Agenda de decizie
+src\components\dashboard\CommercialDecisionReview.tsx :: Revizuire comercial
+src\components\dashboard\CommercialDecisionReview.tsx :: view=executive
+src\components\dashboard\CommercialDecisionReview.tsx :: view=review
+src\components\dashboard\ControlCenterViews.tsx :: Brief executiv
+src\components\dashboard\ControlCenterViews.tsx :: ControlCenter
+src\components\dashboard\ControlCenterViews.tsx :: Revizuire comercial
+src\components\dashboard\ControlCenterViews.tsx :: view=executive
+src\components\dashboard\ControlCenterViews.tsx :: view=review
+src\components\dashboard\ControlCenterVisuals.tsx :: ControlCenter
+src\components\dashboard\ExecutionControlCenter.tsx :: ControlCenter
+src\components\dashboard\ExecutionControlCenter.tsx :: ExecutionControlCenter
+src\components\dashboard\ExecutiveMorningBrief.tsx :: Activitatea mea
+src\components\dashboard\ExecutiveMorningBrief.tsx :: Brief executiv
+src\components\dashboard\HomeAskSurface.tsx :: HomeAskSurface
+src\components\dashboard\RevenueCommandBrief.tsx :: Brief comercial
+src\components\dashboard\RevenueCommandBrief.tsx :: Brief executiv
+src\components\dashboard\RevenueCommandBrief.tsx :: view=executive
+src\components\inbox\CommercialInboxClient.tsx :: Activitatea mea
+src\components\marketing\LandingV3Visuals.tsx :: ControlCenter
+src\components\marketing\ProductPreview.tsx :: Activitatea mea
+src\components\onboarding\OnboardingForm.tsx :: Activitatea mea
+src\components\opportunities\CommercialResponsePanel.tsx :: Activitatea mea
+src\components\opportunities\OpportunityControlCenter.tsx :: ControlCenter
+src\components\opportunities\OpportunityWorkflow.tsx :: Activitatea mea
+src\components\revenue\TaskControls.tsx :: Activitatea mea
+src\lib\ai\action-planner.ts :: Revizuire comercial
+src\lib\ai\copilot-orchestrator.ts :: Activitatea mea
+src\lib\ai\copilot-tools.ts :: Brief executiv
+src\lib\ai\copilot-types.ts :: Brief executiv
+src\lib\ai\universal-business-context.ts :: Activitatea mea
+src\lib\app-section-search.ts :: Activitatea mea
+src\lib\contextual-help.ts :: Activitatea mea
+src\lib\control-center-reporting.ts :: ControlCenter
+src\lib\control-center-visuals.ts :: ControlCenter
+src\lib\execution-control-center.ts :: ControlCenter
+src\lib\execution-control-center.ts :: ExecutionControlCenter
+src\lib\navigation.ts :: Activitatea mea
+src\lib\workflow-drafting.ts :: Revizuire comercial
+
+SAFETY
+- No .env files are copied.
+- No secret/credential/service-role named files are copied.
+- Script is read-only for project source.

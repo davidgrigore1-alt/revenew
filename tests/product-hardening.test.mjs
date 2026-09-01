@@ -182,7 +182,7 @@ test("QA-polished operational copy remains accurate and uses shared primitives",
 
   assert.match(dashboard, /HomeAskSurface/);
   assert.doesNotMatch(dashboard, /oportunități sunt evaluate cu risc ridicat|oportunități cu valoare mare sunt evaluate|MetricCard/);
-  assert.match(opportunities, /filtered\.length === 1 \? "oportunitate" : "oportunități"/);
+  assert.match(opportunities, /\{filtered\.length\}[\s\S]{0,120}în selecția curentă/);
   assert.match(analyze, /Analizează o oportunitate nouă/);
   assert.match(reportActions, /import \{ Button \} from "@\/components\/ui\/Button"/);
   assert.match(reportActions, /role="status"/);

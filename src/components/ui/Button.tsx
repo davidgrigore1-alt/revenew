@@ -24,7 +24,7 @@ const variants = {
   intelligence: "bg-[rgb(var(--intelligence))] text-[rgb(var(--intelligence-foreground))] hover:bg-[rgb(var(--intelligence-hover))] active:bg-[rgb(var(--intelligence-strong))]",
   secondary: "border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] text-[rgb(var(--foreground))] hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-elevated))]",
   ghost: "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]",
-  danger: "bg-[rgb(var(--danger-solid))] text-white shadow-sm hover:bg-[rgb(var(--danger-solid-hover))] active:brightness-90"
+  danger: "bg-[rgb(var(--danger-solid))] text-white hover:bg-[rgb(var(--danger-solid-hover))] active:brightness-90"
 };
 
 const sizes = {

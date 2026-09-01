@@ -10,26 +10,28 @@ import {
   documentMimeLabel,
 } from "@/components/documents/DocumentTypeIcon";
 import { Button } from "@/components/ui/Button";
+import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { getCommercialDocuments } from "@/lib/commercial-documents";
 import { formatProductDateTime } from "@/lib/ui/presentation";
 
 export const dynamic = "force-dynamic";
 
 const regionClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
+  "border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))]";
 
 const innerSurfaceClass =
   "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
 
-export default async function DocumentsPage({
-  searchParams,
-}: {
-  searchParams: {
-    q?: string;
-    provider?: string;
-    page?: string;
-  };
-}) {
+export default async function DocumentsPage(
+  props: {
+    searchParams: Promise<{
+      q?: string;
+      provider?: string;
+      page?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const model = await getCommercialDocuments({
     query: searchParams.q,
     provider: searchParams.provider,
@@ -43,6 +45,9 @@ export default async function DocumentsPage({
   const revenewCount = model.items.filter(
     (item) => item.provider === "revenew",
   ).length;
+  const approvedCount = model.items.filter((item) => item.status === "Aprobat").length;
+  const sentCount = model.items.filter((item) => item.status === "Trimis").length;
+  const inProgressCount = model.items.length - approvedCount - sentCount;
 
   const href = (
     provider = model.provider,
@@ -56,13 +61,14 @@ export default async function DocumentsPage({
 
   return (
     <PageShell
+      wide
       eyebrow="Documente"
       title="Documente comerciale"
       description="Surse autorizate, documente interne și context verificabil"
     >
       <div className="grid gap-6">
         {/* Search + source action */}
-        <section className={`${regionClass} p-4 sm:p-5`}>
+        <section aria-label="Instrumente registru documente" className="product-grouping-surface p-3 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <form
               action="/documents"
@@ -99,55 +105,23 @@ export default async function DocumentsPage({
               <DriveWorkspace selectorOnly />
             ) : null}
           </div>
+          <nav aria-label="Sursa documentelor" className="mt-3 flex gap-1 border-t border-[rgb(var(--border))] pt-2">
+            {[["all", "Toate"], ["google_drive", "Google Drive"], ["revenew", "ReveNew"]].map(([value, label]) => {
+              const active = model.provider === value;
+              return <Link key={value} href={href(value)} aria-current={active ? "page" : undefined} className={"focus-ring relative min-h-9 px-3 py-2 text-xs font-medium transition-colors " + (active ? "text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]")}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-2 bottom-0 h-0.5 bg-[rgb(var(--interaction))]" /> : null}</Link>;
+            })}
+          </nav>
         </section>
 
         {/* Summary */}
-        <section
-          aria-label="Rezumat documente afișate"
-          className={`${regionClass} grid overflow-hidden sm:grid-cols-3`}
-        >
-          <div className="px-4 py-3.5 sm:border-r sm:border-[rgb(var(--border))]">
-            <p className="micro-label">
-              În această pagină
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {model.items.length}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Documente comerciale afișate
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-r sm:border-t-0">
-            <p className="micro-label">
-              Google Drive
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {driveCount}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Selectate și autorizate explicit
-            </p>
-          </div>
-
-          <div className="border-t border-[rgb(var(--border))] px-4 py-3.5 sm:border-t-0">
-            <p className="micro-label">
-              ReveNew
-            </p>
-
-            <p className="mt-1 text-lg font-semibold tabular-nums">
-              {revenewCount}
-            </p>
-
-            <p className="mt-0.5 text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Create în fluxul comercial
-            </p>
-          </div>
-        </section>
+        <RecordSummaryBar label="Rezumat documente afișate" items={[
+          { label: "În această pagină", value: String(model.items.length), detail: "Documente comerciale afișate" },
+          { label: "Google Drive", value: String(driveCount), detail: "Selectate și autorizate explicit" },
+          { label: "ReveNew", value: String(revenewCount), detail: "Create în fluxul comercial" },
+          { label: "Alte stări curente", value: String(inProgressCount), detail: "Inclusiv surse autorizate" },
+          { label: "Aprobate", value: String(approvedCount), detail: "Nu înseamnă trimise", tone: approvedCount ? "attention" : "default" },
+          { label: "Trimise", value: String(sentCount), detail: "Execuție înregistrată", tone: sentCount ? "success" : "default" }
+        ]} />
 
         {/* Document workspace */}
         <section className={`${regionClass} p-4 sm:p-5`}>
@@ -171,50 +145,18 @@ export default async function DocumentsPage({
             </span>
           </div>
 
-          <nav
-            aria-label="Sursa documentelor"
-            className="mt-4 flex gap-1 border-b border-[rgb(var(--border))]"
-          >
-            {[
-              ["all", "Toate"],
-              ["google_drive", "Google Drive"],
-              ["revenew", "ReveNew"],
-            ].map(([value, label]) => {
-              const active =
-                model.provider === value;
-
-              return (
-                <Link
-                  key={value}
-                  href={href(value)}
-                  aria-current={
-                    active ? "page" : undefined
-                  }
-                  className={
-                    "focus-ring relative px-3 py-2.5 text-xs font-medium transition-colors " +
-                    (active
-                      ? "text-[rgb(var(--foreground))]"
-                      : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]")
-                  }
-                >
-                  {label}
-
-                  {active ? (
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-x-2 bottom-[-1px] h-[2px] rounded-full bg-[rgb(var(--primary))]"
-                    />
-                  ) : null}
-                </Link>
-              );
-            })}
-          </nav>
-
           {model.items.length ? (
+            <>
+            <ul className="mt-4 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border-strong))] lg:hidden" aria-label="Documente comerciale">
+              {model.items.map((item) => <li key={`mobile:${item.kind}:${item.id}`} className="grid gap-3 px-4 py-4">
+                <div className="flex min-w-0 items-start gap-3"><DocumentTypeIcon mime={item.mime} /><div className="min-w-0"><Link href={item.detailHref} className="focus-ring block truncate text-sm font-semibold">{item.title}</Link><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{item.commercialType} · {documentMimeLabel(item.mime)}</p></div></div>
+                <dl className="grid grid-cols-2 gap-3 text-xs"><div><dt className="text-[rgb(var(--text-muted))]">Context</dt><dd className="mt-1 truncate"><Link href={item.linkedContext.href} className="focus-ring hover:underline">{item.linkedContext.title}</Link></dd></div><div><dt className="text-[rgb(var(--text-muted))]">Stare</dt><dd className="mt-1 font-medium">{item.status}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Sursă</dt><dd className="mt-1">{item.provider === "google_drive" ? "Google Drive" : "ReveNew"}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Actualizat</dt><dd className="mt-1">{item.sourceModifiedAt ? formatProductDateTime(item.sourceModifiedAt) : item.lastSyncedAt ? formatProductDateTime(item.lastSyncedAt) : "Neconfirmat"}</dd></div></dl>
+              </li>)}
+            </ul>
             <div
               role="table"
               aria-label="Documente comerciale"
-              className={`${innerSurfaceClass} mt-4 overflow-hidden`}
+              className={`${innerSurfaceClass} mt-4 hidden overflow-hidden lg:block`}
             >
               <div
                 role="row"
@@ -346,7 +288,7 @@ export default async function DocumentsPage({
                   </div>
                 ))}
               </div>
-            </div>
+            </div></>
           ) : (
             <div
               className={`${innerSurfaceClass} mt-4 overflow-hidden`}

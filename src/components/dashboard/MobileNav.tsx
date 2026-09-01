@@ -19,7 +19,7 @@ export function MobileNav({ items = primaryNavigation }: { items?: NavigationIte
   if (mobileItems.length === 0) return null;
 
   return (
-    <nav aria-label="Navigare rapidă" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.96)] px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 shadow-elevated backdrop-blur-md lg:hidden">
+    <nav aria-label="Navigare rapidă" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.98)] px-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 lg:hidden">
       {mobileItems.map((item) => {
         const active = isNavItemActive(pathname, item.href);
 
@@ -32,7 +32,7 @@ export function MobileNav({ items = primaryNavigation }: { items?: NavigationIte
             className={cn(
               "focus-ring flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-control px-1 text-[0.6875rem] font-semibold transition-colors duration-fast",
               active
-                ? "bg-[rgb(var(--brand-50))] text-[rgb(var(--brand-800))] dark:bg-[rgb(var(--brand-950))] dark:text-[rgb(var(--brand-300))]"
+                ? "bg-[rgb(var(--interaction-tint))] text-[rgb(var(--interaction-hover))]"
                 : "text-[rgb(var(--text-muted))] active:bg-[rgb(var(--surface-muted))]"
             )}
           >

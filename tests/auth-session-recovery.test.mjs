@@ -152,6 +152,7 @@ test("auth resolver treats missing sessions without auth cookies as anonymous", 
 
   assert.equal(sessionErrors.includes("hasPersistedSupabaseAuthCookie"), true);
   assert.equal(sessionErrors.includes("return hasPersistedSession ? { status: \"stale_session\", reason: \"session_not_found\" } : { status: \"anonymous\" }"), true);
-  assert.equal(profileSource.includes("hasPersistedSupabaseAuthCookie(cookies().getAll())"), true);
+  assert.equal(profileSource.includes("hasPersistedSupabaseAuthCookie((await cookies()).getAll())"), true);
+  assert.equal(profileSource.includes("UnsafeUnwrappedCookies"), false);
   assert.equal(profileSource.includes('if (classified.status === "anonymous")'), true);
 });

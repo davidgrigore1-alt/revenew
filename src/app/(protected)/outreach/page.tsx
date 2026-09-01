@@ -14,7 +14,7 @@ export default async function OutreachPage() {
   let drafts: OutreachDraftItem[] = [];
   if (isSupabaseConfigured) {
     const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (business && supabase) {
       const [{ data: documents, error }, { data: actions, error: actionsError }] = await Promise.all([
         supabase.from("opportunity_documents").select("id,opportunity_id,title,body,status,generation_mode,created_at,opportunities(title)").eq("business_id", business.id).in("document_type", ["outreach_email", "follow_up_email", "linkedin_message", "whatsapp_message"]).order("created_at", { ascending: false }),

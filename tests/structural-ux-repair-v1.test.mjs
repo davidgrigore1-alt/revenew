@@ -7,6 +7,7 @@ const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8
 
 test("opportunity exposes semantic URL tabs and renders only the active panel", () => {
   const page = read("src/app/(protected)/opportunities/[id]/page.tsx");
+  const recordTabs = read("src/components/records/RecordTabs.tsx");
   const timeline = read("src/components/opportunities/OpportunityIntelligenceTimeline.tsx");
   const workflow = read("src/components/opportunities/OpportunityWorkflow.tsx");
   const sidebar = read("src/lib/navigation.ts");
@@ -14,7 +15,8 @@ test("opportunity exposes semantic URL tabs and renders only the active panel", 
   for (const destination of ["Context", "Responsabilitate", "Răspuns", "Programează", "Istoric", "Flux"]) {
     assert.match(page, new RegExp(destination));
   }
-  assert.match(page, /href=\{`\?tab=\$\{tab\.id\}`\}/);
+  assert.match(page, /<RecordTabs/);
+  assert.match(recordTabs, /href=\{`\?tab=\$\{tab\.id\}`\}/);
   assert.match(page, /activeTab === "context"/);
   assert.match(page, /activeTab === "history"/);
   assert.match(page, /\{ id: "history", label: "Semnale" \}/);
@@ -25,7 +27,8 @@ test("opportunity exposes semantic URL tabs and renders only the active panel", 
   assert.match(timeline, /Istoric comercial/);
   assert.match(timeline, /Fapte înregistrate și interpretări cu momentul evaluării explicit/);
   assert.match(timeline, /tabIndex=\{-1\}/);
-  assert.match(page, /aria-label="Secțiunile oportunității"/);
+  assert.match(page, /label\s*=\s*"Secțiunile oportunității"/);
+  assert.match(recordTabs, /<nav aria-label=\{label\}/);
   assert.doesNotMatch(sidebar, /name: "(?:Timeline|Istoric comercial|Memorie companie|Ask Company)"/);
 });
 

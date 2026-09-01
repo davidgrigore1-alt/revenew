@@ -20,7 +20,7 @@ export async function selectPreviewPlan(planId: PreviewPlanId, redirectTo = "/da
 
   await getCurrentBusinessForUser({ redirectIfMissing: true });
 
-  cookies().set(previewPlanCookieName, planId, {
+  (await cookies()).set(previewPlanCookieName, planId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

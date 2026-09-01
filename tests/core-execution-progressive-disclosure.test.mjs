@@ -73,7 +73,7 @@ test("inbox presents compact filters and master-detail before detailed review", 
   assert.match(client, /Netrimis automat/);
   assert.match(client, /01 · Date esențiale/);
   assert.match(client, /02 · Acțiune și responsabil/);
-  assert.match(page, /Revizuiește semnalele înainte de a le transforma în oportunități/);
+  assert.match(page, /Prioritizează ce s-a schimbat, verifică sursa și aplică numai următorul pas comercial aprobat/);
   assert.doesNotMatch(page, /Obligatoriu:|Opțional, dar util:/);
 });
 

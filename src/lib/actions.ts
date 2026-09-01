@@ -43,7 +43,7 @@ export async function saveAnalyzedOpportunity(formData: FormData) {
     return { ok: true, mode: "demo", id: null };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !business) {
     return { ok: false, error: "Nu am găsit firma curentă." };
@@ -149,7 +149,7 @@ export async function persistGeneratedDocument(opportunityId: string, type: Oppo
     return { ok: true, mode: "demo" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !opportunity || !business) {
@@ -215,7 +215,7 @@ export async function updateGeneratedDocument(
     return { ok: true, mode: "demo" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const admin = createSupabaseAdminClient();
   const [opportunity, business] = await Promise.all([
     getOpportunityForCurrentBusiness(opportunityId),
@@ -365,7 +365,7 @@ export async function persistFollowUp(
     return { ok: true, mode: "demo" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const opportunity = await getOpportunityForCurrentBusiness(opportunityId);
   const business = await getCurrentBusinessOrDemo({ redirectIfMissing: true });
   if (!supabase || !opportunity || !business) {
@@ -429,7 +429,7 @@ export async function updateOpportunityAction(opportunityId: string, actionId: s
     return { ok: true, mode: "demo" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return { ok: false, error: "Supabase nu este disponibil." };
   }

@@ -3,7 +3,7 @@ import { isSupabaseAuthCookie } from "@/lib/auth/session-errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function clearSupabaseSession(request: NextRequest, response: NextResponse) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   if (supabase) {
     const { error } = await supabase.auth.signOut();

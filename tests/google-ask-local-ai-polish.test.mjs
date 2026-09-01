@@ -261,7 +261,8 @@ test("full Gmail detail stays behind an authenticated owner-scoped server endpoi
   const route = read("src/app/api/integrations/google/email/[messageId]/route.ts");
   const repository = read("src/lib/google-workspace/repository.ts");
   assert.match(route, /requireGoogleConnectorActor/);
-  assert.match(route, /getOwnedGoogleEmailDetail\(actor, context\.params\.messageId\)/);
+  assert.match(route, /const \{ messageId \} = await context\.params/);
+  assert.match(route, /getOwnedGoogleEmailDetail\(actor, messageId\)/);
   assert.match(route, /Cache-Control.*private, no-store/);
   assert.match(repository, /\.eq\("business_id", actor\.businessId\)/);
   assert.match(repository, /\.eq\("owner_profile_id", actor\.profileId\)/);

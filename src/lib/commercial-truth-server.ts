@@ -33,7 +33,7 @@ export const getCommercialTruthForOpportunity=cache(async(opportunityId:string)=
  if(!opportunity||opportunity.businessId!==actor.businessId)throw new Error("truth_scope_forbidden");
  const limitations:string[]=[],segments:TruthSegment[]=[];
  let companyName:string|null=null;
- const client=createSupabaseServerClient();
+ const client=await createSupabaseServerClient();
  if(client&&opportunity.organizationId&&hasPermission(authorization,"workspace.read")){
   const company=await client.from("crm_organizations").select("name").eq("id",opportunity.organizationId).eq("business_id",actor.businessId).maybeSingle();
   if(!company.error)companyName=company.data?.name??null;
@@ -86,7 +86,7 @@ export async function getCommercialTruthScope(scope:{opportunityId?:string;organ
  const actor=await requireGoogleConnectorActor();
  if(scope.opportunityId)return {items:[await getCommercialTruthForOpportunity(scope.opportunityId)],limited:false,label:"Această oportunitate"};
  if(scope.organizationId&&!uuidPattern.test(scope.organizationId))throw new Error("truth_scope_forbidden");
- const client=createSupabaseServerClient();if(!client)throw new Error("truth_unavailable");
+ const client=await createSupabaseServerClient();if(!client)throw new Error("truth_unavailable");
  let query=client.from("opportunities").select("id").eq("business_id",actor.businessId)
   .order("updated_at",{ascending:false}).order("id").limit(TRUTH_LIMITS.scopeOpportunities+1);
  if(!["business_owner","business_admin","business_manager"].includes(authorization.businessRole??""))query=query.eq("owner_profile_id",actor.profileId);
