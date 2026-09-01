@@ -4,7 +4,6 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { TodayActionCard } from "@/components/dashboard/TodayActionCard";
 import { TodayExecutionSections } from "@/components/dashboard/TodayExecutionSections";
 import { Button } from "@/components/ui/Button";
-import { CompactEmptyState } from "@/components/ui/CompactEmptyState";
 import { getRevenueWorkspaceSummary } from "@/lib/revenue-workspace";
 import type { RecoveryAction } from "@/lib/recovery";
 import { formatProductDateTime, formatUserFacingText } from "@/lib/ui/presentation";
@@ -42,6 +41,9 @@ export default async function TodayPage() {
     <PageShell eyebrow="Sistem de execuție" title="Activitatea mea" description="Ce necesită intervenție, ce este pregătit și unde așteptarea este acțiunea corectă"><div className="grid gap-6">
       <TodayExecutionSections queue={executionQueue} />
 {communicationNotifications.length ? <section aria-labelledby="communication-notifications-title"><div className="flex items-end justify-between gap-3 border-b border-[rgb(var(--border))] pb-3"><div><p className="micro-label">Schimbări în comunicare</p><h2 id="communication-notifications-title" className="mt-1 text-sm font-semibold">Evenimente care cer o verificare</h2></div><span className="text-xs tabular-nums text-[rgb(var(--text-muted))]">{communicationNotifications.filter((item) => !item.read_at).length} noi</span></div><div className="divide-y divide-[rgb(var(--border))]">{communicationNotifications.slice(0, 5).map((item) => <Link key={item.id} href={item.href || "/inbox"} className="product-interactive-row focus-ring grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto]"><span><strong className="block text-sm">{formatUserFacingText(item.title)}</strong>{item.body ? <span className="mt-1 block text-xs text-[rgb(var(--text-muted))]">{formatUserFacingText(item.body)}</span> : null}</span><time dateTime={item.created_at} className="text-[0.6875rem] text-[rgb(var(--text-faint))]">{formatProductDateTime(item.created_at)}</time></Link>)}</div></section> : null}
+      <section aria-labelledby="today-plan-title">
+        <div className="flex items-end justify-between gap-4 border-b border-[rgb(var(--border))] pb-3"><div><p className="micro-label">Plan de lucru</p><h2 id="today-plan-title" className="mt-1 text-base font-semibold">Planul meu</h2></div><p className="text-xs text-[rgb(var(--text-muted))]">Coada completă de acțiuni</p></div>
+        <div className="mt-4 grid gap-5">
       {[
         ["Restante", groups.overdue, "restante"],
         ["Astăzi", groups.today, "pentru astăzi"],
@@ -51,18 +53,20 @@ export default async function TodayPage() {
       ].map(([title, actions, emptyLabel]) => (
         <section key={String(title)} aria-labelledby={`today-${String(title).toLocaleLowerCase("ro-RO").replace(/\s+/g, "-")}`}>
           <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--border))] pb-2">
-            <h2 id={`today-${String(title).toLocaleLowerCase("ro-RO").replace(/\s+/g, "-")}`} className="text-sm font-semibold text-[rgb(var(--foreground))]">{String(title)}</h2>
+            <h2 id={`today-${String(title).toLocaleLowerCase("ro-RO").replace(/\s+/g, "-")}`} className="text-sm font-semibold text-[rgb(var(--foreground))]">{String(title)}{title === "Restante" ? <span className="font-normal text-[rgb(var(--text-muted))]"> · plan complet</span> : null}</h2>
             <span className="text-xs font-medium tabular-nums text-[rgb(var(--text-muted))]">{(actions as RecoveryAction[]).length}</span>
           </div>
           <div>
             {(actions as RecoveryAction[]).length > 0 ? (
               (actions as RecoveryAction[]).map((action) => <TodayActionCard key={`${title}-${action.id}`} action={action} compact />)
             ) : (
-              <div className="py-3"><CompactEmptyState>Nu există acțiuni {String(emptyLabel)}.</CompactEmptyState></div>
+              <p className="py-2 text-xs text-[rgb(var(--text-muted))]">Nicio acțiune {String(emptyLabel)}.</p>
             )}
           </div>
         </section>
       ))}
+        </div>
+      </section>
     </div></PageShell>
   );
 }

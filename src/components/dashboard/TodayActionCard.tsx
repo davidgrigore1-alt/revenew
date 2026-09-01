@@ -2,22 +2,26 @@ import Link from "next/link";
 import { PriorityBadge } from "@/components/dashboard/PriorityBadge";
 import { CompleteTaskButton } from "@/components/revenue/TaskControls";
 import type { RecoveryAction } from "@/lib/recovery";
+import { domainStatePresentation } from "@/lib/ui/domain-state-presentation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export function TodayActionCard({ action, compact = false }: { action: RecoveryAction; compact?: boolean }) {
+  const priority = action.priority ?? "medium";
+  const priorityLabel = domainStatePresentation.priority[priority].label;
+  const prominentPriority = priority === "high";
   if (compact) {
     return (
       <article data-guide-anchor="today-action" className="grid gap-3 border-b border-[rgb(var(--border))] py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-semibold text-[rgb(var(--foreground))]">{action.title}</h3>
-            <PriorityBadge priority={action.priority} />
+            {prominentPriority ? <PriorityBadge priority={priority} /> : <span className="text-xs text-[rgb(var(--text-muted))]">Prioritate {priorityLabel}</span>}
           </div>
           <p className="mt-1 truncate text-xs text-[rgb(var(--muted-foreground))]">{action.company} · {action.reason}</p>
           <p className="mt-1 text-xs text-[rgb(var(--text-faint))]">Dovadă · termen înregistrat: {formatDate(action.dueAt)} · Valoare estimată, neconfirmată: {formatCurrency(action.estimatedValue, action.currency)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <Link href={action.opportunityId ? `/opportunities/${action.opportunityId}` : "/today"} className="focus-ring inline-flex min-h-8 items-center rounded-control px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))]">
+          <Link href={action.opportunityId ? `/opportunities/${action.opportunityId}` : "/today"} className="focus-ring inline-flex min-h-8 items-center rounded-control border border-[rgb(var(--primary)/.48)] bg-[rgb(var(--surface-subtle))] px-2.5 text-xs font-semibold text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-muted))]">
             Revizuiește acțiunea
           </Link>
           {action.opportunityId && action.status === "pending" ? <CompleteTaskButton opportunityId={action.opportunityId} actionId={action.id} /> : null}
@@ -33,7 +37,7 @@ export function TodayActionCard({ action, compact = false }: { action: RecoveryA
           <h3 className="font-semibold text-[rgb(var(--foreground))]">{action.title}</h3>
           <p className="mt-1 truncate text-sm text-[rgb(var(--muted-foreground))]">{action.company}</p>
         </div>
-        <PriorityBadge priority={action.priority} />
+        {prominentPriority ? <PriorityBadge priority={priority} /> : <span className="text-xs text-[rgb(var(--text-muted))]">Prioritate {priorityLabel}</span>}
       </div>
       <div className="mt-3 border-l-2 border-[rgb(var(--brand-500)/0.55)] pl-3">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-faint))]">De ce contează acum</p>
