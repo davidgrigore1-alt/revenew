@@ -1,7 +1,11 @@
 {
-  "name": "moneyhunter-ai",
+  "name": "revenew",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.18.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "demo:dev": "node scripts/demo/dev-local-demo.mjs",
