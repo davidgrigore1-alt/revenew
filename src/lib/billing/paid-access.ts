@@ -9,7 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
 
 export type ReveNewAccessMode = "preview" | "paid";
-export type PaidAccessStatus = "active" | "none" | "expired" | "past_due" | "cancelled" | "trialing" | "demo_unconfigured" | "preview_active" | "preview_missing";
+export type PaidAccessStatus = "active" | "none" | "expired" | "past_due" | "cancelled" | "trialing" | "demo_unconfigured" | "verification_unavailable" | "preview_active" | "preview_missing";
 
 export type PaidAccessSubscription = {
   id: string;
@@ -41,6 +41,7 @@ const paidStatusLabels: Record<PaidAccessStatus, string> = {
   cancelled: "Anulat",
   trialing: "Trial neactiv pentru acces",
   demo_unconfigured: "Mod demo local",
+  verification_unavailable: "Verificare abonament indisponibilă",
   preview_active: "Mod de testare activ",
   preview_missing: "Niciun plan selectat"
 };
@@ -67,7 +68,21 @@ function isFutureDate(value: string | null) {
   return Boolean(value && new Date(value).getTime() > Date.now());
 }
 
-function evaluateSubscription(subscription: PaidAccessSubscription | null): Pick<PaidAccessContext, "hasAccess" | "accessStatus" | "reason"> {
+export function mustFailClosedPaidAccess({
+  nodeEnv,
+  accessMode,
+  supabaseConfigured,
+  businessSource
+}: {
+  nodeEnv: string | undefined;
+  accessMode: ReveNewAccessMode;
+  supabaseConfigured: boolean;
+  businessSource: CurrentBusinessResult["source"];
+}) {
+  return nodeEnv === "production" && accessMode === "paid" && (!supabaseConfigured || businessSource === "demo");
+}
+
+export function evaluateSubscription(subscription: PaidAccessSubscription | null): Pick<PaidAccessContext, "hasAccess" | "accessStatus" | "reason"> {
   if (!subscription) {
     return { hasAccess: false, accessStatus: "none", reason: "missing" };
   }
@@ -117,6 +132,23 @@ const getCurrentPaidAccessContextCached = cache(async function getCurrentPaidAcc
       reason: previewPlan ? "preview_plan_selected" : "preview_plan_required",
       accessMode,
       previewPlan
+    };
+  }
+
+  if (mustFailClosedPaidAccess({
+    nodeEnv: process.env.NODE_ENV,
+    accessMode,
+    supabaseConfigured: isSupabaseConfigured,
+    businessSource: currentBusiness.source
+  })) {
+    return {
+      currentBusiness,
+      subscription: null,
+      hasAccess: false,
+      accessStatus: "verification_unavailable",
+      reason: "subscription_verification_unavailable",
+      accessMode,
+      previewPlan: null
     };
   }
 

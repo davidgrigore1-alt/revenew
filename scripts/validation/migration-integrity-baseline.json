@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260830090801_commercial_signal_decision_security.sql",
+  "reviewedThrough": "20260902004041_manual_paid_access_operator_control.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -51,6 +51,7 @@
     "20260828110003_verified_commercial_impact.sql": "90495ca1674b361bcf4f48499f76c1b8c4087695280db2d8ce46f426013da89c",
     "20260828131036_executive_review_checkpoints.sql": "cb735df2d4a251d7137fcec7c8ea438cc580a1f18b560e8df3ceccd385d2565d",
     "20260829154828_allow_service_role_response_window_update.sql": "41fd0ed75c1e74221009422fce060652a7395f79e96851bdf59a821c62ea4168",
-    "20260830090801_commercial_signal_decision_security.sql": "e1375313ebe05f58793af1b4e77eb0187e66cb177adfacf0a9b640e9ca29cc81"
+    "20260830090801_commercial_signal_decision_security.sql": "e1375313ebe05f58793af1b4e77eb0187e66cb177adfacf0a9b640e9ca29cc81",
+    "20260902004041_manual_paid_access_operator_control.sql": "e716408a948ffc5c07d211c8f685c10beeb12de6bf56671d0f2b996a7f3df313"
   }
 }

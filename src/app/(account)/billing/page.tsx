@@ -3,6 +3,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { getCurrentPaidAccessContext, getPaidAccessStatusLabel } from "@/lib/billing/paid-access";
+import { getPaidPlanLabel } from "@/lib/billing/plans";
 import { formatDate } from "@/lib/utils";
 
 export default async function BillingPage() {
@@ -44,7 +45,7 @@ export default async function BillingPage() {
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--muted-foreground))]">Plan</dt>
-              <dd className="mt-1 font-semibold">{isPreviewMode ? context.previewPlan?.title ?? "Niciun plan selectat" : context.subscription?.plan ?? "Fără plan activ"}</dd>
+              <dd className="mt-1 font-semibold">{isPreviewMode ? context.previewPlan?.title ?? "Niciun plan selectat" : getPaidPlanLabel(context.subscription?.plan) ?? "Fără plan activ"}</dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--muted-foreground))]">{isPreviewMode ? "Acces" : "Reînnoire / expirare"}</dt>

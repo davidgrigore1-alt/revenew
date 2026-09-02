@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { authPath } from "@/lib/auth/redirects";
 import { getCurrentPaidAccessContext, getPaidAccessStatusLabel } from "@/lib/billing/paid-access";
-import { previewPlans } from "@/lib/billing/plans";
+import { getPaidPlanLabel, previewPlans } from "@/lib/billing/plans";
 import { formatDate } from "@/lib/utils";
 
 const paidPlans = previewPlans.map((plan) => {
@@ -39,6 +39,7 @@ const paidPlans = previewPlans.map((plan) => {
 });
 
 function reasonMessage(reason?: string) {
+  if (reason === "subscription_verification_unavailable") return "Statutul abonamentului nu poate fi verificat momentan. Accesul rămâne blocat până la verificare.";
   if (reason === "expired") return "Perioada planului s-a încheiat. Poți verifica statutul sau continua procesul comercial pentru reactivare.";
   if (reason === "payment_failed") return "Confirmarea plății nu este disponibilă încă. Verifică din nou statutul sau consultă zona de facturare.";
   if (reason === "trial_not_enabled") return "Accesul operațional necesită un plan confirmat. Contul și spațiul de lucru rămân păstrate.";
@@ -59,7 +60,7 @@ export default async function AccessPage(props: { searchParams?: Promise<{ reaso
     ? context.previewPlan?.id === "audit"
       ? "Audit de recuperare venituri"
       : context.previewPlan?.title ?? "Niciun plan selectat"
-    : context.subscription?.plan ?? "Fără plan activ";
+    : getPaidPlanLabel(context.subscription?.plan) ?? "Fără plan activ";
   const accessLabel = isPreviewMode ? "Acces demonstrativ controlat" : context.hasAccess ? "Acces comercial activ" : "Confirmare comercială necesară";
 
   return (

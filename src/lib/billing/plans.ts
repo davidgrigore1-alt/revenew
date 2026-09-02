@@ -19,6 +19,22 @@ export const previewPlans = [
 
 export type PreviewPlanId = (typeof previewPlans)[number]["id"];
 
+export const paidPlanLabels = {
+  demo: "Demo",
+  starter: "Start",
+  growth: "Growth",
+  agency: "Scale",
+  enterprise: "Enterprise"
+} as const;
+
+export type PaidPlanId = keyof typeof paidPlanLabels;
+
+export function getPaidPlanLabel(value: string | null | undefined) {
+  return typeof value === "string" && value in paidPlanLabels
+    ? paidPlanLabels[value as PaidPlanId]
+    : null;
+}
+
 const previewPlanIds = new Set<string>(previewPlans.map((plan) => plan.id));
 
 export function isPreviewPlanId(value: unknown): value is PreviewPlanId {

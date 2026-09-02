@@ -13,6 +13,8 @@
     "demo:verify": "node scripts/demo/verify-local-demo.mjs",
     "demo:buyer-ready": "npm run demo:seed && npm run demo:verify",
     "demo:reset": "node scripts/demo/reset-local-demo.mjs",
+    "billing:access": "node scripts/billing/manual-paid-access.mjs",
+    "billing:verify-local": "node scripts/billing/verify-manual-paid-access-local.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
