@@ -1,36 +1,34 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildSecurityHeaders } from "./src/lib/security/http-security.mjs";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: projectRoot,
+  poweredByHeader: false,
 
   async headers() {
-    const commonSecurityHeaders = [
-      { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-      { key: "X-Frame-Options", value: "DENY" },
-      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-      {
-        key: "Content-Security-Policy",
-        value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
-      },
-      ...(process.env.NODE_ENV === "production"
-        ? [
-            {
-              key: "Strict-Transport-Security",
-              value: "max-age=31536000"
-            }
-          ]
-        : [])
-    ];
+    const commonSecurityHeaders = buildSecurityHeaders();
+    const privateNoStore = [{ key: "Cache-Control", value: "private, no-store" }];
 
     return [
       {
         source: "/:path*",
         headers: commonSecurityHeaders
+      },
+      {
+        source: "/api/:path*",
+        headers: privateNoStore
+      },
+      {
+        source: "/auth/:path*",
+        headers: privateNoStore
+      },
+      {
+        source: "/debug/:path*",
+        headers: privateNoStore
       }
     ];
   }

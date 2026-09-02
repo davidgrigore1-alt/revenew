@@ -3,12 +3,17 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { hasPersistedSupabaseAuthCookie } from "@/lib/auth/session-errors";
 import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supabase/status";
 
 export async function refreshSupabaseSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const hasPersistedSession = hasPersistedSupabaseAuthCookie(request.cookies.getAll());
 
   if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) {
+    if (hasPersistedSession) {
+      response.headers.set("Cache-Control", "private, no-store");
+    }
     return response;
   }
 
@@ -37,7 +42,7 @@ export async function refreshSupabaseSession(request: NextRequest) {
 
   await supabase.auth.getClaims();
 
-  if (refreshedCookies) {
+  if (refreshedCookies || hasPersistedSession) {
     response.headers.set("Cache-Control", "private, no-store");
   }
 

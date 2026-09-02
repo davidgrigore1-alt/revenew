@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import ts from "typescript";
 import vm from "node:vm";
+import { buildContentSecurityPolicy, buildSecurityHeaders } from "../src/lib/security/http-security.mjs";
 
 const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8");
 const nodeRequire = createRequire(import.meta.url);
@@ -64,6 +65,13 @@ function loadMiddleware({ configured = true, refreshed = [] } = {}) {
           isSupabaseConfigured: configured,
           supabaseAnonKey: configured ? "public-anon-key" : undefined,
           supabaseUrl: configured ? "https://project.example" : undefined
+        };
+      }
+      if (specifier === "@/lib/auth/session-errors") {
+        return {
+          hasPersistedSupabaseAuthCookie: (cookies) => cookies.some((cookie) =>
+            (/^sb-.+-auth-token(?:\.\d+)?$/.test(cookie.name) || cookie.name === "supabase-auth-token") && Boolean(cookie.value)
+          )
         };
       }
       if (specifier === "@supabase/ssr") {
@@ -126,16 +134,31 @@ test("refreshed cookies propagate downstream and outward with private no-store c
   assert.equal(response.headers.get("Cache-Control"), "private, no-store");
 });
 
-test("unconfigured and non-refresh requests remain pass-through and publicly cache-neutral", async () => {
+test("unconfigured and anonymous requests remain pass-through and publicly cache-neutral", async () => {
   const unconfigured = loadMiddleware({ configured: false });
   const unconfiguredResponse = await unconfigured.refreshSupabaseSession({ cookies: new unconfigured.CookieJar() });
   assert.equal(unconfigured.refreshCalls(), 0);
   assert.equal(unconfiguredResponse.headers.get("Cache-Control"), null);
 
+  const staleUnconfiguredResponse = await unconfigured.refreshSupabaseSession({
+    cookies: new unconfigured.CookieJar([{ name: "sb-project-auth-token", value: "persisted-session" }])
+  });
+  assert.equal(staleUnconfiguredResponse.headers.get("Cache-Control"), "private, no-store");
+
   const configured = loadMiddleware();
   const configuredResponse = await configured.refreshSupabaseSession({ cookies: new configured.CookieJar() });
   assert.equal(configured.refreshCalls(), 1);
   assert.equal(configuredResponse.headers.get("Cache-Control"), null);
+});
+
+test("an established Supabase session is private no-store even when no cookie refresh occurs", async () => {
+  const harness = loadMiddleware();
+  const response = await harness.refreshSupabaseSession({
+    cookies: new harness.CookieJar([{ name: "sb-project-auth-token", value: "persisted-session" }])
+  });
+
+  assert.equal(harness.refreshCalls(), 1);
+  assert.equal(response.headers.get("Cache-Control"), "private, no-store");
 });
 
 test("Supabase auth cookie options are explicit and preserve the browser contract", () => {
@@ -161,16 +184,31 @@ test("Google internal redirects use the canonical safe request-origin boundary",
   assert.doesNotMatch(source, /http:\/\/localhost:3000|REVENEW_PUBLIC_SITE_URL/);
 });
 
-test("HTTP headers retain the existing baseline and add only the approved narrow policy", () => {
+test("HTTP security policy is centralized, strict in production, and keeps development compatibility explicit", () => {
   const source = read("next.config.mjs");
+  const productionCsp = buildContentSecurityPolicy({ nodeEnv: "production", supabaseUrl: "https://project.supabase.co/rest/v1" });
+  const developmentCsp = buildContentSecurityPolicy({ nodeEnv: "development", supabaseUrl: "http://127.0.0.1:54321" });
+  const productionHeaders = buildSecurityHeaders({ nodeEnv: "production", supabaseUrl: "https://project.supabase.co" });
+  const headerValue = (key) => productionHeaders.find((header) => header.key === key)?.value;
 
-  for (const header of ["X-Content-Type-Options", "Referrer-Policy", "X-Frame-Options", "Permissions-Policy"]) {
-    assert.match(source, new RegExp(header));
-  }
-  assert.match(source, /frame-ancestors 'none'; base-uri 'self'; object-src 'none'/);
-  assert.match(source, /process\.env\.NODE_ENV === "production"[\s\S]*Strict-Transport-Security/);
-  assert.match(source, /max-age=31536000/);
-  assert.doesNotMatch(source, /includeSubDomains|preload|script-src|connect-src|frame-src/);
+  assert.match(source, /buildSecurityHeaders/);
+  assert.match(source, /poweredByHeader:\s*false/);
+  assert.match(source, /privateNoStore = \[\{ key: "Cache-Control", value: "private, no-store" \}\]/);
+  assert.match(source, /source: "\/api\/:path\*"[\s\S]*?headers: privateNoStore/);
+  assert.match(source, /source: "\/auth\/:path\*"[\s\S]*?headers: privateNoStore/);
+  assert.equal(headerValue("X-Content-Type-Options"), "nosniff");
+  assert.equal(headerValue("Referrer-Policy"), "strict-origin-when-cross-origin");
+  assert.equal(headerValue("X-Frame-Options"), "DENY");
+  assert.equal(headerValue("Permissions-Policy"), "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=()");
+  assert.equal(headerValue("Strict-Transport-Security"), "max-age=31536000");
+  assert.match(productionCsp, /^default-src 'self'; script-src 'self' 'unsafe-inline' https:\/\/accounts\.google\.com https:\/\/apis\.google\.com;/);
+  assert.match(productionCsp, /connect-src 'self' https:\/\/project\.supabase\.co https:\/\/accounts\.google\.com https:\/\/apis\.google\.com https:\/\/docs\.google\.com https:\/\/drive\.google\.com/);
+  assert.match(productionCsp, /frame-src https:\/\/docs\.google\.com https:\/\/drive\.google\.com/);
+  assert.match(productionCsp, /object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests$/);
+  assert.doesNotMatch(productionCsp, /unsafe-eval|\*|includeSubDomains|preload/);
+  assert.match(developmentCsp, /script-src 'self' 'unsafe-inline' 'unsafe-eval'/);
+  assert.doesNotMatch(developmentCsp, /upgrade-insecure-requests/);
+  assert.doesNotMatch(buildContentSecurityPolicy({ nodeEnv: "production", supabaseUrl: "http://remote.example" }), /remote\.example/);
 });
 
 test("environment example classifies names without values or public secrets", () => {
@@ -185,6 +223,35 @@ test("environment example classifies names without values or public secrets", ()
   assert.ok(variables.length > 0);
   assert.ok(variables.every((line) => line.endsWith("=") || line.endsWith('=""')), "the example must document names without configured values");
   assert.doesNotMatch(source, /NEXT_PUBLIC_[A-Z0-9_]*(?:SECRET|TOKEN|SERVICE_ROLE|PRIVATE|PASSWORD)/);
+
+  const publicRuntimeSource = [
+    "src/lib/supabase/status.ts",
+    "src/lib/supabase/client.ts",
+    "src/components/apps/drive-picker.ts"
+  ].map(read).join("\n");
+  assert.doesNotMatch(publicRuntimeSource, /SUPABASE_SERVICE_ROLE_KEY|GOOGLE_CLIENT_SECRET|GOOGLE_TOKEN_ENCRYPTION_KEY|OPENAI_API_KEY|RESEND_API_KEY/);
+  assert.match(read("src/lib/supabase/status.ts"), /NEXT_PUBLIC_SUPABASE_URL/);
+  assert.match(read("src/lib/supabase/status.ts"), /NEXT_PUBLIC_SUPABASE_ANON_KEY/);
+});
+
+test("private route families and internal surfaces retain cache, production, and permission boundaries", () => {
+  const config = read("next.config.mjs");
+  const robots = read("src/app/robots.ts");
+  const protectedLayout = read("src/app/(protected)/layout.tsx");
+  const tools = read("src/app/(protected)/tools/page.tsx");
+  const adminLayout = read("src/app/(protected)/admin/layout.tsx");
+
+  for (const routeFamily of ["/api/:path*", "/auth/:path*", "/debug/:path*"]) assert.match(config, new RegExp(`source: "${routeFamily.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  for (const route of ["/admin", "/api", "/debug"]) assert.match(robots, new RegExp(`"${route}"`));
+  for (const debugRoute of ["src/app/debug/supabase/page.tsx", "src/app/debug/repair-profile/page.tsx"]) {
+    const source = read(debugRoute);
+    assert.match(source, /process\.env\.NODE_ENV !== "development"/);
+    assert.match(source, /notFound\(\)/);
+  }
+  assert.match(protectedLayout, /requireActivePaidAccess\(\)/);
+  assert.match(protectedLayout, /hasPermission\(authorization, "workspace\.read"\)/);
+  assert.match(tools, /hasPermission\(authorization, module\.permission\)/);
+  assert.match(adminLayout, /hasPermission\(authorization, "platform\.admin\.access"\)/);
 });
 
 test("dependency patches and equivalent Next flat lint configuration are pinned", () => {

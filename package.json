@@ -26,9 +26,10 @@
     "test:enterprise": "node --test tests/enterprise-workspace-governance.test.mjs",
     "validate:migrations": "node scripts/validation/check-migrations.mjs",
     "validate:security": "node scripts/validation/check-repository-safety.mjs",
+    "validate:http-security": "node scripts/validation/verify-http-security-local.mjs",
     "validate:diff": "git diff --check",
     "validate:quick": "npm run typecheck && npm run lint && npm run test:targeted && npm run validate:migrations && npm run validate:security && npm run validate:diff",
-    "validate": "npm run typecheck && npm run lint && npm test && npm run validate:migrations && npm run validate:security && npm run build && npm run validate:diff"
+    "validate": "npm run typecheck && npm run lint && npm test && npm run validate:migrations && npm run validate:security && npm run build && npm run validate:http-security && npm run validate:diff"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
