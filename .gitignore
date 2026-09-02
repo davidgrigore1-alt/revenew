@@ -28,3 +28,18 @@ artifacts/phase1-verification/local-*
 .codex-dev-*.log
 dev-server.*.log
 artifacts/
+
+# Local snapshots, backups and one-off patch artifacts
+.finalize-snapshots/
+.manual-ui-backups/
+.revenew-backups/
+
+ReveNew-ControlCenter-Polish-v4*
+ReveNew-Finalize-Phase1*
+ReveNew-PatchKit-v1.1*
+revenew-control-center-premium*.ps1
+
+src/**/*.backup-*
+src/**/*.j1-backup-*
+src/**/*.j1-typefix-backup-*
+src/**/*.encoding-backup-*

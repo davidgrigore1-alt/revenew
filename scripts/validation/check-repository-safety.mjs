@@ -11,10 +11,56 @@ const allowedDocumentedCsvFiles = new Set([
   "docs/samples/revenew-client-audit-template.csv",
   "public/samples/revenew-client-audit-template.csv"
 ]);
+const knownAccidentalRootFiles = new Set([
+  "-files --others --exclude-standard",
+  "ecurity",
+  "end",
+  "formatproductcurrency(value",
+  "index",
+  "item.currency+",
+  "monetary",
+  "new",
+  "observer.disconnect()",
+  "point.cumulative))",
+  "point.date",
+  "point.date))",
+  "powershell",
+  "setactivebucket(index)}",
+  "setactivedate(point.date)}",
+  "tatus",
+  "total",
+  "{"
+]);
+
 
 export function forbiddenFileReason(fileName) {
   const lower = fileName.replaceAll("\\", "/").toLowerCase();
   const base = path.posix.basename(lower);
+  if (!lower.includes("/") && knownAccidentalRootFiles.has(lower)) {
+  return "accidental shell artifact";
+}
+
+if (
+  /(^|\/)(?:\.finalize-snapshots|\.manual-ui-backups|\.revenew-backups)(\/|$)/.test(lower)
+) {
+  return "local snapshot or backup artifact";
+}
+
+if (
+  /^revenew-(?:controlcenter-polish-v4|finalize-phase1|patchkit-v1\.1)/.test(lower)
+) {
+  return "local patch or snapshot kit";
+}
+
+if (
+  /(?:\.backup-|\.j1-backup-|\.j1-typefix-backup-|\.encoding-backup-)/.test(base)
+) {
+  return "source backup artifact";
+}
+
+if (/^revenew-control-center-premium.*\.ps1$/.test(base)) {
+  return "one-off local patch script";
+}
   if (/^\.env(?:\..+)?$/.test(base) && base !== ".env.example") return "runtime environment file";
   if (lower.startsWith(".next/") || lower.includes("/node_modules/") || lower.startsWith("node_modules/")) return "generated dependency/build directory";
   if (/\.codex.*(?:browser|profile)/.test(lower)) return "Codex browser profile";
@@ -63,7 +109,17 @@ async function main() {
 
   const requiredIgnores = [
     ".next", "node_modules", ".env", ".env.local", ".env.development.local",
-    ".env.test.local", ".env.production.local", "*.log", ".codex-e2e-browser-profile/", "artifacts/"
+    ".env.test.local", ".env.production.local", "*.log", ".codex-e2e-browser-profile/", "artifacts/", ".finalize-snapshots/",
+".manual-ui-backups/",
+".revenew-backups/",
+"ReveNew-ControlCenter-Polish-v4*",
+"ReveNew-Finalize-Phase1*",
+"ReveNew-PatchKit-v1.1*",
+"revenew-control-center-premium*.ps1",
+"src/**/*.backup-*",
+"src/**/*.j1-backup-*",
+"src/**/*.j1-typefix-backup-*",
+"src/**/*.encoding-backup-*"
   ];
   const gitignore = await readFile(path.join(repositoryRoot, ".gitignore"), "utf8");
   const ignoreLines = new Set(gitignore.split(/\r?\n/).map((line) => line.trim()).filter(Boolean));
