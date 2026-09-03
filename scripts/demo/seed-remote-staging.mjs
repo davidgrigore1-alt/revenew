@@ -172,11 +172,11 @@ async function main() {
   const access = await requireOk(
     "Activare acces staging",
     admin.rpc("set_manual_subscription_access", {
-      target_business_id: DEMO.businessId,
-      target_plan: "growth",
-      target_status: "active",
-      target_current_period_end: periodEnd,
-      operator_reference: "staging-visual-audit"
+      p_business_id: DEMO.businessId,
+      p_plan: "growth",
+      p_status: "active",
+      p_current_period_end: periodEnd,
+      p_reference: "staging-visual-audit"
     })
   );
 
