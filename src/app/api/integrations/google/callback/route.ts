@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       // Capability extension must not rewrite Gmail/Calendar health or cursors.
       const { encryptGoogleRefreshCredential } = await import("@/lib/google-workspace/crypto");
       await updateConnection(existing.id, actor, {
-        granted_scopes: capabilities.scopes, drive_status: "connected",
+        granted_scopes: grantedScopes, drive_status: "connected",
         ...(token.refresh_token ? { encrypted_refresh_credential: encryptGoogleRefreshCredential(token.refresh_token) } : {})
       });
       return clearAttempt(NextResponse.redirect(appsRedirect(request, "drive-enabled")));
