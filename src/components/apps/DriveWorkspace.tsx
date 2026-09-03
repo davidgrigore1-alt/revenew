@@ -92,13 +92,14 @@ export function DriveWorkspace({opportunityId,authorized=false,compact=false,sel
    {model&&!enabled&&model.connectionId?<button className={actionClass} onClick={()=>trust.current?.showModal()}>Reautorizează Google Drive</button>:null}
   </section>:null}
   {message?<p role="status" className="mt-3 text-xs leading-5">{message}</p>:null}
-  <dialog ref={trust} className="w-[min(32rem,95vw)] rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 text-[rgb(var(--foreground))] backdrop:bg-black/50" aria-labelledby="drive-trust-title">
+  <dialog ref={trust} className="dark w-[min(32rem,95vw)] rounded-xl border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-6 text-[rgb(var(--foreground))] backdrop:bg-black/50" style={{colorScheme:"dark"}} aria-labelledby="drive-trust-title">
    <h3 id="drive-trust-title" className="text-base font-semibold">Activează Google Drive</h3>
-   <dl className="mt-4 space-y-3 text-sm"><div><dt className="font-medium">Ce poate accesa ReveNew?</dt><dd>Doar documentele pe care le selectezi explicit.</dd></div>
-    <div><dt className="font-medium">De ce?</dt><dd>Pentru a le folosi drept context și dovezi comerciale.</dd></div>
-    <div><dt className="font-medium">Ce NU face?</dt><dd>Nu scanează întregul Google Drive prin această funcție.</dd></div>
-    <div><dt className="font-medium">Control</dt><dd>Documentele pot fi eliminate ulterior din ReveNew.</dd></div></dl>
-   <div className="mt-5 flex justify-end gap-2"><button className={actionClass} onClick={()=>trust.current?.close()}>Anulează</button><a className={primaryClass} href="/api/integrations/google/connect?capability=drive">Continuă cu Google Drive</a></div>
+   <dl className="mt-6 space-y-5 text-sm leading-6">
+    <div className="border-l-2 border-[rgb(var(--success-border))] pl-3"><dt className="font-semibold text-[rgb(var(--success-text))]">Ce poate accesa ReveNew?</dt><dd className="mt-1 text-[rgb(var(--text-muted))]">Doar documentele pe care le selectezi explicit.</dd></div>
+    <div><dt className="font-medium">De ce?</dt><dd className="mt-1 text-[rgb(var(--text-muted))]">Pentru a le folosi drept context și dovezi comerciale.</dd></div>
+    <div className="border-l-2 border-[rgb(var(--warning-border))] pl-3"><dt className="font-semibold text-[rgb(var(--warning-text))]">Ce NU face?</dt><dd className="mt-1 text-[rgb(var(--text-muted))]">Nu scanează întregul Google Drive prin această funcție.</dd></div>
+    <div className="border-t border-[rgb(var(--border))] pt-4"><dt className="font-medium">Control</dt><dd className="mt-1 text-[rgb(var(--text-muted))]">Documentele pot fi eliminate ulterior din ReveNew.</dd></div></dl>
+   <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-[rgb(var(--border))] pt-4"><button className={actionClass} onClick={()=>trust.current?.close()}>Anulează</button><a className={primaryClass} href="/api/integrations/google/connect?capability=drive">Continuă cu Google Drive</a></div>
   </dialog>
   <dialog ref={review} tabIndex={-1} onClose={()=>{setFiles([]);restoreReviewOrigin();}} onCancel={event=>{if(busy)event.preventDefault();}} className="w-[min(56rem,calc(100vw-2rem))] overflow-visible rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-0 text-[rgb(var(--foreground))] shadow-none backdrop:bg-[rgb(12_14_16/0.62)]" aria-labelledby="drive-review-title">
    <div className="max-h-[min(42rem,calc(100dvh-2rem))] overflow-y-auto overscroll-contain rounded-[inherit]">

@@ -428,7 +428,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         ) : null}
 
         {!isSignup ? (
-          <div className="flex justify-end">
+          <div className="flex justify-end py-1.5">
             <Link href="/forgot-password" className="focus-ring rounded px-1 text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Ai uitat parola?</Link>
           </div>
         ) : null}
