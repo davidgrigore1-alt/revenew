@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { StatusNotice } from "@/components/ui/StatusNotice";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { SavedViewControls } from "@/components/filters/SavedViewControls";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
 import { normalizeOptionalCompanyWebsite } from "@/lib/crm/website";
@@ -81,6 +82,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   }).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
   const visibleIds = view === "contacts" ? sortedContacts.map((item) => item.id) : sortedOrganizations.map((item) => item.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id));
   useEffect(() => {
     if (initialCreate) setPanel(view === "contacts" ? "contact" : "organization");
   }, [initialCreate, view]);
@@ -318,7 +320,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             const activeOpportunities = organizationStats[organization.id]?.activeOpportunities ?? 0;
             return <li key={organization.id} className="product-interactive-row border-l-2 border-l-transparent px-1 py-3 focus-within:border-l-[rgb(var(--interaction))]">
               <div className="flex items-start gap-3">
-                <input type="checkbox" checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-1 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
+                <Checkbox checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-1" />
                 <Link href={`/crm/organizations/${organization.id}`} className="focus-ring min-w-0 flex-1 rounded-control">
                   <span className="block truncate text-sm font-semibold" title={organization.name}>{organization.name}</span>
                   <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{[relationshipLabels[organization.relationshipStatus ?? "prospect"], organization.industry, organization.city].filter(Boolean).join(" · ")}</span>
@@ -335,7 +337,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             <caption className="sr-only">Companiile accesibile în spațiul de lucru curent</caption>
             <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
               <tr className="border-b border-[rgb(var(--border-strong))]">
-                <th scope="col" className="w-[27%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează companiile vizibile" className="size-4 accent-[rgb(var(--interaction))]" />Companie</span></th>
+                <th scope="col" className="w-[27%] px-3 py-2.5"><span className="flex items-center gap-2"><Checkbox checked={allVisibleSelected} indeterminate={!allVisibleSelected && someVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează companiile vizibile" />Companie</span></th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Relație</th>
                 <th scope="col" className="w-[22%] px-3 py-2.5">Contact principal</th>
                 <th scope="col" className="w-[12%] px-3 py-2.5">Oportunități</th>
@@ -350,7 +352,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
                 return (
                   <tr key={organization.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
                     <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--interaction))] group-focus-within:border-l-[rgb(var(--interaction))]">
-                      <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-0.5 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
+                      <div className="flex min-w-0 items-start gap-2"><Checkbox checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-0.5" />
                       <Link href={`/crm/organizations/${organization.id}`} className="focus-ring block min-w-0 flex-1 rounded-control">
                         <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--interaction))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline" title={organization.name}>{organization.name}</span>
                         <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{[organization.industry, organization.city].filter(Boolean).join(" · ") || "Context necompletat"}</span>
@@ -382,7 +384,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             const context = contactOpportunityStats[contact.id];
             return <li key={contact.id} className="product-interactive-row border-l-2 border-l-transparent px-1 py-3 focus-within:border-l-[rgb(var(--interaction))]">
               <div className="flex items-start gap-3">
-                <input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(contact.id)) next.delete(contact.id); else next.add(contact.id); return next; })} aria-label={"Selectează contactul " + contact.fullName} className="mt-1 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
+                <Checkbox checked={selectedIds.has(contact.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(contact.id)) next.delete(contact.id); else next.add(contact.id); return next; })} aria-label={"Selectează contactul " + contact.fullName} className="mt-1" />
                 <Link href={`/crm/contacts/${contact.id}`} className="focus-ring min-w-0 flex-1 rounded-control">
                   <span className="block truncate text-sm font-semibold" title={contact.fullName}>{contact.fullName}</span>
                   <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{[contact.jobTitle, contact.organization?.name].filter(Boolean).join(" · ") || "Rol și companie neconfirmate"}</span>
@@ -399,7 +401,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             <caption className="sr-only">Contactele comerciale accesibile în spațiul de lucru curent</caption>
             <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
               <tr className="border-b border-[rgb(var(--border-strong))]">
-                <th scope="col" className="w-[24%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează contactele vizibile" className="size-4 accent-[rgb(var(--interaction))]" />Persoană</span></th>
+                <th scope="col" className="w-[24%] px-3 py-2.5"><span className="flex items-center gap-2"><Checkbox checked={allVisibleSelected} indeterminate={!allVisibleSelected && someVisibleSelected} onChange={() => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))} aria-label="Selectează contactele vizibile" />Persoană</span></th>
                 <th scope="col" className="w-[20%] px-3 py-2.5">Companie</th>
                 <th scope="col" className="w-[14%] px-3 py-2.5">Rol</th>
                 <th scope="col" className="w-[23%] px-3 py-2.5">Context comercial</th>
@@ -411,7 +413,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
               {sortedContacts.map((contact) => (
                 <tr key={contact.id} className="group transition-colors hover:bg-[rgb(var(--surface-elevated))] focus-within:bg-[rgb(var(--surface-elevated))]">
                   <td className="border-l-2 border-l-transparent px-3 py-2.5 align-middle group-hover:border-l-[rgb(var(--interaction))] group-focus-within:border-l-[rgb(var(--interaction))]">
-                    <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(contact.id)) next.delete(contact.id); else next.add(contact.id); return next; })} aria-label={"Selectează contactul " + contact.fullName} className="mt-0.5 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
+                    <div className="flex min-w-0 items-start gap-2"><Checkbox checked={selectedIds.has(contact.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(contact.id)) next.delete(contact.id); else next.add(contact.id); return next; })} aria-label={"Selectează contactul " + contact.fullName} className="mt-0.5" />
                     <Link href={"/crm/contacts/" + contact.id} className="focus-ring block w-full min-w-0 flex-1 rounded-control text-left" aria-label={"Deschide contactul " + contact.fullName}>
                       <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--interaction))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline" title={contact.fullName}>{contact.fullName}</span>
                       <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{contact.jobTitle ?? "Funcție neconfirmată"}</span>

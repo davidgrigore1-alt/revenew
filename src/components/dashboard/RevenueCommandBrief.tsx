@@ -41,7 +41,7 @@ export function RevenueCommandBrief({model}:{model:RevenueCommandModel}){
   <div className="executive-decision-workbench mt-4 grid min-w-0 border-y border-[rgb(var(--border))] lg:grid-cols-[minmax(0,1.3fr)_minmax(340px,1fr)]">
    <section aria-label="Decizii executive" className={"executive-master-pane min-w-0 " + patterns.reviewPane}>
     <h2 className="px-3 py-3 text-sm font-semibold">Ce necesită decizie <span className="font-normal text-[rgb(var(--text-muted))]">· primele {model.decisions.length}</span></h2>
-    {model.decisions.length?<ul className="divide-y divide-[rgb(var(--border))]">{model.decisions.map((d,i)=><li key={d.id} className={selected?.id===d.id?"executive-decision-selected border-l-2 border-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"border-l-2 border-transparent"}>
+    {model.decisions.length?<ul className="divide-y divide-[rgb(var(--border))]">{model.decisions.map((d,i)=><li key={d.id} className={"border-l-2 border-l-[rgb(var(--border-strong)/0.55)] transition-colors hover:border-l-[rgb(var(--border-strong))] "+(selected?.id===d.id?"executive-decision-selected border-l-[rgb(var(--primary))] bg-[rgb(var(--surface-elevated))]":"")}>
      <button type="button" aria-pressed={selected?.id===d.id} aria-controls="executive-decision-detail" onClick={()=>setSelectedId(d.id)} className="focus-ring block w-full px-3 py-3 text-left hover:bg-[rgb(var(--surface-subtle))]">
       <span className="flex items-baseline gap-2"><span className={muted}>{i+1}</span><span className="min-w-0 break-words text-sm font-semibold">{d.state.title}</span></span>
       <span className={"mt-1 block "+muted}>{d.state.organization.name??"Companie neconfirmată"}</span>

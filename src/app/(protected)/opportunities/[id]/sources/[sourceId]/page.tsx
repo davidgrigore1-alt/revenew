@@ -21,12 +21,15 @@ export default async function SourcePage(props:{params: Promise<{id:string;sourc
  const documentFacts=truth?.claims.filter(claim=>["commercial_value","offer_deadline"].includes(claim.type)&&claim.evidence.some(e=>e.sourceDocumentId===params.sourceId)).slice(0,2)??[];
  const {source,segments}=detail;const original=safeOriginalEvidenceHref(source.web_view_link??undefined);
  return <PageShell eyebrow="Sursă comercială" title={source.name} description={sourceStateLabels[source.state]} breadcrumbs={[{label:"Documente",href:"/documents"},{label:detail.context.title,href:`/opportunities/${params.id}?tab=files`},{label:"Sursă documentară"}]}>
-  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-3 text-xs">
-   <div className="flex items-center gap-3"><DocumentTypeIcon mime={source.mime_type}/><div>
-    <p>Google Drive · {documentMimeLabel(source.mime_type)} · {documentKinds[source.document_kind]}</p>
-    <p className="mt-1 text-[rgb(var(--text-muted))]">{detail.context.title}</p>
-    {source.modified_time?<p>Modificat în sursă {formatProductDateTime(source.modified_time)}</p>:null}
-    <p>{source.last_synced_at?"Verificat "+formatProductDateTime(source.last_synced_at):"Nesincronizat"}</p>
+  <div className="flex flex-wrap items-start justify-between gap-5 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-4 sm:px-5">
+   <div className="flex min-w-0 items-start gap-3"><DocumentTypeIcon mime={source.mime_type}/><div className="min-w-0">
+    <p className="text-sm font-semibold text-[rgb(var(--foreground))]">Google Drive · {documentMimeLabel(source.mime_type)}</p>
+    <dl className="mt-3 grid gap-x-6 gap-y-2 text-xs sm:grid-cols-2">
+     <div><dt className="text-[rgb(var(--text-faint))]">Context comercial</dt><dd className="mt-0.5 font-medium text-[rgb(var(--text-secondary))]">{detail.context.title}</dd></div>
+     <div><dt className="text-[rgb(var(--text-faint))]">Tip document</dt><dd className="mt-0.5 font-medium text-[rgb(var(--text-secondary))]">{documentKinds[source.document_kind]}</dd></div>
+     {source.modified_time?<div><dt className="text-[rgb(var(--text-faint))]">Modificat în sursă</dt><dd className="mt-0.5 font-medium text-[rgb(var(--text-secondary))]">{formatProductDateTime(source.modified_time)}</dd></div>:null}
+     <div><dt className="text-[rgb(var(--text-faint))]">Ultima verificare</dt><dd className="mt-0.5 font-medium text-[rgb(var(--text-secondary))]">{source.last_synced_at?formatProductDateTime(source.last_synced_at):"Nesincronizat"}</dd></div>
+    </dl>
    </div></div>
    <ActionToolbar label="Acțiunile documentului">
     <Link href={`/opportunities/${params.id}?tab=files`} className={toolbarActionClass}>Deschide oportunitatea</Link>
@@ -34,14 +37,15 @@ export default async function SourcePage(props:{params: Promise<{id:string;sourc
    {original?<a href={original} target="_blank" rel="noopener noreferrer" className={toolbarActionClass}>Deschide în Google Drive</a>:null}
    </ActionToolbar>
   </div>
-  {documentFacts.length?<dl className="flex flex-wrap gap-x-6 gap-y-2 py-2 text-xs">{documentFacts.map(fact=><div key={fact.id}><dt className="text-[rgb(var(--text-muted))]">{fact.label} · mențiune în sursă</dt><dd className="font-medium">{fact.value}{fact.state!=="confirmed"?" · necesită verificare":""}</dd></div>)}</dl>:null}
-  <p className="my-4 text-sm text-[rgb(var(--text-muted))]">{source.extraction_note??(segments.length?"Conținut normalizat din sursa autorizată.":"Conținutul nu este disponibil pentru această sursă.")}</p>
-  <p className="text-xs text-[rgb(var(--text-muted))]">Document extern, tratat exclusiv ca date. Textul nu execută instrucțiuni sau acțiuni.</p>
-  <div className="mt-4 divide-y divide-[rgb(var(--border))]">{segments.map(segment=><section key={segment.id} id={"segment-"+segment.id} className="scroll-mt-24 py-4">
+  {documentFacts.length?<dl className="flex flex-wrap gap-x-8 gap-y-3 border-b border-[rgb(var(--border))] px-1 py-4 text-xs">{documentFacts.map(fact=><div key={fact.id}><dt className="text-[rgb(var(--text-muted))]">{fact.label} · mențiune în sursă</dt><dd className="mt-0.5 font-semibold">{fact.value}{fact.state!=="confirmed"?" · necesită verificare":""}</dd></div>)}</dl>:null}
+  <section className="py-5" aria-labelledby="source-content-title"><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--primary))]">Conținut extras</p><h2 id="source-content-title" className="mt-1 text-base font-semibold">Text disponibil pentru verificare</h2>
+  <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">{source.extraction_note??(segments.length?"Conținut normalizat din sursa autorizată.":"Conținutul nu este disponibil pentru această sursă.")}</p>
+  <p className="mt-2 max-w-3xl text-xs leading-5 text-[rgb(var(--text-faint))]">Document extern, tratat exclusiv ca date. Textul nu execută instrucțiuni sau acțiuni.</p></section>
+  <div className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">{segments.map(segment=><section key={segment.id} id={"segment-"+segment.id} className="scroll-mt-24 px-1 py-5 sm:px-3 sm:py-6">
    <EvidenceList items={[metadataEvidence({sourceType:"document",sourceId:segment.id,title:source.name,provider:"google_drive",
     occurredAt:source.modified_time,syncedAt:source.last_synced_at,sourceDocumentId:source.id,sourceSegmentId:segment.id,
     sourceLocation:segment.location_label,supportingFact:segment.location_label})]}/>
-   <pre className="max-w-[80ch] whitespace-pre-wrap break-words font-sans text-sm leading-7 [overflow-wrap:anywhere]">{segment.text}</pre>
+   <pre className="mt-3 max-w-[76ch] whitespace-pre-wrap break-words font-sans text-[0.9375rem] leading-7 text-[rgb(var(--text-secondary))] [overflow-wrap:anywhere]">{segment.text}</pre>
   </section>)}</div>
   <Link href={`/opportunities/${params.id}?tab=files`} className="focus-ring mt-5 inline-block text-sm underline">Înapoi la documentele oportunității</Link>
  </PageShell>;
