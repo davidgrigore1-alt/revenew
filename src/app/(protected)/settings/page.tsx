@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { PersonalizationSettingsPanel } from "@/components/settings/PersonalizationSettingsPanel";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
 import { getCurrentPaidAccessContext, getPaidAccessStatusLabel } from "@/lib/billing/paid-access";
@@ -148,12 +148,6 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
                     ]}
                   />
                 </SettingsRow>
-                <SettingsRow label="Temă de interfață" description="Preferința rămâne salvată în browser.">
-                  <div id="workspace" className="scroll-mt-28 flex flex-wrap items-center gap-3">
-                    <ThemeToggle />
-                    <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Comută între lumină, întuneric și tema sistemului.</p>
-                  </div>
-                </SettingsRow>
                 {canSeeGovernance ? (
                   <SettingsRow label="Echipă și guvernanță" description="Vizibilă numai conform permisiunilor existente.">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -282,6 +276,12 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
               </div>
             </details>
           ) : null}
+          <section className="border-t border-[rgb(var(--border))] pt-5" aria-labelledby="settings-signout-title">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div><h2 id="settings-signout-title" className="text-sm font-semibold">Încheie sesiunea</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Ieși în siguranță din contul curent.</p></div>
+              <LogoutButton className="inline-flex w-fit shrink-0 bg-[rgb(var(--danger-solid))] px-4 py-2.5 text-white hover:bg-[rgb(var(--danger-solid-hover))] hover:text-white" />
+            </div>
+          </section>
         </div>
       </div>
     </PageShell>

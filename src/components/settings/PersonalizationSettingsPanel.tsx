@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
 import { WorkspaceLogoPicker } from "@/components/settings/WorkspaceLogoPicker";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   accentThemePresets,
   accentThemeStyle,
@@ -85,14 +86,18 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
     <section id="aspect" data-guide-anchor="settings-appearance" className="scroll-mt-36 grid gap-5" aria-labelledby="appearance-title">
       <div>
         <h2 id="appearance-title" className="text-xl font-semibold">Aspect</h2>
-        <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Alege modul în care recunoști spațiul de lucru în acest browser. Logica comercială și datele companiei nu se schimbă.</p>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Temă, accent și identitatea vizuală a spațiului de lucru în acest browser.</p>
       </div>
 
       <div className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">
         <div className="grid gap-4 py-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] lg:gap-6">
+          <div><h3 className="text-sm font-semibold">Temă</h3><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Luminos, întunecat sau preferința sistemului.</p></div>
+          <ThemeToggle />
+        </div>
+        <div className="grid gap-4 py-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] lg:gap-6">
           <div>
             <h3 className="text-sm font-semibold">Culoare accent</h3>
-            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Preseturi cu contrast controlat, fără selector de culoare liber.</p>
+            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Accentul pentru selecții și acțiuni.</p>
           </div>
           <div className="min-w-0">
             <fieldset>
@@ -117,14 +122,14 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
               <span className="text-sm font-medium text-[rgb(var(--foreground))]">Exemplu de prezentare</span>
               <span className="status-pill status-pill-neutral">Previzualizare</span>
             </div>
-            <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Claritate păstrată.</strong> Culorile de status — critic, succes, eroare și avertizare — rămân independente de accent.</p>
+            <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Statusurile critic, succes, eroare și avertizare rămân independente de accent.</p>
           </div>
         </div>
 
         <div id="identitate" data-guide-anchor="settings-identity" className="scroll-mt-36 grid gap-4 py-4 lg:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] lg:gap-6" aria-labelledby="identity-title">
           <div>
             <h3 id="identity-title" className="text-sm font-semibold">Identitate spațiu de lucru</h3>
-            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Afișare locală, distinctă de datele legale ale companiei.</p>
+            <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">ReveNew rămâne brandul produsului. Afișarea spațiului de lucru este locală și distinctă de datele legale ale companiei.</p>
           </div>
           <div className="min-w-0">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -134,11 +139,11 @@ export function PersonalizationSettingsPanel({ baselineName, baselineIndustry }:
             <label className="grid gap-2 text-sm font-semibold">Monedă principală<Select className={fieldClassName} value={identity.currency} onChange={(event) => updateIdentity("currency", event.target.value as WorkspaceIdentityPreview["currency"])}><option>RON</option><option>EUR</option><option>RON + EUR</option></Select></label>
             <label className="grid gap-2 text-sm font-semibold sm:col-span-2">Preferință de limbă<Select className={fieldClassName} value={identity.language} onChange={(event) => updateIdentity("language", event.target.value as WorkspaceIdentityPreview["language"])}><option value="ro">Română</option><option value="en-ready">English · pregătit pentru viitor</option></Select></label>
             <WorkspaceLogoPicker />
-            <p className="text-xs leading-5 text-[rgb(var(--text-muted))] sm:col-span-2">Moneda este o preferință de afișare: nu convertește valorile existente, iar moneda originală rămâne identificabilă în rapoarte. Conversia analitică se selectează separat în Control Center și Pipeline. Preferința English este pregătită pentru viitor; interfața curentă rămâne în română.</p>
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))] sm:col-span-2">Moneda este doar o preferință de afișare și nu convertește valorile existente; moneda originală rămâne identificabilă în rapoarte. Interfața curentă rămâne în română.</p>
           </div>
             <div data-accent-preview={draftAccent} style={accentThemeStyle(draftAccent)} className="mt-4 flex flex-col gap-3 border-t border-[rgb(var(--border))] pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-3"><WorkspaceIdentityMark displayName={identity.displayName || baselineName} initials={identity.initials} /><div className="min-w-0"><p className="truncate text-sm font-semibold" title={identity.displayName || baselineName}>{identity.displayName || baselineName}</p><p className="truncate text-xs text-[rgb(var(--text-muted))]">{identity.industry || "Industrie necompletată"} · {identity.currency}</p></div></div>
-              <p className="max-w-sm text-xs leading-5 text-[rgb(var(--text-muted))]">ReveNew rămâne brandul produsului. Logo-ul și numele identifică separat compania activă.</p>
+              <p className="max-w-sm text-xs leading-5 text-[rgb(var(--text-muted))]">Logo-ul și numele identifică separat compania activă.</p>
             </div>
             <div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="small" onClick={saveIdentity}>Aplică afișarea locală</Button><Button type="button" size="small" variant="secondary" onClick={resetIdentity}>Elimină previzualizarea</Button></div>
           </div>
