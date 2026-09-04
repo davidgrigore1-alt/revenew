@@ -488,6 +488,7 @@ test("G3A.2 Drive zero selections, PDF unchanged, per-file failure and lost auth
 });
 function workspaceHarness(options={}){
  const calls=[],runs=[],updates=[],upserts=[];
+ let gmailAttempts=0;
  const actor={businessId:ids.business,profileId:ids.actor};
  const connection={id:ids.connection,business_id:ids.business,owner_profile_id:ids.actor,status:"connected",
   drive_status:"connected",granted_scopes:[core.DRIVE_SCOPE,"gmail-scope","calendar-scope"],encrypted_refresh_credential:"encrypted",
@@ -514,13 +515,17 @@ function workspaceHarness(options={}){
   "@/lib/communication-sequences":{reconcileSequenceExits:async()=>{if(options.reconcileError)throw new Error("PRIVATE reconciliation");}}
  },{fetch:async(url)=>{
   calls.push(String(url));
+  if(options.gmailResponses&&String(url).includes("gmail")){
+   const response=options.gmailResponses[Math.min(gmailAttempts,options.gmailResponses.length-1)];gmailAttempts++;
+   if(response.status!==200)return Response.json(response.body??{error:{errors:[{reason:response.reason}]}},{status:response.status});
+  }
   if(options.gmailError&&String(url).includes("gmail"))return new Response("PRIVATE Gmail error",{status:403});
   if(String(url).includes("/messages?"))return Response.json({messages:[{id:"m1"}]});
   if(String(url).endsWith("/profile"))return Response.json({historyId:"next"});
   if(String(url).includes("/calendar/"))return Response.json({items:[{id:"event"}],nextSyncToken:"next"});
   return Response.json({id:"m1"});
  }})("src/lib/google-workspace/sync.ts");
- return {service,calls,runs,updates,upserts,get driveCalls(){return driveCalls;},get refreshes(){return refreshes;}};
+ return {service,calls,runs,updates,upserts,get gmailAttempts(){return gmailAttempts;},get driveCalls(){return driveCalls;},get refreshes(){return refreshes;}};
 }
 test("G3A.2 provider sync calls canonical mail/calendar plus Drive and reports retained context counts",async()=>{
  const h=workspaceHarness({reconcileError:true});const result=await h.service.syncOwnedGoogleWorkspace();
@@ -542,6 +547,24 @@ test("G3A.2 provider sync isolates source failures, skips unauthorized Drive and
  for(const changes of [{owner_profile_id:"other"},{business_id:ids.otherBusiness},{status:"disconnected"}]){
   const denied=workspaceHarness({connection:changes});await assert.rejects(denied.service.syncOwnedGoogleWorkspace());assert.equal(denied.refreshes,0);assert.equal(denied.driveCalls,0);
  }
+});
+test("Google 403 reasons distinguish permission denial from retryable quota limits",async()=>{
+ const permission=workspaceHarness({gmailResponses:[{status:403,reason:"insufficientPermissions"}]});
+ assert.equal((await permission.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_permission_denied");
+ assert.equal(permission.gmailAttempts,1);
+ for(const reason of ["rateLimitExceeded","userRateLimitExceeded","dailyLimitExceeded","quotaExceeded"]){
+  const limited=workspaceHarness({gmailResponses:[{status:403,reason}]});
+  assert.equal((await limited.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_rate_limited");
+  assert.equal(limited.gmailAttempts,3);
+ }
+});
+test("Google 429 retries are bounded and a later successful response completes Gmail sync",async()=>{
+ const exhausted=workspaceHarness({gmailResponses:[{status:429}]});
+ assert.equal((await exhausted.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_rate_limited");
+ assert.equal(exhausted.gmailAttempts,3);
+ const recovered=workspaceHarness({gmailResponses:[{status:429},{status:200}]});
+ assert.equal((await recovered.service.syncOwnedGoogleWorkspace()).gmail.status,"completed");
+ assert.equal(recovered.gmailAttempts,4);
 });
 test("G3A.2 sync claim uses an owner/tenant-scoped atomic conditional update and fenced completion",()=>{
  const repository=read("src/lib/google-workspace/repository.ts");
