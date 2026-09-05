@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { DOCUMENT_CSV_LIMITS, parseDocumentCsv } from "./csv";
+import type { WorkbookProjection } from "./workbook-types";
 
 export const LOCAL_DOCUMENT_BUCKET = "commercial-document-originals";
 export const LOCAL_DOCUMENT_PARSER = "csv-utf8-v1";
@@ -23,6 +24,7 @@ export function inspectLocalDocument(bytes: Uint8Array, filename: string, mime: 
 }
 
 export type LocalDocumentVersion = {
+  workbook?: WorkbookProjection | null;
   id: string; source_id: string; business_id: string; uploader_profile_id: string; original_filename: string;
   object_key: string; format: string; mime_type: string; state: string; byte_size: number | null; content_hash: string | null;
   parser_version: string | null; headers: string[] | null; row_count: number | null; column_count: number | null;

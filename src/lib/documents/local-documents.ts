@@ -1,4 +1,6 @@
 import "server-only";
+import { createHash } from "node:crypto";
+import { parseWorkbook } from "./workbook-parser";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/authz/require-permission";
@@ -41,12 +43,13 @@ export async function getLocalDocument(sourceId: string, versionId?: string) {
 
 export async function saveLocalDocument(bytes: Uint8Array, filename: string, mime: string, sourceId?: string) {
   const { client, businessId } = await actor(true);
-  inspectLocalDocument(bytes, filename, mime); // Reject unsupported/invalid originals before reserving or storing bytes.
+  const xlsx = /\.xlsx$/i.test(filename);
+  if (xlsx) { await inspectWorkbookUpload(bytes,filename,mime); } else inspectLocalDocument(bytes, filename, mime);
   if (sourceId && !uuid.test(sourceId)) throw new LocalDocumentError("forbidden", "Documentul nu este disponibil.");
   const reservation = await client.rpc("reserve_local_document", { p_business: businessId, p_filename: filename, p_source: sourceId ?? null }); check(reservation.error);
   const version = reservation.data as LocalDocumentVersion;
   const storage = admin().storage.from(LOCAL_DOCUMENT_BUCKET);
-  const upload = await storage.upload(version.object_key, bytes, { contentType: "text/csv", upsert: false });
+  const upload = await storage.upload(version.object_key, bytes, { contentType: xlsx ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "text/csv", upsert: false });
   if (upload.error) {
     await admin().from("local_document_versions").update({ state: "unavailable", failure_code: "upload_failed" }).eq("id",version.id).eq("state","reserved");
     return { sourceId: version.source_id, versionId: version.id, ready: false };
@@ -70,8 +73,19 @@ export async function finalizeLocalDocument(sourceId: string, versionId: string)
   if (access.error || access.data !== true) throw new LocalDocumentError("forbidden", "Accesul la document a fost retras.");
   const stored = await admin().storage.from(LOCAL_DOCUMENT_BUCKET).download(document.version.object_key); check(stored.error, true);
   if (!stored.data || stored.data.size > 2097152) throw new LocalDocumentError("size", "Originalul nu poate fi verificat. Șterge această încărcare și alege un CSV de cel mult 2 MB.", true);
-  const verified = inspectLocalDocument(new Uint8Array(await stored.data.arrayBuffer()), document.version.original_filename, stored.data.type.split(";")[0]);
+  const bytes = new Uint8Array(await stored.data.arrayBuffer());
+  if (document.version.format === "xlsx") {
+    const workbook = await inspectWorkbookUpload(bytes, document.version.original_filename, stored.data.type.split(";")[0]);
+    check((await admin().rpc("finalize_local_workbook",{p_version:versionId,p_size:bytes.length,p_hash:createHash("sha256").update(bytes).digest("hex"),p_workbook:workbook})).error,true);
+    return;
+  }
+  const verified = inspectLocalDocument(bytes, document.version.original_filename, stored.data.type.split(";")[0]);
   const result = await admin().rpc("finalize_local_document", { p_version: versionId, p_size: verified.size, p_hash: verified.hash, p_headers: verified.csv.headers, p_rows: verified.csv.rows, p_parser: LOCAL_DOCUMENT_PARSER }); check(result.error, true);
+}
+export async function inspectWorkbookUpload(bytes: Uint8Array, filename: string, mime: string) {
+  await actor(true);
+  if (!/\.xlsx$/i.test(filename) || filename.length>240 || /[\x00-\x1f/\\]/.test(filename) || !["","application/octet-stream","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].includes(mime)) throw new LocalDocumentError("format","Alege un workbook XLSX valid. Acest format nu este disponibil.");
+  return parseWorkbook(bytes);
 }
 export async function downloadLocalDocument(sourceId: string, versionId: string) {
   const { client } = await actor();

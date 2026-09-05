@@ -7,6 +7,10 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: projectRoot,
+  outputFileTracingIncludes: {
+    "/api/documents/local": ["./scripts/documents/parse-workbook.cjs", "./node_modules/xlsx/**/*"],
+    "/documents/local/**": ["./scripts/documents/parse-workbook.cjs", "./node_modules/xlsx/**/*"]
+  },
   poweredByHeader: false,
 
   async headers() {

@@ -43,15 +43,18 @@ test("global search is bounded and always derives workspace context server-side"
 test("CSV import is bounded, idempotent and rejects foreign workspace identifiers", () => {
   const actions = read("src/lib/imports/actions.ts");
   const client = read("src/components/imports/CsvImportWizard.tsx");
-  assert.match(actions, /const maxRows = 1000/);
-  assert.match(actions, /createHash\("sha256"\)/);
-  assert.match(actions, /getCurrentBusinessForUser\(\{ redirectIfMissing: true \}\)/);
-  assert.match(actions, /eligibleOwners\.has\(ownerId\)/);
-  assert.match(actions, /business_id: businessId/);
+  const transaction=read("supabase/migrations/20260905154340_workbook_structured_import.sql");
+  assert.match(actions, /rawRows.length>1000/);
+  assert.match(actions, /getCurrentBusinessForUser/);
+  assert.match(actions, /validateImportSource/);
+  assert.match(actions, /import_crm_batch_atomic/);
+  assert.match(transaction, /pg_advisory_xact_lock/);
+  assert.match(transaction, /business_assignable_profiles\(p_business\)/);
+  assert.match(transaction, /sha256\(convert_to/);
   assert.doesNotMatch(actions, /console\.(log|error)\([^)]*rows/);
-  assert.match(client, /papaparse/);
-  assert.match(client, /2 \* 1024 \* 1024/);
-  assert.match(client, /spreadsheet|^[\s\S]*\^\[=\+\\-@\]/i);
+  assert.match(client, /parseDocumentCsv/);
+  assert.match(client, /2097152/);
+  assert.match(client, /confirmed/);
 });
 
 test("saved views and onboarding progress use authenticated database ownership", () => {

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260905135710_local_document_memory.sql",
+  "reviewedThrough": "20260905173203_structured_signal_omission_receipt.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -53,6 +53,9 @@
     "20260829154828_allow_service_role_response_window_update.sql": "41fd0ed75c1e74221009422fce060652a7395f79e96851bdf59a821c62ea4168",
     "20260830090801_commercial_signal_decision_security.sql": "e1375313ebe05f58793af1b4e77eb0187e66cb177adfacf0a9b640e9ca29cc81",
     "20260902004041_manual_paid_access_operator_control.sql": "e716408a948ffc5c07d211c8f685c10beeb12de6bf56671d0f2b996a7f3df313",
-    "20260905135710_local_document_memory.sql": "f76ea74f27c95ae5ccb196ce56e3ec2e20bf96a85d0bbf60b1da0523db385bb7"
+    "20260905135710_local_document_memory.sql": "f76ea74f27c95ae5ccb196ce56e3ec2e20bf96a85d0bbf60b1da0523db385bb7",
+    "20260905154340_workbook_structured_import.sql": "0a3b475eeceb8d16a99990eb905593cc978ca959a617e3d44b6dd02a3be1ad51",
+    "20260905165927_structured_import_review_integrity.sql": "3c998a7912c7f82e136c6cd866a14169cfca977ea9bb268c11298c1cdae4412e",
+    "20260905173203_structured_signal_omission_receipt.sql": "70b92c62b9079393497830781a0e07e5689487824841994e8d39f9479d84d9a0"
   }
 }

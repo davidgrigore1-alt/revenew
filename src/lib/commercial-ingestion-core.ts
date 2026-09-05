@@ -134,7 +134,9 @@ function mergeAuditContext(baseContext: string, fields: Array<[string, string]>)
   if (!details.length) return baseContext;
   return [baseContext, "Context operațional importat, de verificat:", ...details]
     .filter(Boolean)
-    .join("\n");
+    // The normalized import RPC rejects control characters. Keep every declaration
+    // in the same whitespace-normalized representation used by its fingerprint.
+    .join(" ");
 }
 
 export function commercialRowFingerprint(row: Omit<NormalizedCommercialImportRow, "row_number" | "row_fingerprint">) {

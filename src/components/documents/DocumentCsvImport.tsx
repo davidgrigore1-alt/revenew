@@ -12,15 +12,16 @@ import type { CommercialMappedRow } from "@/lib/commercial-ingestion-core";
 import { SourceMappingReview } from "./SourceMappingReview";
 import { describeDataset, proposeSourceMapping, sourceReviewGroups } from "@/lib/documents/source-review";
 import styles from "./Documents.module.css";
+import type {ImportProvenance} from "@/lib/imports/actions";
 
 const normalizedKeys:Record<string,string>={source:"source_label",status:"status_label",owner:"owner_label",last_interaction:"last_interaction_at",due_date:"requested_date",request_date:"request_date_at",next_action:"next_action_label",approval_required:"approval_required_label",approval_status:"approval_status_label",proposal_prepared:"proposal_prepared_label",proposal_sent:"proposal_sent_label",outcome_confirmed:"outcome_confirmed_label"};
-export function DocumentCsvImport({ canImport = true, sourceChoices, initialSource }: { canImport?: boolean; sourceChoices?: ReactNode; initialSource?:{csv:DocumentCsv;name:string;bytes:number;href:string} }) {
+export function DocumentCsvImport({ canImport = true, sourceChoices, initialSource }: { canImport?: boolean; sourceChoices?: ReactNode; initialSource?:{csv:DocumentCsv;name:string;bytes:number;href:string;provenance?:Omit<ImportProvenance,"mapping">} }) {
   const [csv,setCsv]=useState<DocumentCsv|null>(initialSource?.csv??null),[fileName,setFileName]=useState(initialSource?.name??"date-comerciale.csv"),[text,setText]=useState("");
-  const [mapping,setMapping]=useState<Partial<Record<CommercialImportFieldKey,number|null>>>({});
+  const [mapping,setMapping]=useState<Partial<Record<CommercialImportFieldKey,number|null>>>(initialSource?.provenance?proposeSourceMapping(initialSource.csv.headers):{});
   const [preview,setPreview]=useState<CommercialImportPreview|null>(null),[mapped,setMapped]=useState<CommercialMappedRow[]>([]);
   const [selected,setSelected]=useState<string[]>([]),[result,setResult]=useState<CommercialImportResult|null>(null);
   const [confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
-  const [step,setStep]=useState(initialSource?5:0),[reviewPage,setReviewPage]=useState(0);
+  const [step,setStep]=useState(initialSource?.provenance?1:initialSource?5:0),[reviewPage,setReviewPage]=useState(0);
   const [ignored,setIgnored]=useState<number[]>([]),[byteSize,setByteSize]=useState(initialSource?.bytes??0);
   const lock=useRef(false),heading=useRef<HTMLHeadingElement>(null);
   const reset=()=>{setCsv(null);setPreview(null);setMapped([]);setSelected([]);setResult(null);setConfirmed(false);setError("");setStep(0);setReviewPage(0);setIgnored([]);setMapping({});setByteSize(0);};
@@ -34,7 +35,7 @@ export function DocumentCsvImport({ canImport = true, sourceChoices, initialSour
     if(!file||lock.current)return;
     reset();lock.current=true;setBusy(true);
     try {
-      if(!/\.csv$/i.test(file.name))throw new Error("Acest flux acceptă CSV. Excel, Word, PowerPoint și PDF nu au un parser de import disponibil.");
+      if(!/\.csv$/i.test(file.name))throw new Error("Acest import rapid acceptă CSV. Pentru Excel XLSX, adaugă workbook-ul în Documente și alege foaia pentru import.");
       if(!["","text/csv","text/plain","application/vnd.ms-excel"].includes(file.type))throw new Error("Tipul declarat nu corespunde unui fișier CSV text.");
       if(file.size>DOCUMENT_CSV_LIMITS.bytes)throw new Error("Fișierul depășește limita de 2 MB.");
       let raw:string;
@@ -62,7 +63,7 @@ export function DocumentCsvImport({ canImport = true, sourceChoices, initialSour
     if(!canImport||!preview||!confirmed||!selected.length||lock.current)return;
     lock.current=true;setBusy(true);setError("");
     try {
-      const response=await confirmCommercialSignalImport(preview.fileName,mapped,selected);
+      const response=await confirmCommercialSignalImport(preview.fileName,mapped,selected,initialSource?.provenance?{...initialSource.provenance,mapping}:undefined);
       setResult(response);setStep(3);focusStep();
     }catch{
       setError("Rezultatul confirmării nu a putut fi verificat. Verifică istoricul importurilor înainte de a reîncerca; nu presupune că au fost create zero înregistrări.");
@@ -80,7 +81,7 @@ export function DocumentCsvImport({ canImport = true, sourceChoices, initialSour
       <details><summary className="focus-ring">Formate și limite</summary><p id="csv-limits" className={styles.meta}>UTF-8 · maximum 2 MB, 1.000 de rânduri, 30 de coloane și 6.000 de caractere pe celulă. Validarea acceptă maximum 512 KB de date mapate.</p></details>
       <details><summary className="focus-ring cursor-pointer text-sm">Sau lipește conținut CSV</summary><div className={styles.form+" mt-4"}><label className={styles.field}>Conținut CSV<textarea value={text} maxLength={DOCUMENT_CSV_LIMITS.bytes} spellCheck={false} onChange={event=>setText(event.target.value)} placeholder={'Titlu,Companie,Email,Valoare,Monedă\n'}/></label><div><Button variant="secondary" disabled={!text.trim()} onClick={()=>load(text,"date-comerciale.csv")}>Previzualizează CSV</Button></div></div></details>
       <p className={styles.notice}>Acest import rapid nu arhivează originalul. Pentru a păstra și analiza documentul ulterior, folosește <Link className="focus-ring underline" href="/documents/add">Adaugă document</Link>. Importul datelor rămâne o alegere separată.</p>
-      <details><summary className="focus-ring cursor-pointer text-sm">Excel și alte formate</summary><p className={styles.meta+" mt-2"}>Importul XLSX/XLS necesită un parser aprobat. Exportă explicit foaia dorită ca CSV UTF-8 și verifică formatarea identificatorilor, valorilor și datelor. Formulele, macrocomenzile și legăturile din fișier nu sunt executate.</p></details>
+      <details><summary className="focus-ring cursor-pointer text-sm">Excel și alte formate</summary><p className={styles.meta+" mt-2"}>Pentru XLSX, folosește Adaugă document, apoi selectează foaia pentru import. XLS, XLSM și XLSB nu sunt acceptate. Pentru un export CSV UTF-8, verifică formatarea identificatorilor, valorilor și datelor. Formulele, macrocomenzile și legăturile din fișier nu sunt executate.</p></details>
     </fieldset>:null}
     {step===4&&csv?<>
       <div className={styles.toolbar}><div><h2>{fileName}</h2><p className={styles.meta}>CSV · {byteSize.toLocaleString("ro-RO")} octeți · {csv.rows.length} rânduri · {csv.headers.length} coloane</p></div>{initialSource?<Link className="focus-ring underline" href={initialSource.href}>Deschide documentul păstrat</Link>:<Button variant="ghost" onClick={reset}>Alege alt fișier</Button>}</div>
@@ -119,6 +120,6 @@ export function DocumentCsvImport({ canImport = true, sourceChoices, initialSour
       {preview.rejected.length?<details><summary className="focus-ring cursor-pointer">Rânduri respinse sau repetate ({preview.rejected.length})</summary><ul>{preview.rejected.map((row,index)=><li className={styles.meta+" py-2"} key={index}>Rând {row.row_number} · {row.error_message}</li>)}</ul></details>:null}
       <section className={styles.section}><h2>Confirmă selecția</h2><p className={styles.meta}>{selected.length} semnale selectate din {fileName}. Confirmarea revalidează datele pe server și persistă rezultatul importului.</p><label className={styles.check+" my-4"}><input type="checkbox" disabled={busy||!selected.length} checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/>Am verificat valorile normalizate și potrivirile pentru toate rândurile selectate. Confirm crearea semnalelor pentru revizuire, fără execuție externă.</label><Button disabled={busy||!confirmed||!selected.length} loading={busy} onClick={()=>void commit()}>Confirmă importul a {selected.length} semnale</Button></section>
     </>:null}
-    {step===3&&result?<section className={styles.form} aria-live="polite"><h2>{result.ok?result.duplicateBatch?"Import deja înregistrat":"Import înregistrat":"Import nefinalizat"}</h2><p>{result.error}</p><dl className={styles.facts}><div><dt>Sursă</dt><dd>{preview?.fileName}</dd></div><div><dt>Identitate lot</dt><dd>{result.batchId||"Nicio confirmare de lot disponibilă"}</dd></div><div><dt>Rezultat raportat de server</dt><dd>{result.created} create · {result.rejected} respinse · {result.duplicates} duplicate · {result.failed} eșuate · {result.notSelected} neselectate</dd></div></dl>{csv?<details><summary className="focus-ring cursor-pointer">Maparea folosită în această sesiune</summary><dl className={styles.facts}>{mappedFields.map(field=><div key={field.key}><dt>{csv.headers[mapping[field.key]!]}</dt><dd>{field.label}</dd></div>)}</dl></details>:null}<p className={styles.meta}>Istoricul păstrează lotul, rândurile și numărul înregistrărilor. Maparea este disponibilă în această sesiune; fișierul original nu este arhivat. Venitul și rezultatele declarate în sursă nu sunt confirmate prin import.</p><div className={styles.toolbar}><Link className="focus-ring underline" href="/inbox/import">Vezi istoricul importurilor</Link><Link className="focus-ring underline" href="/inbox">Revizuiește semnalele</Link><Button variant="secondary" onClick={reset}>Începe alt import</Button></div></section>:null}
+    {step===3&&result?<section className={styles.form} aria-live="polite"><h2>{result.ok?result.duplicateBatch?"Import deja înregistrat":"Import înregistrat":"Import nefinalizat"}</h2><p>{result.error}</p><dl className={styles.facts}><div><dt>Sursă</dt><dd>{preview?.fileName}</dd></div><div><dt>Identitate lot</dt><dd>{result.batchId||"Nicio confirmare de lot disponibilă"}</dd></div><div><dt>Rezultat raportat de server</dt><dd>{result.created} create · {result.rejected} respinse · {result.duplicates} duplicate · {result.failed} eșuate · {result.notSelected} neselectate</dd></div></dl>{csv?<details><summary className="focus-ring cursor-pointer">Maparea folosită în această sesiune</summary><dl className={styles.facts}>{mappedFields.map(field=><div key={field.key}><dt>{csv.headers[mapping[field.key]!]}</dt><dd>{field.label}</dd></div>)}</dl></details>:null}<p className={styles.meta}>{initialSource?.provenance ? "Istoricul păstrează confirmarea și maparea, legate de versiunea documentului. Originalul rămâne păstrat." : "Istoricul păstrează lotul și rezultatul. Acest import rapid nu arhivează originalul."} Venitul și rezultatele declarate în sursă nu sunt confirmate prin import.</p><div className={styles.toolbar}><Link className="focus-ring underline" href="/inbox/import">Vezi istoricul importurilor</Link><Link className="focus-ring underline" href="/inbox">Revizuiește semnalele</Link><Button variant="secondary" onClick={reset}>Începe alt import</Button></div></section>:null}
   </div>;
 }

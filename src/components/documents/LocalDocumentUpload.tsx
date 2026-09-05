@@ -19,15 +19,25 @@ export function LocalDocumentUpload({ sourceId }: { sourceId?: string }) {
     setError(""); setSelection({ file, bytes: null, state: "checking" });
     try {
       if (files.length !== 1) throw new Error("Selectează un singur document pentru fiecare încărcare.");
-      if (!/\.csv$/i.test(file.name) || !["", "text/csv", "application/csv", "application/vnd.ms-excel"].includes(file.type)) throw new Error("Acest format nu este disponibil. Selectează un document CSV UTF-8.");
-      if (!file.size || file.size > DOCUMENT_CSV_LIMITS.bytes) throw new Error("Selectează un CSV cu conținut, de cel mult 2 MB.");
+      const xlsx = /\.xlsx$/i.test(file.name);
+      if (xlsx && !["", "application/octet-stream", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].includes(file.type)) throw new Error("Tipul fișierului nu corespunde unui workbook XLSX.");
+      if (!xlsx && (!/\.csv$/i.test(file.name) || !["", "text/csv", "application/csv", "application/vnd.ms-excel"].includes(file.type))) throw new Error("Acest format nu este disponibil. Selectează un document CSV UTF-8 sau XLSX.");
+      if (!file.size || file.size > DOCUMENT_CSV_LIMITS.bytes) throw new Error("Selectează un document cu conținut, de cel mult 2 MB.");
       let bytes: ArrayBuffer;
       try { bytes = await file.arrayBuffer(); }
       catch { throw new Error("Fișierul nu a putut fi citit de pe dispozitiv. Selectează-l din nou."); }
+      if (xlsx) {
+        const signature = new Uint8Array(bytes,0,Math.min(4,bytes.byteLength));
+        if (signature.length !== 4 || signature[0]!==80 || signature[1]!==75 || signature[2]!==3 || signature[3]!==4) throw new Error("Fișierul nu are structura unui workbook XLSX.");
+        const response = await fetch("/api/documents/local?validate=xlsx",{method:"POST",headers:{"Content-Type":file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","X-Document-Filename":encodeURIComponent(file.name)},body:bytes});
+        const result = await response.json();
+        if (!response.ok || !result.valid) throw new Error(result.error || "Workbook-ul nu poate fi verificat momentan.");
+      } else {
       let text: string;
       try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
       catch { throw new Error("Codificarea nu este UTF-8. Salvează o copie CSV UTF-8 și selecteaz-o din nou."); }
       parseDocumentCsv(text);
+      }
       if (current === revision.current) setSelection({ file, bytes, state: "ready" });
     } catch (cause) {
       if (current !== revision.current) return;
@@ -40,7 +50,7 @@ export function LocalDocumentUpload({ sourceId }: { sourceId?: string }) {
     lock.current = true; setBusy(true); setError("");
     try {
       const response = await fetch("/api/documents/local", {
-        method: "POST", headers: { "Content-Type": selection.file.type || "text/csv", "X-Document-Filename": encodeURIComponent(selection.file.name), ...(sourceId ? { "X-Document-Source": sourceId } : {}) }, body: selection.bytes
+        method: "POST", headers: { "Content-Type": selection.file.type || (/\.xlsx$/i.test(selection.file.name)?"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"text/csv"), "X-Document-Filename": encodeURIComponent(selection.file.name), ...(sourceId ? { "X-Document-Source": sourceId } : {}) }, body: selection.bytes
       });
       const result = await response.json();
       if (!response.ok || !result.sourceId || !result.versionId) throw new Error(result.error || "Salvarea nu a fost confirmată. Verifică Documente înainte de a reîncerca.");
@@ -58,7 +68,7 @@ export function LocalDocumentUpload({ sourceId }: { sourceId?: string }) {
       <h2 id={`${id}-heading`}>{sourceId ? "Adaugă o versiune nouă" : "Încarcă un document"}</h2>
       <p className={styles.meta}>Fișierul este păstrat în spațiul companiei și poate fi analizat ulterior de ReveNew.</p>
     </header>
-    <input ref={input} type="file" accept=".csv,text/csv" hidden disabled={busy} aria-label="Selectează un fișier"
+    <input ref={input} type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden disabled={busy} aria-label="Selectează un fișier"
       onChange={event => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; void choose(files); }}/>
     <div className={styles.uploadSelection}>
       {selection ? <div className={styles.selectedDocument} key={selection.file.name}>
@@ -76,6 +86,6 @@ export function LocalDocumentUpload({ sourceId }: { sourceId?: string }) {
       <Button disabled={selection.state !== "ready" || busy} loading={busy} onClick={() => void save()}>Salvează documentul</Button>
       <p className={styles.meta}>{busy ? "Confirmarea apare după verificarea originalului." : "Originalul nu este încă salvat. Importul datelor rămâne opțional."}</p>
     </div> : null}
-    <details className={styles.uploadLimits}><summary className="focus-ring">Formate și limite</summary><p className={styles.meta}>CSV UTF-8 · maximum 2 MB, 1.000 de rânduri, 30 de coloane și 6.000 de caractere într-o celulă. Valorile sunt păstrate ca text.</p></details>
+    <details className={styles.uploadLimits}><summary className="focus-ring">Formate și limite</summary><p className={styles.meta}>CSV UTF-8 și XLSX · maximum 2 MB. CSV: 1.000 de rânduri și 30 de coloane. XLSX: previzualizare limitată la 8 foi, 500 de rânduri și 40 de coloane pe foaie, în limita totală disponibilă. Originalul rămâne integral. Formulele nu sunt calculate; fișierele cu macrocomenzi nu sunt acceptate.</p></details>
   </section>;
 }

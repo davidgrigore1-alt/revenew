@@ -39,7 +39,7 @@ test('request authority is isolated across async calls and cannot be enabled by 
 test('common retrieval uses exact authorized version, bounds evidence, cites logical rows and never dispatches actions',async()=>{
  const sourceId='de100001-0000-4000-8000-000000000001',versionId='de100002-0000-4000-8000-000000000001';let calls=0;
  const doc={source:{state:'active'},version:{id:versionId,source_id:sourceId,original_filename:'Pipeline.csv',content_hash:'a'.repeat(64),state:'ready',headers:['Company','Text'],row_count:20,finalized_at:'2026-09-05T00:00:00Z'},segments:Array.from({length:20},(_,i)=>({row_number:i+2,cells:['Meridian',attacks[i%attacks.length]]}))};
- const retrieval=loadTS('src/lib/ai/source-retrieval.ts',{'@/lib/documents/local-documents':{getLocalDocument:async(s,v)=>{calls++;return s===sourceId&&v===versionId?doc:null;}}});
+ const retrieval=loadTS('src/lib/ai/source-retrieval.ts',{'@/lib/ai/source-comparison':{compareSourceOpportunities:async()=>({findings:[],evidence:[]})},'@/lib/documents/local-documents':{getLocalDocument:async(s,v)=>{calls++;return s===sourceId&&v===versionId?doc:null;}}});
  assert.equal(await retrieval.retrieveSelectedSource('foreign',versionId,'Rezumă'),null);
  const answer=await retrieval.answerSelectedDocument({question:'Meridian',context:{documentSourceId:sourceId,documentVersionId:versionId},history:[]});
  assert.equal(answer.preparedAction,null);assert.equal(answer.evidence.length,12);assert.equal(answer.findings.length,6);assert.ok(answer.caveats.some(x=>x.includes('parțială')));

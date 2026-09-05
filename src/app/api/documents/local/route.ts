@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { saveLocalDocument } from "@/lib/documents/local-documents";
+import { saveLocalDocument, inspectWorkbookUpload } from "@/lib/documents/local-documents";
 import { LocalDocumentError } from "@/lib/documents/local-document-core";
 
 export async function POST(request: Request) {
@@ -13,6 +13,10 @@ export async function POST(request: Request) {
     const chunks: Uint8Array[] = []; let size = 0;
     while (true) { const {done,value}=await reader.read(); if(done)break; size+=value.byteLength; if(size>2097152){await reader.cancel();throw new LocalDocumentError("size","Fișierul depășește 2 MB. Originalul nu a fost salvat.");} chunks.push(value); }
     const bytes = new Uint8Array(size); let offset=0; for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
+    if (new URL(request.url).searchParams.get("validate") === "xlsx") {
+      const workbook = await inspectWorkbookUpload(bytes,filename,request.headers.get("content-type")?.split(";")[0]??"");
+      return NextResponse.json({valid:true,sheetCount:workbook.sheetCount,partial:workbook.partial},{headers:{"Cache-Control":"private, no-store"}});
+    }
     const result = await saveLocalDocument(bytes,filename,request.headers.get("content-type")?.split(";")[0]??"",request.headers.get("x-document-source")??undefined);
     return NextResponse.json(result,{headers:{"Cache-Control":"private, no-store"}});
   } catch(error) {

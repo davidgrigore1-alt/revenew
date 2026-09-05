@@ -1,0 +1,5 @@
+export const WORKBOOK_LIMITS = { bytes: 2097152, sheets: 8, sheetMetadata: 64, rows: 500, columns: 40, cells: 20000, cellCharacters: 2000, textCharacters: 800000, projectionBytes: 2000000, timeoutMs: 8000 } as const;
+export type WorkbookCell = { address: string; row: number; column: number; type: string; raw: string | number | boolean | null; display: string; formula?: string; cached: boolean; hyperlink: boolean; truncated: boolean };
+export type WorkbookSheet = { index: number; name: string; visibility: "visible" | "hidden" | "very_hidden"; range: string | null; rows: number; columns: number; previewRows: number; previewColumns: number; cells: WorkbookCell[]; partial: boolean; inspected: boolean };
+export type WorkbookProjection = { parser: string; sheetCount: number; sheets: WorkbookSheet[]; partial: boolean; inspectedCells: number };
+export function columnLetter(column: number): string { let value = column + 1, result = ""; while (value) { value--; result = String.fromCharCode(65 + value % 26) + result; value = Math.floor(value / 26); } return result; }

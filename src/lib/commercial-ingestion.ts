@@ -1,4 +1,8 @@
 import "server-only";
+import type {ImportProvenance} from "./imports/actions";
+import {validateImportSource} from "./documents/validate-import-source";
+import {createSupabaseAdminClient} from "./supabase/admin";
+import {requirePermission} from "./authz/require-permission";
 
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
@@ -72,14 +76,13 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   const fileName = safeFileName(fileNameInput);
   const { accepted: initiallyAccepted, rejected } = validateCommercialImportRows(rawRows);
   const { business, supabase } = await ingestionContext();
-  const [signalsResult, organizationsResult, contactsResult, opportunitiesResult, ownersResult] = await Promise.all([
+  const [signalsResult, organizationsResult, contactsResult, opportunitiesResult] = await Promise.all([
     supabase.from("commercial_signals").select("id,ingestion_fingerprint,contact_email,contact_company,title,source,source_reference,raw_message").eq("business_id", business.id).limit(2000),
     supabase.from("crm_organizations").select("normalized_name").eq("business_id", business.id).eq("is_archived", false).limit(2000),
     supabase.from("crm_contacts").select("normalized_email").eq("business_id", business.id).eq("is_active", true).limit(2000),
-    supabase.from("opportunities").select("title,contact_email").eq("business_id", business.id).limit(2000),
-    supabase.rpc("business_assignable_profiles", { target_business_id: business.id })
+    supabase.from("opportunities").select("title,contact_email").eq("business_id", business.id).limit(2000)
   ]);
-  const firstError = signalsResult.error ?? organizationsResult.error ?? contactsResult.error ?? opportunitiesResult.error ?? ownersResult.error;
+  const firstError = signalsResult.error ?? organizationsResult.error ?? contactsResult.error ?? opportunitiesResult.error;
   if (firstError) {
     return { ok: false, fileName, batchFingerprint: "", accepted: [], rejected, error: "Previzualizarea nu poate verifica momentan datele workspace-ului." };
   }
@@ -94,15 +97,10 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   const contactEmails = new Set((contactsResult.data ?? []).map((item) => item.normalized_email).filter(Boolean));
   const opportunityTitles = new Set((opportunitiesResult.data ?? []).map((item) => normalizeCommercialValue(item.title ?? "")));
   const opportunityEmails = new Set((opportunitiesResult.data ?? []).map((item) => normalizeCommercialValue(item.contact_email ?? "")).filter(Boolean));
-  const owners = new Map<string, string>((ownersResult.data ?? []).map((item: { profile_id: string; full_name: string }) => [normalizeCommercialValue(item.full_name), item.profile_id]));
   const accepted: CommercialImportPreviewRow[] = [];
 
   for (const row of initiallyAccepted) {
-    const ownerId = row.owner_label ? owners.get(normalizeCommercialValue(row.owner_label)) : undefined;
-    if (row.owner_label && !ownerId) {
-      rejected.push({ row_number: row.row_number, row_fingerprint: row.row_fingerprint, status: "rejected", error_code: "unknown_owner", error_message: "Responsabilul nu corespunde exact unui membru activ al workspace-ului." });
-      continue;
-    }
+    // A declared source owner is provenance, never canonical responsibility.
     const email = normalizeCommercialValue(row.email);
     const company = normalizeCommercialValue(row.company);
     const title = normalizeCommercialValue(row.title);
@@ -110,7 +108,7 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
     const textSignature = normalizeCommercialValue(row.context).slice(0, 180);
     accepted.push({
       ...row,
-      owner_profile_id: ownerId ?? "",
+      owner_profile_id: "",
       probable_signal_match: Boolean(
         (email && signalEmails.has(email))
         || (sourceReference && signalSourceReferences.has(sourceReference))
@@ -128,7 +126,8 @@ export async function previewCommercialSignalImport(fileNameInput: string, rawRo
   return { ok: true, fileName, batchFingerprint: batchFingerprint(fileName, fingerprintRows), accepted, rejected };
 }
 
-export async function confirmCommercialSignalImport(fileName: string, rawRows: CommercialMappedRow[], selectedFingerprints?: string[]): Promise<CommercialImportResult> {
+export async function confirmCommercialSignalImport(fileName: string, rawRows: CommercialMappedRow[], selectedFingerprints?: string[],provenance?:ImportProvenance): Promise<CommercialImportResult> {
+  if(provenance)await validateImportSource(provenance,rawRows);
   const preview = await previewCommercialSignalImport(fileName, rawRows);
   if (!preview.ok) return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: 0, failed: 0, duplicateBatch: false, notSelected: 0, error: preview.error };
   if (selectedFingerprints && (selectedFingerprints.length > 1000 || selectedFingerprints.some((value) => !/^[a-f0-9]{64}$/.test(value)))) {
@@ -136,20 +135,21 @@ export async function confirmCommercialSignalImport(fileName: string, rawRows: C
   }
   const selection = selectedFingerprints ?? preview.accepted.filter((row) => !row.exact_duplicate).map((row) => row.row_fingerprint);
   const { selectedRows, exactDuplicates, notSelected, confirmedRows } = selectConfirmedCommercialRows(preview.accepted, selection);
-  if (!selectedRows.length) {
+  if (!selectedRows.length && !provenance) {
     return { ok: false, created: 0, rejected: preview.rejected.length, duplicates: exactDuplicates.length, failed: 0, duplicateBatch: false, notSelected, error: "Selectează cel puțin un semnal valid pentru import." };
   }
-  const confirmedFingerprint = batchFingerprint(preview.fileName, [
-    ...confirmedRows,
-    ...preview.rejected.filter((row): row is CommercialImportRowIssue & { row_fingerprint: string } => Boolean(row.row_fingerprint))
-  ]);
-  const { business, supabase } = await ingestionContext();
-  const { data, error } = await supabase.rpc("import_commercial_signal_batch", {
+  const { business } = await ingestionContext();
+  const requestRows=provenance?preview.accepted.filter(row=>selection.includes(row.row_fingerprint)):confirmedRows;
+  const documentActor=await requirePermission("signals.create");
+  const persistence=createSupabaseAdminClient();
+  if(!persistence)throw Error("Import indisponibil.");
+  const { data, error } = await persistence.rpc("import_document_signal_batch", {
     target_business_id: business.id,
     source_file_name: preview.fileName,
-    batch_fingerprint: confirmedFingerprint,
-    accepted_rows: confirmedRows.map(({ exact_duplicate: _exactDuplicate, ...row }) => row),
-    rejected_rows: preview.rejected
+    batch_fingerprint: createHash("sha256").update(JSON.stringify({contract:"structured-v1",rawRows,selection,provenance:provenance??null})).digest("hex"),
+    accepted_rows: requestRows.map(({ exact_duplicate: _exactDuplicate, ...row }) => row),
+    rejected_rows: preview.rejected,
+    p_actor:documentActor.profileId,p_version:provenance?.versionId??null,p_sheet:provenance?.sheetIndex??null,p_mapping:provenance?.mapping??{},
   });
   if (error) {
     console.warn("commercial_signal_import_failed", { code: error.code, rowCount: rawRows.length });
@@ -162,7 +162,7 @@ export async function confirmCommercialSignalImport(fileName: string, rawRows: C
     batchId: String(result.batch_id ?? ""),
     created: Number(result.created ?? 0),
     rejected: Number(result.rejected ?? 0),
-    duplicates: Number(result.duplicates ?? 0) + exactDuplicates.length,
+    duplicates: Number(result.duplicates ?? 0) + (provenance?0:exactDuplicates.length),
     failed: Number(result.failed ?? 0),
     duplicateBatch: Boolean(result.duplicate_batch),
     notSelected
