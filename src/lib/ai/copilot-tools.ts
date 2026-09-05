@@ -201,7 +201,7 @@ async function executionContextTool(args: Record<string, unknown>, context: Tool
     if (!brief) return empty("get_execution_context", ["Intervențiile nu au putut fi verificate. Reîncearcă din Control Center."]);
     const interventions = brief.items.slice(0, 3);
     return { toolName: "get_execution_context", state: interventions.length ? "ready" : "empty", data: { ...baseData, interventions },
-      sources: interventions.map((item) => source({ sourceId: `intervention:${item.id}`, recordId: item.id, sourceType: "Oportunitate", label: item.title, route: `/opportunities/${item.id}`, observedAt: brief.checkedAt, fact: item.summary, claimType: "derived" })),
+      sources: interventions.map((item,index) => source({ sourceId: `intervention:${item.id}`, recordId: item.id, sourceType: "Oportunitate", label: item.title, route: `/opportunities/${item.id}`, observedAt: brief.checkedAt, fact: `Poziția ${index+1} în ordinea canonică. ${item.summary} Pas recomandat: ${item.recommendation}. Responsabil: ${item.owner}. ${item.estimatedExposure!==null?`Valoare estimată: ${item.estimatedExposure} ${item.currency}; nu venit confirmat.`:""}`, claimType: "derived" })),
       checkedSources: universal.sourceChecks, missingInformation: brief.externalState === "partial" || brief.externalState === "unavailable" ? ["Contextul Google este incomplet; evaluarea folosește datele disponibile."] : [], preparedAction: null, suggestedAction: { label: "Vezi toate intervențiile", route: "/dashboard" } };
   }
   if (view === "contact") {

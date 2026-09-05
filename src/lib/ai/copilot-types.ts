@@ -18,6 +18,7 @@ export type CopilotPageContext = {
   contextLabel?: string;
   documentSourceId?: string;
   documentVersionId?: string;
+  documentComparisonScope?: "workspace";
 };
 
 export type CopilotConversationTurn = {
@@ -42,6 +43,7 @@ export type CopilotSourceType =
   | "Eveniment calendar";
 
 export type CopilotEvidence = {
+  provenance?: import("./intelligence-evidence").EvidenceEnvelope;
   sourceId: string;
   label: string;
   sourceType: CopilotSourceType;
@@ -163,6 +165,7 @@ export type CopilotMultiRecordPlanPreview = {
   externalSend: false;
 };
 export type CopilotAnswer = {
+  calculations?: import("./intelligence-evidence").Calculation[];
   answer: string;
   summaryType: "commercial" | "product_help" | "insufficient_information" | "temporary_error";
   findings: CopilotFinding[];
@@ -240,6 +243,7 @@ export type CopilotProvider = {
   available(): boolean;
   model(): string;
   createTurn(input: {
+    signal?: AbortSignal;
     instructions: string;
     items: unknown[];
     tools: unknown[];

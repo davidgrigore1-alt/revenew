@@ -37,7 +37,7 @@ export function parseCopilotPageContext(value: unknown): CopilotPageContext {
   return {
     route,
     pageType: inferredType,
-    ...(typeof candidate.documentSourceId === "string" && uuidPattern.test(candidate.documentSourceId) && typeof candidate.documentVersionId === "string" && uuidPattern.test(candidate.documentVersionId) ? { documentSourceId: candidate.documentSourceId, documentVersionId: candidate.documentVersionId } : {}),
+    ...(typeof candidate.documentSourceId === "string" && uuidPattern.test(candidate.documentSourceId) && typeof candidate.documentVersionId === "string" && uuidPattern.test(candidate.documentVersionId) ? { documentSourceId: candidate.documentSourceId, documentVersionId: candidate.documentVersionId, ...(candidate.documentComparisonScope === "workspace" ? {documentComparisonScope:"workspace" as const} : {}) } : {}),
     ...(organizationId && identifierPattern.test(organizationId) ? { organizationId } : {}),
     ...(opportunityId && identifierPattern.test(opportunityId) ? { opportunityId } : {}),
     ...(contactId && identifierPattern.test(contactId) ? { contactId } : {}),

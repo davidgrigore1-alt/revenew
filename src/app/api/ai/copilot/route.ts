@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runCopilot } from "@/lib/ai/copilot-orchestrator";
+import { runOperationalIntelligence } from "@/lib/ai/operational-intelligence";
 import { parseCopilotRequest } from "@/lib/ai/copilot-validation";
 import { assertJsonRequest } from "@/lib/api/request-validation";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   if (activeRequests.has(actorKey)) return NextResponse.json({ error: "O verificare este deja în curs. Așteaptă finalizarea ei." }, { status: 429 });
   activeRequests.add(actorKey);
   try {
-    const result = await runCopilot(parsed.value);
+    const result = await runOperationalIntelligence(parsed.value, request.signal);
     console.info("copilot_request_complete", {
       requestId: result.diagnostics.requestId,
       provider: result.diagnostics.provider,

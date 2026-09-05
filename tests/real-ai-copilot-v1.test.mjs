@@ -225,12 +225,14 @@ test("assistant UI is structured, contextual, accessible and does not render uns
   assert.match(drawer, /role="dialog"/);
   assert.match(drawer, /event\.key === "Escape"/);
   assert.match(drawer, /returnFocusRef\.current\?\.focus/);
-  assert.match(conversation, /Dovezi ·/);
+  assert.match(read("src/components/intelligence/IntelligenceEvidence.tsx"), /Dovezi și acoperire/);
   assert.match(conversation, /Informații lipsă sau neconfirmate/);
-  assert.match(conversation, /Verific contextul autorizat/);
+  assert.match(conversation, /Analiza este în curs/);
+  assert.doesNotMatch(conversation, /setInterval/);
   assert.match(conversation, /Reîncearcă/);
   assert.match(conversation, /event\.key === "Enter"/);
-  assert.match(conversation, /motion-reduce:animate-none/);
+  assert.match(conversation, /AbortController/);
+  assert.match(conversation, /nativeEvent.isComposing/);
   assert.match(company, /lockedContext=\{\{ pageType: "company", organizationId \}\}/);
   assert.match(ask, /lockedContext=\{\{ pageType: "ai", \.\.\.\(selectedRecordId \? \{ selectedRecordId \} : \{\}\) \}\}/);
   assert.doesNotMatch(conversation + drawer, /dangerouslySetInnerHTML|javascript:|ChatGPT|avatar|AI gradient/i);

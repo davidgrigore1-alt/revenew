@@ -71,7 +71,7 @@ test('real dispatcher strips read-tool write requests; direct intent permits onl
   '@/lib/authz/get-authorization-context':{getAuthorizationContext:async()=>({profileId:id,permissions:allowed?['opportunities.update']:[]})},
   '@/lib/business/current-business':{getCurrentBusinessForUser:async()=>({business:{id}})},
   '@/lib/supabase/data':{getOpportunityForCurrentBusiness:async()=>({id,title:'Synthetic'})},
-  '@/lib/supabase/admin':{createSupabaseAdminClient:()=>({from(table){assert.equal(table,'ask_action_plans');return {insert(value){writes.push(value);return this;},select(){return this;},single:async()=>({data:{id},error:null})};}})}
+  '@/lib/supabase/admin':{createSupabaseAdminClient:()=>({from(table){assert.ok(['business_members','businesses','opportunities','ask_action_plans'].includes(table));return {insert(value){assert.equal(table,'ask_action_plans');writes.push(value);return this;},select(){return this;},eq(){return this;},maybeSingle:async()=>({data:table==='business_members'?{profile_id:id}:table==='businesses'?{owner_profile_id:id}:table==='opportunities'?{id,updated_at:'2026-09-05'}:writes.length?{id}:null,error:null})};}})}
  });
  const dispatcher=isolated('src/lib/ai/copilot-tools.ts',{
   '@/lib/ai/preparation-intent':preparation,'@/lib/ai/action-planner':planner,
@@ -89,6 +89,8 @@ test('real dispatcher strips read-tool write requests; direct intent permits onl
  assert.equal(writes.length,0);
  const draft=await preparation.withPreparationIntent(true,()=>planner.prepareAskActionPlan({question,context:{opportunityId:id},evidence:[]}));
  assert.equal(draft.status,'prepared_not_executed');assert.equal(writes.length,1);assert.equal(writes[0].business_id,id);
+ const replay=await preparation.withPreparationIntent(true,()=>planner.prepareAskActionPlan({question,context:{opportunityId:id},evidence:[]}));
+ assert.equal(replay.planId,draft.planId);assert.equal(writes.length,1);
  allowed=false;
  assert.equal(await preparation.withPreparationIntent(true,()=>planner.prepareAskActionPlan({question,context:{opportunityId:id},evidence:[]})),null);
  assert.equal(writes.length,1);

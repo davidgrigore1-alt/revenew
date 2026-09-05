@@ -1,7 +1,10 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { hasDirectPreparationIntent } from "@/lib/ai/preparation-intent";
 import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
 import { workflowRunIdFromEvidence } from "@/lib/workflow-trace";
+import { businessRolePermissions } from "@/lib/authz/role-permissions";
+import { mapDatabaseBusinessRole } from "@/lib/authz/roles";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAuthorizationContext } from "@/lib/authz/get-authorization-context";
@@ -94,6 +97,7 @@ export async function createStoredActionPlanForActor(input: {
   actor: { businessId: string; profileId: string; permissions: readonly string[] };
   actionType: AskActionType;
   targetId: string;
+  targetType?: "opportunity" | "organization";
   targetLabel: string;
   proposal: AskActionProposal;
   evidence?: Array<{ sourceId: string; label: string; sourceType: string }>;
@@ -103,18 +107,26 @@ export async function createStoredActionPlanForActor(input: {
   if (!input.actor.permissions.includes(permissionFor(input.actionType))) throw new Error("ask_action_forbidden");
   if (!(await validMember(input.actor.businessId, input.actor.profileId))) throw new Error("ask_action_forbidden");
   const client = admin();
-  const { data: target } = await client.from("opportunities").select("id,updated_at").eq("id", input.targetId).eq("business_id", input.actor.businessId).maybeSingle();
+  const ownership = await client.from("businesses").select("owner_profile_id").eq("id",input.actor.businessId).maybeSingle();
+  if(ownership.error||!ownership.data)throw new Error("ask_action_forbidden");
+  if(ownership.data.owner_profile_id!==input.actor.profileId){
+    const membership=await client.from("business_members").select("role").eq("business_id",input.actor.businessId).eq("profile_id",input.actor.profileId).eq("status","active").maybeSingle();
+    const role=mapDatabaseBusinessRole(membership.data?.role);
+    if(membership.error||!role||!businessRolePermissions[role].includes(permissionFor(input.actionType)))throw new Error("ask_action_forbidden");
+  }
+  if(input.targetType==="organization"&&input.actionType!=="add_note")throw new Error("ask_action_target_invalid");
+  const { data: target } = await client.from(input.targetType==="organization"?"crm_organizations":"opportunities").select("id,updated_at").eq("id", input.targetId).eq("business_id", input.actor.businessId).maybeSingle();
   if (!target) throw new Error("ask_action_target_missing");
   const proposal = validateProposal(input.actionType, input.proposal);
   if (proposal.ownerProfileId && !(await validMember(input.actor.businessId, proposal.ownerProfileId))) throw new Error("ask_action_owner_forbidden");
-  const { data: existing } = await client.from("ask_action_plans").select("id").eq("business_id", input.actor.businessId).eq("idempotency_key", input.idempotencyKey).maybeSingle();
+  const { data: existing } = await client.from("ask_action_plans").select("id").eq("business_id", input.actor.businessId).eq("created_by_profile_id", input.actor.profileId).eq("idempotency_key", input.idempotencyKey).maybeSingle();
   if (existing) return { id: existing.id, replay: true as const };
   const payload = {
     business_id: input.actor.businessId,
     created_by_profile_id: input.actor.profileId,
     action_type: input.actionType,
     risk_level: riskFor(input.actionType),
-    target_type: "opportunity",
+    target_type: input.targetType ?? "opportunity",
     target_id: input.targetId,
     target_label: clean(input.targetLabel, 160) || "Oportunitate",
     proposal,
@@ -124,7 +136,7 @@ export async function createStoredActionPlanForActor(input: {
   };
   const { data, error } = await client.from("ask_action_plans").insert(payload).select("id").maybeSingle();
   if (!error && data) return { id: data.id, replay: false as const };
-  const { data: raced } = await client.from("ask_action_plans").select("id").eq("business_id", input.actor.businessId).eq("idempotency_key", input.idempotencyKey).maybeSingle();
+  const { data: raced } = await client.from("ask_action_plans").select("id").eq("business_id", input.actor.businessId).eq("created_by_profile_id", input.actor.profileId).eq("idempotency_key", input.idempotencyKey).maybeSingle();
   if (raced) return { id: raced.id, replay: true as const };
   throw new Error("ask_action_plan_create_failed");
 }
@@ -146,8 +158,11 @@ export async function prepareAskActionPlan(input: { question: string; context: C
   const targetType = input.context.opportunityId ? "opportunity" : "organization";
   const targetLabel = opportunity?.title ?? input.context.contextLabel ?? "Înregistrarea curentă";
   const evidence = input.evidence.slice(0, 8).map((item) => ({ sourceId: item.sourceId, label: item.label, sourceType: item.sourceType }));
-  const { data, error } = await admin().from("ask_action_plans").insert({ business_id: current.business.id, created_by_profile_id: authorization.profileId, action_type: type, risk_level: riskFor(type), target_type: targetType, target_id: targetId, target_label: targetLabel, proposal, evidence, expected_target_updated_at: opportunity?.updatedAt ?? null }).select("id").single();
-  if (error || !data) throw new Error("ask_action_plan_create_failed");
+  // Retry identity binds actor, target revision, reviewed payload and evidence. A
+  // source/history string cannot enable this branch without request-local intent.
+  const hex = createHash("sha256").update(JSON.stringify([current.business.id,authorization.profileId,targetType,targetId,type,opportunity?.updatedAt??null,proposal,evidence])).digest("hex").slice(0,32);
+  const idempotencyKey=`${hex.slice(0,8)}-${hex.slice(8,12)}-5${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20)}`;
+  const data=await createStoredActionPlanForActor({actor:{businessId:current.business.id,profileId:authorization.profileId,permissions:authorization.permissions},actionType:type,targetType,targetId,targetLabel,proposal,evidence,idempotencyKey});
   return { id: data.id, planId: data.id, type: type === "prepare_email" ? "email_draft" : type === "create_task" ? "task_draft" : type === "update_next_action" ? "next_action_draft" : type === "create_notification" ? "notification_draft" : "record_update_draft", actionType: type, riskLevel: riskFor(type), title: titleFor(type), status: "prepared_not_executed", editable: true, subject: proposal.subject ?? proposal.title, body: proposal.body ?? proposal.note ?? proposal.description, rationale: `Propunerea este limitată la ${targetLabel} și va fi revalidată înainte de aplicare.`, evidenceSourceIds: evidence.map((item) => item.sourceId), executionNotice: type === "prepare_email" ? "Emailul va fi salvat ca draft. Nu va fi trimis." : "Nicio modificare nu a fost aplicată. Este necesară aprobarea explicită.", target: { type: targetType, id: targetId, label: targetLabel }, proposal, ownerResolutionRequired: type === "assign_owner" && !proposal.ownerProfileId };
 }
 

@@ -6,8 +6,8 @@ import { parseEmailQueryIntent } from "@/lib/google-workspace/email-intent";
 import { getOwnedExternalContext, requireGoogleConnectorActor } from "@/lib/google-workspace/repository";
 import { getResponseWindowBusinessDays, listOwnedCommunicationNotifications } from "@/lib/communication-os";
 
-type ExternalView = "recent_emails" | "recent_interactions" | "meetings_today" | "meetings_tomorrow" | "meetings_week" | "company_brief" | "external_activity" | "prepare_followup" | "prepare_meeting_brief";
-const allowedViews = new Set<ExternalView>(["recent_emails", "recent_interactions", "meetings_today", "meetings_tomorrow", "meetings_week", "company_brief", "external_activity", "prepare_followup", "prepare_meeting_brief"]);
+type ExternalView = "recent_emails" | "recent_interactions" | "meetings_today" | "meetings_tomorrow" | "meetings_week" | "meetings_next_week" | "company_brief" | "external_activity" | "prepare_followup" | "prepare_meeting_brief";
+const allowedViews = new Set<ExternalView>(["recent_emails", "recent_interactions", "meetings_today", "meetings_tomorrow", "meetings_week", "meetings_next_week", "company_brief", "external_activity", "prepare_followup", "prepare_meeting_brief"]);
 
 export function externalSearchTerm(question: string) {
   const email = question.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
@@ -38,12 +38,11 @@ function zonedMidnight(date: string, timeZone = "Europe/Bucharest") {
 
 export function dateRange(today: string, view: ExternalView) {
   if (!view.startsWith("meetings_")) return {};
-  const offset = view === "meetings_tomorrow" ? 1 : 0;
-  const start = zonedMidnight(today);
-  start.setUTCDate(start.getUTCDate() + offset);
-  const end = new Date(start);
-  end.setUTCDate(end.getUTCDate() + (view === "meetings_week" ? 7 : 1));
-  return { from: start.toISOString(), to: end.toISOString() };
+  const date = new Date(`${today}T12:00:00Z`);
+  const offset = view === "meetings_tomorrow" ? 1 : view === "meetings_next_week" ? 8-(date.getUTCDay()||7) : 0;
+  const dateAt=(days:number)=>{const value=new Date(date);value.setUTCDate(value.getUTCDate()+days);return value.toISOString().slice(0,10);};
+  const length=view==="meetings_week"||view==="meetings_next_week"?7:1;
+  return {from:zonedMidnight(dateAt(offset)).toISOString(),to:zonedMidnight(dateAt(offset+length)).toISOString()};
 }
 
 function source(input: CopilotEvidence): CopilotEvidence {
@@ -118,8 +117,8 @@ export async function externalContextTool(raw: Record<string, unknown>, page: Co
   const requestedLimit = typeof raw.limit === "number" && Number.isInteger(raw.limit) ? Math.min(8, Math.max(1, raw.limit)) : 5;
   const parsedEmailIntent = parseEmailQueryIntent(query);
   const emailIntent = { ...parsedEmailIntent, limit: requestedLimit };
-  const organizationId = bounded(raw.organizationId, 80) || page.organizationId;
-  const opportunityId = bounded(raw.opportunityId, 80) || page.opportunityId;
+  const organizationId = page.organizationId || bounded(raw.organizationId, 80);
+  const opportunityId = page.opportunityId || bounded(raw.opportunityId, 80);
   const contactId = page.contactId;
   const emailId = page.route === "/inbox" ? page.selectedRecordId : undefined;
   const range = dateRange(universal.today, view);

@@ -194,14 +194,19 @@ export async function removeDriveSource(actor:Actor,sourceId:string){
  // Removing cached content needs source ownership, not a live Google token or the latest account.
  return {id:await commit(actor,existing.connection_id,existing.provider_file_id,existing,"remove",{},[])};
 }
-export async function getDriveWorkspace(opportunityId?:string){
+export async function getDriveWorkspace(opportunityId?:string,allowedOpportunityIds?:string[]){
  await requirePermission("documents.read");
  const actor=await requireGoogleConnectorActor();if(opportunityId)await target(actor,opportunityId);
  const connection=await getOwnedGoogleConnection(actor);
  let query=db().from("external_document_sources").select(sourceFields).eq("business_id",actor.businessId).neq("state","removed")
   .order("last_synced_at",{ascending:false}).limit(100);
- query=opportunityId?query.eq("opportunity_id",opportunityId):query.eq("owner_profile_id",actor.profileId);
- const [sources,opportunities]=await Promise.all([query,opportunityId ? db().from("opportunities").select("id,title").eq("business_id",actor.businessId).eq("id",opportunityId) : db().from("opportunities").select("id,title").eq("business_id",actor.businessId).order("title").limit(100)]);
+ query=query.eq("owner_profile_id",actor.profileId);
+ if(opportunityId)query=query.eq("opportunity_id",opportunityId);
+ if(allowedOpportunityIds)query=query.in("opportunity_id",allowedOpportunityIds.filter(id=>uuidPattern.test(id)).slice(0,200));
+ let targets=db().from("opportunities").select("id,title").eq("business_id",actor.businessId).order("title").limit(100);
+ if(opportunityId)targets=targets.eq("id",opportunityId);
+ if(allowedOpportunityIds)targets=targets.in("id",allowedOpportunityIds.filter(id=>uuidPattern.test(id)).slice(0,200));
+ const [sources,opportunities]=await Promise.all([query,targets]);
  if(sources.error||opportunities.error)throw new Error("storage_unavailable");
  return {connectionId:connection?.id??null,authorized:!!connection&&connection.drive_status==="connected"&&connection.granted_scopes.includes(DRIVE_SCOPE),
   sources:(sources.data as DocumentSource[]).map(source=>({...source,canManage:source.owner_profile_id===actor.profileId})),
@@ -210,7 +215,9 @@ export async function getDriveWorkspace(opportunityId?:string){
 export async function getDocumentSourceDetail(sourceId:string){
  await requirePermission("documents.read");
  const actor=await requireGoogleConnectorActor();if(!uuidPattern.test(sourceId))return null;
- const {data,error}=await db().from("external_document_sources").select(sourceFields).eq("business_id",actor.businessId).eq("id",sourceId).neq("state","removed").maybeSingle();
+ const ownedConnection=await getOwnedGoogleConnection(actor);
+ if(!ownedConnection||ownedConnection.drive_status!=="connected"||!ownedConnection.granted_scopes.includes(DRIVE_SCOPE))return null;
+ const {data,error}=await db().from("external_document_sources").select(sourceFields).eq("business_id",actor.businessId).eq("owner_profile_id",actor.profileId).eq("connection_id",ownedConnection.id).eq("id",sourceId).neq("state","removed").maybeSingle();
  if(error)throw new Error("document_source_unavailable");
  if(!data)return null;const source=data as DocumentSource;
  const segments=source.state==="synced"?await db().from("external_document_segments").select("id,ordinal,text,text_hash,location_type,location_label")
@@ -231,7 +238,10 @@ export async function getDriveEvidence(opportunityIds:string[]):Promise<Record<s
  await requirePermission("documents.read");
  const actor=await requireGoogleConnectorActor();const ids=opportunityIds.filter(id=>uuidPattern.test(id)).slice(0,200);
  if(!ids.length)return {};
+ const connection=await getOwnedGoogleConnection(actor);
+ if(!connection||connection.drive_status!=="connected"||!connection.granted_scopes.includes(DRIVE_SCOPE))return {};
  const {data,error}=await db().from("external_document_sources").select(sourceFields).eq("business_id",actor.businessId)
+  .eq("owner_profile_id",actor.profileId).eq("connection_id",connection.id)
   .in("opportunity_id",ids).eq("state","synced").order("last_synced_at",{ascending:false}).limit(200);
  if(error)throw new Error("storage_unavailable");
  const sources=(data??[]) as DocumentSource[];

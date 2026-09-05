@@ -59,7 +59,7 @@ export function createOpenAICopilotProvider(): CopilotProvider {
         ...(input.requireStructuredAnswer ? {
           text: { format: { type: "json_schema", name: "revenew_structured_answer", strict: true, schema: (input.responseSchema ?? answerSchema) as typeof answerSchema } }
         } : {})
-      }, { signal }), 22_000);
+      }, { signal: input.signal ? AbortSignal.any([signal,input.signal]) : signal, maxRetries: 0 }), 22_000);
       const toolCalls = response.output.flatMap((item) => item.type === "function_call" ? [{ callId: item.call_id, name: item.name, argumentsJson: item.arguments }] : []);
       return {
         responseId: response.id,

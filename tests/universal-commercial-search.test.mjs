@@ -197,6 +197,6 @@ test("global search remains deterministic while Ask ReveNew can reuse it as an a
   assert.match(ask, /Ce vrei să verifici\?/);
   assert.match(ask, /CopilotConversation/);
   assert.match(globalSearch, /De ce apare/);
-  assert.match(conversation, /Dovezi/);
+  assert.match(conversation, /IntelligenceEvidence/);
   assert.doesNotMatch(`${globalSearch}\n${ask}\n${conversation}`, /Ask anything|ChatGPT|răspuns garantat|ROI garantat/i);
 });

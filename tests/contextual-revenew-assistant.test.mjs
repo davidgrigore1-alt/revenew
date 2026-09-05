@@ -132,7 +132,7 @@ test("assistant is accessible, evidence-grounded, actionable and keeps the exist
   assert.match(assistant, /aria-modal="true"/);
   assert.match(assistant, /event\.key === "Escape"/);
   assert.match(conversation, /Ce necesită atenție astăzi și pe ce dovezi se bazează/);
-  assert.match(conversation, /Dovezi ·/);
+  assert.match(read("src/components/intelligence/IntelligenceEvidence.tsx"), /Dovezi și acoperire/);
   assert.match(conversation, /Informații lipsă sau neconfirmate/);
   assert.match(assistant, /Revezi turul introductiv/);
   assert.match(assistant, /Resetează ghidurile închise/);

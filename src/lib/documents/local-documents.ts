@@ -25,6 +25,35 @@ export async function listLocalDocuments(query = "", limit = 25) {
   const result = await request; check(result.error);
   return result.data as LocalDocumentVersion[];
 }
+
+// Metadata-only discovery. Bodies are loaded separately through getLocalDocument,
+// which rechecks the actor, tenant, source lifecycle and immutable version.
+export async function discoverLocalDocumentVersions(opportunityIds?: string[]) {
+  const { client, businessId } = await actor();
+  let sourceIds:string[]|undefined;
+  if(opportunityIds){
+    const ids=opportunityIds.filter(id=>uuid.test(id)).slice(0,200);
+    if(!ids.length)return {versions:[],partial:false};
+    const sources=await client.from("local_document_sources").select("id").eq("business_id",businessId).eq("state","active").in("opportunity_id",ids).limit(201);
+    check(sources.error);sourceIds=(sources.data??[]).slice(0,200).map(row=>row.id);
+    if(!sourceIds.length)return {versions:[],partial:false};
+  }
+  const rows: Array<{source_id:string;id:string;original_filename:string}> = [];
+  let partial = false;
+  for (let page = 0; page < 2; page++) {
+    let query = client.from("local_document_versions")
+      .select("source_id,id,original_filename").eq("business_id",businessId).eq("state","ready")
+      .order("created_at",{ascending:false}).order("id").range(page*20,page*20+20);
+    if(sourceIds)query=query.in("source_id",sourceIds);
+    const result=await query;
+    check(result.error);
+    rows.push(...(result.data ?? []).slice(0,20));
+    partial = (result.data?.length ?? 0)>20;
+    if (!partial) break;
+  }
+  // Workspace questions use the latest retained version encountered for a source.
+  return {versions:Array.from(new Map(rows.map(row=>[row.source_id,row] as const).reverse()).values()).reverse(),partial};
+}
 export async function getLocalDocument(sourceId: string, versionId?: string) {
   if (!uuid.test(sourceId) || (versionId && !uuid.test(versionId))) return null;
   const { client, businessId } = await actor();

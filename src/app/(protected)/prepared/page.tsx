@@ -5,6 +5,8 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { ActionPreview } from "@/components/intelligence/ActionPreview";
 import { getPreparedWorkRegistry } from "@/lib/prepared-work-registry";
+import { getAskPreparedWork } from "@/lib/ai/ask-prepared-work";
+import { PreparedActionCard } from "@/components/intelligence/CopilotConversation";
 import { formatProductDate } from "@/lib/ui/presentation";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +19,9 @@ const groups = [
 
 export default async function PreparedWorkPage(props: { searchParams?: Promise<{ item?: string }> }) {
   const searchParams = await props.searchParams;
-  const registry = await getPreparedWorkRegistry();
+  const [registry,askItems] = await Promise.all([getPreparedWorkRegistry(),getAskPreparedWork()]);
+  registry.items = [...askItems,...registry.items];
+  registry.counts.review += askItems.length;
   const requestedId = typeof searchParams?.item === "string" ? searchParams.item : undefined;
   const selected = registry.items.find((item) => item.id === requestedId) ?? registry.items[0];
 
@@ -65,7 +69,7 @@ export default async function PreparedWorkPage(props: { searchParams?: Promise<{
 
           <section aria-label="Detaliul lucrului selectat" className={`${requestedId ? "block" : "hidden xl:block"} xl:max-h-[calc(100dvh-17rem)]`}>
             <Link href="/prepared" className="focus-ring mb-3 inline-flex items-center gap-1 rounded-sm text-xs font-semibold text-[rgb(var(--primary))] hover:underline xl:hidden"><ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />Înapoi la coadă</Link>
-            <ActionPreview item={selected} />
+            {askItems.find(item=>item.id===selected.id)?.askAction ? <PreparedActionCard action={askItems.find(item=>item.id===selected.id)!.askAction} /> : <ActionPreview item={selected} />}
           </section>
         </div>
       ) : (

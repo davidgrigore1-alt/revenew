@@ -213,10 +213,10 @@ test("Ask history is newest-first, locally clearable and individually dismissibl
   assert.match(conversation, /Șterge conversația/);
   assert.match(conversation, /Istoric · \{previousCount\}/);
   assert.match(conversation, /current\.filter\(\(turn\) => turn\.id !== item\.id\)/);
-  assert.match(conversation, /Verific contextul autorizat/);
-  assert.match(conversation, /Caut informația relevantă/);
-  assert.match(conversation, /Pregătesc răspunsul/);
-  assert.match(conversation, /Dovezi ·/);
+  assert.match(conversation, /Analiza este în curs/);
+  assert.doesNotMatch(conversation, /setInterval/);
+  assert.match(conversation, /AbortController/);
+  assert.match(read("src/components/intelligence/IntelligenceEvidence.tsx"), /Dovezi și acoperire/);
 });
 
 test("corrective migration keeps trigger scope strict and grants reads only to service_role", () => {

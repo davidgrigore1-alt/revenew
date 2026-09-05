@@ -44,7 +44,7 @@ export async function getUniversalBusinessContext(page: CopilotPageContext) {
     email: emailAvailable ? "available" : emailGranted ? "unavailable" : "not_connected",
     calendar: calendarAvailable ? "available" : calendarGranted ? "unavailable" : "not_connected"
   }, {
-    email: emailAvailable ? "Context Gmail autorizat și sincronizat pentru utilizatorul curent." : emailGranted ? "Gmail este autorizat, dar contextul nu este disponibil până la o sincronizare reușită." : "Gmail nu este autorizat pentru utilizatorul curent.",
+    email: emailAvailable ? "Context Gmail privat, sincronizare limitată. Istoricul complet și absența unui răspuns nu sunt confirmate." : emailGranted ? "Gmail este autorizat, dar contextul nu este disponibil până la o sincronizare reușită." : "Gmail nu este autorizat pentru utilizatorul curent.",
     calendar: calendarAvailable ? "Context Calendar autorizat și sincronizat pentru utilizatorul curent." : calendarGranted ? "Calendar este autorizat, dar contextul nu este disponibil până la o sincronizare reușită." : "Calendar nu este autorizat pentru utilizatorul curent."
   });
 

@@ -103,7 +103,7 @@ test("recent changes use a dedicated renderer with concise narrative and seconda
   has(cards, "Ce s-a schimbat recent");
   has(cards, "presentOpportunityState");
   has(cards, "formatProductDateTime");
-  has(conversation, "Dovezi ·");
+  has(conversation, "IntelligenceEvidence");
   has(orchestrator, "schimbări comerciale relevante");
   assert.doesNotMatch(conversation, /Rezultat determinist|Răspunsul generativ nu este disponibil/);
   assert.doesNotMatch(orchestrator, /\$\{index \+ 1\}\. \$\{item\.title\}/);

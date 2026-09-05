@@ -116,7 +116,7 @@ export function createOllamaCopilotProvider(): CopilotProvider {
         const response = await fetch(`${config.baseUrl}/api/chat`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          signal: controller.signal,
+          signal: input.signal ? AbortSignal.any([controller.signal,input.signal]) : controller.signal,
           cache: "no-store",
           body: JSON.stringify({
             model: config.model,
