@@ -34,19 +34,19 @@ test("A4.3 Documents is an operational registry with compact tools and responsiv
   const page = read("src/app/(protected)/documents/page.tsx");
   assert.match(page, /<PageShell[\s\S]{0,40}\bwide\b/);
   assert.match(page, /Instrumente registru documente/);
-  assert.match(page, /<RecordSummaryBar label="Rezumat documente afișate"/);
-  assert.match(page, /<ul[\s\S]*lg:hidden[\s\S]*aria-label="Documente comerciale"/);
-  assert.match(page, /hidden overflow-hidden lg:block/);
+  assert.match(page, /<table[^>]*aria-label="Documente comerciale"/);
+  assert.match(page, /scope="col"/);
+  assert.match(page, /mobileContext/);
   assert.match(page, /Asociere|Context|Stare/);
 });
 
 test("A4.3 document detail separates prepared, approved and executed truth", () => {
   const page = read("src/app/(protected)/documents/[id]/page.tsx");
-  assert.match(page, /<RecordSummaryBar label="Starea și contextul documentului"/);
-  assert.match(page, /status === "approved"/);
-  assert.match(page, /Nu înseamnă trimis/);
-  assert.match(page, /status === "sent"/);
-  assert.match(page, /Acțiune umană necesară/);
-  assert.match(page, /<pre className="whitespace-pre-wrap/);
+  assert.match(page, /aria-label="Proveniență și context"/);
+  assert.match(page, /status\s*===\s*"approved"/);
+  assert.match(page, /nu dovedește trimiterea/);
+  assert.match(page, /status\s*===\s*"sent"/);
+  assert.match(page, /Aprobarea, execuția și rezultatul comercial se verifică separat/);
+  assert.match(page, /<pre className=\{styles.body\}/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
 });

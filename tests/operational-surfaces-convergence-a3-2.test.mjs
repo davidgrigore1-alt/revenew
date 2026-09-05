@@ -98,12 +98,12 @@ test("Meetings distinguish upcoming and completed commercial context truthfully"
 
 test("Documents expose source, commercial context, provenance and useful empty actions", () => {
   const source = read("src/app/(protected)/documents/page.tsx");
-  assert.match(source, /Rezumat documente afișate/);
+  assert.match(source, /în această pagină/);
   assert.match(source, /Google Drive/);
   assert.match(source, /Context/);
-  assert.match(source, /Actualizat \/ verificat/);
-  assert.match(source, /selectate explicit dintr-o sursă autorizată/);
-  assert.match(source, /Gestionează sursele/);
+  assert.match(source, /Încercare sincronizare/);
+  assert.match(source, /Accesul actual se verifică separat/);
+  assert.match(source, /Selectează o sursă din Drive/);
 });
 
 test("Apps uses the protected shell and keeps live, planned and connected states distinct", () => {

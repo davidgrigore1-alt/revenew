@@ -1,368 +1,43 @@
 import Link from "next/link";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-
-import { DriveWorkspace } from "@/components/apps/DriveWorkspace";
-import { EmptyState } from "@/components/dashboard/EmptyState";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { DriveSourceActions } from "@/components/documents/DriveSourceActions";
-import {
-  DocumentTypeIcon,
-  documentMimeLabel,
-} from "@/components/documents/DocumentTypeIcon";
+import { DocumentTypeIcon, documentMimeLabel } from "@/components/documents/DocumentTypeIcon";
 import { Button } from "@/components/ui/Button";
-import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { getCommercialDocuments } from "@/lib/commercial-documents";
 import { formatProductDateTime } from "@/lib/ui/presentation";
+import styles from "@/components/documents/Documents.module.css";
 
 export const dynamic = "force-dynamic";
 
-const regionClass =
-  "border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))]";
-
-const innerSurfaceClass =
-  "rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
-
-export default async function DocumentsPage(
-  props: {
-    searchParams: Promise<{
-      q?: string;
-      provider?: string;
-      page?: string;
-    }>;
-  }
-) {
-  const searchParams = await props.searchParams;
-  const model = await getCommercialDocuments({
-    query: searchParams.q,
-    provider: searchParams.provider,
-    page: searchParams.page,
-  });
-
-  const driveCount = model.items.filter(
-    (item) => item.provider === "google_drive",
-  ).length;
-
-  const revenewCount = model.items.filter(
-    (item) => item.provider === "revenew",
-  ).length;
-  const approvedCount = model.items.filter((item) => item.status === "Aprobat").length;
-  const sentCount = model.items.filter((item) => item.status === "Trimis").length;
-  const inProgressCount = model.items.length - approvedCount - sentCount;
-
-  const href = (
-    provider = model.provider,
-    page = 1,
-  ) =>
-    `/documents?${new URLSearchParams({
-      q: model.query,
-      provider,
-      page: String(page),
-    })}`;
-
-  return (
-    <PageShell
-      wide
-      eyebrow="Documente"
-      title="Documente comerciale"
-      description="Surse autorizate, documente interne și context verificabil"
-    >
-      <div className="grid gap-6">
-        {/* Search + source action */}
-        <section aria-label="Instrumente registru documente" className="product-grouping-surface p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <form
-              action="/documents"
-              className="flex h-9 min-w-0 max-w-xl flex-1 items-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]"
-            >
-              <input
-                type="hidden"
-                name="provider"
-                value={model.provider}
-              />
-
-              <input
-                name="q"
-                defaultValue={model.query}
-                maxLength={100}
-                aria-label="Caută documente și context comercial"
-                placeholder="Caută documente sau oportunități…"
-                className="focus-ring h-9 min-w-0 flex-1 rounded-button bg-transparent px-3 text-xs"
-              />
-
-              <button
-                type="submit"
-                aria-label="Caută documente"
-                className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-button text-[rgb(var(--text-muted))] transition-colors hover:text-[rgb(var(--foreground))]"
-              >
-                <MagnifyingGlassIcon
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                />
-              </button>
-            </form>
-
-            {model.canSelect ? (
-              <DriveWorkspace selectorOnly />
-            ) : null}
-          </div>
-          <nav aria-label="Sursa documentelor" className="mt-3 flex gap-1 border-t border-[rgb(var(--border))] pt-2">
-            {[["all", "Toate"], ["google_drive", "Google Drive"], ["revenew", "ReveNew"]].map(([value, label]) => {
-              const active = model.provider === value;
-              return <Link key={value} href={href(value)} aria-current={active ? "page" : undefined} className={"focus-ring relative min-h-9 px-3 py-2 text-xs font-medium transition-colors " + (active ? "text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]")}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-2 bottom-0 h-0.5 bg-[rgb(var(--interaction))]" /> : null}</Link>;
-            })}
-          </nav>
-        </section>
-
-        {/* Summary */}
-        <RecordSummaryBar label="Rezumat documente afișate" items={[
-          { label: "În această pagină", value: String(model.items.length), detail: "Documente comerciale afișate" },
-          { label: "Google Drive", value: String(driveCount), detail: "Selectate și autorizate explicit" },
-          { label: "ReveNew", value: String(revenewCount), detail: "Create în fluxul comercial" },
-          { label: "Alte stări curente", value: String(inProgressCount), detail: "Inclusiv surse autorizate" },
-          { label: "Aprobate", value: String(approvedCount), detail: "Nu înseamnă trimise", tone: approvedCount ? "attention" : "default" },
-          { label: "Trimise", value: String(sentCount), detail: "Execuție înregistrată", tone: sentCount ? "success" : "default" }
-        ]} />
-
-        {/* Document workspace */}
-        <section className={`${regionClass} p-4 sm:p-5`}>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="micro-label">
-                Bibliotecă comercială
-              </p>
-
-              <h2 className="mt-1 text-base font-semibold text-[rgb(var(--foreground))]">
-                Documente disponibile
-              </h2>
-
-              <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">
-                Documentele păstrează sursa, contextul comercial și momentul ultimei verificări.
-              </p>
-            </div>
-
-            <span className="shrink-0 text-xs tabular-nums text-[rgb(var(--text-muted))]">
-              {model.items.length} afișate
-            </span>
-          </div>
-
-          {model.items.length ? (
-            <>
-            <ul className="mt-4 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border-strong))] lg:hidden" aria-label="Documente comerciale">
-              {model.items.map((item) => <li key={`mobile:${item.kind}:${item.id}`} className="grid gap-3 px-4 py-4">
-                <div className="flex min-w-0 items-start gap-3"><DocumentTypeIcon mime={item.mime} /><div className="min-w-0"><Link href={item.detailHref} className="focus-ring block truncate text-sm font-semibold">{item.title}</Link><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{item.commercialType} · {documentMimeLabel(item.mime)}</p></div></div>
-                <dl className="grid grid-cols-2 gap-3 text-xs"><div><dt className="text-[rgb(var(--text-muted))]">Context</dt><dd className="mt-1 truncate"><Link href={item.linkedContext.href} className="focus-ring hover:underline">{item.linkedContext.title}</Link></dd></div><div><dt className="text-[rgb(var(--text-muted))]">Stare</dt><dd className="mt-1 font-medium">{item.status}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Sursă</dt><dd className="mt-1">{item.provider === "google_drive" ? "Google Drive" : "ReveNew"}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Actualizat</dt><dd className="mt-1">{item.sourceModifiedAt ? formatProductDateTime(item.sourceModifiedAt) : item.lastSyncedAt ? formatProductDateTime(item.lastSyncedAt) : "Neconfirmat"}</dd></div></dl>
-              </li>)}
-            </ul>
-            <div
-              role="table"
-              aria-label="Documente comerciale"
-              className={`${innerSurfaceClass} mt-4 hidden overflow-hidden lg:block`}
-            >
-              <div
-                role="row"
-                className="hidden gap-4 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-2.5 text-[11px] font-medium text-[rgb(var(--text-muted))] lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_7rem_10rem_8rem_2.5rem]"
-              >
-                {[
-                  "Document",
-                  "Context",
-                  "Sursă",
-                  "Actualizat / verificat",
-                  "Stare",
-                  "",
-                ].map((label, index) => (
-                  <span
-                    role="columnheader"
-                    key={index}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-
-              <div className="divide-y divide-[rgb(var(--border))]">
-                {model.items.map((item) => (
-                  <div
-                    key={`${item.kind}:${item.id}`}
-                    role="row"
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3.5 transition-colors hover:bg-[rgb(var(--surface-hover))] lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_7rem_10rem_8rem_2.5rem]"
-                  >
-                    <div
-                      role="cell"
-                      className="flex min-w-0 items-center gap-3"
-                    >
-                      <DocumentTypeIcon
-                        mime={item.mime}
-                      />
-
-                      <div className="min-w-0">
-                        <Link
-                          href={item.detailHref}
-                          className="focus-ring block truncate text-sm font-semibold text-[rgb(var(--foreground))] hover:underline"
-                        >
-                          {item.title}
-                        </Link>
-
-                        <p className="mt-0.5 text-xs text-[rgb(var(--text-muted))]">
-                          {item.commercialType} ·{" "}
-                          {documentMimeLabel(
-                            item.mime,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Link
-                      role="cell"
-                      href={item.linkedContext.href}
-                      className="focus-ring col-start-1 truncate text-xs text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--foreground))] hover:underline lg:col-auto"
-                    >
-                      {item.linkedContext.title}
-                    </Link>
-
-                    <span
-                      role="cell"
-                      className="text-xs text-[rgb(var(--text-muted))]"
-                    >
-                      {item.provider ===
-                      "google_drive"
-                        ? "Google Drive"
-                        : "ReveNew"}
-                    </span>
-
-                    <div
-                      role="cell"
-                      className="text-xs leading-5 text-[rgb(var(--text-muted))]"
-                    >
-                      {item.sourceModifiedAt ? (
-                        <p>
-                          Modificat{" "}
-                          {formatProductDateTime(
-                            item.sourceModifiedAt,
-                          )}
-                        </p>
-                      ) : null}
-
-                      {item.lastSyncedAt ? (
-                        <p>
-                          Verificat{" "}
-                          {formatProductDateTime(
-                            item.lastSyncedAt,
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <span
-                      role="cell"
-                      className="text-xs text-[rgb(var(--text-secondary))]"
-                    >
-                      {item.status}
-                    </span>
-
-                    <div
-                      role="cell"
-                      className="col-start-2 row-start-1 flex justify-end lg:col-auto lg:row-auto"
-                    >
-                      {item.provider ===
-                      "google_drive" ? (
-                        <DriveSourceActions
-                          id={item.id}
-                          title={item.title}
-                          canSync={
-                            item.availableActions
-                              .sync
-                          }
-                          canRemove={
-                            item.availableActions
-                              .remove
-                          }
-                          detailHref={
-                            item.detailHref
-                          }
-                          sourceHref={
-                            item.sourceHref
-                          }
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div></>
-          ) : (
-            <div
-              className={`${innerSurfaceClass} mt-4 overflow-hidden`}
-            >
-              <EmptyState
-                title={
-                  model.query
-                    ? "Niciun document pentru această căutare"
-                    : "Nu există documente comerciale"
-                }
-                description={
-                  model.query
-                    ? "Schimbă termenul sau sursa selectată. Căutarea nu modifică documentele ori legăturile lor comerciale."
-                    : "Documentele apar după ce sunt create într-o oportunitate sau selectate explicit dintr-o sursă autorizată."
-                }
-                actions={
-                  <>
-                    <Button
-                      href="/opportunities"
-                      size="small"
-                    >
-                      Deschide oportunitățile
-                    </Button>
-
-                    <Button
-                      href="/apps"
-                      variant="secondary"
-                      size="small"
-                    >
-                      Gestionează sursele
-                    </Button>
-                  </>
-                }
-              />
-            </div>
-          )}
-
-          {model.page > 1 ||
-          model.hasMore ? (
-            <nav
-              aria-label="Paginarea documentelor"
-              className="mt-4 flex items-center justify-end gap-3 border-t border-[rgb(var(--border))] pt-4 text-xs"
-            >
-              {model.page > 1 ? (
-                <Link
-                  className="focus-ring rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-3 py-2 font-medium transition-colors hover:bg-[rgb(var(--surface-hover))]"
-                  href={href(
-                    model.provider,
-                    model.page - 1,
-                  )}
-                >
-                  Înapoi
-                </Link>
-              ) : null}
-
-              <span className="text-[rgb(var(--text-muted))]">
-                Pagina {model.page}
-              </span>
-
-              {model.hasMore ? (
-                <Link
-                  className="focus-ring rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] px-3 py-2 font-medium transition-colors hover:bg-[rgb(var(--surface-hover))]"
-                  href={href(
-                    model.provider,
-                    model.page + 1,
-                  )}
-                >
-                  Următoarea
-                </Link>
-              ) : null}
-            </nav>
-          ) : null}
-        </section>
-      </div>
-    </PageShell>
-  );
+export default async function DocumentsPage(props:{searchParams:Promise<{q?:string;provider?:string;page?:string}>}) {
+  const params=await props.searchParams;
+  const model=await getCommercialDocuments({query:params.q,provider:params.provider,page:params.page});
+  const href=(provider=model.provider,page=1)=>"/documents?"+new URLSearchParams({q:model.query,provider,page:String(page)});
+  return <PageShell wide eyebrow="Documente" title="Documente comerciale" description="Surse, conținut și context pentru decizia comercială."
+    actions={<Button href="/documents/add">Adaugă document</Button>}>
+    <div className={styles.workspace}>
+      <section aria-label="Instrumente registru documente" className={styles.toolbar}>
+        <form action="/documents" className={styles.search}>
+          <input type="hidden" name="provider" value={model.provider}/>
+          <input name="q" defaultValue={model.query} maxLength={100} aria-label="Caută documente și context comercial" placeholder="Caută documente sau oportunități…" className="focus-ring"/>
+          <button type="submit" aria-label="Caută documente" className="focus-ring"><MagnifyingGlassIcon className="h-5 w-5" aria-hidden="true"/></button>
+        </form>
+        {model.canImport?<Link href="/documents/import" className={styles.meta+" focus-ring underline"}>Importă date în ReveNew</Link>:null}
+      </section>
+      <nav aria-label="Sursa documentelor" className={styles.tabs}>{[["all","Toate"],["google_drive","Google Drive"],["revenew","ReveNew"]].map(([key,label])=><Link key={key} href={href(key)} aria-current={model.provider===key?"page":undefined} className="focus-ring">{label}</Link>)}</nav>
+      <div className={styles.toolbar}><div><p className={styles.eyebrow}>Bibliotecă comercială</p><h2>Surse și documente pregătite</h2></div><p className={styles.meta}>{model.items.length} în această pagină · pagina {model.page}</p></div>
+      {model.items.length?<table className={styles.registry} aria-label="Documente comerciale">
+        <thead><tr><th className={styles.nameCol} style={{width:"34%"}} scope="col">Document / sursă</th><th className={styles.contextCol} style={{width:"24%"}} scope="col">Context comercial</th><th className={styles.dateCol} style={{width:"22%"}} scope="col">Momente înregistrate</th><th className={styles.stateCol} style={{width:"15%"}} scope="col">Disponibilitate</th><th className={styles.actionCol} style={{width:"5%"}} scope="col"><span className="sr-only">Acțiuni</span></th></tr></thead>
+        <tbody>{model.items.map(item=><tr key={item.kind+":"+item.id}>
+          <td><div className={styles.identity}><DocumentTypeIcon mime={item.mime}/><div className="min-w-0"><Link href={item.detailHref} className="focus-ring">{item.title}</Link><p className={styles.meta}>{item.provider==="google_drive"?"Google Drive":"ReveNew"} · {documentMimeLabel(item.mime)} · {item.commercialType}</p><div className={styles.mobileContext}><Link href={item.linkedContext.href} className={styles.meta+" focus-ring"}>{item.linkedContext.title}</Link><p className={styles.meta}>{item.status}</p></div></div></div></td>
+          <td className={styles.contextCol}><Link href={item.linkedContext.href} className={styles.contextLink+" focus-ring"}>{item.linkedContext.title}</Link><p className={styles.meta}>Oportunitate asociată</p></td>
+          <td className={styles.dateCol}><p>{item.sourceModifiedAt?formatProductDateTime(item.sourceModifiedAt):"Dată necunoscută"}</p><p className={styles.meta}>{item.provider==="google_drive"?"Modificare raportată de sursă":"Ultima modificare internă"}</p>{item.provider==="google_drive"?<p className={styles.meta}>Încercare sincronizare: {item.lastSyncedAt?formatProductDateTime(item.lastSyncedAt):"neînregistrată"}</p>:null}</td>
+          <td className={styles.stateCol}><span className={styles.status}>{item.status}</span><p className={styles.meta}>{item.provider==="google_drive"?"Accesul actual se verifică separat":"Stare internă a documentului"}</p></td>
+          <td><DriveSourceActions id={item.id} title={item.title} detailHref={item.detailHref} sourceHref={item.sourceHref} canSync={item.availableActions.sync} canRemove={item.availableActions.remove}/></td>
+        </tr>)}</tbody>
+      </table>:<section className={styles.notice}><h2>{model.query?"Niciun document găsit":"Niciun document disponibil"}</h2><p>{model.query?"Încearcă un alt nume sau elimină filtrul de sursă.":"Selectează o sursă din Drive în contextul unei oportunități sau pregătește un document în oportunitate."}</p>{model.query||model.provider!=="all"?<Link className="focus-ring underline" href="/documents">Elimină filtrele</Link>:null}</section>}
+      <div className={styles.footer}><p className={styles.meta}>Textul extras este o copie salvată. Starea unui document nu confirmă trimiterea sau venitul.</p><nav aria-label="Paginare documente" className="flex gap-4">{model.page>1?<Link className="focus-ring" href={href(model.provider,model.page-1)}>← Anterior</Link>:null}{model.hasMore?<Link className="focus-ring" href={href(model.provider,model.page+1)}>Următor →</Link>:null}</nav></div>
+    </div>
+  </PageShell>;
 }

@@ -3,15 +3,16 @@ import { requirePermission } from "@/lib/authz/require-permission";
 import { hasPermission } from "@/lib/authz/has-permission";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireGoogleConnectorActor,getOwnedGoogleConnection } from "@/lib/google-workspace/repository";
-import { DRIVE_SCOPE,documentKinds,sourceStateLabels,uuidPattern,type DocumentKind,type SourceState } from "@/lib/google-workspace/drive-types";
+import { DRIVE_SCOPE,documentKinds,uuidPattern,type DocumentKind,type SourceState } from "@/lib/google-workspace/drive-types";
 import { safeOriginalEvidenceHref } from "@/lib/evidence-reference";
+import { documentSourceState,internalCommercialTypes } from "@/lib/documents/capabilities";
 
-export const internalCommercialTypes=["offer_draft","offer","procurement_checklist","checklist","grant_summary"] as const;
+export {internalCommercialTypes} from "@/lib/documents/capabilities";
 const internalLabels:Record<string,string>={offer_draft:"Ofertă",offer:"Ofertă",procurement_checklist:"Listă de achiziții",checklist:"Listă de verificare",grant_summary:"Sinteză finanțare"};
 export type CommercialDocumentListItem={
  id:string;kind:"external_source"|"internal_document";title:string;provider:"google_drive"|"revenew";
  mime:string;commercialType:string;linkedContext:{id:string;title:string;href:string};
- sourceModifiedAt:string|null;lastSyncedAt:string|null;status:string;detailHref:string;sourceHref?:string;
+ sourceModifiedAt:string|null;lastSyncedAt:string|null;status:string;sourceState?:SourceState;detailHref:string;sourceHref?:string;
  availableActions:{sync:boolean;remove:boolean};
 };
 type Context={id:string;title:string;business_id:string};
@@ -51,9 +52,6 @@ export async function getCommercialDocuments(input:{query?:string;provider?:stri
 if (result.error) {
   console.error("[commercial-documents] document list query failed", {
     code: result.error.code,
-    message: result.error.message,
-    details: result.error.details,
-    hint: result.error.hint,
   });
 
   throw new Error("document_list_unavailable");
@@ -77,10 +75,11 @@ if (result.error) {
   items.set(kind+":"+row.id,{
    id:row.id,kind,title:(external?row.name:row.title)||"Document comercial",provider:external?"google_drive":"revenew",
    mime:row.mime_type??"text/plain",commercialType:external?documentKinds[row.document_kind!]:internalLabels[row.document_type!]??"Document",
-   linkedContext:{id:context.id,title:context.title,href:`/opportunities/${context.id}?tab=files`},
+   linkedContext:{id:context.id,title:context.title,href:external?`/opportunities/${context.id}?tab=files`:`/opportunities/${context.id}?tab=workflow#opportunity-documents`},
    sourceModifiedAt:external?row.modified_time??null:row.updated_at??null,lastSyncedAt:row.last_synced_at??null,
-   status:external?sourceStateLabels[row.state!]??"Necesită atenție":
-    row.status==="approved"?"Aprobat":row.status==="sent"?"Trimis":"În lucru",
+   sourceState:external?row.state:undefined,
+   status:external?documentSourceState(row.state).label:
+    row.status==="approved"?"Aprobat":row.status==="sent"?"Marcat ca trimis":"În lucru",
    detailHref:external?`/opportunities/${context.id}/sources/${row.id}`:`/documents/${row.id}`,
    sourceHref:external?safeOriginalEvidenceHref(row.web_view_link??undefined)??undefined:undefined,
    availableActions:{sync:!!authorized&&hasPermission(authorization,"documents.generate"),remove:external&&owns&&hasPermission(authorization,"documents.update")}
@@ -88,7 +87,7 @@ if (result.error) {
  }
  const sorted=Array.from(items.values()).sort((a,b)=>(Date.parse(b.lastSyncedAt??b.sourceModifiedAt??"")||0)-(Date.parse(a.lastSyncedAt??a.sourceModifiedAt??"")||0)||a.id.localeCompare(b.id)||a.kind.localeCompare(b.kind));
  return {items:sorted.slice((page-1)*pageSize,page*pageSize),hasMore:sorted.length>page*pageSize,page,pageSize,query,provider,
-  canSelect:hasPermission(authorization,"documents.generate")};
+  canSelect:hasPermission(authorization,"documents.generate"),canImport:hasPermission(authorization,"signals.create")};
 }
 export async function getInternalCommercialDocument(id:string){
  await requirePermission("documents.read");const actor=await requireGoogleConnectorActor();

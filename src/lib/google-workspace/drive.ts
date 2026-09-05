@@ -13,9 +13,9 @@ export type DocumentSource = {
  id:string;business_id:string;owner_profile_id:string;connection_id:string;opportunity_id:string|null;
  provider_file_id:string;resource_key:string|null;name:string;mime_type:string;modified_time:string|null;
  provider_version:string|null;web_view_link:string|null;document_kind:DocumentKind;state:SourceState;
- content_hash:string|null;last_synced_at:string|null;extraction_note:string|null;revision:number;
+ content_hash:string|null;last_synced_at:string|null;created_at?:string;extraction_note:string|null;revision:number;
 };
-const sourceFields="id,business_id,owner_profile_id,connection_id,opportunity_id,provider_file_id,resource_key,name,mime_type,modified_time,provider_version,web_view_link,document_kind,state,content_hash,last_synced_at,extraction_note,revision";
+const sourceFields="id,business_id,owner_profile_id,connection_id,opportunity_id,provider_file_id,resource_key,name,mime_type,modified_time,provider_version,web_view_link,document_kind,state,content_hash,last_synced_at,created_at,extraction_note,revision";
 function db(){const client=createSupabaseAdminClient();if(!client)throw new Error("storage_unavailable");return client;}
 export async function requireDriveConnection(actor:Actor,connectionId?:string) {
  const connection=await getOwnedGoogleConnection(actor);
@@ -211,14 +211,16 @@ export async function getDocumentSourceDetail(sourceId:string){
  await requirePermission("documents.read");
  const actor=await requireGoogleConnectorActor();if(!uuidPattern.test(sourceId))return null;
  const {data,error}=await db().from("external_document_sources").select(sourceFields).eq("business_id",actor.businessId).eq("id",sourceId).neq("state","removed").maybeSingle();
- if(error||!data)return null;const source=data as DocumentSource;
+ if(error)throw new Error("document_source_unavailable");
+ if(!data)return null;const source=data as DocumentSource;
  const segments=source.state==="synced"?await db().from("external_document_segments").select("id,ordinal,text,text_hash,location_type,location_label")
   .eq("business_id",actor.businessId).eq("source_id",source.id).order("ordinal").limit(DRIVE_LIMITS.segments):{data:[],error:null};
  if(segments.error)throw new Error("storage_unavailable");
  const [connection,context,authorization]=await Promise.all([getOwnedGoogleConnection(actor),
   db().from("opportunities").select("id,title").eq("business_id",actor.businessId).eq("id",source.opportunity_id!).maybeSingle(),
   requirePermission("documents.read")]);
- if(context.error||!context.data)return null;
+ if(context.error)throw new Error("document_context_unavailable");
+ if(!context.data)return null;
  const owned=source.owner_profile_id===actor.profileId;
  return {source,segments:segments.data as Array<SourceSegment&{id:string}>,context:context.data as {id:string;title:string},
   canSync:owned&&connection?.id===source.connection_id&&connection.status!=="disconnected"&&connection.drive_status==="connected"&&connection.granted_scopes.includes(DRIVE_SCOPE)&&authorization.permissions.includes("documents.generate"),
@@ -241,7 +243,7 @@ export async function getDriveEvidence(opportunityIds:string[]):Promise<Record<s
  for(const source of sources){
   const segment=result.data?.find(s=>s.source_id===source.id);if(!segment||!source.opportunity_id)continue;
   (evidence[source.opportunity_id]??=[]).push(metadataEvidence({sourceType:"document",provider:"google_drive",sourceId:source.id,title:source.name,mimeType:source.mime_type,
-   occurredAt:source.modified_time,syncedAt:source.last_synced_at,sourceDocumentId:source.id,sourceSegmentId:segment.id,sourceLocation:segment.location_label,
+   occurredAt:source.modified_time,syncedAt:source.last_synced_at,sourceVersion:source.provider_version??undefined,sourceDocumentId:source.id,sourceSegmentId:segment.id,sourceLocation:segment.location_label,
    supportingFact:segment.location_label,entityHref:`/opportunities/${source.opportunity_id}/sources/${source.id}#segment-${segment.id}`,
    originalHref:source.web_view_link??undefined,commercialRelationship:source.opportunity_id}));
  }

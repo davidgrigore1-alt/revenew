@@ -1,4 +1,5 @@
 import "server-only";
+import { commercialDocumentHref } from "@/lib/documents/capabilities";
 
 import { approvalCenterSignals } from "@/lib/approval-center";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
@@ -286,8 +287,8 @@ function timelineFrom(input: CompanyIntelligenceInput) {
         description: `${document.title} · ${opportunity.title}`,
         kind: "Document",
         occurredAt: timestamp,
-        href: `${opportunityHref}#documents`,
-        evidence: evidence("opportunity_document", document.id, timestamp, `Documentul „${document.title}”`, `${opportunityHref}#documents`)
+        href: commercialDocumentHref(document, opportunity.id),
+        evidence: evidence("opportunity_document", document.id, timestamp, `Documentul „${document.title}”`, commercialDocumentHref(document, opportunity.id))
       });
     }
   }
@@ -486,7 +487,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
   });
   const documents = input.opportunities.flatMap((opportunity) => opportunity.documents.map((document) => {
     const occurredAt = validTimestamp(document.sentAt) ?? validTimestamp(document.readyAt) ?? validTimestamp(document.editedAt) ?? validTimestamp(document.createdAt);
-    const href = `/opportunities/${opportunity.id}#opportunity-documents`;
+    const href = commercialDocumentHref(document, opportunity.id);
     return { id: document.id, title: document.title, type: document.type, status: document.status, opportunityId: opportunity.id, opportunityTitle: opportunity.title, occurredAt, href, evidence: evidence("opportunity_document", document.id, occurredAt, `Documentul „${document.title}”`, href) };
   })).sort((left, right) => String(right.occurredAt ?? "").localeCompare(String(left.occurredAt ?? "")) || left.id.localeCompare(right.id)).slice(0, 50);
 

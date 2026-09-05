@@ -11,6 +11,7 @@ type EvidenceMetadata = {
   sourceSegmentId?: string;
   sourceLocation?: string;
   syncedAt?: string | null;
+  sourceVersion?: string;
   commercialRelationship?: string;
   originalHref?: string;
   entityHref?: string;
@@ -60,6 +61,7 @@ export function metadataEvidence(input: EvidenceMetadata): EvidenceReference {
     occurredAt: input.occurredAt && Number.isFinite(Date.parse(input.occurredAt)) ? input.occurredAt : null,
     mimeType: input.mimeType, sourceDocumentId: input.sourceDocumentId, sourceSegmentId: input.sourceSegmentId, sourceLocation: input.sourceLocation,
     syncedAt: input.syncedAt && Number.isFinite(Date.parse(input.syncedAt)) ? input.syncedAt : null,
+    sourceVersion: input.sourceVersion?.slice(0,128),
     commercialRelationship: input.commercialRelationship, originalHref: safeOriginalEvidenceHref(input.originalHref),
     supportingFact: input.supportingFact, provider: input.provider,
     entityHref: evidenceHref(input.entityHref), visibility: "metadata"

@@ -14,6 +14,7 @@ function EvidenceRow({ item }: { item: EvidenceReference }) {
       <p className="truncate text-[11px] leading-4 text-[rgb(var(--text-muted))]" title={item.syncedAt ? "Sincronizat " + formatProductDateTime(item.syncedAt) : undefined}>
         {item.sourceLocation ?? "Sursă documentară"}{item.occurredAt ? " · " + formatProductDateTime(item.occurredAt, { year: false }) : ""}
       </p>
+      <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">Copie extrasă{item.sourceVersion?" · versiune "+item.sourceVersion:""} · acces actual de verificat</p>
     </div>
   </li>;
   const Icon = item.sourceType === "document" ? DocumentTextIcon : item.sourceType === "action" || item.sourceType === "approval" ? CheckCircleIcon

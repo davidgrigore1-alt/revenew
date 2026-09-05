@@ -48,6 +48,7 @@ function harness(options={}){
     order(key){order=key;return query;},limit(n){limit=n;return query;},
     maybeSingle(){single=true;return query;},
     then(resolve,reject){
+     if(options.sourceReadError&&table==="external_document_sources")return Promise.resolve({data:null,error:{code:"fixture_unavailable"}}).then(resolve,reject);
      try{let rows=({opportunities,external_document_sources:sources,external_document_segments:segments}[table]??[]).filter(row=>filters.every(f=>f(row)));
       if(order)rows=rows.toSorted((a,b)=>String(a[order]).localeCompare(String(b[order])));
       return Promise.resolve({data:single?(rows[0]??null):rows.slice(0,limit),count:rows.length,error:null}).then(resolve,reject);
@@ -573,4 +574,9 @@ test("G3A.2 sync claim uses an owner/tenant-scoped atomic conditional update and
  assert.match(claim,/\.is\("current_sync_started_at",null\)/);assert.match(claim,/sync_already_running/);
  assert.match(claim,/\.eq\("current_sync_started_at",startedAt\)/);assert.match(claim,/\.eq\("business_id",actor.businessId\)/);
  assert.match(claim,/\.eq\("owner_profile_id",actor.profileId\)/);assert.doesNotMatch(claim,/setTimeout|Map\(/);
+});
+
+test("document detail distinguishes a storage failure from a missing authorized source",async()=>{
+ const missing=harness();assert.equal(await missing.service.getDocumentSourceDetail(ids.opportunity),null);
+ const failed=harness({sourceReadError:true});await assert.rejects(()=>failed.service.getDocumentSourceDetail(ids.opportunity),/document_source_unavailable/);
 });
