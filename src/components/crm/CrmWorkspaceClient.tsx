@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/Textarea";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { SavedViewControls } from "@/components/filters/SavedViewControls";
+import { ContactsRegistry } from "@/components/crm/ContactsRegistry";
+import type { ContactRegistrySnapshot } from "@/lib/crm/contact-registry";
 import { CompaniesRegistry } from "@/components/crm/CompaniesRegistry";
 import type { CompanyRegistrySnapshot } from "@/lib/crm/company-registry";
 import { archiveCrmContact, archiveCrmOrganization, saveCrmContact, saveCrmOrganization } from "@/lib/crm/workspace-actions";
@@ -31,6 +33,7 @@ type CrmWorkspaceClientProps = {
   initialSort?: string;
   initialCreate?: boolean;
   companyRegistry?: CompanyRegistrySnapshot;
+  contactRegistry?: ContactRegistrySnapshot;
 };
 
 const roleOptions = [
@@ -48,7 +51,7 @@ const roleOptions = [
 const roleLabels = Object.fromEntries(roleOptions) as Record<string, string>;
 const relationshipLabels: Record<string, string> = { prospect: "Prospect", customer: "Client", partner: "Partener", inactive: "Inactiv" };
 
-export function CrmWorkspaceClient({ organizations, contacts, view = "all", organizationStats = {}, contactOpportunityStats = {}, savedViews = [], initialQuery = "", initialRelationship = "all", initialSort = "updated", initialCreate = false, companyRegistry }: CrmWorkspaceClientProps) {
+export function CrmWorkspaceClient({ organizations, contacts, view = "all", organizationStats = {}, contactOpportunityStats = {}, savedViews = [], initialQuery = "", initialRelationship = "all", initialSort = "updated", initialCreate = false, companyRegistry, contactRegistry }: CrmWorkspaceClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [notice, setNotice] = useState("");
@@ -61,16 +64,18 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   const [sort, setSort] = useState(initialSort);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [websiteError, setWebsiteError] = useState("");
+  const isContactRegistry = view === "contacts" && Boolean(contactRegistry);
+  const contactCompaniesComplete = contactRegistry?.coverage.organizations ?? true;
   const isCompanyRegistry = view === "companies" && Boolean(companyRegistry);
   const organizationNameRef = useRef<HTMLInputElement>(null);
   const contactNameRef = useRef<HTMLInputElement>(null);
   const websiteRef = useRef<HTMLInputElement>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO");
-  const filteredOrganizations = useMemo(() => organizations.filter((organization) => {
+  const filteredOrganizations = useMemo(() => isContactRegistry ? [] : organizations.filter((organization) => {
     const matchesQuery = !normalizedQuery || `${organization.name} ${organization.industry ?? ""} ${organization.city ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery);
     return matchesQuery && (relationship === "all" || organization.relationshipStatus === relationship);
-  }), [organizations, normalizedQuery, relationship]);
-  const filteredContacts = useMemo(() => contacts.filter((contact) => !normalizedQuery || `${contact.fullName} ${contact.email ?? ""} ${contact.phone ?? ""} ${contact.jobTitle ?? ""} ${contact.organization?.name ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery)), [contacts, normalizedQuery]);
+  }), [organizations, normalizedQuery, relationship, isContactRegistry]);
+  const filteredContacts = useMemo(() => isContactRegistry ? [] : contacts.filter((contact) => !normalizedQuery || `${contact.fullName} ${contact.email ?? ""} ${contact.phone ?? ""} ${contact.jobTitle ?? ""} ${contact.organization?.name ?? ""}`.toLocaleLowerCase("ro-RO").includes(normalizedQuery)), [contacts, normalizedQuery, isContactRegistry]);
   const sortedOrganizations = useMemo(() => [...filteredOrganizations].sort((left, right) => {
     if (sort === "name") return left.name.localeCompare(right.name, "ro");
     if (sort === "opportunities") return (organizationStats[right.id]?.activeOpportunities ?? 0) - (organizationStats[left.id]?.activeOpportunities ?? 0);
@@ -83,24 +88,24 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   }), [filteredContacts, sort]);
   const currentQuery = new URLSearchParams(Object.entries({
     q: query.trim(),
-    relationship: view === "contacts" || relationship === "all" ? "" : relationship,
+    relationship: (view === "contacts" && !isContactRegistry) || relationship === "all" ? "" : relationship,
     sort
   }).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
   const visibleIds = view === "contacts" ? sortedContacts.map((item) => item.id) : sortedOrganizations.map((item) => item.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
   const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id));
   useEffect(() => {
-    if (initialCreate) setPanel(view === "contacts" ? "contact" : "organization");
-  }, [initialCreate, view]);
+    if (initialCreate && contactCompaniesComplete) setPanel(view === "contacts" ? "contact" : "organization");
+  }, [initialCreate, view, contactCompaniesComplete]);
 
   // Saved-view navigation can reuse this instance. Same-URL refreshes preserve
   // local filters; changed URL filters are applied without resetting selection.
   useEffect(() => {
-    if (!isCompanyRegistry) return;
+    if (!isCompanyRegistry && !isContactRegistry) return;
     setQuery(initialQuery);
     setRelationship(initialRelationship);
     setSort(initialSort);
-  }, [isCompanyRegistry, initialQuery, initialRelationship, initialSort]);
+  }, [isCompanyRegistry, isContactRegistry, initialQuery, initialRelationship, initialSort]);
 
   useEffect(() => {
     if (!panel) return;
@@ -155,7 +160,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
       {notice ? <StatusNotice tone="success">{notice}</StatusNotice> : null}
       {error ? <StatusNotice tone="warning">{error}</StatusNotice> : null}
 
-      {isCompanyRegistry && companyRegistry ? <CompaniesRegistry snapshot={companyRegistry} query={query} relationship={relationship} sort={sort} onQuery={setQuery} onRelationship={setRelationship} onSort={setSort} selectedIds={selectedIds} onSelection={setSelectedIds} pending={isPending} savedViews={savedViews} currentQuery={currentQuery} onCreate={() => { setEditingOrganization(null); setPanel("organization"); }} onEdit={(organization) => { setEditingOrganization(organization); setPanel("organization"); }} onArchive={(id) => runAction(() => archiveCrmOrganization(id))} /> : <section aria-label={view === "contacts" ? "Instrumente registru contacte" : "Instrumente registru companii"} className="product-grouping-surface grid gap-3 p-3 sm:p-4">
+      {isCompanyRegistry && companyRegistry ? <CompaniesRegistry snapshot={companyRegistry} query={query} relationship={relationship} sort={sort} onQuery={setQuery} onRelationship={setRelationship} onSort={setSort} selectedIds={selectedIds} onSelection={setSelectedIds} pending={isPending} savedViews={savedViews} currentQuery={currentQuery} onCreate={() => { setEditingOrganization(null); setPanel("organization"); }} onEdit={(organization) => { setEditingOrganization(organization); setPanel("organization"); }} onArchive={(id) => runAction(() => archiveCrmOrganization(id))} /> : isContactRegistry && contactRegistry ? <ContactsRegistry snapshot={contactRegistry} query={query} filter={relationship} sort={sort} onQuery={setQuery} onFilter={setRelationship} onSort={setSort} selectedIds={selectedIds} onSelection={setSelectedIds} pending={isPending} savedViews={savedViews} currentQuery={currentQuery} onCreate={() => { setEditingContact(null); setPanel("contact"); }} onEdit={(contact) => { setEditingContact(contact); setPanel("contact"); }} onArchive={(id) => runAction(() => archiveCrmContact(id))} /> : <section aria-label={view === "contacts" ? "Instrumente registru contacte" : "Instrumente registru companii"} className="product-grouping-surface grid gap-3 p-3 sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_11rem]">
           <label className="grid gap-1.5 text-xs font-semibold text-[rgb(var(--text-secondary))]">
@@ -176,7 +181,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
         <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage={view === "contacts" ? "contacts" : "companies"} />
       </section>}
 
-      {!isCompanyRegistry && selectedIds.size > 0 ? <div role="status" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
+      {!isCompanyRegistry && !isContactRegistry && selectedIds.size > 0 ? <div role="status" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
 
       {view !== "contacts" && panel === "organization" ? <Drawer labelledBy="crm-organization-title" describedBy="crm-organization-description" initialFocusRef={organizationNameRef} onClose={() => setPanel(null)}>
         <div>
@@ -387,7 +392,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
         {organizations.length === 0 ? <div className="grid justify-items-start gap-3 border-y border-dashed border-[rgb(var(--border))] py-8 text-sm text-[rgb(var(--muted-foreground))]"><p>Nu există companii încă. Adaugă primul client sau prospect pentru a lega contacte și oportunități reale.</p><Button onClick={() => setPanel("organization")}>Adaugă companie</Button></div> : filteredOrganizations.length === 0 ? <p className="border-b border-[rgb(var(--border))] py-8 text-sm text-[rgb(var(--muted-foreground))]">Nicio companie nu corespunde filtrelor.</p> : null}
       </section> : null}
 
-      {view !== "companies" ? <section className="grid gap-3">
+      {view !== "companies" && !isContactRegistry ? <section className="grid gap-3">
         <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">Contacte</h2><p className="text-xs text-[rgb(var(--text-muted))]">{filteredContacts.length} înregistrări</p></div>
         <ul className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border-strong))] lg:hidden" aria-label="Registru contacte">
           {sortedContacts.map((contact) => {

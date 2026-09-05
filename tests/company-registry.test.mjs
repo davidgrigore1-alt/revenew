@@ -70,6 +70,14 @@ test("primary contact requires the explicit active flag and matching company and
   assert.equal(build({ contacts: [contact("first")] }).rows[0].primaryContact, null);
 });
 
+test("Companies agrees with Contacts on ambiguous, unknown-active and incomplete primary evidence", () => {
+  const primary = contact("primary", { isPrimaryForOrganization: true });
+  assert.equal(build({ contacts: [primary, contact("second", { isPrimaryForOrganization: true })] }).rows[0].primaryContact, null);
+  assert.equal(build({ contacts: [{ ...primary, isActive: null }] }).rows[0].primaryContact, null);
+  assert.equal(build({ contacts: [{ ...primary, archivedAt: "2026-09-01" }] }).rows[0].primaryContact, null);
+  assert.equal(build({ contacts: [primary], coverage: { ...coverage, contacts: false } }).rows[0].primaryContact, null);
+});
+
 test("attention uses pending canonical next action; completed tasks and closed opportunities do not create attention", () => {
   const result = build({ opportunities: [opportunity(), opportunity("closed", { lifecycleStatus: "won", ownerProfileId: null })], actions: [action("done", { status: "done", dueDate: "2026-01-01" }), action("next")] });
   assert.equal(result.rows[0].attention.length, 0);

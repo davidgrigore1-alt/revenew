@@ -186,6 +186,7 @@ export async function getCrmWorkspaceForCurrentBusiness(): Promise<{
   ready: boolean;
   organizations: CrmOrganization[];
   contacts: CrmContact[];
+  contactsComplete?: boolean;
   error?: string;
 }> {
   if (!isSupabaseConfigured) {
@@ -207,7 +208,7 @@ export async function getCrmWorkspaceForCurrentBusiness(): Promise<{
       .order("updated_at", { ascending: false }),
     supabase
       .from("crm_contacts")
-      .select("id,business_id,organization_id,first_name,last_name,full_name,job_title,department,decision_role,email,phone,professional_url,is_active,is_primary_for_organization,notes,archived_at,created_at,updated_at")
+      .select("id,business_id,organization_id,first_name,last_name,full_name,job_title,department,decision_role,email,phone,professional_url,is_active,is_primary_for_organization,notes,archived_at,created_at,updated_at", { count: "exact" })
       .eq("business_id", business.id)
       .eq("is_active", true)
       .order("updated_at", { ascending: false })
@@ -269,7 +270,7 @@ export async function getCrmWorkspaceForCurrentBusiness(): Promise<{
     updatedAt: row.updated_at
   }));
 
-  return { ready: true, organizations, contacts };
+  return { ready: true, organizations, contacts, contactsComplete: contactResult.count !== null && contacts.length === contactResult.count };
 }
 
 export async function getCrmOrganizationDetail(organizationId: string) {

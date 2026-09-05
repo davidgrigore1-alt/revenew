@@ -27,10 +27,16 @@ test("A4.2 registries use one compact tool surface and responsive semantic recor
 
 test("contact context comes only from explicit persisted opportunity associations", () => {
   const contacts = read("src/app/(protected)/contacts/page.tsx");
-  const crm = read("src/components/crm/CrmWorkspaceClient.tsx");
+  const data = read("src/lib/crm/contact-registry-data.ts");
+  const crm = read("src/components/crm/ContactsRegistry.tsx");
 
-  assert.match(contacts, /opportunity\.contacts\?\.some\(\(association\) => association\.contact\.id === contact\.id\)/);
-  assert.match(crm, /Context comercial/);
+  // The route now delegates to a narrow cohort loader. Relationship behavior,
+  // tenant rejection and canonical lifecycle are exercised in contact-registry.
+  assert.match(contacts, /getContactRegistryForCurrentBusiness\(\)/);
+  assert.match(data, /from\("opportunity_contacts"\)/);
+  assert.match(data, /\.in\("contact_id", contacts\.map/);
+  assert.doesNotMatch(contacts, /getOpportunitiesForCurrentBusiness/);
+  assert.match(crm, /Oportunități asociate/);
   assert.match(crm, /asocieri explicite/);
   assert.doesNotMatch(contacts, /similar|heuristic|fuzzy|includes\(contact\.fullName/);
 });

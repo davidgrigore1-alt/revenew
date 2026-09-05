@@ -10,6 +10,8 @@ import { getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { getWorkspaceNotes } from "@/lib/workspace-notes";
 import { formatCurrency } from "@/lib/utils";
+import { buildContactRegistry } from "@/lib/crm/contact-registry";
+import { isOpenOpportunity } from "@/lib/opportunity-domain";
 import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +37,11 @@ export default async function ContactDetailPage(props: { params: Promise<{ id: s
   ]);
   if (!crm.ready) return <PageShell eyebrow="Contact" title="Contact indisponibil" description={crm.error ?? "Registrul nu poate fi încărcat momentan."} />;
   const contact = crm.contacts.find((item) => item.id === params.id);
-  if (!contact) notFound();
+  if (!contact) {
+    if (!crm.contactsComplete) return <PageShell eyebrow="Contact" title="Contact indisponibil" description="Registrul încărcat este incomplet. Contactul nu poate fi confirmat din această selecție." />;
+    notFound();
+  }
+  const relationship = buildContactRegistry({ businessId: contact.businessId, contacts: crm.contacts, organizations: crm.organizations, associations: [], coverage: { contacts: crm.contactsComplete === true, organizations: true, associations: false } }).rows.find((row) => row.contact.id === contact.id);
   const linkedOpportunities = opportunities.filter((opportunity) =>
     opportunity.contacts?.some((relationship) => relationship.contact.id === contact.id)
   );
@@ -51,16 +57,16 @@ export default async function ContactDetailPage(props: { params: Promise<{ id: s
     >
       <RecordSummaryBar label="Identitatea și contextul comercial al contactului" items={[
         { label: "Companie", value: contact.organization ? <Link href={`/crm/organizations/${contact.organization.id}`} className="focus-ring rounded-control text-[rgb(var(--primary))] hover:underline">{contact.organization.name}</Link> : "Neasociată", tone: contact.organization ? "default" : "attention" },
-        { label: "Rol", value: contact.jobTitle ?? "Funcție neconfirmată", detail: roleLabels[contact.decisionRole ?? "other"] ?? "Rol neconfirmat" },
-        { label: "Relație", value: contact.isPrimaryForOrganization ? "Contact principal" : "Contact asociat" },
-        { label: "Oportunități", value: linkedOpportunities.length, detail: linkedOpportunities.length === 1 ? "asociere explicită" : "asocieri explicite" },
+        { label: "Rol", value: contact.jobTitle ?? "Funcție neconfirmată", detail: roleLabels[contact.decisionRole ?? ""] ?? "Rol neconfirmat" },
+        { label: "Relație", value: relationship?.primary === "confirmed" ? "Contact principal" : relationship?.primary === "ambiguous" ? "Principal de clarificat" : relationship?.primary === "unknown" ? "Principal neconfirmat" : "Contact asociat" },
+        { label: "Asocieri încărcate", value: linkedOpportunities.length, detail: `${linkedOpportunities.filter(isOpenOpportunity).length} active · ${linkedOpportunities.filter((item) => !isOpenOpportunity(item)).length} închise` },
         { label: "Email", value: contact.email ?? "Necompletat" },
         { label: "Telefon", value: contact.phone ?? "Necompletat" }
       ]} />
       <div className="grid items-start gap-5 xl:grid-cols-12">
         <div className="grid min-w-0 gap-6 xl:col-span-8">
-          <DataCard title="Oportunități conectate" description="Contexte comerciale asociate explicit acestei persoane.">
-            {linkedOpportunities.length ? <div className="divide-y divide-[rgb(var(--border))]">{linkedOpportunities.map((opportunity) => <Link key={opportunity.id} href={"/opportunities/" + opportunity.id} className="focus-ring grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-sm font-semibold hover:text-[rgb(var(--primary))]">{opportunity.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{opportunity.ownerName ?? "Responsabil neconfirmat"} · {opportunity.recommendedAction ?? "Pas următor neconfirmat"}</p></div><p className="text-xs font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p></Link>)}</div> : <EmptyState title="Nicio oportunitate conectată" description="Asociază persoana unei oportunități numai când relația este confirmată." />}
+          <DataCard title="Oportunități conectate" description="Contexte comerciale asociate explicit acestei persoane. Lista reflectă datele încărcate.">
+            {linkedOpportunities.length ? <div className="divide-y divide-[rgb(var(--border))]">{linkedOpportunities.map((opportunity) => <Link key={opportunity.id} href={"/opportunities/" + opportunity.id} className="focus-ring grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-sm font-semibold hover:text-[rgb(var(--primary))]">{opportunity.title}</p><p className="mt-1 truncate text-xs text-[rgb(var(--text-muted))]">{isOpenOpportunity(opportunity) ? "Activă" : "Închisă"} · {opportunity.ownerName ?? "Responsabil neconfirmat"} · {opportunity.recommendedAction ?? "Pas următor neconfirmat"}</p></div><p className="text-xs font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</p></Link>)}</div> : <EmptyState title="Nicio oportunitate conectată" description="Asociază persoana unei oportunități numai când relația este confirmată." />}
           </DataCard>
 
           <RecordNotes targetType="contact" targetId={contact.id} notes={notes} />

@@ -55,12 +55,21 @@ export function buildCompanyRegistry(input: CompanyRegistryInput, now = new Date
     if (organization.businessId !== input.businessId) continue;
     rows.set(organization.id, { organization, primaryContact: null, contactCount: 0, activeOpportunities: 0, attention: [], latestActivity: null, sortActivityAt: null });
   }
+  const primaryCandidates = new Map<string, Map<string, CrmContact>>();
   for (const contact of input.contacts) {
-    if (contact.businessId !== input.businessId || contact.isActive === false) continue;
+    if (contact.businessId !== input.businessId || contact.isActive !== true || contact.archivedAt) continue;
     const row = rows.get(contact.organizationId ?? "");
     if (!row) continue;
     row.contactCount++;
-    if (contact.isPrimaryForOrganization) row.primaryContact = contact;
+    if (contact.isPrimaryForOrganization === true) {
+      const candidates = primaryCandidates.get(row.organization.id) ?? new Map<string, CrmContact>();
+      candidates.set(contact.id, contact);
+      primaryCandidates.set(row.organization.id, candidates);
+    }
+  }
+  for (const [id, candidates] of Array.from(primaryCandidates.entries())) {
+    const row = rows.get(id);
+    if (row && input.coverage.contacts && candidates.size === 1) row.primaryContact = Array.from(candidates.values())[0];
   }
   const organizationsByOpportunity = new Map<string, Set<string>>();
   for (const association of input.associations) {
