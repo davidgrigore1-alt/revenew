@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -81,6 +81,11 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
   const [passwordLength, setPasswordLength] = useState(0);
   const [signupStep, setSignupStep] = useState(0);
   const signupFormRef = useRef<HTMLFormElement>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLFormElement | null>(null);
+  const attachForm = useCallback((node: HTMLFormElement | null) => {
+    signupFormRef.current = node;
+    setPortalContainer(node);
+  }, []);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
 
@@ -283,7 +288,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         <ErrorSummary errors={errors} />
       </div>
 
-      <form ref={signupFormRef} onSubmit={handleSubmit} className={isSignup ? "signup-step-form mt-7" : "mt-6 space-y-4 rounded-panel border border-[rgb(var(--border-strong)/0.82)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6"} noValidate>
+      <form ref={attachForm} onSubmit={handleSubmit} className={isSignup ? "signup-step-form mt-7" : "mt-6 space-y-4 rounded-panel border border-[rgb(var(--border-strong)/0.82)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6"} noValidate>
         {isSignup ? (
           <ol className="signup-stepper" aria-label="Progres creare cont">
             {signupSteps.map((step, index) => {
@@ -336,7 +341,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
             <div className="grid gap-3 sm:grid-cols-[0.95fr_1.05fr]">
               <label className="block">
                 <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara numărului</span>
-                <Select id="phoneCountry" name="phoneCountry" defaultValue="RO" autoComplete="country" className="mt-2 min-h-11">
+                <Select portalContainer={portalContainer} id="phoneCountry" name="phoneCountry" defaultValue="RO" autoComplete="country" className="mt-2 min-h-11">
                   {countryOptions.map((country) => <option key={country.code} value={country.code}>{country.label} {country.callingCode}</option>)}
                 </Select>
               </label>
@@ -439,11 +444,11 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
             {signupStep < signupSteps.length - 1 ? (
               <Button type="button" className="ml-auto min-w-36" onClick={() => advanceSignup(signupFormRef.current)}>Continuă</Button>
             ) : (
-              <Button type="submit" className="ml-auto min-w-44" disabled={loading}>{loading ? "Se creează contul..." : "Creează contul"}</Button>
+              <Button type="submit" className="ml-auto min-w-44" disabled={loading} loading={loading}>{loading ? "Se creează contul..." : "Creează contul"}</Button>
             )}
           </div>
         ) : (
-          <Button type="submit" className="w-full" disabled={loading}>{loading ? "Se procesează..." : "Intră în cont"}</Button>
+          <Button type="submit" className="w-full" disabled={loading} loading={loading}>{loading ? "Se procesează..." : "Intră în cont"}</Button>
         )}
         </div>
       </form>

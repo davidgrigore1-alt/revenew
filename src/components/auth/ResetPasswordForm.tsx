@@ -74,7 +74,7 @@ export function ResetPasswordForm() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <PasswordField name="password" label="Parolă nouă" autoComplete="new-password" />
         <PasswordField name="confirmPassword" label="Confirmă parola nouă" autoComplete="new-password" placeholder="Repetă parola" />
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={loading} loading={loading}>
           {loading ? "Se actualizează..." : "Actualizează parola"}
         </Button>
       </form>

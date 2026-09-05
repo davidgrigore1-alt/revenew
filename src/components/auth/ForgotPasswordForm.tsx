@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { authConfirmationRedirectUrl } from "@/lib/auth/confirmation";
@@ -45,17 +46,17 @@ export function ForgotPasswordForm() {
       {error ? <AuthNotice tone="error" title="Nu am putut trimite linkul" message={error} /> : null}
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <label className="block">
-          <span className="text-sm font-medium text-zinc-300">Email</span>
-          <input
+          <span className="text-sm font-medium text-[rgb(var(--foreground))]">Email</span>
+          <Input
             required
             name="email"
             type="email"
             autoComplete="email"
             placeholder="nume@firma.ro"
-            className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-white/[0.06] px-4 text-white outline-none transition placeholder:text-zinc-600 focus:border-mint-400/60"
+            className="mt-2 h-12 px-4"
           />
         </label>
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={loading} loading={loading}>
           {loading ? "Se trimite..." : "Trimite linkul de resetare"}
         </Button>
       </form>

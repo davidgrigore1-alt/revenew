@@ -44,7 +44,7 @@ export function AuthenticatedAccountChoice({ email, intent, mode }: Authenticate
         <Button href="/auth/bootstrap" className={loading ? "pointer-events-none opacity-60" : undefined}>
           Continuă cu acest cont
         </Button>
-        <Button type="button" variant="secondary" onClick={useAnotherAccount} disabled={Boolean(loading)}>
+        <Button type="button" variant="secondary" onClick={useAnotherAccount} disabled={Boolean(loading)} loading={Boolean(loading)}>
           {loading === "switch" ? "Se schimbă contul..." : "Folosește alt cont"}
         </Button>
       </div>

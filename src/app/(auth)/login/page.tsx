@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 import { redirect } from "next/navigation";
 import { AuthenticatedAccountChoice } from "@/components/auth/AuthenticatedAccountChoice";
 import { AuthCardShell } from "@/components/auth/AuthCardShell";
@@ -58,9 +58,9 @@ function RetryAuthState() {
   return (
     <div className="mt-6">
       <AuthNotice tone="warning" title="Autentificarea nu este disponibilă momentan" message="Încearcă din nou în câteva momente." />
-      <Link href="/login" className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-mint-400 px-4 text-sm font-semibold text-ink-950 transition hover:bg-mint-300">
+      <Button href="/login" className="mt-5 min-h-11">
         Reîncearcă
-      </Link>
+      </Button>
     </div>
   );
 }

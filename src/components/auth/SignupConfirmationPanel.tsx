@@ -91,7 +91,7 @@ export function SignupConfirmationPanel({ email, intent, onChangeEmail }: { emai
 
   return (
     <section className="mt-8" aria-labelledby="confirmation-heading">
-      <div className="rounded-card border border-[rgb(var(--primary)/0.3)] bg-[linear-gradient(145deg,rgb(var(--primary)/0.1),rgb(var(--surface-subtle)))] p-5 sm:p-6">
+      <div className="rounded-card border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--surface-subtle))] p-5 sm:p-6">
         <div className="grid size-11 place-items-center rounded-full border border-[rgb(var(--primary)/0.35)] bg-[rgb(var(--primary)/0.12)] text-[rgb(var(--primary))]">
           <EnvelopeIcon className="size-5" aria-hidden="true" />
         </div>
@@ -110,10 +110,10 @@ export function SignupConfirmationPanel({ email, intent, onChangeEmail }: { emai
       {notice ? <div className="mt-4"><AuthNotice {...notice} /></div> : null}
 
       <div className="mt-5 grid gap-3">
-        <Button type="button" onClick={() => void continueIfConfirmed(true)} disabled={checking}>
+        <Button type="button" onClick={() => void continueIfConfirmed(true)} disabled={checking} loading={checking}>
           {checking ? "Verificăm confirmarea..." : "Am confirmat — continuă"}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => void resend()} disabled={resending || cooldown > 0}>
+        <Button type="button" variant="secondary" onClick={() => void resend()} disabled={resending || cooldown > 0} loading={resending}>
           {resending ? "Retrimitem..." : cooldown > 0 ? `Poți retrimite în ${cooldown}s` : "Retrimite emailul"}
         </Button>
       </div>

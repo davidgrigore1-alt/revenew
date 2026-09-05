@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/Input";
 import { useState, type ChangeEventHandler, type FocusEventHandler } from "react";
 
 type PasswordFieldProps = {
@@ -19,8 +20,8 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
   return (
     <label className="block">
       <span className="text-sm font-medium text-[rgb(var(--foreground))]">{label}</span>
-      <span className="focus-within:focus-ring mt-2 flex min-h-11 items-center rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]">
-        <input
+      <span className="mt-2 flex min-h-11 items-center rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-sm transition-colors hover:border-[rgb(var(--border-strong))]">
+        <Input
           id={name}
           required
           name={name}
@@ -28,11 +29,11 @@ export function PasswordField({ name, label, autoComplete, placeholder = "Minim 
           type={visible ? "text" : "password"}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          aria-invalid={invalid}
+          invalid={invalid}
           aria-describedby={describedBy}
           onBlur={onBlur}
           onChange={onChange}
-          className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[rgb(var(--foreground))] outline-none placeholder:text-[rgb(var(--text-faint))]"
+          className="h-11 min-w-0 flex-1 rounded-r-none border-transparent shadow-none"
         />
         <button
           type="button"

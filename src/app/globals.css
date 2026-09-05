@@ -181,6 +181,7 @@
   --danger: var(--danger-text);
 }
 
+.auth-theme,
 .dark {
   color-scheme: dark;
   /* Deliberately achromatic: the workspace accent sits above the interface
@@ -1718,42 +1719,37 @@ body {
   .marketing-faq-panel { transition: none !important; }
 }
 
-/* Premium signup: solid-black foundation with restrained champagne emphasis. */
-.signup-premium-theme {
+/* Auth uses the neutral dark foundation above, regardless of the root theme.
+   Only interactive emphasis follows the saved accent; preferences stay untouched. */
+html:has(.auth-theme) {
   color-scheme: dark;
-  --background: 0 0 0;
-  --background-soft: 4 4 4;
-  --surface: 10 10 10;
-  --surface-subtle: 7 7 7;
-  --surface-muted: 17 17 17;
-  --surface-elevated: 14 14 14;
-  --border: 38 38 38;
-  --border-strong: 65 65 65;
+  scrollbar-color: rgb(122 122 122 / .45) rgb(6 6 6);
+}
+
+.auth-theme {
+  min-height: 100dvh;
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
   --foreground: 250 250 249;
-  --text-secondary: 218 216 211;
-  --text-muted: 164 161 154;
-  --text-faint: 106 103 98;
-  --primary: 218 179 102;
-  --primary-hover: 235 205 147;
-  --primary-active: 190 145 67;
-  --primary-foreground: 18 14 8;
-  --primary-muted: 48 38 20;
-  --focus-ring: 218 179 102;
-  --danger-background: 46 14 17;
-  --danger-text: 249 164 164;
-  --danger-border: 116 39 45;
+  --text-faint: 150 150 150;
+  --primary: var(--rn-accent-400);
+  --primary-hover: var(--rn-accent-300);
+  --primary-active: var(--rn-accent-400);
+  --primary-foreground: 10 10 10;
+  --focus-ring: var(--rn-accent-400);
+  /* Rebind aliases that could otherwise arrive resolved against the light root. */
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--text-muted);
+  --primary-soft: var(--primary-muted);
+  --success: var(--success-text);
+  --warning: var(--warning-text);
+  --danger: var(--danger-text);
 }
 
-.signup-premium-shell {
-  background:
-    radial-gradient(circle at 76% 12%, rgb(218 179 102 / .07), transparent 27rem),
-    rgb(0 0 0);
-}
-
-.signup-premium-aside {
-  background:
-    linear-gradient(145deg, rgb(255 255 255 / .025), transparent 42%),
-    rgb(7 7 7);
+.auth-theme input:autofill {
+  box-shadow: 0 0 0 1000px rgb(var(--surface)) inset;
+  -webkit-text-fill-color: rgb(var(--foreground));
+  caret-color: rgb(var(--primary));
 }
 
 .signup-stepper {

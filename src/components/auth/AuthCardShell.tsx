@@ -30,9 +30,8 @@ export function AuthCardShell({
   const isSignup = variant === "signup";
 
   return (
-    <main className={`${isSignup ? "signup-premium-theme signup-premium-shell" : ""} min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--foreground))] lg:grid lg:grid-cols-[minmax(19rem,0.72fr)_minmax(32rem,1.28fr)]`}>
-      <aside className={`relative hidden min-h-screen overflow-hidden border-r border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-9 lg:flex lg:flex-col lg:justify-between xl:p-12 ${isSignup ? "signup-premium-aside" : ""}`}>
-          {isSignup ? <div className="pointer-events-none absolute inset-0 subtle-grid opacity-30" /> : null}
+    <main className={`min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--foreground))] lg:grid lg:grid-cols-[minmax(19rem,0.72fr)_minmax(32rem,1.28fr)]`}>
+      <aside className={`relative hidden min-h-screen overflow-hidden border-r border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-9 lg:flex lg:flex-col lg:justify-between xl:p-12`}>
           <div className="relative">
             <Logo />
             <p className="mt-16 text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">{isSignup ? "Configurare ghidată · 01" : "Acces controlat · 01"}</p>
