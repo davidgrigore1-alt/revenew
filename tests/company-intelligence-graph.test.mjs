@@ -44,6 +44,42 @@ function load(relativePath) {
 
 const { buildCompanyIntelligenceSnapshot } = load("src/lib/company-intelligence.ts");
 
+// Execute presentation code with data/component boundaries stubbed; assertions below
+// inspect rendered values rather than matching the source expressions used to build them.
+function loadPresentation(relativePath, snapshot) {
+  const filename = path.resolve(relativePath);
+  const module = { exports: {} };
+  const component = ({ children }) => children ?? null;
+  const components = new Proxy({}, { get: () => component });
+  const compiled = ts.transpileModule(read(relativePath), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+    fileName: filename
+  }).outputText;
+  vm.runInNewContext(compiled, {
+    exports: module.exports, module, URLSearchParams, Date, Map, Set,
+    require: (id) => {
+      if (id === "next/navigation") return { useRouter: () => ({ refresh() {} }), notFound: () => { throw new Error("unexpected_not_found"); } };
+      if (id === "next/link") return component;
+      if (id.startsWith("@/components/") || id.startsWith("@heroicons/")) return components;
+      if (id === "@/lib/company-intelligence") return { getCompanyIntelligenceSnapshot: async () => ({ ready: true, snapshot }) };
+      if (id === "@/lib/company-commercial-memory") return { suggestedCompanyQuestions: () => [] };
+      if (id === "@/lib/ai/google-context-tool") return { getExternalContextForCompany: async () => null };
+      if (id === "@/lib/workspace-notes") return { getWorkspaceNotes: async () => [] };
+      if (id === "@/lib/crm/website") return { safeCompanyWebsiteHref: () => null };
+      if (id === "@/lib/crm/workspace-actions") return {};
+      if (id === "@/lib/utils") return { formatDate: () => "Dată test", formatCurrency: (value) => String(value) };
+      return nodeRequire(id);
+    }
+  }, { filename });
+  return module.exports;
+}
+
+async function companySummary(snapshot) {
+  const page = loadPresentation("src/app/(protected)/crm/organizations/[id]/page.tsx", snapshot).default;
+  const tree = await page({ params: Promise.resolve({ id: snapshot.organization.id }) });
+  return tree.props.children.find((child) => child?.props?.label === "Identitatea comercială a companiei").props.items;
+}
+
 function organization(overrides = {}) {
   return {
     id: "company-1",
@@ -225,4 +261,52 @@ test("Company 360 exposes a bounded executive decision layer instead of raw feed
   for (const label of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memory, new RegExp(label));
   assert.match(memory, /Bazat pe:/);
   assert.doesNotMatch(route, /snapshot\.timeline\.map|snapshot\.signals\.slice/);
+});
+
+test("Company 360 displays canonical active count and identifies opportunity-derived responsibility", async () => {
+  const opportunities = ["open", "won", "lost", "disqualified", "archived"].map((lifecycleStatus, index) => opportunity({
+    id: `opportunity-${index}`, lifecycleStatus, ownerName: index === 0 ? "Responsabil activ" : "Responsabil închis"
+  }));
+  const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [], opportunities, signals: [] });
+  assert.equal(snapshot.opportunities.length, 5);
+  assert.equal(snapshot.commercial.activeOpportunities, 1);
+  const items = await companySummary(snapshot);
+  assert.equal(items.find((item) => item.label === "Oportunități active").value, 1);
+  assert.equal(items.find((item) => item.label === "Responsabil din oportunitate activă").value, "Responsabil activ");
+  assert.equal(items.some((item) => item.label === "Responsabil"), false);
+});
+
+test("Company 360 keeps missing responsibility unassigned and does not promote closed owners", async () => {
+  const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [], opportunities: [opportunity({ lifecycleStatus: "won" })], signals: [] });
+  const items = await companySummary(snapshot);
+  assert.equal(items.find((item) => item.label === "Oportunități active").value, 0);
+  assert.equal(items.find((item) => item.label === "Responsabil din oportunitate activă").value, "Neatribuit");
+});
+
+test("company relationship presentation preserves unknown and explicitly stored values across surfaces", async () => {
+  const React = nodeRequire("react");
+  const { renderToStaticMarkup } = nodeRequire("react-dom/server");
+  const { CrmWorkspaceClient } = loadPresentation("src/components/crm/CrmWorkspaceClient.tsx");
+  for (const [relationshipStatus, expected] of [[undefined, "Neclasificată"], [null, "Neclasificată"], ["", "Neclasificată"], ["unrecognized", "Neclasificată"], ["prospect", "Prospect"], ["customer", "Client"], ["partner", "Partener"], ["inactive", "Inactiv"]]) {
+    const company = organization({ relationshipStatus });
+    const snapshot = buildCompanyIntelligenceSnapshot({ organization: company, contacts: [], opportunities: [], signals: [] });
+    const items = await companySummary(snapshot);
+    assert.equal(items.find((item) => item.label === "Relație").value, expected);
+    const html = renderToStaticMarkup(React.createElement(CrmWorkspaceClient, { organizations: [company], contacts: [], view: "companies" }));
+    const mobile = html.match(/<ul\b[\s\S]*?<\/ul>/)?.[0];
+    const desktop = html.match(/<tbody\b[\s\S]*?<\/tbody>/)?.[0];
+    assert.ok(mobile && desktop, "both registry representations rendered");
+    for (const representation of [mobile, desktop]) {
+      assert.ok(representation.includes(expected), String(relationshipStatus));
+      if (expected === "Neclasificată") assert.equal(representation.includes("Prospect"), false);
+    }
+  }
+});
+
+test("company primary contact remains explicitly flagged rather than the first contact", () => {
+  const unflagged = contact({ id: "first", isPrimaryForOrganization: false });
+  const flagged = contact({ id: "second", isPrimaryForOrganization: true });
+  const build = (contacts) => buildCompanyIntelligenceSnapshot({ organization: organization(), contacts, opportunities: [], signals: [] });
+  assert.equal(build([unflagged, flagged]).identity.primaryContact.id, "second");
+  assert.equal(build([unflagged]).identity.primaryContact, null);
 });

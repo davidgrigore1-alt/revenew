@@ -323,7 +323,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
                 <Checkbox checked={selectedIds.has(organization.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(organization.id)) next.delete(organization.id); else next.add(organization.id); return next; })} aria-label={"Selectează compania " + organization.name} className="mt-1" />
                 <Link href={`/crm/organizations/${organization.id}`} className="focus-ring min-w-0 flex-1 rounded-control">
                   <span className="block truncate text-sm font-semibold" title={organization.name}>{organization.name}</span>
-                  <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{[relationshipLabels[organization.relationshipStatus ?? "prospect"], organization.industry, organization.city].filter(Boolean).join(" · ")}</span>
+                  <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{[relationshipLabels[organization.relationshipStatus ?? ""] ?? "Neclasificată", organization.industry, organization.city].filter(Boolean).join(" · ")}</span>
                   <span className="mt-2 block text-xs text-[rgb(var(--text-secondary))]">{primary?.fullName ?? "Contact principal neconfirmat"} · {activeOpportunities} {activeOpportunities === 1 ? "oportunitate activă" : "oportunități active"}</span>
                   <span className="mt-1 block text-micro text-[rgb(var(--text-faint))]">Ultima activitate: {formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</span>
                 </Link>
@@ -358,7 +358,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
                         <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{[organization.industry, organization.city].filter(Boolean).join(" · ") || "Context necompletat"}</span>
                       </Link></div>
                     </td>
-                    <td className="px-3 py-2.5"><span className={"status-pill " + (organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand")}>{relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Neclasificată"}</span></td>
+                    <td className="px-3 py-2.5"><span className={"status-pill " + (organization.relationshipStatus === "inactive" ? "status-pill-neutral" : organization.relationshipStatus === "customer" ? "status-pill-success" : "status-pill-brand")}>{relationshipLabels[organization.relationshipStatus ?? ""] ?? "Neclasificată"}</span></td>
                     <td className="px-3 py-2.5"><p className="truncate font-medium text-[rgb(var(--foreground))]">{primary?.fullName ?? "Neconfirmat"}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{primary?.jobTitle ?? (organizationContacts.length ? organizationContacts.length + " contacte" : "Fără contact")}</p></td>
                     <td className="px-3 py-2.5 font-semibold tabular-nums text-[rgb(var(--foreground))]">{organizationStats[organization.id]?.activeOpportunities ?? 0}</td>
                     <td className="px-3 py-2.5 text-xs text-[rgb(var(--text-muted))]">{formatDate(organizationStats[organization.id]?.lastActivity ?? organization.updatedAt ?? undefined)}</td>

@@ -57,10 +57,10 @@ export default async function CrmOrganizationDetailPage(
   return (
     <PageShell wide eyebrow="Company 360" title={organization.name} description={[organization.industry, organization.city, organization.county].filter(Boolean).join(" · ") || "Context comercial centralizat pentru această companie."} actions={<CreateOpportunityPanel organizations={[organization]} />} breadcrumbs={[{ label: "Companii", href: "/companies" }, { label: organization.name }]}>
       <RecordSummaryBar label="Identitatea comercială a companiei" items={[
-        { label: "Relație", value: relationshipLabels[organization.relationshipStatus ?? "prospect"] ?? "Neconfirmată" },
-        { label: "Responsabil", value: identity.owner ?? "Neatribuit", tone: identity.owner ? "default" : "attention" },
+        { label: "Relație", value: relationshipLabels[organization.relationshipStatus ?? ""] ?? "Neclasificată" },
+        { label: "Responsabil din oportunitate activă", value: identity.owner ?? "Neatribuit", tone: identity.owner ? "default" : "attention" },
         { label: "Contact principal", value: identity.primaryContact?.fullName ?? "Neconfirmat", tone: identity.primaryContact ? "default" : "attention" },
-        { label: "Oportunități active", value: snapshot.opportunities.length },
+        { label: "Oportunități active", value: snapshot.commercial.activeOpportunities },
         { label: "Localizare", value: identity.location ?? "Necompletată" },
         { label: "Website", value: websiteHref ? <a href={websiteHref} target="_blank" rel="noopener noreferrer" className="focus-ring inline-flex max-w-full items-center gap-1 text-[rgb(var(--primary))] hover:underline">{organization.website}<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></a> : "Necompletat" }
       ]} />
