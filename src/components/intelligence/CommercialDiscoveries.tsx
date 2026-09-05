@@ -16,9 +16,9 @@ const strengthCopy: Record<DiscoveryEvidenceStrength, { label: string; tone: "br
 function EmptyDiscoveryState({ state }: { state: "clean" | "insufficient_data" }) {
   const clean = state === "clean";
   return (
-    <div className="rounded-card border border-dashed border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] p-5">
-      <h3 className="font-semibold">{clean ? "Nu există semnale noi de verificat" : "Nu există suficiente date-sursă"}</h3>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{clean ? "Semnalele comerciale calificate din datele disponibile sunt deja legate sau au o decizie înregistrată." : "Sursele disponibile nu conțin încă suficiente indicii comerciale verificabile pentru o descoperire sigură."}</p>
+    <div className="rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-6 sm:p-8">
+      <h3 className="font-semibold">{clean ? "Nu există semnale noi de verificat" : "Adaugă surse pentru prima descoperire"}</h3>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">{clean ? "Semnalele comerciale calificate din datele disponibile sunt deja legate sau au o decizie înregistrată." : "Importă date comerciale cu indicii verificabile. Oportunitățile se pregătesc doar la decizia ta."}</p>
       <Button href={clean ? "/inbox" : "/inbox/import"} variant="secondary" size="small" className="mt-4">{clean ? "Vezi sursele" : "Importă date comerciale"}</Button>
     </div>
   );
@@ -31,7 +31,7 @@ export function CommercialDiscoveries({ result, error = false }: { result?: Comm
         <ExclamationTriangleIcon className="h-6 w-6 text-[rgb(var(--danger-text))]" aria-hidden="true" />
         <h2 id="commercial-discoveries-title" className="mt-3 text-xl font-semibold">Nu am putut verifica semnalele comerciale</h2>
         <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Datele nu au fost interpretate ca zero rezultate. Reîncearcă verificarea în siguranță.</p>
-        <Button href="/ai" variant="secondary" size="small" className="mt-4">Reîncearcă</Button>
+        <Button href="/ai?tab=discoveries" variant="secondary" size="small" className="mt-4">Reîncearcă</Button>
       </section>
     );
   }
@@ -47,7 +47,7 @@ export function CommercialDiscoveries({ result, error = false }: { result?: Comm
               <p className="mt-2 text-lg font-semibold">{result.totalCandidates} {result.totalCandidates === 1 ? "semnal comercial merită verificat" : "semnale comerciale merită verificate"}</p>
               <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">{result.strongEvidenceCount} cu dovezi puternice · {result.explicitValueCount} cu valoare menționată explicit</p>
             </>
-          ) : <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew verifică doar indicii susținute de sursele disponibile și nu transformă automat semnalele în oportunități.</p>}
+          ) : <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">Semnale susținute de surse, fără creare automată de oportunități.</p>}
         </div>
         <p className="flex max-w-md items-start gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />Asocierea și pregătirea necesită decizie umană.</p>
       </div>

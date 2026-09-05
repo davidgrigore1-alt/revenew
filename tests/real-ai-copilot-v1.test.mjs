@@ -227,7 +227,10 @@ test("assistant UI is structured, contextual, accessible and does not render uns
   assert.match(drawer, /returnFocusRef\.current\?\.focus/);
   assert.match(read("src/components/intelligence/IntelligenceEvidence.tsx"), /Dovezi și acoperire/);
   assert.match(conversation, /Informații lipsă sau neconfirmate/);
-  assert.match(conversation, /Analiza este în curs/);
+  assert.match(conversation, /<IntelligenceAnalysisStatus/);
+  const status = read("src/components/intelligence/IntelligenceAnalysisStatus.tsx");
+  assert.match(status, /Analizez contextul/);
+  assert.match(status, /role="status"/);
   assert.doesNotMatch(conversation, /setInterval/);
   assert.match(conversation, /Reîncearcă/);
   assert.match(conversation, /event\.key === "Enter"/);

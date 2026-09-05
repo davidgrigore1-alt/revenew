@@ -228,10 +228,12 @@ export default async function AiControlCenterPage(
   const activeCount = aiCapabilities.filter((capability) => capability.status === "available_internal").length;
   const sandboxCount = aiCapabilities.filter((capability) => capability.status === "sandbox_only").length;
   const blockedCount = aiCapabilities.filter((capability) => capability.status === "blocked_until_security_review").length;
-  let intelligence;
+  const requestedTab = searchParams?.tab;
+  const activeTab: IntelligenceTab = intelligenceTabs.some((tab) => tab.id === requestedTab) ? requestedTab as IntelligenceTab : "ask";
+  let intelligence = unavailableOperationalIntelligence();
   let discoveries: CommercialOpportunityDiscoveryResult | undefined;
 
-  try {
+  if (activeTab === "recommendations" || activeTab === "discoveries") try {
     const summary = await getRecoverySummary();
     const queue = buildWorkspaceDecisionQueue(
       { opportunities: summary.opportunities, signals: summary.signals },
@@ -245,27 +247,25 @@ export default async function AiControlCenterPage(
     intelligence = unavailableOperationalIntelligence();
   }
 
-  const requestedTab = searchParams?.tab;
-  const activeTab: IntelligenceTab = intelligenceTabs.some((tab) => tab.id === requestedTab) ? requestedTab as IntelligenceTab : "ask";
   return (
     <PageShell
-      eyebrow="Inteligență controlată"
+      eyebrow="Analiză și decizie"
       title="Inteligență operațională"
-      description="Analizează activitatea comercială autorizată, verifică dovezile și pregătește următorul pas fără execuție automată"
+      description="Dovezi clare. Priorități verificate. Decizia îți aparține."
       breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Inteligență operațională" }]}
       wide
     >
-      <nav aria-label="Secțiunile inteligenței operaționale" className="flex min-h-11 gap-5 overflow-x-auto border-b border-[rgb(var(--border-subtle))]">
+      <nav aria-label="Secțiunile inteligenței operaționale" className="grid min-h-11 grid-cols-2 gap-1 border-b border-[rgb(var(--border-strong))] sm:flex">
         {intelligenceTabs.map((tab) => (
-          <Link
+          <a
             key={tab.id}
             href={`/ai?tab=${tab.id}`}
             aria-current={activeTab === tab.id ? "page" : undefined}
             {...(tab.id === "recommendations" && activeTab !== "recommendations" ? { "data-guide-anchor": "ai-recommendation" } : {})}
-            className="focus-ring inline-flex min-h-10 items-center whitespace-nowrap border-b-2 border-transparent px-0.5 text-label font-medium text-[rgb(var(--text-muted))] transition-colors duration-fast hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--interaction))] aria-[current=page]:text-[rgb(var(--foreground))]"
+            className="focus-ring inline-flex min-h-10 items-center whitespace-nowrap border-b-2 border-transparent rounded-t-control px-4 py-3 text-label font-medium text-[rgb(var(--text-muted))] transition-colors duration-fast hover:text-[rgb(var(--foreground))] hover:bg-[rgb(var(--surface-subtle))] aria-[current=page]:bg-[rgb(var(--intelligence)/0.08)] aria-[current=page]:border-[rgb(var(--intelligence))] aria-[current=page]:text-[rgb(var(--foreground))]"
           >
             {tab.label}
-          </Link>
+          </a>
         ))}
       </nav>
 
@@ -325,7 +325,7 @@ export default async function AiControlCenterPage(
         <div className="mb-4 max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]">Priorități din datele existente</p>
           <h2 id="operational-recommendations" className="mt-2 text-xl font-semibold tracking-[-0.02em]">Recomandări operaționale</h2>
-          <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Cel mult trei decizii ordonate determinist după severitate, termen și valoare estimată. Nu sunt acțiuni executate.</p>
+          <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Până la trei priorități după severitate, termen și valoare estimată · fără execuție automată.</p>
         </div>
         {intelligence.recommendations.length > 0 ? (
           <div className="grid items-start gap-4 xl:grid-cols-2">
@@ -334,7 +334,7 @@ export default async function AiControlCenterPage(
             ))}
           </div>
         ) : (
-          <div className="rounded-panel border border-dashed border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] p-6">
+          <div className="rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-6 sm:p-8">
             <ExclamationTriangleIcon className="h-6 w-6 text-[rgb(var(--text-muted))]" aria-hidden="true" />
             <h3 className="mt-3 font-semibold">Nu există recomandări verificabile acum</h3>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">ReveNew nu inventează riscuri sau priorități. Completează date comerciale reale ori revino după restabilirea accesului la dovezi.</p>

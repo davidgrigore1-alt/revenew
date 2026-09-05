@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./OperationalIntelligence.module.css";
+import { IntelligenceAnalysisStatus } from "./IntelligenceAnalysisStatus";
 import { IntelligenceComparisonView } from "./IntelligenceComparisonView";
 import Link from "next/link";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -118,14 +120,13 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const [revealStep, setRevealStep] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selection, setSelection] = useState<CopilotSelectionContext | undefined>(undefined);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
-    setScope("current"); setConversation([]); setSelection(undefined); setPrepareReview(null);
-    return () => { abortRef.current?.abort(); };
+    setScope("current"); setConversation([]); setSelection(undefined); setPrepareReview(null); setLoading(false);
+    return () => { abortRef.current?.abort(); abortRef.current = null; };
   }, [contextIdentity]);
 
 
@@ -133,18 +134,9 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
     if (autoFocus) window.setTimeout(() => inputRef.current?.focus(), 0);
   }, [autoFocus]);
 
-  const activeResponseId = conversation[0]?.id;
-  useEffect(() => {
-    if (!activeResponseId) return;
-    setRevealStep(1);
-    const cardsTimer = window.setTimeout(() => setRevealStep(2), 120);
-    const detailsTimer = window.setTimeout(() => setRevealStep(3), 320);
-    return () => { window.clearTimeout(cardsTimer); window.clearTimeout(detailsTimer); };
-  }, [activeResponseId]);
-
   async function ask(value: string, prepare = false, candidateSelectionId?: string) {
     const normalized = value.trim();
-    if (normalized.length < 2 || loading) return;
+    if (normalized.length < 2 || loading || abortRef.current) return;
     setQuestion(normalized);
     setLoading(true);
     setError("");
@@ -154,6 +146,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
     try {
       const response = await fetch("/api/ai/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ question: normalized, context, history, ...(!prepare && conversation[0]?.answer.analysisToken ? {analysisToken:conversation[0].answer.analysisToken} : {}), ...(candidateSelectionId ? {candidateSelectionId} : {}), preparationIntent: !context.documentSourceId && prepare, ...(selection ? { selection } : {}) }) });
       const payload = await response.json() as CopilotAnswer | { error?: string };
+      if (controller.signal.aborted || abortRef.current !== controller) return;
       if (!response.ok || !("answer" in payload)) throw new Error("Nu am putut finaliza verificarea. Datele și acțiunile existente au rămas neschimbate.");
       if (payload.multiRecordResult) setSelection({ resultSetId: payload.multiRecordResult.resultSetId, selectedRecordIds: [] });
       setConversation((current) => [{ id: `${Date.now()}-${current.length}`, question: normalized, answer: payload, answeredAt: new Date().toISOString() }, ...current].slice(0, 8));
@@ -162,7 +155,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
       if (controller.signal.aborted) return;
       setError(requestError instanceof Error && requestError.message ? requestError.message : "Nu am putut finaliza verificarea. Datele și acțiunile existente au rămas neschimbate.");
     } finally {
-      setLoading(false);
+      if (abortRef.current === controller) { abortRef.current = null; setLoading(false); }
     }
   }
 
@@ -174,50 +167,41 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
   const previousCount = loading ? conversation.length : Math.max(0, conversation.length - 1);
   return (
     <div className={cn("grid min-h-0 gap-4", className)}>
-      <form onSubmit={submit} className="product-work-surface grid gap-2 p-3.5 transition-[background-color,border-color] duration-normal ease-standard focus-within:border-[rgb(var(--intelligence)/0.72)] focus-within:bg-[rgb(var(--surface))]">
+      <form onSubmit={submit} className={cn("product-work-surface grid gap-3 p-4 sm:p-6", styles.composer)}>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgb(var(--border-subtle))] px-2 pb-2">
           <p className="text-xs font-semibold text-[rgb(var(--text-secondary))]">Context autorizat · {context.contextLabel ?? (context.pageType === "opportunity" ? "Oportunitatea curentă" : context.pageType === "company" ? "Compania curentă" : context.pageType === "dashboard" ? "Control Center" : "Întregul spațiu de lucru")}</p>
-          <span className="text-xs text-[rgb(var(--text-secondary))]">Enter pentru analiză · Shift+Enter pentru rând nou</span>
+          <span className="hidden text-xs text-[rgb(var(--text-muted))] lg:inline">Enter pentru analiză · Shift+Enter pentru rând nou</span>
         </div>
         {pageContext.opportunityId||pageContext.organizationId||pageContext.contactId||pageContext.documentSourceId?<div role="group" aria-label="Contextul verificării" className="flex flex-wrap items-center gap-1 px-2 text-xs text-[rgb(var(--text-secondary))]">
          {(["current","workspace"] as const).map(value=><button key={value} type="button" disabled={loading} aria-pressed={scope===value} onClick={()=>{setScope(value);setConversation([]);setSelection(undefined);setPrepareReview(null);}} className="focus-ring inline-flex h-8 items-center rounded-button border border-[rgb(var(--border))] px-3 disabled:opacity-50 aria-pressed:border-[rgb(var(--primary))] aria-pressed:text-[rgb(var(--foreground))]">{value==="current"?(pageContext.documentSourceId?"Această versiune":pageContext.contactId?"Contactul selectat":pageContext.opportunityId?"Această oportunitate":"Compania selectată"):pageContext.documentSourceId?"Versiune + CRM autorizat":"Workspace autorizat"}</button>)}
         </div>:null}
         <label htmlFor={inputId} className="sr-only">Întrebarea ta</label>
-        <p className="px-2 text-xs text-[rgb(var(--text-secondary))]">{pageContext.documentSourceId ? `Pornit din ${pageContext.contextLabel ?? "document"} · versiunea ${pageContext.documentVersionId?.slice(0,8)}. ` : ""}Analiza este numai pentru citire.</p>
-        <textarea ref={inputRef} data-copilot-input id={inputId} aria-describedby={`${inputId}-trust`} aria-keyshortcuts="Enter" value={question} onChange={(event) => { setQuestion(event.target.value.slice(0, 3000)); setPrepareReview(null); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void ask(question); } }} rows={3} maxLength={3000} placeholder="Exemplu: Ce necesită atenție astăzi și pe ce dovezi se bazează?" className="focus-ring min-h-24 w-full resize-none rounded-control border-0 bg-transparent px-2 py-2 text-[0.95rem] leading-6 outline-none placeholder:text-[rgb(var(--text-secondary))]" />
-        <div className="flex flex-col gap-3 border-t border-[rgb(var(--border-subtle))] px-2 pt-2 sm:flex-row sm:items-center sm:justify-between"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-xs leading-4 text-[rgb(var(--text-secondary))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />Doar informații autorizate. Nu este executată nicio acțiune externă.</p><Button type="submit" variant="intelligence" size="small" loading={loading} disabled={question.trim().length < 2}>Analizează</Button>{loading ? <Button type="button" variant="secondary" size="small" onClick={()=>abortRef.current?.abort()}>Anulează</Button> : context.opportunityId && question.trim().length >= 2 ? <Button type="button" variant="secondary" size="small" onClick={()=>setPrepareReview(question)}>Pregătește propunerea descrisă</Button> : null}</div>
+        {pageContext.documentSourceId ? <p className="px-2 text-xs text-[rgb(var(--text-secondary))]">{pageContext.documentSourceId ? `Pornit din ${pageContext.contextLabel ?? "document"} · versiunea ${pageContext.documentVersionId?.slice(0,8)}. ` : ""}Analiza este numai pentru citire.</p> : null}
+        <textarea ref={inputRef} data-copilot-input id={inputId} aria-describedby={`${inputId}-trust`} aria-keyshortcuts="Enter" value={question} onChange={(event) => { setQuestion(event.target.value.slice(0, 3000)); setPrepareReview(null); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void ask(question); } }} rows={3} maxLength={3000} placeholder="Exemplu: Ce necesită atenție astăzi și pe ce dovezi se bazează?" className="focus-ring min-h-32 w-full resize-none rounded-control border-0 bg-transparent px-2 py-3 text-base leading-7 outline-none placeholder:text-[rgb(var(--text-secondary))]" />
+        <div className="flex flex-col gap-3 border-t border-[rgb(var(--border-subtle))] px-2 pt-2 sm:flex-row sm:items-center sm:justify-between"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-xs leading-4 text-[rgb(var(--text-secondary))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />Doar date autorizate · fără execuție externă.</p><div className="flex shrink-0 flex-wrap items-center gap-2">{loading ? <IntelligenceAnalysisStatus /> : <Button type="submit" variant="intelligence" disabled={question.trim().length < 2}>Analizează<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button>}{loading ? <Button type="button" variant="secondary" size="small" onClick={()=>{abortRef.current?.abort(); abortRef.current=null; setLoading(false); inputRef.current?.focus();}}>Anulează</Button> : context.opportunityId && question.trim().length >= 2 ? <Button type="button" variant="secondary" size="small" onClick={()=>setPrepareReview(question)}>Pregătește propunerea descrisă</Button> : null}</div></div>
       </form>
 
       {prepareReview ? <Dialog labelledBy={`${inputId}-prepare-title`} onClose={()=>setPrepareReview(null)}><div className="p-5"><h2 id={`${inputId}-prepare-title`} className="text-lg font-semibold">Revizuiește cererea de pregătire</h2><p className="mt-3 whitespace-pre-wrap text-sm leading-6">{prepareReview}</p><p className="mt-3 text-xs leading-5 text-[rgb(var(--text-secondary))]">Context: {context.contextLabel ?? "Oportunitatea curentă"}. Cererea salvează o propunere dacă ai permisiunea necesară. Aplicarea se aprobă separat.</p><div className="mt-5 flex gap-2"><Button type="button" onClick={()=>void ask(prepareReview,true)}>Confirmă pregătirea</Button><Button type="button" variant="secondary" onClick={()=>setPrepareReview(null)}>Înapoi</Button></div></div></Dialog> : null}
       <div className="grid gap-5" aria-live="polite" aria-busy={loading}>
-        {conversation.length || loading ? (
+        {conversation.length > 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-secondary))]">{loading ? "Răspuns în pregătire" : "Răspuns activ"}</p>
             <div className="flex items-center gap-2">
               {previousCount > 0 ? <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((value) => !value)} className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><ClockIcon className="h-4 w-4" aria-hidden="true" />Istoric · {previousCount}</button> : null}
-              <button type="button" onClick={() => { setConversation([]); setHistoryOpen(false); setSelection(undefined); }} className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><TrashIcon className="h-4 w-4" aria-hidden="true" />Șterge conversația</button>
+              <button type="button" disabled={loading} onClick={() => { setConversation([]); setHistoryOpen(false); setSelection(undefined); }} className="focus-ring inline-flex min-h-8 items-center gap-1.5 rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><TrashIcon className="h-4 w-4" aria-hidden="true" />Șterge conversația</button>
             </div>
           </div>
         ) : null}
-        {loading ? (
-          <article className="intelligence-reveal overflow-hidden product-work-surface" aria-label="Răspuns în pregătire">
-            <div className="border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3"><p className="text-sm font-medium text-[rgb(var(--text-secondary))]">{question}</p></div>
-            <div className="p-4 sm:p-5">
-              <p className="sr-only" role="status">Verific informațiile disponibile.</p>
-              <p role="status" className="text-sm text-[rgb(var(--text-secondary))]">Analiza este în curs. Poți anula cererea.</p>
-            </div>
-          </article>
-        ) : null}
         {conversation.length === 0 && !loading ? (
-          <section aria-labelledby="copilot-suggestions-title">
-            <h3 id="copilot-suggestions-title" className="sr-only">Întrebări utile aici</h3>
-            <div className="grid gap-px overflow-hidden rounded-panel border border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))] sm:grid-cols-3">
-              {suggestions.slice(0, 3).map((suggestion) => <button key={suggestion} type="button" disabled={loading} className="focus-ring min-h-11 bg-[rgb(var(--surface-subtle))] px-3 py-2.5 text-left text-xs font-medium leading-5 text-[rgb(var(--text-secondary))] transition-colors hover:bg-[rgb(var(--surface))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(suggestion)}>{suggestion}</button>)}
+          <section aria-labelledby={`${inputId}-suggestions`}>
+            <h3 id={`${inputId}-suggestions`} className="sr-only">Întrebări utile aici</h3>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {suggestions.slice(0, 3).map((suggestion) => <button key={suggestion} type="button" disabled={loading} className={cn("focus-ring flex min-h-14 items-start justify-between gap-3 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 text-left text-[13px] font-medium leading-5 text-[rgb(var(--text-secondary))] disabled:opacity-60", styles.suggestion)} onClick={() => void ask(suggestion)}><span>{suggestion}</span><ArrowRightIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /></button>)}
             </div>
           </section>
         ) : conversation.map((item, index) => (
           <article key={item.id} className={cn("intelligence-reveal overflow-hidden rounded-panel border", index === 0 && !loading ? "border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))]" : historyOpen ? "border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]" : "hidden")} aria-labelledby={`${item.id}-answer`}>
-            <div className="p-4 sm:p-5">
+            <div className="p-4 sm:p-6">
             <div className="flex items-start justify-between gap-3 rounded-control bg-[rgb(var(--surface-subtle))] px-3 py-2">
               <p className="text-sm font-medium text-[rgb(var(--text-secondary))]">{item.question}</p>
               <button type="button" onClick={() => setConversation((current) => current.filter((turn) => turn.id !== item.id))} className="focus-ring -mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-button text-[rgb(var(--text-secondary))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]" aria-label="Elimină acest răspuns"><XMarkIcon className="h-4 w-4" aria-hidden="true" /></button>
@@ -228,18 +212,18 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--text-secondary))]">
                   <ShieldCheckIcon className="h-3.5 w-3.5 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />
                   {item.answer.clarification ? "Clarificare necesară" : item.answer.mode === "ai" ? "Sinteză cu model" : item.answer.summaryType === "product_help" ? "Context produs" : item.answer.summaryType === "insufficient_information" ? "Limită de date explicită" : "Mod limitat · date și calcule"}
-                  {item.answer.evidence.length ? ` · ${uniqueEvidenceSources(item.answer.evidence)} surse` : ""}
+                  {item.answer.evidence.length ? ` · ${uniqueEvidenceSources(item.answer.evidence)} ${uniqueEvidenceSources(item.answer.evidence) === 1 ? "sursă" : "surse"}` : ""}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-[rgb(var(--text-secondary))]">Răspuns la {formatProductDateTime(item.answeredAt)} · Instantaneu al verificării. Întreabă din nou după modificări.</p>
-              <p id={`${item.id}-answer`} className="mt-2 max-w-[46rem] whitespace-pre-line text-[0.95rem] leading-7 text-[rgb(var(--foreground))]">{formatUserFacingText(item.answer.answer)}</p>
+              <p className="mt-2 text-xs text-[rgb(var(--text-secondary))]">{formatProductDateTime(item.answeredAt)} · Instantaneu; reverifică după modificări.</p>
+              <p id={`${item.id}-answer`} className="mt-4 max-w-[46rem] whitespace-pre-line text-base font-medium leading-7 text-[rgb(var(--foreground))]">{formatUserFacingText(item.answer.answer)}</p>
               <IntelligenceComparisonView answer={item.answer} disabled={loading||index!==0} onSelect={id=>void ask("Compară înregistrarea selectată cu sursa.",false,id)} />
               {item.answer.commercialTruth?<div className="mt-4 space-y-3">{item.answer.commercialTruth.items.map(truth=><CommercialTruthSnapshot key={truth.opportunityId} truth={truth} compact prepareLabel={context.opportunityId===truth.opportunityId?"Pregătește următorul pas":"Deschide oportunitatea"} onPrepare={()=>{if(context.opportunityId===truth.opportunityId)setPrepareReview("Pregătește următorul pas.");else window.location.assign("/opportunities/"+truth.opportunityId);}}/>)}</div>:null}
-              {item.answer.workflowDraft && (index > 0 || revealStep >= 2) ? <WorkflowDraftPreview preview={item.answer.workflowDraft} onModify={(request) => { setQuestion(request); window.setTimeout(() => inputRef.current?.focus(), 0); }} /> : null}
-              {item.answer.multiRecordResult && (index > 0 || revealStep >= 2) ? <MultiRecordResultView result={item.answer.multiRecordResult} onSelectionChange={(resultSetId, selectedRecordIds) => setSelection({ resultSetId, selectedRecordIds })} onAsk={(nextQuestion) => void ask(nextQuestion)} /> : null}
-              {item.answer.multiRecordPlan && (index > 0 || revealStep >= 2) ? <MultiRecordPlanView preview={item.answer.multiRecordPlan} /> : null}
-              {item.answer.presentation && (index > 0 || revealStep >= 2) ? <CopilotResultCards presentation={item.answer.presentation} onAsk={(nextQuestion) => void ask(nextQuestion)} /> : null}
-              {!item.answer.workflowDraft && !item.answer.multiRecordResult && !item.answer.multiRecordPlan && !item.answer.presentation && (item.answer.findings ?? []).length > 0 && (index > 0 || revealStep >= 2) ? (
+              {item.answer.workflowDraft ? <WorkflowDraftPreview preview={item.answer.workflowDraft} onModify={(request) => { setQuestion(request); window.setTimeout(() => inputRef.current?.focus(), 0); }} /> : null}
+              {item.answer.multiRecordResult ? <MultiRecordResultView result={item.answer.multiRecordResult} onSelectionChange={(resultSetId, selectedRecordIds) => setSelection({ resultSetId, selectedRecordIds })} onAsk={(nextQuestion) => void ask(nextQuestion)} /> : null}
+              {item.answer.multiRecordPlan ? <MultiRecordPlanView preview={item.answer.multiRecordPlan} /> : null}
+              {item.answer.presentation ? <CopilotResultCards presentation={item.answer.presentation} onAsk={(nextQuestion) => void ask(nextQuestion)} /> : null}
+              {!item.answer.workflowDraft && !item.answer.multiRecordResult && !item.answer.multiRecordPlan && !item.answer.presentation && (item.answer.findings ?? []).length > 0 ? (
                 <section className="mt-5" aria-label="Puncte relevante">
                   <h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-[rgb(var(--text-secondary))]">Puncte relevante</h4>
                   <ul className="mt-2 divide-y divide-[rgb(var(--border))]">
@@ -247,12 +231,12 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
                   </ul>
                 </section>
               ) : null}
-              {!item.answer.workflowDraft && item.answer.preparedAction && (index > 0 || revealStep >= 2) ? <PreparedActionCard action={item.answer.preparedAction} /> : null}
+              {!item.answer.workflowDraft && item.answer.preparedAction ? <PreparedActionCard action={item.answer.preparedAction} /> : null}
               {!item.answer.workflowDraft ? <IntelligenceEvidence answer={item.answer} /> : null}
-              {!item.answer.workflowDraft && item.answer.missingInformation.length > 0 && (index > 0 || revealStep >= 2) ? <section className="mt-4 border-l-2 border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background)/0.42)] px-3 py-2.5"><h4 className="text-xs font-semibold text-[rgb(var(--warning-text))]">Informații lipsă sau neconfirmate</h4><ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-secondary))]">{item.answer.missingInformation.map((missing) => <li key={missing}>— {formatUserFacingText(missing)}</li>)}</ul></section> : null}
+              {!item.answer.workflowDraft && item.answer.missingInformation.length > 0 ? <section className="mt-4 border-l-2 border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background)/0.42)] px-3 py-2.5"><h4 className="text-xs font-semibold text-[rgb(var(--warning-text))]">Informații lipsă sau neconfirmate</h4><ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-secondary))]">{item.answer.missingInformation.map((missing) => <li key={missing}>— {formatUserFacingText(missing)}</li>)}</ul></section> : null}
               {!item.answer.workflowDraft && item.answer.caveats.length > 0 ? <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-secondary))]">{formatUserFacingText(item.answer.caveats.join(" "))}</p> : null}
-              {!item.answer.commercialTruth && !item.answer.workflowDraft && item.answer.suggestedAction && (index > 0 || revealStep >= 3) ? <div className="mt-4"><Button href={item.answer.suggestedAction.route} size="small">{item.answer.suggestedAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></div> : null}
-              {!item.answer.workflowDraft && item.answer.followUps.length > 0 && (index > 0 || revealStep >= 3) ? <div className="mt-5 border-t border-[rgb(var(--border))] pt-3"><p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-secondary))]">Continuă analiza</p><div className="flex flex-wrap gap-2">{item.answer.followUps.map((followUp) => <button key={followUp} type="button" disabled={loading} className="focus-ring rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-left text-xs font-medium text-[rgb(var(--text-secondary))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(followUp)}>{followUp}<ArrowRightIcon className="ml-2 inline h-3.5 w-3.5" aria-hidden="true" /></button>)}</div></div> : null}
+              {!item.answer.commercialTruth && !item.answer.workflowDraft && item.answer.suggestedAction ? <div className="mt-4"><Button href={item.answer.suggestedAction.route} size="small">{item.answer.suggestedAction.label}<ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Button></div> : null}
+              {!item.answer.workflowDraft && item.answer.followUps.length > 0 ? <div className="mt-5 border-t border-[rgb(var(--border))] pt-3"><p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[rgb(var(--text-secondary))]">Continuă analiza</p><div className="flex flex-wrap gap-2">{item.answer.followUps.map((followUp) => <button key={followUp} type="button" disabled={loading} className="focus-ring rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-left text-xs font-medium text-[rgb(var(--text-secondary))] hover:border-[rgb(var(--border-strong))] hover:text-[rgb(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void ask(followUp)}>{followUp}<ArrowRightIcon className="ml-2 inline h-3.5 w-3.5" aria-hidden="true" /></button>)}</div></div> : null}
             </div>
             </div>
           </article>

@@ -115,7 +115,7 @@ test("UI and authorized loader preserve review, state and safety boundaries", ()
   assert.match(ui, /ExplanationDisclosure/);
   assert.match(disclosure, /<details/);
   assert.match(ui, /Nu există semnale noi de verificat/);
-  assert.match(ui, /Nu există suficiente date-sursă/);
+  assert.match(ui, /Adaugă surse pentru prima descoperire/);
   assert.match(ui, /Nu am putut verifica semnalele comerciale/);
   assert.match(page, /CommercialDiscoveries/);
   assert.match(page, /isRedirectError\(error\)/);
