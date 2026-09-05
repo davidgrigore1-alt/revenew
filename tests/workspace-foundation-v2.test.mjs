@@ -90,8 +90,9 @@ test("Company, Opportunity, and Contact 360 expose collaborative notes without m
   const company = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const opportunity = read("src/app/(protected)/opportunities/[id]/page.tsx");
   const contact = read("src/app/(protected)/crm/contacts/[id]/page.tsx");
-  for (const source of [company, opportunity, contact]) assert.match(source, /RecordNotes/);
-  assert.match(contact, /Contact 360/);
+  const contactDetail = read("src/components/crm/ContactDetail.tsx");
+  for (const source of [company, opportunity, contactDetail]) assert.match(source, /RecordNotes/);
+  assert.match(contact, /<ContactDetail/);
   assert.match(contact, /getOpportunitiesForCurrentBusiness/);
   const notes = read("src/components/workspace/RecordNotes.tsx");
   assert.match(notes, /date neîncrezute/);
