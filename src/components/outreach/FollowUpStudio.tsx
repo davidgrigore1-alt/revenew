@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Dialog } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { useMemo, useRef, useState } from "react";
 import { updateGeneratedDocument } from "@/lib/actions";
 import {
   getFollowUpSendReadiness,
@@ -41,6 +43,7 @@ export function FollowUpStudio({ initialDraft, timeline, initialReadiness }: { i
   const [readiness, setReadiness] = useState(initialReadiness);
   const [busy, setBusy] = useState("");
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const confirmationTriggerRef = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const assessment = useMemo(() => assessFollowUpDraft({ subject, body, recipientEmail: readiness.recipient, contactName: initialDraft.contactName, reason: initialDraft.reason, dueDate: initialDraft.dueDate }), [subject, body, readiness.recipient, initialDraft]);
   const readOnly = status === "sent" || status === "archived";
@@ -129,7 +132,7 @@ export function FollowUpStudio({ initialDraft, timeline, initialReadiness }: { i
         {!readOnly ? <button type="button" disabled={Boolean(busy)} onClick={() => save("edited")} className="rounded-lg bg-mint-500 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-60">Salvează revizuirea</button> : null}
         {!readOnly && !["approved", "ready_to_send"].includes(status) ? <button type="button" disabled={Boolean(busy) || !assessment.canApprove} onClick={() => save("approved")} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-200 disabled:opacity-50">Aprobă draftul</button> : null}
         {status === "approved" && !localRevisionMismatch ? <button type="button" disabled={Boolean(busy)} onClick={() => save("ready_to_send")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Pregătit pentru trimitere</button> : null}
-        {["approved", "ready_to_send"].includes(status) && !readOnly ? <button type="button" disabled={Boolean(busy) || localRevisionMismatch} onClick={openConfirmation} className="rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-50">Verifică și confirmă trimiterea</button> : null}
+        {["approved", "ready_to_send"].includes(status) && !readOnly ? <button ref={confirmationTriggerRef} type="button" disabled={Boolean(busy) || localRevisionMismatch} onClick={openConfirmation} className="rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-50">Verifică și confirmă trimiterea</button> : null}
         <button type="button" onClick={copy} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-white">Copiază</button>
         <Link href={`/opportunities/${initialDraft.opportunityId}#commercial-response-loop`} className="rounded-lg border border-mint-400/30 bg-mint-400/10 px-4 py-2 text-sm font-semibold text-mint-200">Înregistrează răspuns</Link>
         {!readOnly ? <button type="button" disabled={Boolean(busy)} onClick={() => save("archived")} className="rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-zinc-400">Arhivează</button> : null}
@@ -143,6 +146,12 @@ export function FollowUpStudio({ initialDraft, timeline, initialReadiness }: { i
       <section className="rounded-lg border border-white/10 bg-ink-900/70 p-5"><h2 className="font-semibold text-white">Istoric auditabil</h2><div className="mt-4 grid gap-4">{timeline.length ? timeline.map((item) => <div key={item.id} className="border-l border-white/10 pl-3"><p className="text-sm font-semibold text-white">{item.label}</p><p className="mt-1 text-xs leading-5 text-zinc-400">{item.description}</p><p className="mt-1 text-xs text-zinc-500">{item.actorName ?? "Sistem"}{item.date ? ` · ${formatDateTimeWithSeconds(item.date)}` : ""}</p></div>) : <p className="text-sm text-zinc-400">Nu există evenimente pentru acest draft.</p>}</div></section>
     </aside>
 
-    {confirmationOpen ? <div role="dialog" aria-modal="true" aria-labelledby="send-confirmation-title" className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4"><div className="w-full max-w-lg rounded-xl border border-white/15 bg-ink-950 p-6 shadow-2xl"><h2 id="send-confirmation-title" className="text-xl font-semibold text-white">Confirmare finală</h2><p className="mt-3 text-sm leading-6 text-zinc-300">Confirmi inițierea în modul <strong>{readiness.mode}</strong> către <strong>{readiness.recipient}</strong>? Acțiunea nu este automată.</p><dl className="mt-4 grid gap-3 rounded-lg border border-white/10 bg-black/20 p-4 text-sm"><div><dt className="text-zinc-500">Subiect</dt><dd className="mt-1 font-semibold text-white">{subject}</dd></div><div><dt className="text-zinc-500">Mesaj</dt><dd className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-zinc-300">{body}</dd></div></dl>{readiness.mode === "test" ? <p className="mt-3 rounded-lg border border-gold-400/20 bg-gold-400/10 p-3 text-sm text-gold-100">Testul nu livrează extern și nu va apărea ca email trimis.</p> : null}<div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={() => setConfirmationOpen(false)} className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white">Renunță</button><button type="button" disabled={busy === "send"} onClick={confirmSend} className="rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-ink-950 disabled:opacity-60">Confirm explicit</button></div></div></div> : null}
+    {confirmationOpen ? <Dialog labelledBy="send-confirmation-title" describedBy="send-confirmation-description" returnFocusRef={confirmationTriggerRef} onClose={() => setConfirmationOpen(false)}>
+      <h2 id="send-confirmation-title" className="text-xl font-semibold">Confirmare finală</h2>
+      <p id="send-confirmation-description" className="mt-3 text-sm leading-6 text-[rgb(var(--text-secondary))]">Confirmi inițierea în modul <strong>{readiness.mode}</strong> către <strong>{readiness.recipient}</strong>? Acțiunea nu este automată.</p>
+      <dl className="mt-4 grid gap-3 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] p-4 text-sm"><div><dt className="text-[rgb(var(--text-muted))]">Subiect</dt><dd className="mt-1 font-semibold">{subject}</dd></div><div><dt className="text-[rgb(var(--text-muted))]">Mesaj</dt><dd className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-[rgb(var(--text-secondary))]">{body}</dd></div></dl>
+      {readiness.mode === "test" ? <p className="mt-3 rounded-lg border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-3 text-sm text-[rgb(var(--warning-text))]">Testul nu livrează extern și nu va apărea ca email trimis.</p> : null}
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button variant="secondary" className="w-full sm:w-auto" onClick={() => setConfirmationOpen(false)}>Renunță</Button><Button className="w-full sm:w-auto" disabled={busy === "send"} loading={busy === "send"} onClick={confirmSend}>Confirm explicit</Button></div>
+    </Dialog> : null}
   </div>;
 }

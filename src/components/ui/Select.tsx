@@ -5,6 +5,7 @@ import {
   forwardRef,
   isValidElement,
   useEffect,
+  useContext,
   useId,
   useMemo,
   useRef,
@@ -17,6 +18,7 @@ import { createPortal } from "react-dom";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { nextSelectOption } from "@/lib/ui/select-navigation";
 import { cn } from "@/lib/utils";
+import { OverlayPortalContext } from "@/components/ui/overlay-context";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   invalid?: boolean;
@@ -115,6 +117,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     ref,
   ) {
     const uid = useId();
+    const overlayContainer = useContext(OverlayPortalContext);
+    const popupContainer = portalContainer ?? overlayContainer;
 
     const button = useRef<HTMLButtonElement>(null);
     const native = useRef<HTMLSelectElement | null>(null);
@@ -580,7 +584,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   top: position.top,
                   width: position.width,
                   maxHeight: position.maxHeight,
-                  zIndex: portalContainer ? 2 : 100,
+                  zIndex: popupContainer ? 2 : 100,
                 }}
                 className="product-popup overflow-y-auto overscroll-contain rounded-control border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-floating))] p-1 shadow-none"
               >
@@ -645,7 +649,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   </p>
                 ) : null}
               </div>,
-              portalContainer ?? document.body,
+              popupContainer ?? document.body,
             )
           : null}
       </span>

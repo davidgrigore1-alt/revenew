@@ -1,5 +1,6 @@
 "use client";
 
+import { Drawer } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -57,7 +58,8 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
   const [sort, setSort] = useState(initialSort);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [websiteError, setWebsiteError] = useState("");
-  const panelRef = useRef<HTMLDivElement>(null);
+  const organizationNameRef = useRef<HTMLInputElement>(null);
+  const contactNameRef = useRef<HTMLInputElement>(null);
   const websiteRef = useRef<HTMLInputElement>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO");
   const filteredOrganizations = useMemo(() => organizations.filter((organization) => {
@@ -89,7 +91,6 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
 
   useEffect(() => {
     if (!panel) return;
-    panelRef.current?.querySelector<HTMLElement>("input:not([type='hidden']), select, textarea")?.focus();
     if (panel === "organization") setWebsiteError("");
   }, [panel, editingOrganization, editingContact]);
 
@@ -164,19 +165,17 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
 
       {selectedIds.size > 0 ? <div role="status" className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 product-floating-surface px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
 
-      {view !== "contacts" && panel === "organization" ? <div className="fixed inset-0 z-50 flex justify-end bg-black/45" role="dialog" aria-modal="true" aria-label={editingOrganization ? "Editează compania" : "Adaugă companie"} onKeyDown={(event) => { if (event.key === "Escape") setPanel(null); }}>
-        <button type="button" className="absolute inset-0" aria-label="Închide formularul" onClick={() => setPanel(null)} />
-        <section ref={panelRef} className="relative h-full w-full max-w-2xl overflow-y-auto border-l border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-2xl">
+      {view !== "contacts" && panel === "organization" ? <Drawer labelledBy="crm-organization-title" describedBy="crm-organization-description" initialFocusRef={organizationNameRef} onClose={() => setPanel(null)}>
         <div>
-          <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează compania" : "Adaugă companie"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din spațiul de lucru curent.</p>
+          <div className="flex items-center justify-between gap-3"><h2 id="crm-organization-title" className="text-base font-semibold text-[rgb(var(--foreground))]">{editingOrganization ? "Editează compania" : "Adaugă companie"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
+          <p id="crm-organization-description" className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Companiile sunt clienți sau prospecți din spațiul de lucru curent.</p>
         </div>
         <form action={organizationSubmit} onSubmit={organizationFormSubmit} noValidate className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingOrganization?.id ?? ""} />
           {error ? <p role="alert" className="md:col-span-2 rounded-lg border border-[rgb(var(--danger-border))] bg-[rgb(var(--danger-background))] px-3 py-2 text-sm text-[rgb(var(--danger-text))]">{error}</p> : null}
           <label className="grid gap-2 text-sm font-semibold">
             Nume companie
-            <input name="name" required defaultValue={editingOrganization?.name ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+            <input ref={organizationNameRef} name="name" required defaultValue={editingOrganization?.name ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Website / Domeniu <span className="font-normal text-[rgb(var(--text-muted))]">(opțional)</span>
@@ -237,14 +236,12 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             {editingOrganization ? <Button variant="secondary" onClick={() => setEditingOrganization(null)}>Renunță</Button> : null}
           </div>
         </form>
-      </section></div> : null}
+      </Drawer> : null}
 
-      {view !== "companies" && panel === "contact" ? <div className="fixed inset-0 z-50 flex justify-end bg-black/45" role="dialog" aria-modal="true" aria-label={editingContact ? "Editează contactul" : "Adaugă contact"} onKeyDown={(event) => { if (event.key === "Escape") setPanel(null); }}>
-        <button type="button" className="absolute inset-0" aria-label="Închide formularul" onClick={() => setPanel(null)} />
-        <section ref={panelRef} className="relative h-full w-full max-w-2xl overflow-y-auto border-l border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-2xl">
+      {view !== "companies" && panel === "contact" ? <Drawer labelledBy="crm-contact-title" describedBy="crm-contact-description" initialFocusRef={contactNameRef} onClose={() => setPanel(null)}>
         <div>
-          <div className="flex items-center justify-between gap-3"><h2 className="text-base font-semibold text-[rgb(var(--foreground))]">{editingContact ? "Editează contactul" : "Adaugă contact"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
-          <p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți atașa mai multe contacte la aceeași companie și poți marca unul ca principal.</p>
+          <div className="flex items-center justify-between gap-3"><h2 id="crm-contact-title" className="text-base font-semibold text-[rgb(var(--foreground))]">{editingContact ? "Editează contactul" : "Adaugă contact"}</h2><button type="button" className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[rgb(var(--border))]" aria-label="Închide" onClick={() => setPanel(null)}><XMarkIcon className="h-5 w-5" /></button></div>
+          <p id="crm-contact-description" className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Poți atașa mai multe contacte la aceeași companie și poți marca unul ca principal.</p>
         </div>
         <form action={contactSubmit} className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="id" value={editingContact?.id ?? ""} />
@@ -257,7 +254,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Nume complet
-            <input name="fullName" required defaultValue={editingContact?.fullName ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
+            <input ref={contactNameRef} name="fullName" required defaultValue={editingContact?.fullName ?? ""} className="h-11 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3" />
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Prenume
@@ -306,7 +303,7 @@ export function CrmWorkspaceClient({ organizations, contacts, view = "all", orga
             {editingContact ? <Button variant="secondary" onClick={() => setEditingContact(null)}>Renunță</Button> : null}
           </div>
         </form>
-      </section></div> : null}
+      </Drawer> : null}
 
       {view !== "contacts" ? <section>
         <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--border))] pb-3">

@@ -53,7 +53,7 @@ test("G3F select navigation skips disabled options, supports boundaries and empt
 test("G3F select retains a hidden form bridge and custom accessible popup; visible native dropdowns are absent",()=>{
  const source=read("src/components/ui/Select.tsx");
  for(const part of ['role="combobox"','role="listbox"','role="option"','aria-activedescendant','aria-required','aria-invalid','onInvalid','type="button"','createPortal','form?.addEventListener("reset"','new Event("change"','search.current'])has(source,part);
- has(source,"portalContainer ?? document.body");has(source,"focus({ preventScroll: true })");
+ has(source,"popupContainer ?? document.body");has(source,"focus({ preventScroll: true })");
  assert.match(source,/event\.key\s*===\s*"Escape"/);assert.match(source,/event\.key\s*===\s*"Tab"/);
  assert.match(source,/tabIndex=\{-1\}[\s\S]*?aria-hidden="true"/);assert.match(source,/onClick=\{\(\)\s*=>\s*choose\(index\)\}/);
  for(const file of ["workflows/WorkflowBuilder","settings/PersonalizationSettingsPanel","crm/CrmWorkspaceClient","inbox/CommercialInboxClient","revenue/PipelineBoard","apps/DriveWorkspace","opportunities/OpportunityControlCenter"])assert.doesNotMatch(read("src/components/"+file+".tsx"),/<select\b/);

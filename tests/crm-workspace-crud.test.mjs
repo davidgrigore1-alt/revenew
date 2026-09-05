@@ -49,7 +49,9 @@ test("CRM UI exposes real CRUD forms and first-class company/contact navigation"
   assert.match(crmPage, /CrmWorkspaceClient/);
   assert.match(client, /Adaugă companie/);
   assert.match(client, /Adaugă contact/);
-  assert.match(client, /role="dialog"/);
+  assert.match(client, /import \{ Drawer \} from "@\/components\/ui\/Modal"/);
+  assert.match(client, /<Drawer\b/);
+  assert.match(read("src/components/ui/Modal.tsx"), /role="dialog"/);
   assert.match(client, /filteredOrganizations/);
   assert.match(client, /activeOpportunities/);
   assert.match(client, /Arhivează/);

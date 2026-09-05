@@ -1,0 +1,35 @@
+.modal {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  color: rgb(var(--foreground));
+  box-shadow: var(--shadow-modal);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.modal::backdrop { background: rgb(0 0 0 / .65); }
+.modal[open] { animation: enter 180ms ease-out; }
+.dialog {
+  margin: auto;
+  width: calc(100% - 2rem);
+  max-width: 32rem;
+  max-height: calc(100dvh - 2rem);
+  padding: 1.5rem;
+  border-radius: var(--radius-overlay);
+}
+.drawer {
+  margin: 0 0 0 auto;
+  width: 100%;
+  max-width: 42rem;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 1.25rem;
+  border-width: 0 0 0 1px;
+}
+.drawer::backdrop { background: rgb(0 0 0 / .45); }
+@keyframes enter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .modal[open] { animation: none; } }
