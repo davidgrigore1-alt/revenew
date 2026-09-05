@@ -66,6 +66,36 @@
 .check input { margin-top:5px; }
 .sourceChoice { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px; padding-bottom:28px; border-bottom:1px solid var(--doc-line); }
 .sourceChoice > div:first-child { max-width:64ch; }
+.sourceSelection { max-width:960px; gap:36px; }
+.sourceSelection > .localUpload { border-top:0; padding-top:4px; }
+.sourceIntro { display:grid; gap:8px; max-width:62ch; }
+.localUpload { min-width:0; padding-block:24px 4px; border-top:1px solid var(--doc-line); transition:background-color 120ms ease; }
+.localUpload[data-dragging] { background:rgb(var(--surface-subtle)); }
+.uploadSelection { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; padding-block:28px; }
+.uploadHint { color:rgb(var(--text-muted)); font-size:14px; max-width:40ch; }
+.selectedDocument { display:flex; align-items:flex-start; gap:16px; min-width:0; flex:1 1 280px; }
+.selectedIcon { width:28px; height:32px; flex-shrink:0; color:rgb(var(--text-muted)); margin-top:2px; }
+.selectedIdentity { min-width:0; display:grid; gap:4px; }
+.selectedFilename { font-size:16px; font-weight:600; overflow-wrap:anywhere; }
+.selectionStatus { font-size:13px; color:rgb(var(--foreground)); }
+.uploadSave { display:flex; align-items:center; flex-wrap:wrap; gap:16px 24px; padding-top:24px; border-top:1px solid var(--doc-line); }
+.uploadSave p { max-width:42ch; }
+.uploadSave > button:disabled {
+  background:rgb(var(--surface-subtle));
+  color:rgb(var(--text-muted));
+  box-shadow:inset 0 0 0 1px rgb(var(--border));
+  opacity:.65;
+  cursor:default;
+  outline:none;
+  filter:none;
+}
+.uploadLimits { margin-top:20px; font-size:12px; color:rgb(var(--text-muted)); }
+.uploadLimits summary { cursor:pointer; width:fit-content; padding-block:6px; }
+.uploadLimits p { margin-top:8px; max-width:65ch; }
+.alternativeSource { border-top:1px solid var(--doc-line); border-bottom:0; padding-top:28px; }
+@media(prefers-reduced-motion:no-preference) { .selectedDocument { animation:document-enter 180ms cubic-bezier(.2,.8,.2,1); } }
+@media(prefers-reduced-motion:reduce) { .localUpload { transition:none; } }
+@media(max-width:700px) { .sourceSelection { gap:28px; } .uploadSelection { align-items:flex-start; gap:18px; padding-block:24px; } .selectedDocument { flex-basis:100%; } .uploadSave { align-items:flex-start; gap:12px; } }
 .proposal { display:grid; gap:28px; max-width:980px; min-width:0; }
 .proposal summary { cursor:pointer; padding-block:12px; font-size:14px; color:rgb(var(--text-muted)); }
 .proposalRow { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,340px); gap:24px; align-items:center; padding-block:18px; border-bottom:1px solid var(--doc-line); }

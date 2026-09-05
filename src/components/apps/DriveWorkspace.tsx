@@ -69,7 +69,7 @@ export function DriveWorkspace({opportunityId,authorized=false,compact=false,sel
  const format=(mime:string)=>mime==="application/vnd.google-apps.document"?"Google Docs":mime==="application/vnd.google-apps.spreadsheet"?"Google Sheets · prima foaie":mime==="application/pdf"?"PDF · doar metadate":mime==="text/plain"?"Text":mime;
  return <div className="min-w-0 text-[rgb(var(--foreground))]">
   {compact||selectorOnly?<div className="flex flex-wrap items-center gap-2">
-   <button type="button" disabled={busy||!model} className={primaryClass} onClick={()=>enabled?pick():trust.current?.showModal()}>{busy?"Se procesează…":selectorOnly?"Selectează din Google Drive":enabled?"Selectează documente":"Activează Google Drive"}</button>
+   <button type="button" disabled={busy||!model} className={selectorOnly?actionClass:primaryClass} onClick={()=>enabled?pick():trust.current?.showModal()}>{busy?"Se procesează…":selectorOnly?"Selectează din Google Drive":enabled?"Selectează documente":"Activează Google Drive"}</button>
    {compact&&!selectorOnly?<button type="button" aria-expanded={expanded} className={actionClass} onClick={()=>setExpanded(value=>!value)}>{expanded?"Ascunde documentele":"Vezi documentele"}</button>:null}
   </div>:null}
   {expanded&&!selectorOnly?<section aria-label="Documente din Google Drive" className={compact?"mt-2":""}>

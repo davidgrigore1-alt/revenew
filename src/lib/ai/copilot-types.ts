@@ -16,6 +16,8 @@ export type CopilotPageContext = {
   contactId?: string;
   selectedRecordId?: string;
   contextLabel?: string;
+  documentSourceId?: string;
+  documentVersionId?: string;
 };
 
 export type CopilotConversationTurn = {
@@ -186,6 +188,7 @@ export type CopilotSelectionContext = {
 };
 
 export type CopilotRequest = {
+  preparationIntent?: boolean;
   question: string;
   context: CopilotPageContext;
   history: CopilotConversationTurn[];
@@ -193,6 +196,7 @@ export type CopilotRequest = {
 };
 
 export type CopilotToolName =
+  | "get_document_context"
   | "get_commercial_truth"
   | "search_commercial_context"
   | "get_daily_brief"

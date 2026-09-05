@@ -21,7 +21,10 @@ test("documents is a protected commercial document workspace", () => {
   assert.equal(existsSync(new URL(`../${documentsRoute}`, import.meta.url)), true);
   const route = read(documentsRoute);
   assert.match(route, /PageShell/);
-  assert.match(route, /DriveWorkspace/);
+  assert.match(route, /getCommercialDocuments/);
+  assert.match(route, /aria-label="Documente comerciale"/);
+  assert.match(route, /item\.detailHref/);
+  assert.match(read("src/lib/commercial-documents.ts"), /requirePermission\("documents\.read"\)/);
   assert.doesNotMatch(route, /redirect\("\/outreach"\)/);
   assert.match(navigation, /name: "Documente", href: "\/documents".+permission: "documents\.read"/);
   assert.match(outreach, /Studio de follow-up/);

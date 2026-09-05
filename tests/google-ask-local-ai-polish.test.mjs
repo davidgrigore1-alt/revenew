@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {preparation,noSelectedSource} from './helpers/phase32-modules.mjs';
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -10,6 +11,7 @@ import ts from "typescript";
 const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8");
 
 function compile(relativePath, aliases = {}, globals = {}) {
+  aliases={"@/lib/ai/preparation-intent":preparation,"@/lib/ai/source-retrieval":noSelectedSource,...aliases};
   const filename = path.resolve(relativePath);
   const output = ts.transpileModule(read(relativePath), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true }

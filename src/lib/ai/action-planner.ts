@@ -1,4 +1,5 @@
 import "server-only";
+import { hasDirectPreparationIntent } from "@/lib/ai/preparation-intent";
 import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
 import { workflowRunIdFromEvidence } from "@/lib/workflow-trace";
 
@@ -128,6 +129,7 @@ export async function createStoredActionPlanForActor(input: {
   throw new Error("ask_action_plan_create_failed");
 }
 export async function prepareAskActionPlan(input: { question: string; context: CopilotPageContext; evidence: CopilotEvidence[]; proposalOverride?: AskActionProposal }): Promise<CopilotPreparedAction | null> {
+  if (!hasDirectPreparationIntent()) return null;
   const type = classifyAskActionIntent(input.question); if (!type) return null;
   const authorization = await getAuthorizationContext(); const current = await getCurrentBusinessForUser({ redirectIfMissing: false });
   if (!authorization.profileId || !current || !authorization.permissions.includes(permissionFor(type))) return null;

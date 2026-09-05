@@ -28,6 +28,7 @@ export function contextForPath(pathname: string, lockedContext?: Partial<Copilot
   return {
     route: lockedContext?.route ?? pathname,
     pageType,
+    ...(lockedContext?.documentSourceId ? { documentSourceId: lockedContext.documentSourceId, documentVersionId: lockedContext.documentVersionId } : {}),
     ...(lockedContext?.organizationId ?? companyMatch?.[1] ? { organizationId: lockedContext?.organizationId ?? companyMatch?.[1] } : {}),
     ...(lockedContext?.opportunityId ?? opportunityMatch?.[1] ? { opportunityId: lockedContext?.opportunityId ?? opportunityMatch?.[1] } : {}),
     ...(lockedContext?.selectedRecordId ? { selectedRecordId: lockedContext.selectedRecordId } : {}),
@@ -109,6 +110,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
   const inputId = useId();
   const pageContext = useMemo(() => contextForPath(pathname, lockedContext, contextLabel), [contextLabel, lockedContext, pathname]);
   const [scope,setScope]=useState<"current"|"workspace">("current");
+  const [preparationIntent,setPreparationIntent]=useState(false);
   const context=scope==="workspace"?{route:"/ai",pageType:"ai" as const,contextLabel:"Workspace autorizat"}:pageContext;
   const suggestions = initialSuggestions ?? suggestionsFor(context);
   useEffect(()=>{setScope("current");},[pathname]);
@@ -150,7 +152,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
     setError("");
     const history: CopilotConversationTurn[] = conversation.slice(0, 4).reverse().flatMap((item) => [{ role: "user" as const, content: item.question }, { role: "assistant" as const, content: item.answer.answer }]);
     try {
-      const response = await fetch("/api/ai/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: normalized, context, history, ...(selection ? { selection } : {}) }) });
+      const response = await fetch("/api/ai/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: normalized, context, history, preparationIntent: !context.documentSourceId && preparationIntent, ...(selection ? { selection } : {}) }) });
       const payload = await response.json() as CopilotAnswer | { error?: string };
       if (!response.ok || !("answer" in payload)) throw new Error("Nu am putut finaliza verificarea. Datele și acțiunile existente au rămas neschimbate.");
       if (payload.multiRecordResult) setSelection({ resultSetId: payload.multiRecordResult.resultSetId, selectedRecordIds: [] });
@@ -180,6 +182,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
          {(["current","workspace"] as const).map(value=><button key={value} type="button" disabled={loading} aria-pressed={scope===value} onClick={()=>{setScope(value);setConversation([]);setSelection(undefined);}} className="focus-ring inline-flex h-8 items-center rounded-button border border-[rgb(var(--border))] px-3 disabled:opacity-50 aria-pressed:border-[rgb(var(--primary))] aria-pressed:text-[rgb(var(--foreground))]">{value==="current"?(pageContext.opportunityId?"Această oportunitate":"Compania selectată"):"Workspace autorizat"}</button>)}
         </div>:null}
         <label htmlFor={inputId} className="sr-only">Întrebarea ta</label>
+        {!context.documentSourceId ? <label className="flex items-center gap-2 px-2 py-1 text-sm text-[rgb(var(--text-muted))]"><input type="checkbox" checked={preparationIntent} disabled={loading} onChange={event=>setPreparationIntent(event.target.checked)} className="focus-ring"/>Pregătește o propunere · fără executare</label> : <p className="px-2 text-sm text-[rgb(var(--text-muted))]">Analiză document · fără creare de acțiuni</p>}
         <textarea ref={inputRef} data-copilot-input id={inputId} aria-describedby={`${inputId}-trust`} aria-keyshortcuts="Enter" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 3000))} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void ask(question); } }} rows={3} maxLength={3000} placeholder="Exemplu: Ce necesită atenție astăzi și pe ce dovezi se bazează?" className="focus-ring min-h-24 w-full resize-none rounded-control border-0 bg-transparent px-2 py-2 text-[0.95rem] leading-6 outline-none placeholder:text-[rgb(var(--text-faint))]" />
         <div className="flex flex-col gap-3 border-t border-[rgb(var(--border-subtle))] px-2 pt-2 sm:flex-row sm:items-center sm:justify-between"><p id={`${inputId}-trust`} className="flex items-start gap-1.5 text-[0.6875rem] leading-4 text-[rgb(var(--text-muted))]"><ShieldCheckIcon className="mt-px h-3.5 w-3.5 shrink-0 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />Doar informații autorizate. Nu este executată nicio acțiune externă.</p><Button type="submit" variant="intelligence" size="small" loading={loading} disabled={question.trim().length < 2}>Analizează</Button></div>
       </form>

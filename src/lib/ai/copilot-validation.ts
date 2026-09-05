@@ -11,7 +11,7 @@ import {
 
 const identifierPattern = /^[0-9a-z-]{1,80}$/i;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const allowedRoutePattern = /^\/(?:dashboard|ai|today|approvals|inbox|companies|contacts|apps|opportunities(?:\/[0-9a-z-]+)?|crm\/(?:organizations|contacts)\/[0-9a-z-]+|reports(?:\/[0-9a-z-]+)?|help)(?:#[0-9a-z-]+)?$/i;
+const allowedRoutePattern = /^\/(?:documents\/local\/[0-9a-f-]{36}(?:\/versions\/[0-9a-f-]{36})?|dashboard|ai|today|approvals|inbox|companies|contacts|apps|opportunities(?:\/[0-9a-z-]+)?|crm\/(?:organizations|contacts)\/[0-9a-z-]+|reports(?:\/[0-9a-z-]+)?|help)(?:#[0-9a-z-]+)?$/i;
 
 function text(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.normalize("NFKC").trim().slice(0, maxLength) : "";
@@ -37,6 +37,7 @@ export function parseCopilotPageContext(value: unknown): CopilotPageContext {
   return {
     route,
     pageType: inferredType,
+    ...(typeof candidate.documentSourceId === "string" && uuidPattern.test(candidate.documentSourceId) && typeof candidate.documentVersionId === "string" && uuidPattern.test(candidate.documentVersionId) ? { documentSourceId: candidate.documentSourceId, documentVersionId: candidate.documentVersionId } : {}),
     ...(organizationId && identifierPattern.test(organizationId) ? { organizationId } : {}),
     ...(opportunityId && identifierPattern.test(opportunityId) ? { opportunityId } : {}),
     ...(contactId && identifierPattern.test(contactId) ? { contactId } : {}),
@@ -63,7 +64,7 @@ export function parseCopilotRequest(value: unknown): { ok: true; value: CopilotR
   const resultSetId = text(rawSelection?.resultSetId, 80);
   const selectedRecordIds = Array.from(new Set((Array.isArray(rawSelection?.selectedRecordIds) ? rawSelection.selectedRecordIds : []).map((item) => text(item, 80)).filter((item) => uuidPattern.test(item)))).slice(0, 25);
   const selection = resultSetId && uuidPattern.test(resultSetId) ? { resultSetId, selectedRecordIds } : undefined;
-  return { ok: true, value: { question, context: parseCopilotPageContext(candidate.context), history, ...(selection ? { selection } : {}) } };
+  return { ok: true, value: { question, context: parseCopilotPageContext(candidate.context), history, preparationIntent: candidate.preparationIntent === true, ...(selection ? { selection } : {}) } };
 }
 
 function stringArray(value: unknown, limit: number, maxLength = 240) {

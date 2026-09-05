@@ -14,14 +14,14 @@ import { describeDataset, proposeSourceMapping, sourceReviewGroups } from "@/lib
 import styles from "./Documents.module.css";
 
 const normalizedKeys:Record<string,string>={source:"source_label",status:"status_label",owner:"owner_label",last_interaction:"last_interaction_at",due_date:"requested_date",request_date:"request_date_at",next_action:"next_action_label",approval_required:"approval_required_label",approval_status:"approval_status_label",proposal_prepared:"proposal_prepared_label",proposal_sent:"proposal_sent_label",outcome_confirmed:"outcome_confirmed_label"};
-export function DocumentCsvImport({ canImport = true, sourceChoices }: { canImport?: boolean; sourceChoices?: ReactNode }) {
-  const [csv,setCsv]=useState<DocumentCsv|null>(null),[fileName,setFileName]=useState("date-comerciale.csv"),[text,setText]=useState("");
+export function DocumentCsvImport({ canImport = true, sourceChoices, initialSource }: { canImport?: boolean; sourceChoices?: ReactNode; initialSource?:{csv:DocumentCsv;name:string;bytes:number;href:string} }) {
+  const [csv,setCsv]=useState<DocumentCsv|null>(initialSource?.csv??null),[fileName,setFileName]=useState(initialSource?.name??"date-comerciale.csv"),[text,setText]=useState("");
   const [mapping,setMapping]=useState<Partial<Record<CommercialImportFieldKey,number|null>>>({});
   const [preview,setPreview]=useState<CommercialImportPreview|null>(null),[mapped,setMapped]=useState<CommercialMappedRow[]>([]);
   const [selected,setSelected]=useState<string[]>([]),[result,setResult]=useState<CommercialImportResult|null>(null);
   const [confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
-  const [step,setStep]=useState(0),[reviewPage,setReviewPage]=useState(0);
-  const [ignored,setIgnored]=useState<number[]>([]),[byteSize,setByteSize]=useState(0);
+  const [step,setStep]=useState(initialSource?5:0),[reviewPage,setReviewPage]=useState(0);
+  const [ignored,setIgnored]=useState<number[]>([]),[byteSize,setByteSize]=useState(initialSource?.bytes??0);
   const lock=useRef(false),heading=useRef<HTMLHeadingElement>(null);
   const reset=()=>{setCsv(null);setPreview(null);setMapped([]);setSelected([]);setResult(null);setConfirmed(false);setError("");setStep(0);setReviewPage(0);setIgnored([]);setMapping({});setByteSize(0);};
   const focusStep=()=>requestAnimationFrame(()=>heading.current?.focus());
@@ -79,15 +79,15 @@ export function DocumentCsvImport({ canImport = true, sourceChoices }: { canImpo
       <label className={styles.upload} onDragOver={event=>event.preventDefault()} onDrop={event=>{event.preventDefault();void readFile(event.dataTransfer.files?.[0]);}}><span className={styles.uploadButton}>Alege un fișier</span><span className={styles.meta}>sau adu aici o foaie exportată în CSV</span><input aria-label="Fișier CSV" type="file" accept=".csv,text/csv" onChange={event=>{void readFile(event.target.files?.[0]);event.target.value="";}} aria-describedby="csv-limits"/></label>
       <details><summary className="focus-ring">Formate și limite</summary><p id="csv-limits" className={styles.meta}>UTF-8 · maximum 2 MB, 1.000 de rânduri, 30 de coloane și 6.000 de caractere pe celulă. Validarea acceptă maximum 512 KB de date mapate.</p></details>
       <details><summary className="focus-ring cursor-pointer text-sm">Sau lipește conținut CSV</summary><div className={styles.form+" mt-4"}><label className={styles.field}>Conținut CSV<textarea value={text} maxLength={DOCUMENT_CSV_LIMITS.bytes} spellCheck={false} onChange={event=>setText(event.target.value)} placeholder={'Titlu,Companie,Email,Valoare,Monedă\n'}/></label><div><Button variant="secondary" disabled={!text.trim()} onClick={()=>load(text,"date-comerciale.csv")}>Previzualizează CSV</Button></div></div></details>
-      <p className={styles.notice}>Salvarea fișierelor din computer nu este disponibilă încă. Poți inspecta CSV-ul în această pagină; la închidere, copia se pierde. Fișierul nu este trimis către ReveNew sau AI. Importul datelor este o alegere separată.</p>
+      <p className={styles.notice}>Acest import rapid nu arhivează originalul. Pentru a păstra și analiza documentul ulterior, folosește <Link className="focus-ring underline" href="/documents/add">Adaugă document</Link>. Importul datelor rămâne o alegere separată.</p>
       <details><summary className="focus-ring cursor-pointer text-sm">Excel și alte formate</summary><p className={styles.meta+" mt-2"}>Importul XLSX/XLS necesită un parser aprobat. Exportă explicit foaia dorită ca CSV UTF-8 și verifică formatarea identificatorilor, valorilor și datelor. Formulele, macrocomenzile și legăturile din fișier nu sunt executate.</p></details>
     </fieldset>:null}
     {step===4&&csv?<>
-      <div className={styles.toolbar}><div><h2>{fileName}</h2><p className={styles.meta}>CSV · {byteSize.toLocaleString("ro-RO")} octeți · {csv.rows.length} rânduri · {csv.headers.length} coloane</p></div><Button variant="ghost" onClick={reset}>Alege alt fișier</Button></div>
-      <p className={styles.notice}>Previzualizare temporară · originalul nu este salvat. Conținutul nu este disponibil ulterior în Documente sau Inteligență operațională.</p>
+      <div className={styles.toolbar}><div><h2>{fileName}</h2><p className={styles.meta}>CSV · {byteSize.toLocaleString("ro-RO")} octeți · {csv.rows.length} rânduri · {csv.headers.length} coloane</p></div>{initialSource?<Link className="focus-ring underline" href={initialSource.href}>Deschide documentul păstrat</Link>:<Button variant="ghost" onClick={reset}>Alege alt fișier</Button>}</div>
+      <p className={styles.notice}>{initialSource?"Original păstrat în Documente. Importul poate fi închis fără să pierzi documentul.":"Previzualizare temporară · originalul nu este salvat. Folosește Adaugă document pentru a-l păstra."}</p>
       <StructuredGrid rows={csv.rows} headers={csv.headers} label="Conținut original CSV" firstRow={2}/>
       <div className={styles.toolbar}><div><h3>Documentul poate fi inspectat fără import</h3><p className={styles.meta}>Nicio înregistrare nu a fost creată. Tabelul păstrează valorile originale; rândul 1 conține antetele.</p></div>{canImport?<Button variant="secondary" onClick={()=>{setStep(5);focusStep();}}>Importă date în ReveNew</Button>:null}</div>
-      <details><summary className="focus-ring">Proveniență și disponibilitate</summary><dl className={styles.facts}><div><dt>Original</dt><dd>{fileName} · conținut local introdus în această sesiune</dd></div><div><dt>Conținut</dt><dd>CSV citit integral în limitele afișate. Valorile sunt date, nu instrucțiuni.</dd></div><div><dt>Salvare și acces ulterior</dt><dd>Indisponibile pentru fișiere locale. Nicio identitate sau versiune salvată nu a fost creată.</dd></div></dl></details>
+      <details><summary className="focus-ring">Proveniență și disponibilitate</summary><dl className={styles.facts}><div><dt>Original</dt><dd>{fileName} · {initialSource?"versiune păstrată în Documente":"conținut local introdus în această sesiune"}</dd></div><div><dt>Conținut</dt><dd>CSV citit integral în limitele afișate. Valorile sunt date, nu instrucțiuni.</dd></div><div><dt>Salvare și acces ulterior</dt><dd>{initialSource?<Link href={initialSource.href}>Deschide versiunea și proveniența</Link>:"Acest import rapid nu a creat o versiune salvată."}</dd></div></dl></details>
     </>:null}
     {step===5&&csv?<section className={styles.proposal}>
       <div><p className={styles.eyebrow}>Din antetele fișierului</p><h2>{describeDataset(csv.headers).label}</h2><p className={styles.meta}>{describeDataset(csv.headers).detail}</p></div>

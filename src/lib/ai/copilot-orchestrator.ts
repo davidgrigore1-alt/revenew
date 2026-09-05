@@ -1,4 +1,6 @@
 import "server-only";
+import { withPreparationIntent } from "@/lib/ai/preparation-intent";
+import { answerSelectedDocument } from "@/lib/ai/source-retrieval";
 
 import { randomUUID } from "crypto";
 import {
@@ -728,6 +730,14 @@ function workflowDraftAnswer(
   };
 }
 export async function runCopilot(request: CopilotRequest, provider: CopilotProvider = getCopilotProvider()): Promise<CopilotRunResult> {
+  return withPreparationIntent(request.preparationIntent === true && !request.context.documentSourceId, () => runAuthorizedCopilot(request, provider));
+}
+async function runAuthorizedCopilot(request: CopilotRequest, provider: CopilotProvider): Promise<CopilotRunResult> {
+  if (request.context.documentSourceId) {
+    const startedAt = Date.now();
+    const answer = await answerSelectedDocument(request);
+    return { answer, diagnostics: { requestId: randomUUID(), provider: "deterministic", model: null, latencyMs: Date.now()-startedAt, inputTokens: 0, outputTokens: 0, totalTokens: 0, toolNames: ["get_document_context"], success: true } };
+  }
   // Only the user's explicit instruction may widen page scope; retrieved business text cannot.
   if (/intreg(?:ul)? (?:spatiu|workspace)|toate (?:oportunitatile|companiile|emailurile)|whole workspace/.test(normalized(request.question))) {
     request = { ...request, context: { route: "/ai", pageType: "ai", contextLabel: "Întregul spațiu autorizat" } };

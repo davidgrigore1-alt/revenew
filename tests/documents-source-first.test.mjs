@@ -7,6 +7,7 @@ import ts from 'typescript';
 const nativeRequire=createRequire(import.meta.url);
 const read=path=>fs.readFileSync(path,'utf8');
 function compile(path,aliases={}) {
+  aliases={'@/lib/documents/local-documents':{listLocalDocuments:async()=>[]},'@/lib/documents/local-document-core':{localDocumentState:()=>''},...aliases};
   const module={exports:{}};
   vm.runInNewContext(ts.transpileModule(read(path),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,
     {module,exports:module.exports,require:name=>name in aliases?aliases[name]:nativeRequire(name),TextEncoder,TextDecoder,requestAnimationFrame:fn=>fn()});

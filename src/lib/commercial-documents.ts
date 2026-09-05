@@ -1,4 +1,6 @@
 import "server-only";
+import { listLocalDocuments } from "@/lib/documents/local-documents";
+import { localDocumentState } from "@/lib/documents/local-document-core";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { hasPermission } from "@/lib/authz/has-permission";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,7 +12,7 @@ import { documentSourceState,internalCommercialTypes } from "@/lib/documents/cap
 export {internalCommercialTypes} from "@/lib/documents/capabilities";
 const internalLabels:Record<string,string>={offer_draft:"Ofertă",offer:"Ofertă",procurement_checklist:"Listă de achiziții",checklist:"Listă de verificare",grant_summary:"Sinteză finanțare"};
 export type CommercialDocumentListItem={
- id:string;kind:"external_source"|"internal_document";title:string;provider:"google_drive"|"revenew";
+ id:string;kind:"external_source"|"internal_document"|"local_document";title:string;provider:"google_drive"|"revenew";
  mime:string;commercialType:string;linkedContext:{id:string;title:string;href:string};
  sourceModifiedAt:string|null;lastSyncedAt:string|null;status:string;sourceState?:SourceState;detailHref:string;sourceHref?:string;
  availableActions:{sync:boolean;remove:boolean};
@@ -84,6 +86,12 @@ if (result.error) {
    sourceHref:external?safeOriginalEvidenceHref(row.web_view_link??undefined)??undefined:undefined,
    availableActions:{sync:!!authorized&&hasPermission(authorization,"documents.generate"),remove:external&&owns&&hasPermission(authorization,"documents.update")}
   });
+ }
+ if(provider!=="google_drive"){
+  for(const v of await listLocalDocuments(query,Math.min(250,take))){
+   const detailHref=`/documents/local/${v.source_id}/versions/${v.id}`;
+   items.set("local:"+v.id,{id:v.id,kind:"local_document",title:v.original_filename,provider:"revenew",mime:v.mime_type,commercialType:"Original local · versionat",linkedContext:{id:v.source_id,title:"Document al firmei",href:detailHref},sourceModifiedAt:v.finalized_at??v.created_at,lastSyncedAt:null,status:localDocumentState(v.state),detailHref,availableActions:{sync:false,remove:false}});
+  }
  }
  const sorted=Array.from(items.values()).sort((a,b)=>(Date.parse(b.lastSyncedAt??b.sourceModifiedAt??"")||0)-(Date.parse(a.lastSyncedAt??a.sourceModifiedAt??"")||0)||a.id.localeCompare(b.id)||a.kind.localeCompare(b.kind));
  return {items:sorted.slice((page-1)*pageSize,page*pageSize),hasMore:sorted.length>page*pageSize,page,pageSize,query,provider,

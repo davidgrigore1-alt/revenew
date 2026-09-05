@@ -1,4 +1,5 @@
 import "server-only";
+import { hasDirectPreparationIntent } from "@/lib/ai/preparation-intent";
 import { commercialTruthAnswer } from "@/lib/ai/commercial-truth-answer";
 
 import type { Tool } from "openai/resources/responses/responses";
@@ -616,6 +617,13 @@ function productHelpTool(args: Record<string, unknown>, context: ToolExecutionCo
 
 export async function executeCopilotTool(name: string, rawArguments: unknown, context: ToolExecutionContext): Promise<CopilotToolResult> {
   const args = objectArgs(rawArguments);
+  if (!hasDirectPreparationIntent()) {
+    // Model-supplied fields never establish request capability, even on a nominal read tool.
+    delete args.actionRequest; delete args.actionType;
+    if (name === "prepare_followup_draft" || (name === "get_external_context" && String(args.view).startsWith("prepare_"))) {
+      return { toolName: name as CopilotToolName, state: "forbidden", data: {}, sources: [], missingInformation: ["Alege explicit modul Pregătește o propunere pentru a păstra un draft. Analiza nu creează lucru pregătit."], preparedAction: null, suggestedAction: null };
+    }
+  }
   try {
     let result: CopilotToolResult;
     if (name === "get_commercial_truth") {

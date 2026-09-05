@@ -231,6 +231,7 @@ function serverHarness({ actions, conditions = [] } = {}) {
   }
   const client = { from: (table) => new Query(table) };
   const planner = compile("src/lib/ai/action-planner.ts", {
+    "@/lib/ai/preparation-intent": { hasDirectPreparationIntent:()=>false },
     "@/lib/commercial-state-invalidation": compile("src/lib/commercial-state-invalidation.ts", { "next/cache": { revalidatePath: () => {} } }),
     "@/lib/supabase/admin": { createSupabaseAdminClient: () => client },
     "@/lib/authz/get-authorization-context": { getAuthorizationContext: async () => ({ profileId: h.authorized ? ids.profile : null, permissions: h.permissions }) },

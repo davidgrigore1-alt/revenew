@@ -1,0 +1,16 @@
+warning: in the working copy of 'scripts/validation/migration-integrity-baseline.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/(protected)/documents/add/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/documents/DocumentCsvImport.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/intelligence/CopilotConversation.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai/action-planner.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai/copilot-orchestrator.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai/copilot-tools.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai/copilot-types.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/ai/copilot-validation.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/commercial-documents.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/buyer-demo-trust-repair.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/commercial-workflow-runtime-g2a.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/documents-source-first.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/google-ask-local-ai-polish.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/real-ai-copilot-v1.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/universal-business-context.test.mjs', LF will be replaced by CRLF the next time Git touches it
