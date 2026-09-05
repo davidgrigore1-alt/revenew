@@ -40,7 +40,7 @@ test("CRM UI exposes real CRUD forms and first-class company/contact navigation"
   const crmPage = read("src/app/(protected)/crm/page.tsx");
   const client = read("src/components/crm/CrmWorkspaceClient.tsx");
   const detail = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
-  const memory = read("src/components/company/CompanyBusinessMemory.tsx");
+  const memory = read("src/components/company/CompanyBriefing.tsx");
   const navigation = read("src/lib/navigation.ts");
 
   assert.match(navigation, /href: "\/companies"/);

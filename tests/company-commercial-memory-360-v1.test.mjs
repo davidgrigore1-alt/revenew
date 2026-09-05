@@ -40,7 +40,7 @@ const { buildCompanyIntelligenceSnapshot } = load("src/lib/company-intelligence.
 const memory = load("src/lib/company-commercial-memory.ts");
 
 const organization = { id: "company-1", businessId: "business-1", name: "Meridian Client", website: "https://client.example", industry: "Servicii B2B", city: "București", createdAt: "2026-07-01T09:00:00.000Z", updatedAt: "2026-08-10T09:00:00.000Z" };
-const contact = { id: "contact-1", businessId: "business-1", organizationId: "company-1", fullName: "Ana Pop", jobTitle: "Director comercial", isPrimaryForOrganization: true, createdAt: "2026-07-01T09:00:00.000Z", updatedAt: "2026-08-10T09:00:00.000Z" };
+const contact = { id: "contact-1", businessId: "business-1", organizationId: "company-1", fullName: "Ana Pop", jobTitle: "Director comercial", isActive: true, isPrimaryForOrganization: true, createdAt: "2026-07-01T09:00:00.000Z", updatedAt: "2026-08-10T09:00:00.000Z" };
 
 function opportunity(overrides = {}) {
   return {
@@ -60,6 +60,21 @@ function signal(overrides = {}) {
 function richSnapshot() {
   return buildCompanyIntelligenceSnapshot({ organization, contacts: [contact], opportunities: [opportunity()], signals: [signal()] }, { now: new Date("2026-08-17T10:00:00.000Z"), timelineLimit: 30 });
 }
+
+test("Company answers keep canonical lifecycle and multiple active owners truthful", () => {
+  const snapshot = buildCompanyIntelligenceSnapshot({ organization, contacts: [contact], signals: [], opportunities: [
+    opportunity(), opportunity({ id: "opp-2", ownerProfileId: "profile-2", ownerName: "Ana Manager" }),
+    opportunity({ id: "closed", lifecycleStatus: "won", ownerProfileId: "closed-owner", ownerName: "Closed Owner" })
+  ] });
+  assert.equal(snapshot.identity.owner, null);
+  assert.equal(memory.answerCompanyQuestion(snapshot, "Care sunt oportunitățile active?").headline, "2 oportunități active");
+  const answer = memory.answerCompanyQuestion(snapshot, "Cine se ocupă de firmă?");
+  assert.match(answer.headline, /2 responsabili/);
+  assert.match(answer.answer, /Mihai Ionescu.*Ana Manager/);
+  assert.doesNotMatch(answer.answer, /Closed Owner/);
+  snapshot.coverage = { atLimit: true, responsibilityUnavailable: false };
+  assert.equal(memory.answerCompanyQuestion(snapshot, "Cine este contactul principal?").state, "insufficient");
+});
 
 test("company memory retains identity, current work, people, documents and bounded evidence", () => {
   const snapshot = richSnapshot();
@@ -136,15 +151,15 @@ test("server action re-authorizes the company and never turns the question into 
   assert.doesNotMatch(action, /\.from\(|\.rpc\(|service_role|businessId\s*[:=]\s*organizationId/i);
 });
 
-test("Company 360 prioritizes business memory before Ask and keeps only four memory subsections", () => {
+test("Company 360 prioritizes business memory before Ask and keeps a single decision with progressive disclosure", () => {
   const page = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const ui = read("src/components/company/CompanyContextualAsk.tsx");
   const memoryUi = read("src/components/company/CompanyBusinessMemory.tsx");
   assert.ok(page.indexOf("<CompanyBusinessMemory") < page.indexOf("<CompanyContextualAsk"));
   assert.match(ui, /Întreabă despre \{companyName\}/);
-  assert.match(ui, /limitat la datele autorizate ale acestei relații/i);
+  assert.match(ui, /schimba explicit aria în Workspace autorizat/i);
   assert.match(ui, /lockedContext=\{\{ pageType: "company", organizationId \}\}/);
   assert.match(read("src/components/intelligence/CopilotConversation.tsx"), /event\.key === "Enter"/);
-  for (const heading of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memoryUi, new RegExp(heading));
+  for (const heading of ["Ce contează acum", "CompanyEvidenceLine", "Alte situații de revizuit"]) assert.match(memoryUi, new RegExp(heading));
   assert.doesNotMatch(memoryUi, /De revizuit astăzi|Relație conectată|activity feed|memory model|\bnode\b|\bedge\b/i);
 });

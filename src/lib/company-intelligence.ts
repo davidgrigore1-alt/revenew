@@ -105,10 +105,12 @@ export type CompanyIntelligenceInput = {
   contacts: CrmContact[];
   opportunities: Opportunity[];
   signals: CommercialSignal[];
+  coverage?: { atLimit: boolean; responsibilityUnavailable: boolean };
 };
 
 export type CompanyIntelligenceSnapshot = {
   organization: CrmOrganization;
+  coverage?: { atLimit: boolean; responsibilityUnavailable: boolean };
   identity: {
     website: string | null;
     industry: string | null;
@@ -153,6 +155,7 @@ export type CompanyIntelligenceSnapshot = {
     title: string;
     status: Opportunity["status"];
     lifecycleStatus: Opportunity["lifecycleStatus"];
+    ownerProfileId: string | null;
     ownerName: string | null;
     estimatedValue: number;
     currency: string;
@@ -331,6 +334,7 @@ function timelineFrom(input: CompanyIntelligenceInput) {
 export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput, options: { now?: Date; timelineLimit?: number } = {}): CompanyIntelligenceSnapshot {
   const authorizedBusinessId = input.organization.businessId;
   input = {
+    coverage: input.coverage,
     organization: input.organization,
     contacts: input.contacts.filter((item) => item.businessId === authorizedBusinessId),
     opportunities: input.opportunities.filter((item) => item.businessId === authorizedBusinessId),
@@ -344,7 +348,9 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
   const recoveryQueue = buildRevenueRecoveryQueue(activeOpportunities, { now });
   const unresolvedSignals = input.signals.filter((signal) => unresolvedSignalStatuses.has(signal.status));
   const pendingApprovals = approvalCenterSignals(input.signals, "pending");
-  const primaryContact = input.contacts.find((contact) => contact.organizationId === input.organization.id && contact.isPrimaryForOrganization) ?? null;
+  const primaryCandidates = input.contacts.filter((contact) => contact.organizationId === input.organization.id && contact.isActive === true && contact.isPrimaryForOrganization === true);
+  const primaryContact = primaryCandidates.length === 1 ? primaryCandidates[0] : null;
+  const activeOwnerIds = new Set(activeOpportunities.map((item) => item.ownerProfileId).filter(Boolean));
   const timeline = timelineFrom(input);
   const latestActivity = timeline[0] ?? null;
   const inactivityDays = daysSince(latestActivity?.occurredAt ?? null, now);
@@ -380,7 +386,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
     attention.push({ id: `primary-contact:${input.organization.id}`, code: "missing_primary_contact", severity: "medium", title: "Nu există contact principal", description: "Compania nu are o persoană principală confirmată pentru continuitatea relației.", actionLabel: "Adaugă contact principal", href: "/contacts", occurredAt: input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
   }
   if (inactivityDays === null || inactivityDays > INACTIVITY_DAYS) {
-    attention.push({ id: `inactive:${input.organization.id}`, code: "inactive_company", severity: "medium", title: "Activitate comercială întârziată", description: inactivityDays === null ? "Nu există activitate comercială datată pentru această companie." : `Ultima activitate comercială este de acum ${inactivityDays} zile.`, actionLabel: "Revizuiește compania", href: organizationHref, occurredAt: latestActivity?.occurredAt ?? input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: latestActivity?.evidence ?? evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
+    attention.push({ id: `inactive:${input.organization.id}`, code: "inactive_company", severity: "medium", title: inactivityDays === null ? "Istoric comercial insuficient" : "Activitate comercială întârziată", description: inactivityDays === null ? "Nu există activitate comercială datată pentru această companie." : `Ultima activitate comercială este de acum ${inactivityDays} zile.`, actionLabel: "Revizuiește compania", href: organizationHref, occurredAt: latestActivity?.occurredAt ?? input.organization.updatedAt ?? input.organization.createdAt ?? null, evidence: latestActivity?.evidence ?? evidence("organization", input.organization.id, input.organization.updatedAt ?? input.organization.createdAt, `Profilul companiei „${input.organization.name}”`, organizationHref) });
   }
 
   const deduplicatedAttention: CompanyAttentionItem[] = Array.from(new Map<string, CompanyAttentionItem>(attention.map((item) => [`${item.code}:${item.evidence.sourceId}`, item])).values())
@@ -476,7 +482,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
 
   const contactRelationships = input.contacts.map((contact) => {
     const associations = input.opportunities.flatMap((opportunity) => (opportunity.contacts ?? []).filter((association) => association.contactId === contact.id));
-    return { id: contact.id, fullName: contact.fullName, jobTitle: contact.jobTitle ?? null, decisionRole: contact.decisionRole ?? null, isPrimary: Boolean(contact.isPrimaryForOrganization), opportunityRoles: Array.from(new Set(associations.map((association) => association.role).filter((role): role is string => Boolean(role)))), opportunityCount: new Set(associations.map((association) => association.opportunityId)).size, evidence: [evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, "/contacts"), ...associations.map((association) => evidence("opportunity_contact", association.id, association.updatedAt ?? association.createdAt, `Relația cu oportunitatea ${association.opportunityId}`, `/opportunities/${association.opportunityId}`))] };
+    return { id: contact.id, fullName: contact.fullName, jobTitle: contact.jobTitle ?? null, decisionRole: contact.decisionRole ?? null, isPrimary: contact.id === primaryContact?.id, opportunityRoles: Array.from(new Set(associations.map((association) => association.role).filter((role): role is string => Boolean(role)))), opportunityCount: new Set(associations.map((association) => association.opportunityId)).size, evidence: [evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, `/crm/contacts/${contact.id}`), ...associations.map((association) => evidence("opportunity_contact", association.id, association.updatedAt ?? association.createdAt, `Relația cu oportunitatea ${association.opportunityId}`, `/opportunities/${association.opportunityId}`))] };
   });
   const documents = input.opportunities.flatMap((opportunity) => opportunity.documents.map((document) => {
     const occurredAt = validTimestamp(document.sentAt) ?? validTimestamp(document.readyAt) ?? validTimestamp(document.editedAt) ?? validTimestamp(document.createdAt);
@@ -486,11 +492,12 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
 
   return {
     organization: input.organization,
-    identity: { website: input.organization.website ?? null, industry: input.organization.industry ?? null, location: [input.organization.city, input.organization.county, input.organization.country].filter(Boolean).join(", ") || null, owner: activeOpportunities.find((item) => item.ownerName)?.ownerName ?? null, primaryContact, contactCount: input.contacts.length, evidence: [organizationEvidence, ...input.contacts.map((contact) => evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, "/contacts")), ...activeOpportunities.filter((item) => item.ownerName).map((item) => evidence("opportunity", item.id, item.updatedAt ?? item.createdAt, `Responsabilul oportunității „${item.title}”`, `/opportunities/${item.id}`))] },
+    coverage: input.coverage,
+    identity: { website: input.organization.website ?? null, industry: input.organization.industry ?? null, location: [input.organization.city, input.organization.county, input.organization.country].filter(Boolean).join(", ") || null, owner: activeOwnerIds.size === 1 ? activeOpportunities.find((item) => item.ownerProfileId && item.ownerName)?.ownerName ?? null : null, primaryContact, contactCount: input.contacts.length, evidence: [organizationEvidence, ...input.contacts.map((contact) => evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, "/contacts")), ...activeOpportunities.filter((item) => item.ownerName).map((item) => evidence("opportunity", item.id, item.updatedAt ?? item.createdAt, `Responsabilul oportunității „${item.title}”`, `/opportunities/${item.id}`))] },
     commercial: { activeOpportunities: activeOpportunities.length, closedOpportunities: closedOpportunities.length, archivedOpportunities: archivedOpportunities.length, recoverableValueByCurrency, blockedOrOverdue: recoveryQueue.filter((item) => item.assessment.state === "blocked" || item.assessment.state === "at_risk" || item.primaryReason.code === "overdue_next_action").length, unresolvedSignals: unresolvedSignals.length, pendingApprovals: pendingApprovals.length, latestActivity, inactivityDays, evidence: [...input.opportunities.map((item) => evidence("opportunity", item.id, item.updatedAt ?? item.createdAt, `Oportunitatea „${item.title}”`, `/opportunities/${item.id}`)), ...input.signals.map((item) => evidence("commercial_signal", item.id, item.updatedAt ?? item.createdAt ?? item.occurredAt, `Semnalul „${item.title}”`, `/inbox?signal=${item.id}`))] },
     canonicalNextAction,
     contacts: contactRelationships,
-    opportunities: input.opportunities.map((opportunity) => { const next = selectPrimaryNextAction(opportunity.actions); return { id: opportunity.id, title: opportunity.title, status: opportunity.status, lifecycleStatus: opportunity.lifecycleStatus, ownerName: opportunity.ownerName ?? null, estimatedValue: opportunity.estimatedValueHigh, currency: opportunity.currency ?? "RON", nextActionTitle: next?.title ?? null, nextActionDueAt: next?.dueDate ?? null, href: `/opportunities/${opportunity.id}`, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, `/opportunities/${opportunity.id}`) }; }),
+    opportunities: input.opportunities.map((opportunity) => { const next = selectPrimaryNextAction(opportunity.actions); return { id: opportunity.id, title: opportunity.title, status: opportunity.status, lifecycleStatus: opportunity.lifecycleStatus, ownerProfileId: opportunity.ownerProfileId ?? null, ownerName: opportunity.ownerName ?? null, estimatedValue: opportunity.estimatedValueHigh, currency: opportunity.currency ?? "RON", nextActionTitle: next?.title ?? null, nextActionDueAt: next?.dueDate ?? null, href: `/opportunities/${opportunity.id}`, evidence: evidence("opportunity", opportunity.id, opportunity.updatedAt ?? opportunity.createdAt, `Oportunitatea „${opportunity.title}”`, `/opportunities/${opportunity.id}`) }; }),
     documents,
     signals: input.signals,
     approvalItems: pendingApprovals.map(({ signal }) => ({ signalId: signal.id, title: signal.title, href: `/approvals?signal=${signal.id}`, evidence: evidence("approval", signal.id, signal.reviewedAt ?? signal.updatedAt ?? signal.createdAt, `Aprobarea semnalului „${signal.title}”`, `/approvals?signal=${signal.id}`) })),
@@ -562,7 +569,7 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
   if (directOpportunitiesResult.error || linkedOpportunityResult.error) return { ready: false, snapshot: null, error: "Oportunitățile companiei nu au putut fi încărcate." };
   const directRows = (directOpportunitiesResult.data ?? []) as Row[];
   const directIds = new Set(directRows.map((row) => String(row.id)));
-  const linkedIds = ((linkedOpportunityResult.data ?? []) as Row[]).map((row) => String(row.opportunity_id)).filter((id) => !directIds.has(id));
+  const linkedIds = Array.from(new Set(((linkedOpportunityResult.data ?? []) as Row[]).map((row) => String(row.opportunity_id)).filter((id) => !directIds.has(id))));
   const linkedRowsResult = linkedIds.length > 0
     ? await supabase.from("opportunities").select("id,business_id,organization_id,title,type,status,lifecycle_status,commercial_type,owner_profile_id,currency,estimated_value_low,estimated_value_high,deadline,city,county,fit_score,urgency_score,money_score,confidence_score,summary,ai_summary,relevance,risks,recommended_action,raw_source_text,created_at,updated_at").eq("business_id", businessId).in("id", linkedIds).limit(50)
     : { data: [], error: null };
@@ -571,7 +578,8 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
   const opportunityIds = opportunityRows.map((row) => String(row.id));
   const signals = await getCommercialSignalsForOrganization(organizationId, { opportunityIds, contactIds });
 
-  if (opportunityIds.length === 0) return { ready: true, snapshot: buildCompanyIntelligenceSnapshot({ organization, contacts: directContacts, opportunities: [], signals }) };
+  const baseAtLimit = directContacts.length >= 50 || directRows.length >= 50 || (linkedOpportunityResult.data?.length ?? 0) >= 100 || (linkedRowsResult.data?.length ?? 0) >= 50;
+  if (opportunityIds.length === 0) return { ready: true, snapshot: buildCompanyIntelligenceSnapshot({ organization, contacts: directContacts, opportunities: [], signals, coverage: { atLimit: baseAtLimit, responsibilityUnavailable: false } }) };
 
   const [actionsResult, documentsResult, eventsResult, associationsResult, ownersResult] = await Promise.all([
     supabase.from("opportunity_actions").select("id,business_id,opportunity_id,type,title,description,status,due_at,priority,assigned_to_profile_id,created_at,updated_at,completed_at,cancelled_at").eq("business_id", businessId).in("opportunity_id", opportunityIds).order("due_at", { ascending: true, nullsFirst: false }).limit(100),
@@ -608,6 +616,11 @@ export async function getCompanyIntelligenceSnapshot(organizationId: string): Pr
     return mapOpportunity(row, actionsByOpportunity.get(id) ?? [], documentsByOpportunity.get(id) ?? [], eventsByOpportunity.get(id) ?? [], associationsByOpportunity.get(id) ?? [], ownerId ? ownerNames.get(ownerId) ?? null : null);
   });
   const connectedContacts = new Map(directContacts.map((contact) => [contact.id, contact]));
-  for (const association of associations) connectedContacts.set(association.contact.id, association.contact);
-  return { ready: true, snapshot: buildCompanyIntelligenceSnapshot({ organization, contacts: Array.from(connectedContacts.values()), opportunities, signals }) };
+  // Company membership and primary status come from the direct contact query.
+  // The opportunity association carries a narrower projection and a different primary flag.
+  for (const association of associations) {
+    if (!connectedContacts.has(association.contact.id)) connectedContacts.set(association.contact.id, association.contact);
+  }
+  const atLimit = baseAtLimit || (actionsResult.data?.length ?? 0) >= 100 || (documentsResult.data?.length ?? 0) >= 50 || (eventsResult.data?.length ?? 0) >= 50 || (associationsResult.data?.length ?? 0) >= 100;
+  return { ready: true, snapshot: buildCompanyIntelligenceSnapshot({ organization, contacts: Array.from(connectedContacts.values()), opportunities, signals, coverage: { atLimit, responsibilityUnavailable: Boolean(ownersResult.error) } }) };
 }

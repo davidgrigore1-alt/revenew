@@ -45,7 +45,7 @@ test("record details share compact identity and semantic tab patterns", () => {
   assert.match(summary, /<dl/);
   assert.match(tabs, /aria-current/);
   assert.match(tabs, /aria-\[current=page\]/);
-  assert.match(company, /<RecordSummaryBar/);
+  assert.match(company, /<CompanyIdentity/);
   assert.match(company, /<RecordTabs/);
   assert.match(contact, /<RecordSummaryBar/);
   assert.match(opportunity, /<RecordSummaryBar/);

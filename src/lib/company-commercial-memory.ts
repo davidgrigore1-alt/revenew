@@ -1,4 +1,6 @@
 import type { CompanyEvidence, CompanyIntelligenceSnapshot } from "@/lib/company-intelligence";
+import { isOpenOpportunity } from "@/lib/opportunity-domain";
+import { companyBriefing } from "@/lib/company-briefing";
 
 export type CompanyQuestionIntent =
   | "active_opportunities"
@@ -21,8 +23,6 @@ export type CompanyQuestionAnswer = {
   missingInformation: string[];
   continuation?: { label: string; href: string };
 };
-
-const activeStatuses = new Set(["new", "qualified", "proposal", "contacted", "negotiation"]);
 
 export function normalizeCompanyQuestion(value: string) {
   return value
@@ -65,7 +65,7 @@ function insufficient(intent: CompanyQuestionIntent, headline: string, answer: s
 export function suggestedCompanyQuestions(snapshot: CompanyIntelligenceSnapshot) {
   const suggestions: string[] = ["Ce s-a întâmplat recent?"];
   if (snapshot.memory.openLoops.length > 0) suggestions.push("Ce a rămas nerezolvat?");
-  if (snapshot.opportunities.some((item) => item.lifecycleStatus === "open" || activeStatuses.has(item.status))) suggestions.push("Care sunt oportunitățile active?");
+  if (snapshot.opportunities.some(isOpenOpportunity)) suggestions.push("Care sunt oportunitățile active?");
   if (snapshot.identity.primaryContact) suggestions.push("Cine este contactul principal?");
   if (snapshot.documents.length > 0) suggestions.push("Ce documente avem?");
   if (suggestions.length < 4) suggestions.push("Care este următorul pas?");
@@ -75,7 +75,8 @@ export function suggestedCompanyQuestions(snapshot: CompanyIntelligenceSnapshot)
 export function answerCompanyQuestion(snapshot: CompanyIntelligenceSnapshot, question: string): CompanyQuestionAnswer {
   const intent = classifyCompanyQuestion(question);
   const organizationHref = `/crm/organizations/${snapshot.organization.id}`;
-  const activeOpportunities = snapshot.opportunities.filter((item) => item.lifecycleStatus === "open" || activeStatuses.has(item.status));
+  const activeOpportunities = snapshot.opportunities.filter(isOpenOpportunity);
+  if (snapshot.coverage?.atLimit && intent !== "unknown") return insufficient(intent, "Context comercial parțial", "Una dintre liste a atins limita de încărcare. Datele curente nu susțin un răspuns complet despre această relație.", ["Acoperire completă a înregistrărilor asociate"], { label: "Revizuiește compania", href: organizationHref });
 
   if (intent === "active_opportunities") {
     if (activeOpportunities.length === 0) return insufficient(intent, "Nu există oportunități active înregistrate", "Nu am identificat o oportunitate activă asociată explicit acestei companii.", ["Oportunitate activă asociată companiei"], { label: "Revizuiește compania", href: organizationHref });
@@ -98,6 +99,10 @@ export function answerCompanyQuestion(snapshot: CompanyIntelligenceSnapshot, que
   }
 
   if (intent === "relationship_owner") {
+    const responsibility = companyBriefing(snapshot);
+    if (snapshot.coverage?.responsibilityUnavailable) return insufficient(intent, "Identități indisponibile", "Responsabilii nu au putut fi verificați în datele încărcate.", ["Identitatea responsabililor"], { label: "Revizuiește compania", href: organizationHref });
+    if (responsibility.owners.length > 1) return { intent, state: "answered", headline: responsibility.responsibility, answer: responsibility.owners.map(owner => owner.name ?? "Identitate neconfirmată").join(" · "), evidence: uniqueEvidence(activeOpportunities.filter(item => item.ownerProfileId).map(item => item.evidence)), missingInformation: responsibility.owners.some(owner => !owner.name) ? ["Identitatea unui responsabil"] : [], continuation: { label: "Revizuiește oportunitățile", href: `${organizationHref}?tab=opportunities` } };
+    if (responsibility.owners.length === 1 && !responsibility.owners[0].name) return insufficient(intent, "Identitate neconfirmată", "Există un responsabil atribuit unei oportunități active, dar numele lui nu este disponibil.", ["Identitatea responsabilului"], { label: "Deschide oportunitatea", href: responsibility.owners[0].href });
     if (!snapshot.identity.owner) return insufficient(intent, "Nu există responsabil comercial confirmat", "Nicio oportunitate activă asociată nu are un responsabil disponibil în datele curente.", ["Responsabil comercial confirmat"], snapshot.opportunities[0] ? { label: "Atribuie responsabil", href: snapshot.opportunities[0].href } : { label: "Revizuiește compania", href: organizationHref }, snapshot.identity.evidence);
     const ownerEvidence = snapshot.identity.evidence.filter((item) => item.sourceType === "opportunity");
     return { intent, state: "answered", headline: snapshot.identity.owner, answer: "Responsabil identificat din oportunitățile active asociate companiei.", evidence: uniqueEvidence(ownerEvidence), missingInformation: [], continuation: activeOpportunities[0] ? { label: "Deschide oportunitatea", href: activeOpportunities[0].href } : undefined };

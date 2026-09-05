@@ -93,7 +93,7 @@ test("Add Company uses Romanian inline website validation instead of native URL 
 });
 
 test("Company 360 remains protected and presents empty and populated operating contexts", () => {
-  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx") + read("src/components/company/CompanyBriefing.tsx");
   const loader = read("src/lib/company-intelligence.ts");
   const policy = read("src/lib/authz/route-policies.ts");
   assert.match(policy, /prefix: "\/crm"[\s\S]*permission: "workspace\.read"/);
@@ -111,14 +111,14 @@ test("Company 360 remains protected and presents empty and populated operating c
 
 test("company wayfinding exposes a primary record link and accessible breadcrumbs", () => {
   const client = read("src/components/crm/CrmWorkspaceClient.tsx");
-  const companyRoute = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const companyRoute = read("src/components/company/CompanyBriefing.tsx");
   const opportunityRoute = read("src/app/(protected)/opportunities/[id]/page.tsx");
   const breadcrumbs = read("src/components/dashboard/Breadcrumbs.tsx");
 
   assert.match(client, /<Link href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}/);
   assert.match(client, /<table[\s\S]*?<caption[\s\S]*?<thead[\s\S]*?<tbody/);
   assert.doesNotMatch(client, /role="row"/);
-  assert.match(companyRoute, /breadcrumbs=\{\[\{ label: "Companii", href: "\/companies" \}/);
+  assert.match(companyRoute, /items=\{\[\{ label: "Companii", href: "\/companies" \}/);
   assert.match(opportunityRoute, /breadcrumbs=\{\[\{ label: [^,]+, href: "\/opportunities" \}/);
   assert.match(breadcrumbs, /aria-label="Navigare contextual/);
   assert.match(breadcrumbs, /aria-current=\{current \? "page" : undefined\}/);
@@ -134,11 +134,11 @@ test("dashboard stays sparse with direct entries to Today and Opportunities", ()
 });
 
 test("Company 360 connects each attention item to its evidence-backed source route", () => {
-  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
+  const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx") + read("src/components/company/CompanyBriefing.tsx");
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
   const intelligence = read("src/lib/company-intelligence.ts");
   assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\}/);
-  assert.match(memory, /const href = item\.href \?\? item\.evidence\.href/);
+  assert.match(memory, /companySourceHref\(item\.href \?\? item\.evidence\.href\)/);
   assert.match(memory, /<Link href=\{href\}/);
   assert.match(memory, /label=\{item\.evidence\.label\}/);
   assert.match(intelligence, /href: `\/opportunities\/\$\{opportunity\.id\}/);

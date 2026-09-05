@@ -60,6 +60,11 @@ function loadPresentation(relativePath, snapshot) {
     require: (id) => {
       if (id === "next/navigation") return { useRouter: () => ({ refresh() {} }), notFound: () => { throw new Error("unexpected_not_found"); } };
       if (id === "next/link") return component;
+      if (id.endsWith(".css")) return { __esModule: true, default: {} };
+      if (id === "./CompanyBusinessMemory") return components;
+      if (id === "@/lib/company-briefing") return load("src/lib/company-briefing.ts");
+      if (id === "@/lib/opportunity-domain") return load("src/lib/opportunity-domain.ts");
+      if (id === "@/components/dashboard/StatusBadge") return { getStatusLabel: value => value };
       if (id.startsWith("@/components/") || id.startsWith("@heroicons/")) return components;
       if (id === "@/lib/company-intelligence") return { getCompanyIntelligenceSnapshot: async () => ({ ready: true, snapshot }) };
       if (id === "@/lib/company-commercial-memory") return { suggestedCompanyQuestions: () => [] };
@@ -75,9 +80,10 @@ function loadPresentation(relativePath, snapshot) {
 }
 
 async function companySummary(snapshot) {
-  const page = loadPresentation("src/app/(protected)/crm/organizations/[id]/page.tsx", snapshot).default;
-  const tree = await page({ params: Promise.resolve({ id: snapshot.organization.id }) });
-  return tree.props.children.find((child) => child?.props?.label === "Identitatea comercială a companiei").props.items;
+  const React = nodeRequire("react");
+  const { renderToStaticMarkup } = nodeRequire("react-dom/server");
+  const { CompanyIdentity, CompanyPeople } = loadPresentation("src/components/company/CompanyBriefing.tsx", snapshot);
+  return renderToStaticMarkup(React.createElement(React.Fragment, null, React.createElement(CompanyIdentity, { snapshot }), React.createElement(CompanyPeople, { snapshot })));
 }
 
 function organization(overrides = {}) {
@@ -103,7 +109,7 @@ function contact(overrides = {}) {
     fullName: "Ana Pop",
     jobTitle: "Director comercial",
     decisionRole: "decision_maker",
-    isPrimaryForOrganization: true,
+    isActive: true, isPrimaryForOrganization: true,
     ...overrides
   };
 }
@@ -229,7 +235,7 @@ test("pending approval remains an explicit human decision and never becomes exec
   assert.equal(snapshot.approvalItems[0].href, "/approvals?signal=signal-1");
   assert.equal(snapshot.canonicalNextAction.href, "/approvals?signal=signal-1");
   const page = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
-  assert.match(page, /Nicio acțiune externă automată/);
+  assert.match(read("src/components/company/CompanyBusinessMemory.tsx"), /Acțiunea rămâne sub controlul echipei/);
   assert.doesNotMatch(page, /sendEmail|sendSms|webhook|fetch\s*\(/i);
 });
 
@@ -258,8 +264,8 @@ test("Company 360 exposes a bounded executive decision layer instead of raw feed
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
   assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\} executiveDecision=\{snapshot\.executiveDecision\}/);
-  for (const label of ["De reținut", "Bucle deschise", "Dovezi recente", "Informații lipsă"]) assert.match(memory, new RegExp(label));
-  assert.match(memory, /Bazat pe:/);
+  for (const label of ["Ce contează acum", "CompanyEvidenceLine", "Alte situații de revizuit"]) assert.match(memory, new RegExp(label));
+  assert.match(memory, /Sursă:/);
   assert.doesNotMatch(route, /snapshot\.timeline\.map|snapshot\.signals\.slice/);
 });
 
@@ -271,16 +277,18 @@ test("Company 360 displays canonical active count and identifies opportunity-der
   assert.equal(snapshot.opportunities.length, 5);
   assert.equal(snapshot.commercial.activeOpportunities, 1);
   const items = await companySummary(snapshot);
-  assert.equal(items.find((item) => item.label === "Oportunități active").value, 1);
-  assert.equal(items.find((item) => item.label === "Responsabil din oportunitate activă").value, "Responsabil activ");
-  assert.equal(items.some((item) => item.label === "Responsabil"), false);
+  assert.match(items, /<strong>1<\/strong> oportunitate activă/);
+  assert.match(items, /Responsabilitate din oportunități active/);
+  assert.match(items, /Responsabil activ/);
+  assert.doesNotMatch(items, /Responsabil închis/);
+  assert.doesNotMatch(items, /Responsabilul companiei/);
 });
 
 test("Company 360 keeps missing responsibility unassigned and does not promote closed owners", async () => {
   const snapshot = buildCompanyIntelligenceSnapshot({ organization: organization(), contacts: [], opportunities: [opportunity({ lifecycleStatus: "won" })], signals: [] });
   const items = await companySummary(snapshot);
-  assert.equal(items.find((item) => item.label === "Oportunități active").value, 0);
-  assert.equal(items.find((item) => item.label === "Responsabil din oportunitate activă").value, "Neatribuit");
+  assert.match(items, /<strong>0<\/strong> oportunități active/);
+  assert.match(items, /Neatribuit/);
 });
 
 test("company relationship presentation preserves unknown and explicitly stored values across surfaces", async () => {
@@ -291,7 +299,7 @@ test("company relationship presentation preserves unknown and explicitly stored 
     const company = organization({ relationshipStatus });
     const snapshot = buildCompanyIntelligenceSnapshot({ organization: company, contacts: [], opportunities: [], signals: [] });
     const items = await companySummary(snapshot);
-    assert.equal(items.find((item) => item.label === "Relație").value, expected);
+    assert.ok(items.includes(`Relație · ${expected}`));
     const html = renderToStaticMarkup(React.createElement(CrmWorkspaceClient, { organizations: [company], contacts: [], view: "companies" }));
     const mobile = html.match(/<ul\b[\s\S]*?<\/ul>/)?.[0];
     const desktop = html.match(/<tbody\b[\s\S]*?<\/tbody>/)?.[0];
