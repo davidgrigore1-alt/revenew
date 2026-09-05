@@ -6,7 +6,8 @@ export type ButtonProps = {
   href?: string;
   children: ReactNode;
   variant?: "primary" | "intelligence" | "secondary" | "ghost" | "danger";
-  size?: "small" | "default" | "large" | "icon";
+  size?: "small" | "compact" | "default" | "large" | "icon";
+  fullWidth?: boolean;
   className?: string;
   type?: "button" | "submit" | "reset";
   onClick?: () => void;
@@ -28,9 +29,10 @@ const variants = {
 };
 
 const sizes = {
-  small: "h-[var(--control-height-compact)] px-3 text-label",
-  default: "h-[var(--control-height)] px-4 text-sm",
-  large: "min-h-12 px-5 text-sm",
+  small: "min-h-[var(--control-height-compact)] px-3 py-1 text-label",
+  compact: "min-h-[var(--control-height-compact)] px-3 py-1 text-label",
+  default: "min-h-[var(--control-height)] px-4 py-1.5 text-sm",
+  large: "min-h-12 px-5 py-2 text-sm",
   icon: "h-8 w-8 p-0"
 };
 
@@ -44,28 +46,34 @@ export function Button({
   onClick,
   disabled = false,
   loading = false,
+  fullWidth = false,
   ...accessibilityProps
 }: ButtonProps) {
   const unavailable = disabled || loading;
   const classes = cn(
-    "focus-ring inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold transition-[background-color,border-color,color,transform] duration-fast ease-standard hover:-translate-y-px active:translate-y-0 active:scale-[0.985] disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transform-none",
+    "rn-button focus-ring relative inline-flex max-w-full shrink-0 self-start justify-self-start items-center justify-center gap-2 rounded-control font-semibold transition-colors duration-100 motion-reduce:transition-none",
     variants[variant],
     sizes[size],
-    unavailable && href && "pointer-events-none opacity-55",
+    fullWidth && "w-full",
     className
   );
+
+  const content = <><span className="rn-button-label inline-flex min-w-0 items-center justify-center gap-2">{children}</span>{loading ? <span aria-hidden="true" className="rn-button-spinner absolute size-4 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none" /> : null}</>;
+
+  // An unavailable navigation action must not retain an activatable destination.
+  if (href && unavailable) {
+    return <span role="link" aria-disabled="true" aria-busy={loading || undefined} data-loading={loading || undefined} className={classes} {...accessibilityProps}>{content}</span>;
+  }
 
   if (href) {
     return (
       <Link
         href={href}
         className={classes}
-        tabIndex={unavailable ? -1 : undefined}
-        onClick={unavailable ? undefined : onClick}
-        aria-disabled={unavailable || undefined}
+        onClick={onClick}
         {...accessibilityProps}
       >
-        {children}
+        {content}
       </Link>
     );
   }
@@ -77,9 +85,10 @@ export function Button({
       onClick={onClick}
       disabled={unavailable}
       aria-busy={loading || undefined}
+      data-loading={loading || undefined}
       {...accessibilityProps}
     >
-      {children}
+      {content}
     </button>
   );
 }

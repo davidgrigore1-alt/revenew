@@ -32,7 +32,7 @@ export function MobileNav({ items = primaryNavigation }: { items?: NavigationIte
             className={cn(
               "focus-ring flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-control px-1 text-[0.6875rem] font-semibold transition-colors duration-fast",
               active
-                ? "bg-[rgb(var(--interaction-tint))] text-[rgb(var(--interaction-hover))]"
+                ? "bg-[rgb(var(--selection-tint))] text-[rgb(var(--selection))]"
                 : "text-[rgb(var(--text-muted))] active:bg-[rgb(var(--surface-muted))]"
             )}
           >

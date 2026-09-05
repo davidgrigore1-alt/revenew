@@ -27,7 +27,7 @@ test("Light V2 centralizes the true-white, interaction, and intelligence roles",
     "--intelligence-tint: var(--rn-accent-50);"
   ]) assert.match(css, new RegExp(contract.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(css, /--primary: var\(--rn-accent-700\);/);
-  assert.match(css, /--focus-ring: var\(--interaction\);/);
+  assert.match(css, /--focus-ring: var\(--rn-accent-ring\);/);
 });
 
 test("shared Select matches the trigger and retains anchored accessible behavior", () => {

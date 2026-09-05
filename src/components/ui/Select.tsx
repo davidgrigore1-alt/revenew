@@ -6,6 +6,7 @@ import {
   isValidElement,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -119,7 +120,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const native = useRef<HTMLSelectElement | null>(null);
     const menu = useRef<HTMLDivElement>(null);
 
-    const choices = choicesOf(children);
+    const choices = useMemo(() => choicesOf(children), [children]);
 
     const [current, setCurrent] = useState(
       String(value ?? defaultValue ?? choices[0]?.value ?? ""),
@@ -535,9 +536,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           }
           onKeyDown={keyDown}
           className={cn(
-            "focus-ring flex w-full items-center justify-between gap-2 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1 text-left text-sm font-normal text-[rgb(var(--foreground))] transition-colors hover:border-[rgb(var(--border-strong))] disabled:cursor-not-allowed disabled:opacity-50",
-            (invalid || validationError) &&
-              "border-[rgb(var(--danger-border))]",
+            "rn-field focus-ring flex w-full items-center justify-between gap-2 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1 text-left text-sm font-normal text-[rgb(var(--foreground))] transition-colors duration-fast motion-reduce:transition-none hover:border-[rgb(var(--border-strong))] disabled:cursor-not-allowed disabled:bg-[rgb(var(--surface-muted))] disabled:text-[rgb(var(--text-muted))]",
             density === "compact"
               ? "h-[var(--control-height-compact)]"
               : "h-[var(--control-height)]",
@@ -618,9 +617,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                       }
                       onClick={() => choose(index)}
                       className={cn(
-                        "flex min-h-9 cursor-pointer items-center justify-between gap-3 rounded-[5px] px-3 py-2 text-xs leading-5 text-[rgb(var(--foreground))] transition-colors",
+                        "flex min-h-9 cursor-pointer items-center justify-between gap-3 rounded-[5px] px-3 py-2 text-xs leading-5 text-[rgb(var(--foreground))] transition-colors duration-fast motion-reduce:transition-none",
                         index === active &&
-                          "bg-[rgb(var(--interaction-tint))] ring-1 ring-inset ring-[rgb(var(--interaction-border))]",
+                          "bg-[rgb(var(--selection-tint))] ring-1 ring-inset ring-[rgb(var(--selection-border))]",
                         choice.disabled &&
                           "cursor-not-allowed opacity-40",
                       )}
@@ -633,7 +632,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                       selected?.value ? (
                         <CheckIcon
                           aria-hidden="true"
-                          className="h-4 w-4 shrink-0 text-[rgb(var(--interaction))]"
+                          className="h-4 w-4 shrink-0 text-[rgb(var(--selection))]"
                         />
                       ) : null}
                     </div>

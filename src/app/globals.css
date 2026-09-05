@@ -164,7 +164,10 @@
   --motion-slow: var(--motion-panel);
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --focus-ring: var(--interaction);
+  --selection: var(--rn-accent-700);
+  --selection-tint: var(--selection) / .08;
+  --selection-border: var(--selection) / .45;
+  --focus-ring: var(--rn-accent-ring);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
   --primary-soft: var(--primary-muted);
@@ -232,7 +235,10 @@
   --danger-border: 132 45 51;
   --danger-solid: 185 45 45;
   --danger-solid-hover: 153 34 34;
-  --focus-ring: var(--interaction);
+  --selection: var(--rn-accent-400);
+  --selection-tint: var(--selection) / .12;
+  --selection-border: var(--selection) / .45;
+  --focus-ring: var(--rn-accent-400);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.34), 0 10px 26px rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.42);
   --shadow-modal: 0 28px 90px rgba(0, 0, 0, 0.58);
@@ -374,6 +380,22 @@ body {
   outline-color: rgb(var(--focus-ring));
 }
 
+/* Shared controls: native state drives decoration, including form reset. */
+.rn-button[disabled], .rn-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .7;
+}
+.rn-button[data-loading="true"] > .rn-button-label { opacity: 0; }
+.rn-button-label { overflow-wrap: anywhere; }
+:where(.rn-button-label > svg) { width: 1rem; height: 1rem; flex-shrink: 0; }
+.rn-field[aria-invalid]:not([aria-invalid="false"]) {
+  border-color: rgb(var(--danger-border));
+}
+.rn-checkbox-check, .rn-checkbox-mixed { display: none; }
+.rn-checkbox > input:checked + .rn-checkbox-mark > .rn-checkbox-check { display: block; }
+.rn-checkbox > input:indeterminate + .rn-checkbox-mark > .rn-checkbox-check { display: none; }
+.rn-checkbox > input:indeterminate + .rn-checkbox-mark > .rn-checkbox-mixed { display: block; }
+
 [data-revenew-guide-highlight="true"] {
   outline: 2px solid rgb(var(--rn-accent));
   outline-offset: 4px;
@@ -410,7 +432,7 @@ body {
   transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
 }
 .product-interactive-row:hover { background: rgb(var(--surface-muted) / .72); }
-.product-interactive-row[aria-selected="true"] { background: rgb(var(--surface-selected)); box-shadow: inset 2px 0 0 rgb(var(--interaction)); }
+.product-interactive-row[aria-selected="true"] { background: rgb(var(--surface-selected)); box-shadow: inset 2px 0 0 rgb(var(--selection)); }
 .operating-section { border-top: 1px solid rgb(var(--border)); border-bottom: 1px solid rgb(var(--border)); }
 .operating-row { position: relative; display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-3); }
 .operating-row + .operating-row { border-top: 1px solid rgb(var(--border)); }
@@ -438,6 +460,10 @@ body {
 
 /* Authenticated shell: graphite navigation stays stable across product surfaces. */
 :root:not(.dark) .authenticated-sidebar {
+  --selection: var(--rn-accent-400);
+  --selection-tint: var(--selection) / .08;
+  --selection-border: var(--selection) / .45;
+  --focus-ring: var(--rn-accent-400);
   --sidebar: 46 49 58;
   --background: 46 49 58;
   --background-soft: 52 56 65;

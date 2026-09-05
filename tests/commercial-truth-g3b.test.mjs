@@ -314,7 +314,7 @@ test("G3C.1 commercial UI separates current/resolved/history and reuses shared c
  const history=read("src/components/recovery/ImpactSurface.tsx");
  assert.match(history,/Înainte · la detectare/);assert.match(history,/model.actorNames\[e.actor_profile_id\]/);
  assert.match(history,/<summary[^>]*>Detalii tehnice<\/summary><p>Actor:/);
- assert.match(read("src/components/ui/ActionToolbar.tsx"),/h-8/);assert.match(read("src/components/ui/Button.tsx"),/small: "h-\[var\(--control-height-compact\)\]/);
+ assert.match(read("src/components/ui/ActionToolbar.tsx"),/h-8/);assert.match(read("src/components/ui/Button.tsx"),/small: "min-h-\[var\(--control-height-compact\)\]/);
 });
 
 test("G3C.1 current CRM facts do not expire with record age and an undated action is not a missing action",()=>{

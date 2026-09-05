@@ -68,7 +68,7 @@ export function ShellNavigation({
                       ? "min-h-8 gap-2 px-2 text-label"
                       : "min-h-9 gap-3 px-3 text-sm",
                     active
-                      ? "border-[rgb(var(--interaction-border)/0.72)] bg-[rgb(var(--interaction-tint)/0.72)] text-[rgb(var(--foreground))] before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-[rgb(var(--interaction))] dark:border-[rgb(var(--border)/0.72)] dark:bg-[rgb(var(--surface-selected)/0.82)]"
+                      ? "border-[rgb(var(--selection-border))] bg-[rgb(var(--selection-tint))] text-[rgb(var(--foreground))] before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-[rgb(var(--selection))] dark:border-[rgb(var(--border)/0.72)] dark:bg-[rgb(var(--surface-selected)/0.82)]"
                       : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"
                   )}
                 >
@@ -80,7 +80,7 @@ export function ShellNavigation({
                         : "h-[18px] w-[18px]",
                       "shrink-0",
                       active
-                        ? "text-[rgb(var(--interaction))] dark:text-[rgb(var(--text-secondary))]"
+                        ? "text-[rgb(var(--selection))] dark:text-[rgb(var(--text-secondary))]"
                         : "text-[rgb(var(--text-muted))] group-hover:text-[rgb(var(--foreground))]"
                     )}
                   />
