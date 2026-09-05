@@ -209,7 +209,7 @@ async function executionContextTool(args: Record<string, unknown>, context: Tool
     const contact = crm.ready ? crm.contacts.find((item) => item.id === context.page.contactId) : null;
     if (!contact) return empty("get_execution_context", ["Contactul nu este disponibil în contextul autorizat."]);
     const linked = summary.opportunities.filter((item) => item.contacts?.some((link) => link.contact.id === contact.id)).slice(0, 5);
-    const sources = linked.map((item) => source({ sourceId: `contact-opportunity:${item.id}`, recordId: item.id, label: item.title, sourceType: "Oportunitate", route: `/opportunities/${item.id}`, fact: `${item.title} este asociată explicit cu ${contact.fullName}. Responsabil: ${item.ownerName ?? "neconfirmat"}.` }));
+    const sources = linked.map((item) => source({ sourceId: `contact-opportunity:${item.id}`, recordId: item.id, label: item.title, sourceType: "Oportunitate", route: `/opportunities/${item.id}`, fact: `${item.title} este asociată explicit cu ${contact.fullName}. Responsabil: ${item.ownerName ?? "neconfirmat"}. Valoare estimată ${item.estimatedValueHigh} ${item.currency ?? "RON"}; stare ${item.status}; pas recomandat: ${item.recommendedAction ?? "necompletat"}.` }));
     sources.unshift(source({ sourceId: `contact:${contact.id}`, recordId: contact.id, label: contact.fullName, sourceType: "Contact", route: `/crm/contacts/${contact.id}`, fact: `${contact.fullName}${contact.organization?.name ? ` · ${contact.organization.name}` : " · Companie neconfirmată"}. ${linked.length ? "Oportunitățile asociate sunt disponibile în context." : "Nicio oportunitate asociată în datele vizibile."}` }));
     return { toolName: "get_execution_context", state: "ready", data: { ...baseData }, sources, checkedSources: universal.sourceChecks, missingInformation: linked.length ? [] : ["Nicio oportunitate asociată explicit acestui contact în datele vizibile."], preparedAction: null, suggestedAction: { label: "Deschide contactul", route: `/crm/contacts/${contact.id}` } };
   }
@@ -391,9 +391,12 @@ async function companyTool(args: Record<string, unknown>, context: ToolExecution
   ]);
   if (!result.ready || !result.snapshot) return empty("get_company_context", ["Compania nu este disponibilă în spațiul de lucru autorizat."]);
   const snapshot = result.snapshot;
+  const associated=universal.summary.opportunities.filter(o=>o.organizationId===organizationId);
   const memoryItems = [...snapshot.memory.mustRemember, ...snapshot.memory.openLoops].filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index).slice(0, 8);
   const recent = snapshot.memory.recentEvidence.slice(0, 6);
   const sources = [
+    source({sourceId:`company:${organizationId}`,recordId:organizationId,label:snapshot.organization.name,sourceType:"Companie",route:`/crm/organizations/${organizationId}`,fact:`Compania selectată: ${snapshot.organization.name}. În setul autorizat încărcat: ${associated.length} oportunități. Recomandări înregistrate (nu acțiuni programate): ${associated.filter(o=>o.recommendedAction).slice(0,4).map(o=>`${o.title}: ${o.recommendedAction}`).join("; ")||"necompletate"}.`}),
+    ...associated.slice(0,5).map(o=>source({sourceId:`opportunity:${o.id}`,recordId:o.id,label:o.title,sourceType:"Oportunitate",route:`/opportunities/${o.id}`,observedAt:o.updatedAt,fact:`${o.title}, asociată explicit cu ${snapshot.organization.name}. Valoare estimată ${o.estimatedValueHigh} ${o.currency??"RON"}; stare ${o.status}; responsabil ${o.ownerName??"neconfirmat"}; pas recomandat ${o.recommendedAction??"necompletat"}.`})),
     ...memoryItems.map((item) => source({ sourceId: `company:${organizationId}:memory:${item.id}`, label: item.evidence.label, sourceType: "Memorie comercială", route: item.href ?? item.evidence.href ?? `/crm/organizations/${organizationId}`, fact: `${item.title}. ${item.description}` })),
     ...recent.map((item) => source({ sourceId: `company:${organizationId}:timeline:${item.id}`, label: item.evidence.label, sourceType: "Istoric comercial", route: item.href ?? item.evidence.href ?? `/crm/organizations/${organizationId}`, fact: `${item.label}. ${item.description}` })),
     ...external.emails.slice(0, 3).map((item) => source({

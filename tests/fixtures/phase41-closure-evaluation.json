@@ -1,0 +1,20 @@
+{
+  "version": "phase4.1-closure/1",
+  "originalManifest": "tests/fixtures/phase4-evaluation.json",
+  "maximumApplicationRequests": 10,
+  "provider": "ollama",
+  "model": "qwen3.5:9b",
+  "paidSpendUSD": 0,
+  "cases": [
+    {"id":"C01","context":"Conflict.csv + authorized CRM","question":"Compară valoarea estimată din această sursă cu CRM. Există un dezacord comparabil?","expect":"ai synthesis; genuine_conflict; explicit canonical ID; 1300 RON versus 1200 RON; same observation time; both sources; no automatic winner"},
+    {"id":"C02","context":"Compatible.csv + authorized CRM","question":"Compară evenimentul de comunicare din sursă cu starea operațională CRM. Se contrazic?","expect":"ai synthesis; compatible_detail; sent offer and reviewed describe different dimensions; no fabricated contradiction"},
+    {"id":"C03","context":"Identity.csv + authorized CRM","question":"Compară această oportunitate cu CRM.","expect":"two authorized identity candidates; no automatic choice or model required; no comparison before selection"},
+    {"id":"C04","context":"C03 explicit first candidate selection","question":"Compară înregistrarea selectată cu sursa.","expect":"signed selection; fresh authorization; ai synthesis; match for original 1200 RON record; no persistent entity link"},
+    {"id":"C05","context":"Orion Systems company","question":"Care sunt oportunitățile asociate explicit companiei și ce pas comercial este recomandat?","expect":"ai synthesis with actual explicitly linked opportunities, owner or missing owner and grounded recommendation; no unsupported Company absence"},
+    {"id":"C06","context":"Dana Ionescu contact","question":"Ce oportunitate este asociată explicit acestui contact și care este pasul recomandat?","expect":"ai synthesis; explicit opportunity_contacts link; original Orion opportunity and contractual clarification; no fuzzy name matching"},
+    {"id":"C07","context":"Reports","question":"Ce arată raportul despre revizuirea comercială și execuția echipei? Care sunt situațiile de decis și limitele acoperirii?","expect":"ai synthesis using canonical current review and decision evidence, scoped counts; no historical trend or revenue invention; more than follow-up metrics"},
+    {"id":"C08","context":"Intelligence.xlsx pinned version","question":"Care este suma valorilor din Pipeline, separat pe monede?","expect":"ai synthesis; server totals 660.30 RON and 3 EUR across retained 36 rows"},
+    {"id":"C09","context":"C08 follow-up","question":"Și doar din București?","expect":"ai synthesis; signed sum intent retained, fresh retrieval; 320.10 RON and 3 EUR"},
+    {"id":"C10","context":"C09 second follow-up","question":"Și doar în RON?","expect":"ai synthesis; city and sum operation retained, fresh retrieval; 320.10 RON; no currency mixing"}
+  ]
+}

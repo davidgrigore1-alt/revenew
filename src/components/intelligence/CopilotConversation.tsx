@@ -1,5 +1,6 @@
 "use client";
 
+import { IntelligenceComparisonView } from "./IntelligenceComparisonView";
 import Link from "next/link";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowRightIcon, ClockIcon, DocumentTextIcon, ShieldCheckIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -141,7 +142,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
     return () => { window.clearTimeout(cardsTimer); window.clearTimeout(detailsTimer); };
   }, [activeResponseId]);
 
-  async function ask(value: string, prepare = false) {
+  async function ask(value: string, prepare = false, candidateSelectionId?: string) {
     const normalized = value.trim();
     if (normalized.length < 2 || loading) return;
     setQuestion(normalized);
@@ -151,7 +152,7 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
     setPrepareReview(null);
     const history: CopilotConversationTurn[] = conversation.slice(0, 4).reverse().flatMap((item) => [{ role: "user" as const, content: item.question }, { role: "assistant" as const, content: item.answer.answer }]);
     try {
-      const response = await fetch("/api/ai/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ question: normalized, context, history, preparationIntent: !context.documentSourceId && prepare, ...(selection ? { selection } : {}) }) });
+      const response = await fetch("/api/ai/copilot", { method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ question: normalized, context, history, ...(!prepare && conversation[0]?.answer.analysisToken ? {analysisToken:conversation[0].answer.analysisToken} : {}), ...(candidateSelectionId ? {candidateSelectionId} : {}), preparationIntent: !context.documentSourceId && prepare, ...(selection ? { selection } : {}) }) });
       const payload = await response.json() as CopilotAnswer | { error?: string };
       if (!response.ok || !("answer" in payload)) throw new Error("Nu am putut finaliza verificarea. Datele și acțiunile existente au rămas neschimbate.");
       if (payload.multiRecordResult) setSelection({ resultSetId: payload.multiRecordResult.resultSetId, selectedRecordIds: [] });
@@ -226,12 +227,13 @@ export function CopilotConversation({ className, lockedContext, contextLabel, au
                 <h4 className="text-xs font-semibold text-[rgb(var(--foreground))]">Concluzie ReveNew</h4>
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--text-secondary))]">
                   <ShieldCheckIcon className="h-3.5 w-3.5 text-[rgb(var(--intelligence-strong))] dark:text-[rgb(var(--intelligence))]" aria-hidden="true" />
-                  {item.answer.mode === "ai" ? "Sinteză cu model" : item.answer.summaryType === "product_help" ? "Context produs" : item.answer.summaryType === "insufficient_information" ? "Limită de date explicită" : "Mod limitat · date și calcule"}
+                  {item.answer.clarification ? "Clarificare necesară" : item.answer.mode === "ai" ? "Sinteză cu model" : item.answer.summaryType === "product_help" ? "Context produs" : item.answer.summaryType === "insufficient_information" ? "Limită de date explicită" : "Mod limitat · date și calcule"}
                   {item.answer.evidence.length ? ` · ${uniqueEvidenceSources(item.answer.evidence)} surse` : ""}
                 </span>
               </div>
               <p className="mt-2 text-xs text-[rgb(var(--text-secondary))]">Răspuns la {formatProductDateTime(item.answeredAt)} · Instantaneu al verificării. Întreabă din nou după modificări.</p>
               <p id={`${item.id}-answer`} className="mt-2 max-w-[46rem] whitespace-pre-line text-[0.95rem] leading-7 text-[rgb(var(--foreground))]">{formatUserFacingText(item.answer.answer)}</p>
+              <IntelligenceComparisonView answer={item.answer} disabled={loading||index!==0} onSelect={id=>void ask("Compară înregistrarea selectată cu sursa.",false,id)} />
               {item.answer.commercialTruth?<div className="mt-4 space-y-3">{item.answer.commercialTruth.items.map(truth=><CommercialTruthSnapshot key={truth.opportunityId} truth={truth} compact prepareLabel={context.opportunityId===truth.opportunityId?"Pregătește următorul pas":"Deschide oportunitatea"} onPrepare={()=>{if(context.opportunityId===truth.opportunityId)setPrepareReview("Pregătește următorul pas.");else window.location.assign("/opportunities/"+truth.opportunityId);}}/>)}</div>:null}
               {item.answer.workflowDraft && (index > 0 || revealStep >= 2) ? <WorkflowDraftPreview preview={item.answer.workflowDraft} onModify={(request) => { setQuestion(request); window.setTimeout(() => inputRef.current?.focus(), 0); }} /> : null}
               {item.answer.multiRecordResult && (index > 0 || revealStep >= 2) ? <MultiRecordResultView result={item.answer.multiRecordResult} onSelectionChange={(resultSetId, selectedRecordIds) => setSelection({ resultSetId, selectedRecordIds })} onAsk={(nextQuestion) => void ask(nextQuestion)} /> : null}

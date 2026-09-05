@@ -50,20 +50,25 @@ const aliases = {
   city: ["city", "oras", "localitate"]
 };
 function column(row: StructuredRow, key: keyof typeof aliases) { return row.headers.findIndex(h => aliases[key].includes(normalizeIntelligenceText(h).trim())); }
-export function calculateRetainedRows(question: string, input: StructuredRow[], partial: boolean): Calculation | null {
+export function calculateRetainedRows(question: string, input: StructuredRow[], partial: boolean, intent?:import("./intelligence-analysis-state").AnalysisIntent): Calculation | null {
   const q = normalizeIntelligenceText(question);
-  const operation: Calculation["operation"] | null = /suma|total|sum\b/.test(q) ? "sum" : /top\s*\d*|mai mari|largest/.test(q) ? "top" : /fara|missing|necomplet|nu au/.test(q) && /actiune|action|pas/.test(q) ? "missing" : /cate randuri|numar.*rand|count.*row/.test(q) ? "count" : null;
+  const operation: Calculation["operation"] | null = intent&&["sum","top","missing","count"].includes(intent.operation)?intent.operation as Calculation["operation"]:/suma|total|sum\b/.test(q) ? "sum" : /top\s*\d*|mai mari|largest/.test(q) ? "top" : /fara|missing|necomplet|nu au/.test(q) && /actiune|action|pas/.test(q) ? "missing" : /cate randuri|numar.*rand|count.*row/.test(q) ? "count" : null;
   if (!operation) return null;
   const namedSheets = Array.from(new Set(input.map(r => r.sheet))).filter(name => q.includes(normalizeIntelligenceText(name)));
   let rows = input.filter(r => !namedSheets.length || namedSheets.includes(r.sheet));
   // A filter must resolve an actual column and value; names are not entity associations.
-  if (/doar|numai|only/.test(q)) {
+  if(intent?.city){
+    const city=normalizeIntelligenceText(intent.city).trim();
+    if(!rows.some(r=>normalizeIntelligenceText(String(r.values[column(r,"city")]??"")).trim()===city))return null;
+    rows=rows.filter(r=>normalizeIntelligenceText(String(r.values[column(r,"city")]??"")).trim()===city);
+  } else if (/doar|numai|only/.test(q)&&!intent?.currency) {
     const cities = Array.from(new Set(rows.map(r => String(r.values[column(r,"city")] ?? "")))).filter(city => city && q.includes(normalizeIntelligenceText(city)));
     if (!cities.length) return null;
     if (cities.length) rows = rows.filter(r => cities.includes(String(r.values[column(r,"city")] ?? "")));
   }
+  if(intent?.currency)rows=rows.filter(r=>r.values[column(r,"currency")]===intent.currency);
   const operationLabel={sum:"Sumă",top:"Clasament pe monede",missing:"Rânduri fără următor pas",count:"Număr de rânduri"}[operation];
-  const base = { id: `calculation:${operation}:${rows[0]?.id ?? "empty"}`, operation, definition: `${operationLabel} · ${namedSheets.join(", ") || "foile reținute"} · fără conversie valutară; fără executarea formulelor`, partial, exclusions: 0, totals: [] as Calculation["totals"], ranked: [] as Calculation["ranked"] };
+  const base = { id: `calculation:${operation}:${rows[0]?.id ?? "empty"}`, operation, definition: `${operationLabel} · ${namedSheets.join(", ") || "foile reținute"}${intent?.city?` · oraș ${intent.city}`:""}${intent?.currency?` · moneda ${intent.currency}`:""} · fără conversie valutară; fără executarea formulelor`, partial, exclusions: 0, totals: [] as Calculation["totals"], ranked: [] as Calculation["ranked"] };
   if (operation === "missing") return {...base, exclusions:rows.filter(r=>column(r,"next")<0||r.unavailableColumns?.includes(column(r,"next"))).length, rows: rows.filter(r => column(r,"next") >= 0 && !r.unavailableColumns?.includes(column(r,"next")) && (r.values[column(r,"next")] === null || String(r.values[column(r,"next")] ?? "").trim() === "")).map(r => r.id)};
   if (operation === "count") return {...base, rows: rows.map(r => r.id)};
   const accepted = rows.flatMap(r => {

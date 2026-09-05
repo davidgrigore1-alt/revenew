@@ -1,5 +1,17 @@
 # Phase 4 — current recovery checkpoint
 
+## Phase 4.1 closure — final NO-GO, 2026-09-06
+
+Baseline `b095f92` on `astra/product-transformation`; preserve the current uncommitted patch. Additional budget **10/10 used**, **13 Ollama qwen3.5:9b attempts**, **USD0**. No additional model calls are authorized. Do not restart discovery, recreate fixtures or recreate the existing prepared plan.
+
+Typed comparison, explicit identity clarification, signed temporary follow-up state, Company/Contact evidence and broader canonical Reports retrieval are implemented. C01/C03/C04/C06/C08 established their core behaviors. C02 had attribution confusion; C05 Company made an incorrect count and omitted a recommendation; C07 Reports inferred absent revenue from follow-up metrics; C09/C10 retained correct filters/calculations but failed model validation. Final regression corrections are implemented but have no post-fix live acceptance. **Implementation NO-GO remains.** Gmail synchronization is separately a rollout prerequisite, not the reason for this decision.
+
+Full A–X results: [Phase 4 final closure report](../../design/phase-4-final-closure-report.md). Exact new request ledger and UI snapshots: `artifacts/phase4/closure-live.json`, `C01.txt`–`C10.txt`. Frozen additional expectations: `tests/fixtures/phase41-closure-evaluation.json`. Original 28-case manifest remains unchanged. No migration or remote action was added.
+
+Final gates complete: 1256 passed / 3 existing skips / 0 failures; typecheck, lint, production build, security, migration integrity and diff check PASS. Final light Prepared view inspected; original dark theme restored. Existing plan remains prepared and unexecuted. Preview launcher PID 25592, localhost:3001. No additional inference was performed on the final build. A future provider acceptance pass needs a new explicit request budget, focused on corrected failures. Do not infer permission for more calls from this checkpoint.
+
+### Historical Phase 4 checkpoint (preserved)
+
 Updated 2026-09-06 (Bucharest, after midnight) after local implementation, 20 application requests and final gates. **PHASE 4 IMPLEMENTATION NO-GO**: required conflict/entity clarification, complete source coverage and reliable supported synthesis remain incomplete. Working implementation and one prepared proposal are available for review. This checkpoint supersedes its earlier milestone snapshots; do not restart discovery or recreate fixtures blindly.
 
 ## Authority and preserved baseline

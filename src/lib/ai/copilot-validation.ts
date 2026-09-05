@@ -49,6 +49,8 @@ export function parseCopilotPageContext(value: unknown): CopilotPageContext {
 export function parseCopilotRequest(value: unknown): { ok: true; value: CopilotRequest } | { ok: false; error: string } {
   if (!value || typeof value !== "object") return { ok: false, error: "Cererea nu este validă." };
   const candidate = value as Record<string, unknown>;
+  if(candidate.analysisToken!==undefined&&(typeof candidate.analysisToken!=="string"||candidate.analysisToken.length>12000))return {ok:false,error:"Contextul analizei nu este valid."};
+  if(candidate.candidateSelectionId!==undefined&&(typeof candidate.candidateSelectionId!=="string"||!uuidPattern.test(candidate.candidateSelectionId)||!candidate.analysisToken))return {ok:false,error:"Selectează o înregistrare din clarificarea curentă."};
   const question = text(candidate.question, COPILOT_MAX_QUESTION_LENGTH + 1);
   if (question.length < 2) return { ok: false, error: "Formulează o întrebare de cel puțin două caractere." };
   if (question.length > COPILOT_MAX_QUESTION_LENGTH) return { ok: false, error: `Întrebarea poate avea cel mult ${COPILOT_MAX_QUESTION_LENGTH} de caractere.` };
@@ -64,7 +66,7 @@ export function parseCopilotRequest(value: unknown): { ok: true; value: CopilotR
   const resultSetId = text(rawSelection?.resultSetId, 80);
   const selectedRecordIds = Array.from(new Set((Array.isArray(rawSelection?.selectedRecordIds) ? rawSelection.selectedRecordIds : []).map((item) => text(item, 80)).filter((item) => uuidPattern.test(item)))).slice(0, 25);
   const selection = resultSetId && uuidPattern.test(resultSetId) ? { resultSetId, selectedRecordIds } : undefined;
-  return { ok: true, value: { question, context: parseCopilotPageContext(candidate.context), history, preparationIntent: candidate.preparationIntent === true, ...(selection ? { selection } : {}) } };
+  return { ok: true, value: { question, context: parseCopilotPageContext(candidate.context), history, preparationIntent: candidate.preparationIntent === true, ...(selection ? { selection } : {}), ...(typeof candidate.analysisToken==="string"?{analysisToken:candidate.analysisToken}:{}), ...(typeof candidate.candidateSelectionId==="string"?{candidateSelectionId:candidate.candidateSelectionId}:{}) } };
 }
 
 function stringArray(value: unknown, limit: number, maxLength = 240) {

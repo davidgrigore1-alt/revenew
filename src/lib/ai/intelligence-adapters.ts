@@ -4,6 +4,7 @@ import { normalizeIntelligenceText, relevance, type EvidenceFamily } from "./int
 import { getPreparedWorkRegistry } from "@/lib/prepared-work-registry";
 import { getAskPreparedWork } from "./ask-prepared-work";
 import { getCommercialWorkflowWorkspace } from "@/lib/workflow-runtime";
+import { getRevenueCommand } from "@/lib/revenue-command-server";
 import { getFollowUpWorkspaceSummary } from "@/lib/follow-up-summary";
 import { getGoogleWorkspacePublicState } from "@/lib/google-workspace/repository";
 import { getDriveWorkspace, getDocumentSourceDetail } from "@/lib/google-workspace/drive";
@@ -22,6 +23,12 @@ export async function retrieveSupplementalIntelligence(request:CopilotRequest,no
     evidence.push({sourceId:`${family}:${id}`,recordId:id,label:label.slice(0,160),fact:fact.slice(0,900),sourceType:family==="documents"||family==="drive"||family==="prepared"?"Document":family==="activities"?"Istoric comercial":"Brief executiv",route,observedAt:modifiedAt,providerId:family,claimType:"fact",provenance:{family,recordId:id,version:modifiedAt,independenceKey:`${family}:${id}`,classification:family==="reports"?"computed_result":family==="drive"||family==="documents"?"source_declaration":"canonical_record",retrievedAt:now.toISOString(),analyzedAt:now.toISOString(),modifiedAt,locator:{},coverage:"bounded_records",partial:true}});
   }
   const adapters:Array<{family:EvidenceFamily;label:string;read:()=>Promise<void>}>=[];
+  if(page.organizationId)adapters.push({family:"companies",label:"Asocieri explicite ale companiei",read:async()=>{
+    const universal=await getUniversalBusinessContext(page);
+    const linked=universal.summary.opportunities.filter(o=>o.organizationId===page.organizationId);
+    evidence.push({sourceId:`company:${page.organizationId}:associations`,recordId:page.organizationId,label:"Asocieri explicite ale companiei",sourceType:"Companie",providerId:"revenew",route:`/crm/organizations/${page.organizationId}`,claimType:"derived",fact:`În setul autorizat încărcat: ${linked.length} oportunități asociate explicit companiei. Recomandări înregistrate, nu acțiuni programate: ${linked.filter(o=>o.recommendedAction).slice(0,4).map(o=>`${o.title}: ${o.recommendedAction}`).join("; ")||"necompletate"}.`});
+    limits.push("Numărul oportunităților se referă la setul autorizat încărcat, nu la toate sistemele companiei.");
+  }});
   if(!narrow&&/pregatit|draft|revizui|aprobar/.test(q))adapters.push({family:"prepared",label:"Lucru pregătit",read:async()=>{
     const [registry,plans]=await Promise.all([getPreparedWorkRegistry(),getAskPreparedWork()]);
     for(const item of [...plans,...registry.items].slice(0,12))add("prepared",item.id,item.title,`${item.status} · ${item.target.label} · ${item.proposal}`,`/prepared?item=${encodeURIComponent(item.id)}`,item.preparedAt??null);
@@ -34,9 +41,14 @@ export async function retrieveSupplementalIntelligence(request:CopilotRequest,no
     for(const run of workspace.runs.slice(0,8))add("workflows",run.id,"Rulare workflow",`${run.status} · ${run.guard_reason} · ${run.is_test_run?"test":"rulare"}`,`/workflows/${run.workflow_id}`,run.created_at);
     limits.push("Workflow-uri: maximum 50 de definiții și 50 de rulări recente; fără activare sau execuție.");
   }});
-  if(!narrow&&/raport|metric|performant|follow.up/.test(q))adapters.push({family:"reports",label:"Indicatori de follow-up",read:async()=>{
+  if(!narrow&&/raport|metric|performant|follow.up|revizuirea comerciala|executia echipei/.test(q))adapters.push({family:"reports",label:"Indicatori de follow-up",read:async()=>{
     await requirePermission("reports.read");
-    const metric=await getFollowUpWorkspaceSummary();
+    const [metric,command]=await Promise.all([getFollowUpWorkspaceSummary(),getRevenueCommand("30")]);
+    add("reports","commercial-review","Revizuire comercială · 30 zile",command.currentComplete?`În selecția autorizată: ${command.decisionCount} situații necesită decizie. ${command.narrative}`:"Proiecția revizuirii comerciale este incompletă; numărul blocajelor nu este confirmat.","/reports",command.generatedAt);
+    for(const item of command.decisions.slice(0,4))evidence.push({sourceId:`opportunity:${item.id}:review`,recordId:item.id,label:item.state.title,sourceType:"Oportunitate",route:`/opportunities/${item.id}`,observedAt:command.generatedAt,providerId:"revenew",claimType:"derived",fact:`${item.state.title}: ${item.reason} Pas recomandat: ${item.action.label}.`});
+    if(command.changesComplete)add("reports","commercial-changes","Schimbări comerciale · 30 zile",`${command.changeCount} schimbări materiale de la ultima revizuire, în fereastra de 30 zile. ${command.progress.length} dovezi de progres afișate din perioada selectată; listă limitată la 5, nu totalul echipei.`,"/reports",command.generatedAt);
+    limits.push(`Revizuirea folosește cel mult 80 de oportunități, 1000 de acțiuni și 400 de evenimente; domeniu ${command.scope==="owned"?"oportunitățile proprii":"workspace autorizat"}. ${command.limited?"Există limite de acoperire; nu reprezintă un total exhaustiv.":"Proiecția încărcată este completă în limitele contractului."}`);
+
     add("reports","followup","Follow-up · calcule canonice",`În revizuire: ${metric.awaitingReview}; aprobate netrimise: ${metric.approvedNotSent}; scadente: ${metric.dueFollowUps}; livrări reale confirmate: ${metric.realDeliveries}; încercări test: ${metric.testModeAttempts}; încercări eșuate: ${metric.failedAttempts}. Nu reprezintă venit recuperat.`,"/reports",now.toISOString());
   }});
   if(!narrow&&/surs|conect|aplicat|integrar|provider/.test(q))adapters.push({family:"apps",label:"Starea aplicațiilor",read:async()=>{

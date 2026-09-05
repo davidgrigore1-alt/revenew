@@ -12,8 +12,9 @@ function record(value:unknown):Record<string,unknown>|null {return value&&typeof
 function plain(value:unknown,max:number) {return typeof value==="string"&&value.length<=max&&!/<\/?[a-z]|https?:\/\/|!\[|javascript:/i.test(value)?value.trim():null;}
 function unsupportedProse(text:string) {
   const normalized=normalizeIntelligenceText(text);
+  if(/nu a raspuns|nu au raspuns|n-a raspuns|niciun raspuns (?:primit|de la)/.test(normalized))return true;
   const financial=normalized.replace(/\bnu (?:reprezinta |este )?venit confirmat/g,"");
-  if(/venit (?:garantat|recuperat|confirmat)|roi realizat|probabilitate de castig/.test(financial))return true;
+  if(/venit(?:uri)? (?:garantat|recuperat|confirmat)|roi realizat|probabilitate de castig/.test(financial))return true;
   // Evidence aliases belong only in citation fields. They are not source names.
   if(/\bE\d+\b/.test(text))return true;
   const currencies=new Set(text.match(/\b(?:RON|EUR|USD|GBP|CHF)\b/g));
@@ -21,6 +22,12 @@ function unsupportedProse(text:string) {
   return currencies.size>1&&/inclu|cumul|echivalent|convertit|conversia in/.test(normalized);
 }
 const numbers=(value:string)=>value.replace(/\bE\d+\b/g,"").match(/\d+(?:[.,]\d+)?/g)??[];
+function unsupportedEntityCount(text:string,sources:CopilotEvidence[]) {
+  const counts:Record<string,string>={doua:"2",doi:"2",trei:"3",patru:"4",cinci:"5",sase:"6",sapte:"7",opt:"8",noua:"9",zece:"10"};
+  const normalize=(value:string)=>normalizeIntelligenceText(value).replace(/\b(doua|doi|trei|patru|cinci|sase|sapte|opt|noua|zece)\b/g,word=>counts[word]);
+  const facts=normalize(sources.map(s=>s.fact).join(" "));
+  return Array.from(normalize(text).matchAll(/\b(\d+)\s+(?:de\s+)?oportunitati/g)).some(match=>!new RegExp(`\\b${match[1]}\\s+(?:de\\s+)?oportunitati`).test(facts));
+}
 function unsupportedOutcome(text:string,sources:CopilotEvidence[]) {
   const normalized=normalizeIntelligenceText(text),facts=normalizeIntelligenceText(sources.map(s=>s.fact).join(" "));
   // A name/value overlap must not turn a pending opportunity into a completed outcome.
@@ -52,18 +59,23 @@ export function validateIntelligenceSynthesis(raw:unknown,evidence:CopilotEviden
     const claim=record(item),text=plain(claim?.text,240),ids=claim?.evidenceIds;
     if(!claim||!text||Object.keys(claim).sort().join(",")!=="evidenceIds,kind,text"||!Array.isArray(ids)||!ids.length||ids.length>3||!ids.every(id=>typeof id==="string"&&byId.has(id))||!["source_declaration","inference"].includes(String(claim.kind)))return {ok:false,reason:"invalid_claim_or_citation"};
     const supporting=ids.map(id=>byId.get(id)!);
+    if(unsupportedEntityCount(text,supporting))return {ok:false,reason:"unsupported_entity_count"};
     if(unsupportedProse(text))return {ok:false,reason:"unsupported_financial_or_source_relation"};
     if(!supportedNumbers(text,supporting))return {ok:false,reason:"unsupported_number"};
+    if(supporting.some(e=>e.comparisonKind&&e.comparisonKind!=="genuine_conflict")&&/conflict|contradic|contrazic/.test(normalizeIntelligenceText(text).replace(/(?:nu|fara)[^.]{0,35}(?:conflict|contradic\w*|contrazic\w*)/g,"")))return {ok:false,reason:"unsupported_comparison"};
     if(unsupportedOutcome(text,supporting))return {ok:false,reason:"unsupported_outcome"};
     // Behavioral guard: named commercial tokens must overlap the cited fact. This is
     // a conservative support heuristic, not proof of semantic entailment.
     const tokens=normalizeIntelligenceText(text).split(/[^a-z0-9]+/).filter(t=>t.length>4);
     const sourceText=normalizeIntelligenceText(supporting.map(s=>`${s.label} ${s.fact}`).join(" "));
     if(tokens.length&&!tokens.some(t=>sourceText.includes(t)))return {ok:false,reason:"unsupported_claim"};
-    const detail=supporting.every(s=>s.sourceType==="Document")&&!/^în (?:document|surs)|^din surs/i.test(text)?`În sursă: ${text}`:text;
-    findings.push({label:claim.kind==="inference"?"Interpretare":"Din sursă",detail,kind:claim.kind==="inference"?"derived":"confirmed",sourceIds:ids as string[]});
+    if(supporting.some(s=>s.comparisonKind)&&(/(?:sursa|documentul) (?:declara|spune|confirma)|in sursa/.test(normalizeIntelligenceText(text))))return {ok:false,reason:"comparison_is_server_inference"};
+    const inferred=claim.kind==="inference"||supporting.some(s=>s.claimType==="derived");
+    const detail=!inferred&&supporting.every(s=>s.sourceType==="Document")&&!/^în (?:document|surs)|^din surs/i.test(text)?`În sursă: ${text}`:text;
+    findings.push({label:inferred?"Interpretare":"Din sursă",detail,kind:inferred?"derived":"confirmed",sourceIds:ids as string[]});
   }
   const cited=evidence.filter(e=>findings.some(f=>f.sourceIds.includes(e.sourceId)));
+  if(unsupportedEntityCount(conclusion,cited))return {ok:false,reason:"unsupported_conclusion_count"};
   if(unsupportedProse(conclusion))return {ok:false,reason:"unsupported_conclusion_relation"};
   if(!supportedNumbers(conclusion,cited))return {ok:false,reason:"unsupported_conclusion_number"};
   if(unsupportedOutcome(conclusion,cited))return {ok:false,reason:"unsupported_conclusion_outcome"};

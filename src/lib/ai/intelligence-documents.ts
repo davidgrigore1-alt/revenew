@@ -31,7 +31,7 @@ export async function retrieveIntelligenceDocuments(request: CopilotRequest, now
         const version=document.version, rows=retainedRows(version,document.segments);
         found++;
         const partial=Boolean(version.workbook?.partial);
-        const calculation=request.context.documentSourceId ? calculateRetainedRows(request.question,rows,partial) : null;
+        const calculation=request.context.documentSourceId ? calculateRetainedRows(request.question,rows,partial,request.analysisIntent) : null;
         if(request.context.documentSourceId&&!calculation&&/suma|total|sum\b|top\s*\d/i.test(request.question))result.limits.push("Nu am putut valida operația sau filtrul pentru un calcul complet. Fragmentele nu sunt un total; precizează foaia, coloana și filtrul dorit.");
         if (calculation) result.calculations.push(calculation);
         const ranked=rows.map(row=>({row,score:relevance(request.question,`${version.original_filename} ${row.sheet} ${row.excerpt}`)})).sort((a,b)=>b.score-a.score||a.row.row-b.row.row);

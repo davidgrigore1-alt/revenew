@@ -43,6 +43,7 @@ export type CopilotSourceType =
   | "Eveniment calendar";
 
 export type CopilotEvidence = {
+  comparisonKind?: import("./intelligence-comparison-core").ComparisonKind;
   provenance?: import("./intelligence-evidence").EvidenceEnvelope;
   sourceId: string;
   label: string;
@@ -165,6 +166,9 @@ export type CopilotMultiRecordPlanPreview = {
   externalSend: false;
 };
 export type CopilotAnswer = {
+  analysisToken?: string;
+  comparisons?: import("./intelligence-comparison-core").IntelligenceComparison[];
+  clarification?: {question:string;candidates:import("./intelligence-comparison-core").IdentityCandidate[]};
   calculations?: import("./intelligence-evidence").Calculation[];
   answer: string;
   summaryType: "commercial" | "product_help" | "insufficient_information" | "temporary_error";
@@ -191,6 +195,9 @@ export type CopilotSelectionContext = {
 };
 
 export type CopilotRequest = {
+  analysisToken?: string;
+  candidateSelectionId?: string;
+  analysisIntent?: import("./intelligence-analysis-state").AnalysisIntent;
   preparationIntent?: boolean;
   question: string;
   context: CopilotPageContext;
