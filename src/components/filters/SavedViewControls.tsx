@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { BookmarkIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,7 +9,7 @@ import { createSavedView, deleteSavedView } from "@/lib/saved-views/actions";
 
 type SavedView = { id: string; name: string; filter_state: Record<string, string> | null };
 
-export function SavedViewControls({ views, currentQuery, targetPage }: { views: SavedView[]; currentQuery: string; targetPage: string }) {
+export function SavedViewControls({ views, currentQuery, targetPage, summary }: { views: SavedView[]; currentQuery: string; targetPage: string; summary?: ReactNode }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
@@ -29,9 +29,9 @@ export function SavedViewControls({ views, currentQuery, targetPage }: { views: 
 
   return <details className="group border-t border-[rgb(var(--border))] pt-2" aria-label="Vizualizări private">
     <summary className="focus-ring inline-flex min-h-9 cursor-pointer list-none items-center rounded-button px-2 text-xs font-semibold text-[rgb(var(--text-secondary))] marker:hidden hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--foreground))]">
-      Vizualizări private
+      {summary ?? <>Vizualizări private
       <span className="ml-2 rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-[0.6875rem] text-[rgb(var(--text-muted))]">{views.length}</span>
-      <span aria-hidden="true" className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span aria-hidden="true" className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span>
+      <span aria-hidden="true" className="ml-2 text-[rgb(var(--primary))] group-open:hidden">+</span><span aria-hidden="true" className="ml-2 hidden text-[rgb(var(--primary))] group-open:inline">−</span></>}
     </summary>
     <div className="mt-2 grid gap-3 border-l-2 border-[rgb(var(--primary)/0.28)] pl-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
