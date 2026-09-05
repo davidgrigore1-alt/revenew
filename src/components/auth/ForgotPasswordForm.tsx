@@ -44,7 +44,7 @@ export function ForgotPasswordForm() {
     <>
       {sent ? <AuthNotice tone="success" title="Verifică emailul" message="Dacă există un cont pentru această adresă, vei primi instrucțiunile prin email." /> : null}
       {error ? <AuthNotice tone="error" title="Nu am putut trimite linkul" message={error} /> : null}
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      <form method="post" onSubmit={handleSubmit} className="mt-8 space-y-4">
         <label className="block">
           <span className="text-sm font-medium text-[rgb(var(--foreground))]">Email</span>
           <Input

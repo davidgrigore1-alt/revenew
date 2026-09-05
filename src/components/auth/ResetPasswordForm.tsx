@@ -71,7 +71,7 @@ export function ResetPasswordForm() {
   return (
     <>
       {error ? <AuthNotice tone="error" title="Nu am putut actualiza parola" message={error} /> : null}
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      <form method="post" onSubmit={handleSubmit} className="mt-8 space-y-4">
         <PasswordField name="password" label="Parolă nouă" autoComplete="new-password" />
         <PasswordField name="confirmPassword" label="Confirmă parola nouă" autoComplete="new-password" placeholder="Repetă parola" />
         <Button type="submit" className="w-full" disabled={loading} loading={loading}>

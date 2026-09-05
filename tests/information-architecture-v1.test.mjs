@@ -52,7 +52,7 @@ test("A4 foundation keeps one interaction language and a durable reference regis
   for (const token of ["--page-gutter", "--content-axis", "--workspace-axis", "--row-height-compact", "--row-height-comfortable"]) {
     assert.ok(css.includes(token), token);
   }
-  assert.match(navigation, /before:bg-\[rgb\(var\(--interaction\)\)\]/);
+  assert.match(navigation, /before:bg-\[rgb\(var\(--selection\)\)\]/);
   assert.doesNotMatch(navigation, /before:bg-\[rgb\(var\(--intelligence\)\)\]/);
   assert.match(filter, /role="group"/);
   assert.match(filter, /aria-pressed=\{selected\}/);

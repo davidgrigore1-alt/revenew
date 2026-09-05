@@ -74,7 +74,7 @@ export function OutreachBoard({ drafts }: { drafts: OutreachDraftItem[] }) {
       {visible.length ? (
         <div className="grid auto-rows-fr gap-4 md:grid-cols-2">
           {visible.map((draft) => (
-            <article key={draft.id} className="flex h-full min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card transition-[border-color,box-shadow,transform] duration-fast hover:-translate-y-px hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover">
+            <article key={draft.id} className="flex h-full min-w-0 flex-col rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card transition-colors duration-fast ease-standard hover:border-[rgb(var(--border-strong))] hover:shadow-card-hover">
               <div className="flex flex-wrap gap-2">
                 <span className="status-pill status-pill-neutral">{draft.generationMode === "ai" ? "Draft asistat" : "Draft standard"}</span>
                 <span className="status-pill status-pill-brand">{followUpStatusLabels[draft.status]}</span>

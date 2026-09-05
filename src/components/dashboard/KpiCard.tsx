@@ -20,7 +20,7 @@ const accents = {
 
 export function KpiCard({ label, value, detail, icon, tone = "neutral", methodology }: KpiCardProps) {
   return (
-    <article className="group relative min-w-0 overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-[border-color,transform,box-shadow] duration-normal ease-standard hover:-translate-y-0.5 hover:border-[rgb(var(--border-strong))] hover:shadow-elevated sm:p-5">
+    <article className="group relative min-w-0 overflow-hidden rounded-card border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-card transition-colors duration-fast ease-standard hover:border-[rgb(var(--border-strong))] hover:shadow-elevated sm:p-5">
       <span aria-hidden="true" className={cn("absolute inset-x-0 top-0 h-0.5", accents[tone])} />
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.11em] text-[rgb(var(--text-muted))]">{label}</p>

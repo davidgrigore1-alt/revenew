@@ -21,7 +21,7 @@ export function ControlCenterViews({
           key={id}
           href={href}
           aria-current={active === id ? "page" : undefined}
-          className="focus-ring inline-flex h-10 items-center border-b-2 border-transparent px-0.5 text-label font-medium text-[rgb(var(--text-muted))] transition-colors duration-fast hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--interaction))] aria-[current=page]:text-[rgb(var(--foreground))]"
+          className="focus-ring inline-flex h-10 items-center border-b-2 border-transparent px-0.5 text-label font-medium text-[rgb(var(--text-muted))] transition-colors duration-fast hover:text-[rgb(var(--foreground))] aria-[current=page]:border-[rgb(var(--selection))] aria-[current=page]:text-[rgb(var(--foreground))]"
         >
           {label}
         </Link>

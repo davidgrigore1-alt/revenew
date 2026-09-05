@@ -288,7 +288,7 @@ export function AuthForm({ mode, intent: rawIntent }: AuthFormProps) {
         <ErrorSummary errors={errors} />
       </div>
 
-      <form ref={attachForm} onSubmit={handleSubmit} className={isSignup ? "signup-step-form mt-7" : "mt-6 space-y-4 rounded-panel border border-[rgb(var(--border-strong)/0.82)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6"} noValidate>
+      <form method="post" ref={attachForm} onSubmit={handleSubmit} className={isSignup ? "signup-step-form mt-7" : "mt-6 space-y-4 rounded-panel border border-[rgb(var(--border-strong)/0.82)] bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6"} noValidate>
         {isSignup ? (
           <ol className="signup-stepper" aria-label="Progres creare cont">
             {signupSteps.map((step, index) => {

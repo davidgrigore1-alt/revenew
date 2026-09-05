@@ -22,7 +22,7 @@ function ProviderMark({ connected = false }: { connected?: boolean }) {
 }
 
 const primaryActionClass =
-  "focus-ring inline-flex min-h-9 items-center justify-center gap-2 rounded-button bg-[rgb(var(--primary))] px-3.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-[background-color,transform] duration-fast hover:-translate-y-px hover:bg-[rgb(var(--primary-hover))] active:translate-y-0 active:scale-[0.985] disabled:transform-none motion-reduce:transform-none";
+  "focus-ring inline-flex min-h-9 items-center justify-center gap-2 rounded-button bg-[rgb(var(--primary))] px-3.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-colors duration-100 ease-standard hover:bg-[rgb(var(--primary-hover))] motion-reduce:transition-none";
 
 const secondaryActionClass =
   "focus-ring inline-flex min-h-9 items-center justify-center rounded-button border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3.5 text-xs font-semibold text-[rgb(var(--foreground))] transition-colors hover:border-[rgb(var(--border-strong))] hover:bg-[rgb(var(--surface-subtle))]";

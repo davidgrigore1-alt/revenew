@@ -503,7 +503,7 @@ export function ControlCenterVisuals({
                     stroke="none"
                     fill={`url(#${gradientId})`}
                     isAnimationActive={!reduceMotion}
-                    animationDuration={700}
+                    animationDuration={180}
                     animationEasing="ease-out"
                   />
 
@@ -527,7 +527,7 @@ export function ControlCenterVisuals({
                       strokeWidth: 2.25,
                     }}
                     isAnimationActive={!reduceMotion}
-                    animationDuration={700}
+                    animationDuration={180}
                     animationEasing="ease-out"
                   />
                 </ComposedChart>
@@ -746,7 +746,7 @@ export function ControlCenterVisuals({
                     radius={[6, 6, 2, 2]}
                     maxBarSize={46}
                     isAnimationActive={!reduceMotion}
-                    animationDuration={620}
+                    animationDuration={180}
                     animationEasing="ease-out"
                   >
                     {barData.map((entry) => (

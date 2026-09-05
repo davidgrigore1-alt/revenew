@@ -442,10 +442,9 @@ body {
 .decision-rail { border-left: 2px solid rgb(var(--primary)); background: rgb(var(--primary-muted) / .32); }
 .quiet-metadata { font-size: var(--font-size-metadata); line-height: 1.35; color: rgb(var(--text-muted)); }
 .product-lift {
-  transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+  transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard);
 }
-.product-lift:hover { border-color: rgb(var(--border-strong)); transform: translate3d(0, -1px, 0); }
-.product-lift:active { transform: translate3d(0, 0, 0) scale(.995); }
+.product-lift:hover { border-color: rgb(var(--border-strong)); }
 .intelligence-reveal {
   animation: revenew-page-reveal var(--motion-normal) var(--ease-emphasized) both;
 }
@@ -833,13 +832,11 @@ body {
     0 2px 10px rgb(20 25 34 / .024);
   transition:
     border-color var(--motion-fast) var(--ease-standard),
-    background-color var(--motion-fast) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard);
+    background-color var(--motion-fast) var(--ease-standard);
 }
 
 :root:not(.dark) .control-center-source-card:hover {
   border-color: rgb(158 205 187);
-  transform: translateY(-1px);
 }
 
 :root:not(.dark) .control-center-next-action {
@@ -883,12 +880,6 @@ body {
 
 :root:not(.dark) .control-center-disclosure-content {
   border-top-color: rgb(226 229 233);
-}
-
-@media (max-width: 767px) {
-  :root:not(.dark) .control-center-source-card:hover {
-    transform: none;
-  }
 }
 
 .control-center-lower-panel {
@@ -1060,10 +1051,22 @@ body {
   *,
   *::before,
   *::after {
+    animation-delay: 0s !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
+  /* Keep operational content immediately visible; retain static positioning. */
+  .app-page,
+  .intelligence-reveal,
+  .skeleton-pulse {
+    animation: none !important;
+  }
+  .control-center-disclosure-chevron::before {
+    transition: none !important;
   }
 }
 
@@ -1773,7 +1776,7 @@ html:has(.auth-theme) {
   border-radius: .65rem;
   padding: .55rem;
   text-align: left;
-  transition: color 220ms var(--ease-standard), background-color 220ms var(--ease-standard);
+  transition: color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
 }
 
 .signup-stepper li.is-current button {
@@ -1818,7 +1821,7 @@ html:has(.auth-theme) {
   display: grid;
   gap: 1rem;
   padding-top: 1.35rem;
-  animation: signup-step-enter 320ms cubic-bezier(.22, 1, .36, 1) both;
+  animation: signup-step-enter var(--motion-page) var(--ease-standard) both;
 }
 
 .signup-step-fields[hidden] {
@@ -1826,7 +1829,7 @@ html:has(.auth-theme) {
 }
 
 @keyframes signup-step-enter {
-  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  from { opacity: 0; transform: translate3d(0, 4px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 

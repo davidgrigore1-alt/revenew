@@ -301,8 +301,9 @@ test("Drive review preserves viewport and owns its Select popup above the native
  assert.match(source,/onClose=\{\(\)=>\{setFiles\(\[\]\);restoreReviewOrigin\(\);\}\}/);
  assert.match(source,/portalContainer=\{review\.current\}/);
  assert.match(source,/overflow-visible[\s\S]*?overflow-y-auto overscroll-contain/);
- assert.match(select,/portalContainer \? 2 : 100/);
- assert.match(select,/portalContainer \?\? document\.body/);
+ assert.match(select,/popupContainer \? 2 : 100/);
+ assert.match(select,/popupContainer \?\? document\.body/);
+ assert.match(select,/popupContainer = portalContainer \?\? overlayContainer/);
 });
 test("Picker rejects a combined browser token without changing persistent server authorization",async()=>{
  const h=pickerHarness({scope:core.DRIVE_SCOPE+" https://www.googleapis.com/auth/gmail.readonly"});

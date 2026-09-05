@@ -12,7 +12,7 @@
   overflow-wrap: anywhere;
 }
 .modal::backdrop { background: rgb(0 0 0 / .65); }
-.modal[open] { animation: enter 180ms ease-out; }
+.modal[open] { animation: enter var(--motion-reveal) var(--ease-standard); }
 .dialog {
   margin: auto;
   width: calc(100% - 2rem);

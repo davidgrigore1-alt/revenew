@@ -6,9 +6,9 @@ Sistemul v4 susține experiența de „registru comercial viu” definită în `
 
 ## Culoare și suprafețe
 
-- Canvas light: limestone cald; suprafață: aproape albă; recessed: gri-bej mineral.
-- Canvas dark: graphite/ink; suprafață ridicată cu 5–10 puncte mai luminoasă, fără negru pur.
-- Accent implicit: oxide-copper. Este rezervat pentru acțiune, selecție și firul de decizie.
+- Canvas light: alb, cu suprafețe secundare gri neutru.
+- Canvas dark: near-black neutru (`6 6 6`), cu suprafețe charcoal și borduri neutre. Accentul nu colorează canvasul.
+- Accent implicit: Champagne Gold; Executive Blue este alternativa verificată. Accentul este rezervat pentru acțiune, selecție și focus.
 - Succesul rămâne verde, riscul roșu, avertizarea amber și informația albastră. Accentul utilizatorului nu le modifică.
 - Borderul și spațiul separă conținutul; shadow apare numai la overlay sau obiectul dominant.
 
@@ -28,11 +28,34 @@ Sistemul v4 susține experiența de „registru comercial viu” definită în `
 
 ## Motion
 
-- feedback 100 ms; reveal 160 ms; conținut 200 ms; panel 240 ms; pagină 160 ms;
-- ease-out la intrare, ieșire mai rapidă, maximum două proprietăți;
-- pagina folosește numai fade + 4 px; listele nu dansează la fiecare reîncărcare;
-- reduced motion anulează animațiile și păstrează toate stările lizibile;
+- Button și Checkbox: 100 ms; feedback/rânduri/câmpuri: tokenul de 120 ms;
+- reveal, conținut și pagină: 180 ms; panel: 220 ms. Aliasurile fast/normal/slow rămân 120/180/220 ms; tokenul legacy large de 280 ms nu este recomandat pentru interacțiuni noi;
+- easing comun: `cubic-bezier(.2,.8,.2,1)`. Pagina și pasul signup folosesc fade + cel mult 4 px; graficele Control Center folosesc 160–180 ms;
+- Dialog și Drawer comune: intrare fade de 180 ms, închidere imediată la demontare. Nu există o animație de ieșire întârziată;
+- Select deschide popupul imediat; nu adăugăm întârziere doar pentru uniformitate;
+- controalele și rândurile rămân stabile sub pointer: feedback prin culoare/bordură, fără salt sau scalare. Nu animăm geometria sau umbrele costisitoare în noile interacțiuni operaționale;
+- reduced motion elimină intrările de pagină, signup și overlay, precum și animația graficelor; regula globală scurtează tranzițiile/animațiile reziduale, elimină întârzierile și scrollul animat. Focusul, erorile și selecția rămân vizibile; transformările statice necesare layoutului nu sunt șterse global;
 - conținutul critic este vizibil și fără IntersectionObserver.
+
+Normalizarea Phase 1D privește aplicația. Animațiile marketing și consumatorii legacy nemigrați nu sunt declarați uniformizați.
+
+## Controale, focus și selecție
+
+- Button are lățime intrinsecă; `fullWidth` este explicit. Înălțimea minimă permite etichetelor românești lungi să se împartă pe rânduri;
+- loading păstrează spațiul etichetei, afișează indicatorul și expune `aria-busy`; acțiunea este dezactivată. Un link indisponibil nu păstrează o destinație activabilă;
+- Input păstrează eticheta, starea invalidă și asocierea erorii; focus-visible folosește conturul accentului, nu glow;
+- Checkbox păstrează inputul nativ, operarea cu Space, stările checked/indeterminate/disabled și conturul vizibil de tastatură;
+- selecția folosește `--selection`, iar focusul `--focus-ring`; culorile semantice de eroare, avertizare și succes rămân independente de accent.
+
+## Overlay-uri comune
+
+Dialog și Drawer folosesc dialogul nativ modal, cu nume accesibil, izolare a fundalului, Tab/Shift+Tab conținute, blocarea scrollului și restaurarea focusului la inițiator. Escape respectă starea dismissible; backdropul închide Drawer implicit, iar Dialog numai la opțiune explicită. Select folosește containerul overlayului pentru a păstra popupul în stratul modal; Escape închide mai întâi popupul.
+
+Dialog are maximum 32rem și margini de 1rem; Drawer maximum 42rem și înălțime de viewport. Conținutul lung rămâne scrollabil. Acest contract descrie primitivele comune, nu certifică migrarea tuturor overlayurilor istorice.
+
+## Identitatea autentificării
+
+Scope-ul comun `.auth-theme` impune canvas near-black, suprafețe charcoal, text ivory și `color-scheme: dark`, indiferent de tema Light/System salvată pentru aplicație. Accentul activ poate colora acțiunea, focusul și selecția; nu poate colora canvasul. Popupurile Select din autentificare păstrează același scope. Vizitarea autentificării nu rescrie preferințele spațiului de lucru. Izolarea este prezentare CSS, fără schimbarea autentificării, sesiunii sau redirecturilor.
 
 ## Formulare
 
@@ -41,12 +64,12 @@ Sistemul v4 susține experiența de „registru comercial viu” definită în `
 - valorile introduse se păstrează după eroare;
 - parola are control text explicit și autocomplete semantic;
 - acțiunile ireversibile folosesc o barieră de confirmare proporțională cu riscul;
-- loading schimbă eticheta butonului fără a modifica lățimea și anunță starea accesibil.
+- loading păstrează geometria etichetei și anunță starea accesibil; mesajul acțiunii rămâne responsabilitatea consumatorului.
 
 ## Semnături ReveNew
 
 1. fir de dovadă: Fapt → Sursă → Interpretare → Acțiune;
-2. marca de decizie oxide-copper;
+2. marca de decizie în accentul ReveNew activ, implicit Champagne Gold;
 3. bariera de confirmare umană;
 4. comparația tip registru Înainte → După;
 5. indexul numeric al etapelor pe fluxurile de inteligență și pilot.

@@ -21,7 +21,7 @@ test("dark theme keeps the workspace accent above a crisp neutral foundation", a
   assert.match(css, /\.dark\s*\{[\s\S]*?--primary-muted:\s*24 24 24;/);
   assert.match(css, /--primary-hover:\s*var\(--brand-300\);/);
   assert.match(css, /--primary-active:\s*var\(--brand-600\);/);
-  assert.match(css, /\.dark\s*\{[\s\S]*?--focus-ring:\s*var\(--interaction\);/);
+  assert.match(css, /\.dark\s*\{[\s\S]*?--focus-ring:\s*var\(--rn-accent-400\);/);
   assert.match(css, /--gold-500:\s*183 138 19;/);
 });
 

@@ -228,7 +228,7 @@ test("G3F.2 comfort scale uses shared roles, preserves compact secondary control
   assert.match(read("src/components/dashboard/AppShell.tsx"),/product-desktop/);
   assert.match(read("src/components/dashboard/ShellNavigation.tsx"),/min-h-8 gap-2 px-2 text-label/);
   assert.match(read("src/components/ui/Input.tsx"),/min-h-\[var\(--control-height\)\]/);
-  assert.match(read("src/components/ui/Button.tsx"),/default: "h-\[var\(--control-height\)\]/);
+  assert.match(read("src/components/ui/Button.tsx"),/default: "min-h-\[var\(--control-height\)\]/);
   assert.match(read("src/components/revenue/PipelineBoard.tsx"),/<Select\s+density="compact"/);
   assert.match(read("src/components/ui/Select.tsx"),/product-popup/);
   assert.match(css,/--control-height: 2.25rem/);assert.match(css,/--control-height-compact: 2rem/);
