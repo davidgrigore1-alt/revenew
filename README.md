@@ -1,6 +1,33 @@
 # ReveNew
 
-ReveNew is a Romanian-first B2B SaaS for identifying, reviewing and tracking recoverable commercial opportunities with explicit ownership, evidence, auditability and human control.
+**A commercial execution platform built around evidence, ownership, and human control.**
+
+ReveNew is a Romanian-first B2B SaaS for identifying, reviewing, and tracking recoverable commercial opportunities. It helps commercial teams move from scattered signals to accountable next actions, with an auditable trail of decisions.
+
+[Product website](https://revenew.ro/) · [Local demo guide](docs/local-demo.md) · [Capability status](docs/product-truth-matrix.md) · [Architecture](docs/AUTHORIZATION_ARCHITECTURE.md)
+
+## What the platform does
+
+| Area | Purpose |
+| --- | --- |
+| Control Center & Recovery Queue | Surface commercial exceptions, evidence, responsible owners, and next steps. |
+| Opportunities & Company 360 | Keep account context, activity, relationships, and opportunity history together. |
+| Commercial Inbox | Review incoming commercial signals before promoting them into tracked opportunities. |
+| Ask ReveNew | Answer questions from authorized workspace data with evidence-grounded assistance and safe fallbacks. |
+| Follow-up preparation & approvals | Prepare internal drafts; require explicit human review before externally effective actions. |
+| Reporting & controlled pilots | Preserve the distinction between estimated opportunity value and confirmed business outcomes. |
+
+**Technology:** Next.js 15 · React 19 · TypeScript · Supabase (PostgreSQL, Auth, RLS) · OpenAI SDK · Node.js.
+
+**Engineering priorities:** tenant isolation, server-side authorization, explicit approval gates, traceable commercial evidence, reproducible local demos, and automated validation.
+
+### Product and security boundaries
+
+ReveNew does **not** claim autonomous revenue recovery or guaranteed ROI. Integrations and external messaging are conditional on environment configuration and user authorization. The product's [capability truth matrix](docs/product-truth-matrix.md) documents what is implemented, what is conditional, and what is not live.
+
+The repository provides a [fully synthetic local demo](docs/local-demo.md). Do not use customer data or real credentials for portfolio demonstrations.
+
+---
 
 ## Prerequisites
 
