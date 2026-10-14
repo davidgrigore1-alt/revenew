@@ -63,6 +63,10 @@ Dacă vrei să intri mai adânc în implementare, aici sunt părțile relevante:
 
 ## Cum se poate verifica proiectul
 
+**Pentru prima evaluare:** [site-ul public](https://revenew.ro/), [codul din repository](https://github.com/davidgrigore1-alt/revenew) și documentația de mai jos sunt accesibile direct.
+
+**Pentru evaluarea zonei autentificate:** accesul trebuie pregătit separat, cu un cont de test cu drepturi limitate și date fictive. Nu public parole sau conturi administrative pe GitHub. Dacă ești evaluator și vrei să parcurgi aplicația, [scrie-mi pe LinkedIn](https://www.linkedin.com/in/david-alexandru-grigore-927645319/) pentru un acces demonstrativ verificat.
+
 Site-ul public este la [revenew.ro](https://revenew.ro/). Pentru o demonstrație completă, fără servicii externe și fără date reale, am documentat [configurarea locală](docs/local-demo.md). Comenzile principale, după instalarea dependențelor și pornirea Supabase local, sunt:
 
 ~~~bash
